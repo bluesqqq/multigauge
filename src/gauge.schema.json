@@ -1,0 +1,781 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Gauge Schema",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {
+      "type": "string",
+      "description": "Optional. JSON Schema reference for editor tooling."
+    },
+    "type": {
+      "type": "string"
+    },
+    "style": {
+      "$ref": "#/$defs/style"
+    },
+    "props": {
+      "$ref": "#/$defs/props"
+    },
+    "children": {
+      "$ref": "#/$defs/children"
+    }
+  },
+  "$defs": {
+    "element": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/baseElement"
+        },
+        {
+          "$ref": "#/$defs/circleElement"
+        },
+        {
+          "$ref": "#/$defs/imageElement"
+        },
+        {
+          "$ref": "#/$defs/rectangleElement"
+        },
+        {
+          "$ref": "#/$defs/textElement"
+        },
+        {
+          "$ref": "#/$defs/graphElement"
+        },
+        {
+          "$ref": "#/$defs/horizonElement"
+        },
+        {
+          "$ref": "#/$defs/circularNeedleElement"
+        },
+        {
+          "$ref": "#/$defs/circularScaleElement"
+        }
+      ]
+    },
+    "children": {
+      "description": "Optional. List of child elements.",
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/element"
+      }
+    },
+    "props": {
+      "description": "Optional. Element properties object.",
+      "type": "object",
+      "additionalProperties": true
+    },
+    "typedElement": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string"
+        },
+        "style": {
+          "$ref": "#/$defs/style"
+        },
+        "props": {
+          "$ref": "#/$defs/props"
+        },
+        "children": {
+          "$ref": "#/$defs/children"
+        }
+      }
+    },
+    "baseElement": {
+      "description": "Base element when 'type' is omitted.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "style": {
+          "$ref": "#/$defs/style"
+        },
+        "props": {
+          "$ref": "#/$defs/props"
+        },
+        "children": {
+          "$ref": "#/$defs/children"
+        }
+      },
+      "not": {
+        "required": [
+          "type"
+        ]
+      }
+    },
+    "circleElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "circle"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "color": {
+                  "$ref": "#/$defs/fillStroke"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "imageElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "image"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "rectangleElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "rectangle"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "color": {
+                  "$ref": "#/$defs/fillStroke"
+                },
+                "radius": {
+                  "type": "number"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "fontFamily": {
+      "type": "string",
+      "enum": [
+        "sans",
+        "serif",
+        "mono",
+        "orbitron",
+        "dejavu",
+        "roboto"
+      ]
+    },
+    "textStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "family": {
+          "$ref": "#/$defs/fontFamily"
+        },
+        "pt": {
+          "type": "number"
+        },
+        "weight": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "bold"
+          ]
+        },
+        "slant": {
+          "type": "string",
+          "enum": [
+            "normal",
+            "italic"
+          ]
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        }
+      }
+    },
+    "textElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "text"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "textStyle": {
+                  "$ref": "#/$defs/textStyle"
+                },
+                "ellipses": {
+                  "type": "boolean"
+                },
+                "hyphens": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "style": {
+      "description": "Optional. Either the string 'inherit' or an object of style fields.",
+      "oneOf": [
+        {
+          "type": "string",
+          "const": "inherit"
+        },
+        {
+          "$ref": "#/$defs/styleObject"
+        }
+      ]
+    },
+    "styleObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "$ref": "#/$defs/dimension"
+        },
+        "height": {
+          "$ref": "#/$defs/dimension"
+        },
+        "padding": {
+          "$ref": "#/$defs/padding"
+        },
+        "gap": {
+          "$ref": "#/$defs/gap"
+        },
+        "flex": {
+          "$ref": "#/$defs/flex"
+        }
+      }
+    },
+    "dimension": {
+      "oneOf": [
+        {
+          "type": "number"
+        },
+        {
+          "type": "string",
+          "pattern": "^[0-9]+%$"
+        }
+      ]
+    },
+    "padding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "all": {
+          "type": "number"
+        },
+        "left": {
+          "type": "number"
+        },
+        "right": {
+          "type": "number"
+        },
+        "top": {
+          "type": "number"
+        },
+        "bottom": {
+          "type": "number"
+        }
+      }
+    },
+    "gap": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "row": {
+          "type": "number"
+        },
+        "column": {
+          "type": "number"
+        }
+      }
+    },
+    "flex": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "direction": {
+          "type": "string",
+          "enum": [
+            "row",
+            "column"
+          ]
+        },
+        "justify": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "space-between",
+            "space-around",
+            "space-evenly"
+          ]
+        },
+        "align": {
+          "type": "string",
+          "enum": [
+            "start",
+            "center",
+            "end",
+            "stretch"
+          ]
+        },
+        "grow": {
+          "type": "number"
+        },
+        "shrink": {
+          "type": "number"
+        }
+      }
+    },
+    "fillStroke": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fill": {
+          "$ref": "#/$defs/color"
+        },
+        "stroke": {
+          "$ref": "#/$defs/color"
+        },
+        "thickness": {
+          "type": "number",
+          "default": 1.0
+        }
+      }
+    },
+    "color": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/rgba"
+        },
+        {
+          "$ref": "#/$defs/colorObject"
+        }
+      ]
+    },
+    "rgba": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/hexColor"
+        },
+        {
+          "$ref": "#/$defs/rgbFunction"
+        },
+        {
+          "$ref": "#/$defs/namedColor"
+        }
+      ]
+    },
+    "hexColor": {
+      "type": "string",
+      "pattern": "^(?:#|0[xX])(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"
+    },
+    "rgbFunction": {
+      "type": "string",
+      "pattern": "^rgb\\(\\s*(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\s*,\\s*(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\s*,\\s*(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\s*\\)$"
+    },
+    "namedColor": {
+      "type": "string",
+      "enum": [
+        "black",
+        "grey",
+        "light-grey",
+        "white",
+        "red",
+        "orange",
+        "yellow",
+        "lime",
+        "green",
+        "teal",
+        "aqua",
+        "blue",
+        "magenta",
+        "violet",
+        "purple"
+      ]
+    },
+
+    "colorObject": {
+      "oneOf": [
+        { "$ref": "#/$defs/valueColor" },
+        { "$ref": "#/$defs/timeColor" },
+        { "$ref": "#/$defs/userColor" }
+      ]
+    },
+
+    "valueColor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "timeline", "id"],
+      "properties": {
+        "type": { "const": "value" },
+        "timeline": { "$ref": "#/$defs/colorTimeline" },
+        "id": { "$ref": "#/$defs/valueId" }
+      }
+    },
+
+    "timeColor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "timeline"],
+      "properties": {
+        "type": { "const": "time" },
+        "timeline": { "$ref": "#/$defs/colorTimeline" },
+        "loopType": {
+          "enum": ["forward", "reverse", "pingpong"]
+        }
+      }
+    },
+
+    "userColor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type"],
+      "properties": {
+        "type": { "const": "user" }
+      }
+    },
+
+    "colorTimeline": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/color"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/colorKeyframe"
+          }
+        }
+      ]
+    },
+    "colorKeyframe": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "position": {
+          "type": "number"
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        }
+      }
+    },
+    "fillStrokeTimeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "fill": {
+          "$ref": "#/$defs/colorTimeline"
+        },
+        "stroke": {
+          "$ref": "#/$defs/colorTimeline"
+        },
+        "thickness": {
+          "type": "number"
+        }
+      }
+    },
+    "valueId": {
+      "enum": [
+        "n/a",
+        "engineRPM",
+        "engineCoolantTemp",
+        "engineOilTemp",
+        "transmissionTemp",
+        "engineOilPressure",
+        "transmissionFluidPressure",
+        "fuelPressure",
+        "boostPressure",
+        "fuelLevel",
+        "distanceDriven",
+        "speed",
+        "verticalAcceleration",
+        "longitudinalAcceleration",
+        "lateralAcceleration",
+        "calculatedEngineLoad",
+        "throttlePosition",
+        "engineFuelRate"
+      ]
+    },
+    "tickValueStyle": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/colorTimeline"
+        },
+        "textStyle": {
+          "$ref": "#/$defs/textStyle"
+        },
+        "spacing": {
+          "type": "integer"
+        },
+        "flipValuesPosition": {
+          "type": "boolean"
+        }
+      }
+    },
+    "rootTick": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "divisions": {
+          "type": "integer"
+        },
+        "interval": {
+          "type": "number"
+        },
+        "useDivisions": {
+          "type": "boolean"
+        },
+        "length": {
+          "type": "number"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "color": {
+          "$ref": "#/$defs/fillStrokeTimeline"
+        },
+        "valueStyle": {
+          "$ref": "#/$defs/tickValueStyle"
+        }
+      }
+    },
+    "subTick": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "divisions": {
+          "type": "integer"
+        },
+        "length": {
+          "type": "number"
+        },
+        "thickness": {
+          "type": "number"
+        },
+        "color": {
+          "$ref": "#/$defs/fillStrokeTimeline"
+        },
+        "valueStyle": {
+          "$ref": "#/$defs/tickValueStyle"
+        }
+      }
+    },
+    "tickList": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/rootTick"
+        },
+        "subs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/subTick"
+          }
+        },
+        "offset": {
+          "type": "number"
+        }
+      }
+    },
+    "displayValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/valueId"
+        },
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
+    },
+    "circularProps": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "startAngle": {
+          "type": "number"
+        },
+        "endAngle": {
+          "type": "number"
+        },
+        "value": {
+          "$ref": "#/$defs/displayValue"
+        }
+      }
+    },
+    "graphElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "graph"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "value": { "$ref": "#/$defs/displayValue" },
+                "backgroundColor": { "$ref": "#/$defs/color"},
+                "secondsColor": {"$ref": "#/$defs/color"},
+                "graphColor": { "$ref": "#/$defs/color"},
+                "borderColor": {"$ref": "#/$defs/color"},
+                "seconds": { "type": "number" }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "horizonElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "horizon"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "backgroundColor": {
+                  "$ref": "#/$defs/color"
+                },
+                "groundColor": {
+                  "$ref": "#/$defs/color"
+                },
+                "horizonColor": {
+                  "$ref": "#/$defs/color"
+                },
+                "borderColor": {
+                  "$ref": "#/$defs/color"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "circularNeedleElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "circular-needle"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "startAngle": {
+                  "type": "number"
+                },
+                "endAngle": {
+                  "type": "number"
+                },
+                "value": {
+                  "$ref": "#/$defs/displayValue"
+                },
+                "radius": {
+                  "type": "number"
+                },
+                "color": {
+                  "$ref": "#/$defs/fillStroke"
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "circularScaleElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElement"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "circular-scale"
+            },
+            "props": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "startAngle": {
+                  "type": "number"
+                },
+                "endAngle": {
+                  "type": "number"
+                },
+                "value": {
+                  "$ref": "#/$defs/displayValue"
+                },
+                "radius": {
+                  "type": "number"
+                },
+                "ticks": {
+                  "$ref": "#/$defs/tickList"
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

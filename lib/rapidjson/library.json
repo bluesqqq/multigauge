@@ -1,0 +1,7 @@
+{
+  "name": "rapidjson",
+  "version": "0.0.0",
+  "build": {
+    "includeDir": "src"
+  }
+}

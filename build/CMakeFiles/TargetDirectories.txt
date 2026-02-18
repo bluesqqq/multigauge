@@ -1,0 +1,3 @@
+C:/Users/hayba/OneDrive/Documents/multigauge-core/build/CMakeFiles/multigauge_core.dir
+C:/Users/hayba/OneDrive/Documents/multigauge-core/build/CMakeFiles/ALL_BUILD.dir
+C:/Users/hayba/OneDrive/Documents/multigauge-core/build/CMakeFiles/ZERO_CHECK.dir

@@ -1,0 +1,10 @@
+^C:\USERS\HAYBA\ONEDRIVE\DOCUMENTS\MULTIGAUGE-CORE\CMAKELISTS.TXT
+setlocal
+"C:\Program Files\CMake\bin\cmake.exe" -SC:/Users/hayba/OneDrive/Documents/multigauge-core -BC:/Users/hayba/OneDrive/Documents/multigauge-core/build --check-stamp-file C:/Users/hayba/OneDrive/Documents/multigauge-core/build/CMakeFiles/generate.stamp
+if %errorlevel% neq 0 goto :cmEnd
+:cmEnd
+endlocal & call :cmErrorLevel %errorlevel% & goto :cmDone
+:cmErrorLevel
+exit /b %1
+:cmDone
+if %errorlevel% neq 0 goto :VCEnd
