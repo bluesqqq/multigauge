@@ -1,6 +1,7 @@
 #include <multigauge/utils.h>
 
 #include <cstdio>
+#include <cmath>
 
 // ----------[ FLOAT / STRING ]---------- //
 
@@ -75,9 +76,9 @@ float mapf(float x, float inMin, float inMax, float outMin, float outMax) {
 
 // ----------[ BINARY READERS ]---------- //
 
-float floorDivisible(float n, float factor, float offset) { return floor((n - offset) / factor) * factor + offset; }
+float floorDivisible(float n, float factor, float offset) { return std::floor((n - offset) / factor) * factor + offset; }
 
-float ceilDivisible(float n, float factor, float offset) { return ceil((n - offset) / factor * factor + offset); }
+float ceilDivisible(float n, float factor, float offset) { return std::ceil((n - offset) / factor * factor + offset); }
 
 bool read_u16(const uint8_t *data, size_t size, size_t off, uint16_t &out)
 {
