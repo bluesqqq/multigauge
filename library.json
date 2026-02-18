@@ -2,8 +2,12 @@
   "name": "multigauge-core",
   "version": "0.1.0",
   "build": {
-    "srcDir": "src",
+    "srcDir": ".",
     "includeDir": "include",
+    "srcFilter": [
+      "+<src/**>",
+      "+<lib/yoga/src/**>"
+    ],
     "flags": [
       "-Ilib/rapidjson/src",
       "-Ilib/lodepng/src",
