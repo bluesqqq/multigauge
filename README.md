@@ -1,1 +1,1 @@
-# inclinometer-multigauge
+# multigauge-core
