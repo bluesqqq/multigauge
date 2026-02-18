@@ -1,4 +1,4 @@
-#include "layout.h"
+#include <multigauge/layout.h>
 
 // Helper: safely get object member without double lookup
 static inline const rapidjson::Value* getMember(const rapidjson::Value::ConstObject& o, const char* key) {

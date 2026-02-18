@@ -1,4 +1,4 @@
-#include "alignment.h"
+#include <multigauge/geometry/alignment.h>
 
 std::pair<float, float> alignLength(float start, float length, LengthAlignment alignment) {
     switch (alignment) {

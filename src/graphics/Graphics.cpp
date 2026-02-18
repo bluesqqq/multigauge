@@ -1,4 +1,4 @@
-#include "Graphics.h"
+#include <multigauge/graphics/Graphics.h>
 
 #include <cmath>
 

@@ -1,6 +1,6 @@
-#include "CircularNeedle.h"
+#include <multigauge/graphics/gauge/elements/circular/CircularNeedle.h>
 
-#include "constants.h"
+#include <multigauge/constants.h>
 
 CircularNeedle::CircularNeedle(Element* parent) : CircularElement(parent) {}
 

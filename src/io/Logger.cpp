@@ -1,4 +1,4 @@
-#include "Logger.h"
+#include <multigauge/io/Logger.h>
 
 bool Logger::init() { return true; }
 

@@ -1,6 +1,6 @@
-#include "rj_helpers.h"
+#include <multigauge/json/rj_helpers.h>
 
-#include "io/Logger.h"
+#include <multigauge/io/Logger.h>
 
 const char *rjTypeName(const rapidjson::Value &v) {
     using rapidjson::kNullType;

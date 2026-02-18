@@ -1,4 +1,4 @@
-#include "utils.h"
+#include <multigauge/utils.h>
 
 #include <cstdio>
 

@@ -1,4 +1,4 @@
-#include "StaticColor.h"
+#include <multigauge/graphics/colors/StaticColor.h>
 
 StaticColor::StaticColor() : color(DEFAULT_COLOR) { }
 

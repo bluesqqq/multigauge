@@ -1,4 +1,4 @@
-#include "TimeColor.h"
+#include <multigauge/graphics/colors/TimeColor.h>
 
 float TimeColor::getTime() const {
     float duration = timeline.getEndPosition();

@@ -1,8 +1,8 @@
-#include "color.h"
+#include <multigauge/graphics/colors/Color.h>
 
-#include "StaticColor.h"
-#include "ValueColor.h"
-#include "TimeColor.h"
+#include <multigauge/graphics/colors/StaticColor.h>
+#include <multigauge/graphics/colors/ValueColor.h>
+#include <multigauge/graphics/colors/TimeColor.h>
 
 const ColorTimeline* Color::getTimeline() const { return nullptr; }
 

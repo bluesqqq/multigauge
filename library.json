@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "build": {
     "srcDir": "src",
-    "includeDir": "src"
+    "includeDir": "src",
+    "flags": [
+      "-Ilib/rapidjson/src",
+      "-Ilib/lodepng/src",
+      "-Ilib/tjpgd/src",
+      "-Ilib/yoga/src"
+    ]
   }
 }

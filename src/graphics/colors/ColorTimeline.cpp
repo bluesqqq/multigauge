@@ -1,8 +1,8 @@
-#include "ColorTimeline.h"
-#include "StaticColor.h"
-#include "TimeColor.h"
-#include "ValueColor.h"
-#include "utils.h"
+#include <multigauge/graphics/colors/ColorTimeline.h>
+#include <multigauge/graphics/colors/StaticColor.h>
+#include <multigauge/graphics/colors/TimeColor.h>
+#include <multigauge/graphics/colors/ValueColor.h>
+#include <multigauge/utils.h>
 #include <set>
 #include <algorithm>
 
@@ -225,7 +225,7 @@ FillStrokeTimeline FillStrokeTimeline::blended(const FillStrokeTimeline &other, 
     return FillStrokeTimeline(fill.blended(other.fill, alpha), stroke.blended(other.stroke, alpha), (thickness + other.thickness) / 2.0f);
 }
 
-#include "StaticColor.h"
+#include <multigauge/graphics/colors/StaticColor.h>
 
 FillStroke FillStrokeTimeline::getFillStrokeAtPosition(float position) const {
     return FillStroke(

@@ -1,5 +1,5 @@
-#include "units.h"
-#include "utils.h"
+#include <multigauge/values/units.h>
+#include <multigauge/utils.h>
 
 UnitType::UnitType(const char* baseName, const char* baseAbbreviation, uint8_t baseDecimalPlaces, const std::vector<Unit>& conversionUnits, uint8_t defaultUnitIndex) {
     units.push_back({baseName, baseAbbreviation, 1.0, 0.0, baseDecimalPlaces}); // Base unit

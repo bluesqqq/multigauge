@@ -1,4 +1,4 @@
-#include "RectangleElement.h"
+#include <multigauge/graphics/gauge/elements/primitives/RectangleElement.h>
 
 RectangleElement::RectangleElement(Element* parent) : Element(parent) {}
 

@@ -1,4 +1,4 @@
-#include "CircleElement.h"
+#include <multigauge/graphics/gauge/elements/primitives/CircleElement.h>
 
 CircleElement::CircleElement(Element* parent) : Element(parent) {}
 

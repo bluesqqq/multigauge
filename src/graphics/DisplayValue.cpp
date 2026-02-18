@@ -1,6 +1,6 @@
-#include "DisplayValue.h"
+#include <multigauge/graphics/DisplayValue.h>
 
-#include "json/rj_helpers.h"
+#include <multigauge/json/rj_helpers.h>
 
 int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : DEFAULT_UNIT; }
 

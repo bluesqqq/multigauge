@@ -1,4 +1,4 @@
-#include "Line.h"
+#include <multigauge/geometry/Line.h>
 
 #include <algorithm>
 #include <cmath>
@@ -6,8 +6,8 @@
 #include <vector>
 #include <limits>
 
-#include "Rect.h"
-#include "Circle.h"
+#include <multigauge/geometry/Rect.h>
+#include <multigauge/geometry/Circle.h>
 
 template<typename T>
 inline Line<T>::Line(T x1, T y1, T x2, T y2) : p1(x1, y1), p2(x2, y2) {}

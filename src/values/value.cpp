@@ -1,6 +1,7 @@
-#include "value.h"
+#include <multigauge/values/value.h>
 
-#include "io/Logger.h"
+#include <multigauge/io/Logger.h>
+
 #include <algorithm>
 
 std::unordered_map<std::string, Value*> Value::registry;

@@ -1,4 +1,4 @@
-#include "TextElement.h"
+#include <multigauge/graphics/gauge/elements/primitives/TextElement.h>
 
 TextElement::TextElement(Element* parent, std::string text) : Element(parent), text(text) {}
 

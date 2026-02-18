@@ -1,5 +1,5 @@
-#include "AssetManager.h"
-#include "images/ImageDecoder.h"
+#include <multigauge/AssetManager.h>
+#include <multigauge/images/ImageDecoder.h>
 
 bool AssetManager::loadJson(const std::string &path, rapidjson::Document &out) {
     constexpr const char* TAG = "AssetManager::loadJson";

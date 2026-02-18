@@ -1,4 +1,4 @@
-#include "TickList.h"
+#include <multigauge/graphics/ticks/TickList.h>
 
 float TickList::getLength(uint8_t index) const {
     while (index > 0) {

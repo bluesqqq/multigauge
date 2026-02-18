@@ -1,6 +1,6 @@
-#include "Element.h"
+#include <multigauge/graphics/gauge/Element.h>
 
-#include "layout.h"
+#include <multigauge/layout.h>
 
 Element::Entry Element::registry[MAX_ELEMENT_REGISTRY_SIZE] = {};
 size_t Element::registryCount = 0;
@@ -52,14 +52,14 @@ Element::~Element() {
     }
 }
 
-#include "elements/primitives/TextElement.h"
-#include "elements/primitives/RectangleElement.h"
-#include "elements/primitives/CircleElement.h"
-#include "elements/Horizon.h"
-#include "elements/primitives/ImageElement.h"
-#include "elements/Graph.h"
-#include "elements/circular/CircularNeedle.h"
-#include "elements/circular/CircularScale.h"
+#include <multigauge/graphics/gauge/elements/primitives/TextElement.h>
+#include <multigauge/graphics/gauge/elements/primitives/RectangleElement.h>
+#include <multigauge/graphics/gauge/elements/primitives/CircleElement.h>
+#include <multigauge/graphics/gauge/elements/Horizon.h>
+#include <multigauge/graphics/gauge/elements/primitives/ImageElement.h>
+#include <multigauge/graphics/gauge/elements/Graph.h>
+#include <multigauge/graphics/gauge/elements/circular/CircularNeedle.h>
+#include <multigauge/graphics/gauge/elements/circular/CircularScale.h>
 
 bool Element::registerType(const char *type, FactoryFn fn) {
     constexpr const char* TAG = "Element::registerType";

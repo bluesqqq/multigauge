@@ -1,4 +1,4 @@
-#include "ImageElement.h"
+#include <multigauge/graphics/gauge/elements/primitives/ImageElement.h>
 
 ImageElement::ImageElement(Element* parent) : Element(parent), path("/placeholder.bmp") { }
 

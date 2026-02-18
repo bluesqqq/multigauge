@@ -1,5 +1,5 @@
-#include "UserColor.h"
-#include "StaticColor.h"
+#include <multigauge/graphics/colors/UserColor.h>
+#include <multigauge/graphics/colors/StaticColor.h>
 
 UserColor::UserColor(Slot slot) : slot(slot) { }
 

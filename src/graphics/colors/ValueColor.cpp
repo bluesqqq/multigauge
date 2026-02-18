@@ -1,4 +1,4 @@
-#include "ValueColor.h"
+#include <multigauge/graphics/colors/ValueColor.h>
 
 const ColorTimeline *ValueColor::getTimeline() const { return &timeline; }
 

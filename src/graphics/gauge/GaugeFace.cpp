@@ -1,4 +1,4 @@
-#include "GaugeFace.h"
+#include <multigauge/graphics/gauge/GaugeFace.h>
 
 GaugeFace::GaugeFace() : Element(nullptr) {}
 

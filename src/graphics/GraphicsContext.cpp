@@ -1,4 +1,4 @@
-#include "GraphicsContext.h"
+#include <multigauge/graphics/GraphicsContext.h>
 
 int GraphicsContext::getScreenWidth() const { return width; }
 

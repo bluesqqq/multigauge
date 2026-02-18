@@ -1,11 +1,11 @@
-#include "Point.h"
-#include "constants.h"
+#include <multigauge/geometry/Point.h>
+#include <multigauge/constants.h>
 #include <cmath>
 #include <algorithm>
 
-#include "Line.h"
-#include "Rect.h"
-#include "Circle.h"
+#include <multigauge/geometry/Line.h>
+#include <multigauge/geometry/Rect.h>
+#include <multigauge/geometry/Circle.h>
 
 template <typename T>
 Point<T>::Point() : x(0), y(0) {}
