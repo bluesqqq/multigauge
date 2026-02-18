@@ -1,7 +1,18 @@
 {
-  "name": "rapidjson",
-  "version": "0.0.0",
+  "name": "multigauge-core",
+  "version": "0.1.0",
   "build": {
-    "includeDir": "src"
+    "srcDir": ".",
+    "includeDir": "include",
+    "srcFilter": [
+      "+<src/**>",
+      "+<lib/yoga/src/**>"
+    ],
+    "flags": [
+      "-Ilib/rapidjson/src",
+      "-Ilib/lodepng/src",
+      "-Ilib/tjpgd/src",
+      "-Ilib/yoga/src"
+    ]
   }
 }
