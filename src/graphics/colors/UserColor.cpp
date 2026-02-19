@@ -15,12 +15,12 @@ UserColor::UserColor(const rapidjson::Value::ConstObject json) {
     }
 }
 
-std::unique_ptr<Color> UserColor::clone() const { return std::make_unique<UserColor>(*this); }
+OwnedColor UserColor::clone() const { return std::make_unique<UserColor>(*this); }
 
 rgba UserColor::getColor() const { return userColors[static_cast<size_t>(slot)]; }
 
 Color::Type UserColor::getType() const { return Type::User; }
 
-std::unique_ptr<Color> UserColor::blended(rgba color, float alpha) const { return std::make_unique<StaticColor>(getColor().blended(color, alpha)); }
+OwnedColor UserColor::blended(rgba color, float alpha) const { return std::make_unique<StaticColor>(getColor().blended(color, alpha)); }
 
-std::unique_ptr<Color> UserColor::blended(const Color &other, float alpha) const { return other.blended(getColor(), alpha); }
+OwnedColor UserColor::blended(const Color &other, float alpha) const { return other.blended(getColor(), alpha); }

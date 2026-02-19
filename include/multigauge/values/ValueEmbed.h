@@ -6,7 +6,7 @@
 #include <cstdio>
 
 #include <multigauge/values/Value.h>
-#include <multigauge/values/units.h>
+#include <multigauge/values/UnitType.h>
 #include <multigauge/utils.h>
 
 namespace embed {

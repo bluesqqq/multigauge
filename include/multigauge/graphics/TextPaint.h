@@ -9,16 +9,16 @@
 enum class FontWeight : uint16_t { Normal = 400, Bold = 700 };
 enum class FontSlant  : uint8_t { Normal, Italic };
 
-struct TextStyle {
+struct TextPaint {
     std::string family = "default";
     FontWeight weight = FontWeight::Normal;
     FontSlant slant = FontSlant::Normal;
     float pt = 12.0f;
-    std::unique_ptr<Color> color;
+    OwnedColor color;
 
-    TextStyle() = default;
+    TextPaint() = default;
 
-    explicit TextStyle(const rapidjson::Value::ConstObject& json) {
+    explicit TextPaint(const rapidjson::Value::ConstObject& json) {
         if (json.HasMember("family") && json["family"].IsString())
             family = json["family"].GetString();
 

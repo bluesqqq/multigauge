@@ -16,7 +16,7 @@ bool ImageElement::init(AssetManager &assetManager) {
 void ImageElement::draw(Graphics &g) const {
     const auto& b = getBounds().toInt();
 
-    g.drawImage(image, b);
+    g.drawImageArea(image, b);
 }
 
 REGISTER_ELEMENT_TYPE("image", ImageElement);

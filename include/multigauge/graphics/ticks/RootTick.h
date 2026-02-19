@@ -17,7 +17,7 @@ struct RootTick {
     float thickness= 0;
 
     TickStyle style = TickStyle::LINE;
-    FillStrokeTimeline color;
+    PaintTimeline color;
 
     std::optional<TickValueStyle> valueStyle;
 

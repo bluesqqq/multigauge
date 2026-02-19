@@ -30,8 +30,8 @@ void CircularNeedle::draw(Graphics &g) const {
     float needleAngle = mapf(value.getInterpolationValue(), 0.0f, 1.0f, startAngle, endAngle);
 
     Line<float> needle(cx, cy, cx + cos(needleAngle) * radius, cy + sin(needleAngle) * radius);
-    g.setFillStroke(color);
-    g.fillWideLine(needle.toInt(), 10);
+    g.setPaint(color);
+    g.drawLine(needle.toInt(), 10);
 }
 
 REGISTER_ELEMENT_TYPE("circular-needle", CircularNeedle);

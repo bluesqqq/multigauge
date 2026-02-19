@@ -28,4 +28,6 @@ struct Image {
         other.destroy = nullptr;
         return *this;
     }
+
+    bool empty() const { return native == nullptr || width == 0 || height == 0; }
 };

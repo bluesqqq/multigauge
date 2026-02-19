@@ -14,146 +14,158 @@ rgba Graphics::getCachedColor(const Color& color) {
 
 Graphics::Graphics(GraphicsContext *context) : context(context) { }
 
-Rect<int> Graphics::getScreenBounds() { return Rect<int>(0, 0, context->getScreenWidth(), context->getScreenHeight()); }
+Rect<int> Graphics::getScreenBounds() { return Rect<int>(0, 0, context->width(), context->height()); }
 
 //----------[ COLOR ]----------//
 
 void Graphics::clearColorCache() { colorCache.clear(); }
 
-void Graphics::setFill(rgba color) { fillValue = color; }
+void Graphics::setFill(rgba color) {
+    fill.enabled = true;
+    fill.value = color;
+}
 
-void Graphics::setFill(const Color& color) { fillValue = getCachedColor(color); }
+void Graphics::setFill(const Color *color) {
+    if (color) setFill(getCachedColor(*color));
+    else fill.enabled = false;
+}
 
-void Graphics::setStroke(rgba color) { strokeValue = color; }
+void Graphics::setStroke(rgba color, float t) {
+    stroke.enabled = true;
+    stroke.value = color;
+    thickness = std::min(0.0f, t);
+}
 
-void Graphics::setStroke(const Color& color) { strokeValue = getCachedColor(color); }
+void Graphics::setStroke(const Color *color, float t) {
+    if (color) setStroke(getCachedColor(*color), t);
+    else stroke.enabled = false;
+}
 
 void Graphics::setStrokeThickness(float t) { thickness = t; }
 
-void Graphics::setFillStroke(const FillStroke &fillStroke) {
-    if (fillStroke.fill) {
-        setFill(*fillStroke.fill);
-    }
-    
-    if (fillStroke.stroke) {
-        setStroke(*fillStroke.stroke);
-        setStrokeThickness(fillStroke.thickness);
-    }
+void Graphics::setPaint(rgba f, rgba s, float t) {
+    setFill(f);
+    setStroke(s, t);
 }
+
+void Graphics::setPaint(const Color *f, const Color *s, float t) {
+    setFill(f);
+
+    setStroke(s, t);
+}
+
+void Graphics::setPaint(const Paint &paint) { setPaint(paint.fill.get(), paint.stroke.get(), paint.thickness); }
 
 //----------[ FILL ]----------//
 
-void Graphics::fillAll() const { fillAll(fillValue); }
+void Graphics::fillAll() const { if (fill.enabled) context->clear(fill.value); }
 
-void Graphics::fillAll(const Color& color) { context->fillAll(getCachedColor(color)); }
+void Graphics::fillAll(rgba color) const { context->clear(color); }
 
-void Graphics::fillAll(rgba color) const { context->fillAll(color); }
+void Graphics::fillAll(const Color* color) { 
+    if (color) fillAll(getCachedColor(*color));
+    else fillAll();
+}
 
 //----------[ PIXEL ]----------//
 
-void Graphics::fillPixel(int x, int y) const { context->drawPixel(x, y, fillValue); }
+void Graphics::drawPixel(int x, int y) const { if (fill.enabled) context->pixel(x, y, fill.value); }
 
-void Graphics::fillPixel(const Point<int> &pos) const { context->drawPixel(pos.x, pos.y, fillValue); }
+void Graphics::drawPixel(const Point<int> &pos) const { drawPixel(pos.x, pos.y); }
 
 //----------[ LINE ]----------//
 
-void Graphics::strokeLine(int x0, int y0, int x1, int y1) const { context->strokeLine(x0, y0, x1, y1, strokeValue); }
+void Graphics::drawLine(int x0, int y0, int x1, int y1, float t) const {
+    if (fill.enabled) context->line(x0, y0, x1, y1, fill.value, t);
+    if (stroke.enabled) context->line(x0, y0, x1, y1, stroke.value, thickness);
+}
 
-void Graphics::strokeLine(const Point<int> &p1, const Point<int> &p2) const { strokeLine(p1.x, p1.y, p2.x, p2.y); }
+void Graphics::drawLine(const Point<int> &p1, const Point<int> &p2, float t) const { drawLine(p1.x, p1.y, p2.x, p2.y, t); }
 
-void Graphics::strokeLine(const Line<int> &line) const { strokeLine(line.p1.x, line.p1.y, line.p2.x, line.p2.y); }
-
-void Graphics::fillWideLine(int x0, int y0, int x1, int y1, float t) const { context->fillWideLine(x0, y0, x1, y1, fillValue, t); }
-
-void Graphics::fillWideLine(const Point<int> &p1, const Point<int> &p2, float t) const { context->fillWideLine(p1.x, p1.y, p2.x, p2.y, fillValue, t); }
-
-void Graphics::fillWideLine(const Line<int> &line, float t) const { context->fillWideLine(line.p1.x, line.p1.y, line.p2.x, line.p2.y, fillValue, t); }
+void Graphics::drawLine(const Line<int> &line, float t) const { drawLine(line.p1, line.p2, t); }
 
 //----------[ RECTANGLE ]----------//
 
-void Graphics::fillRect(int x, int y, int w, int h) const { context->fillRect(x, y, w, h, fillValue); }
+void Graphics::drawRect(int x, int y, int w, int h) const { 
+    if (fill.enabled) context->rect(x, y, w, h, fill.value);
+    if (stroke.enabled) context->strokeRect(x, y, w, h, stroke.value, thickness);
+}
 
-void Graphics::fillRect(const Rect<int> &rectangle) const { fillRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height); }
+void Graphics::drawRect(const Rect<int> &rectangle) const { drawRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height); }
 
-void Graphics::fillRoundedRect(int x, int y, int w, int h, float radius) const { context->fillRoundRect(x, y, w, h, radius, fillValue); }
+void Graphics::drawRoundedRect(int x, int y, int w, int h, float radius) const {
+    if (fill.enabled) context->roundRect(x, y, w, h, radius, fill.value);
+    if (stroke.enabled) context->strokeRoundRect(x, y, w, h, radius, stroke.value, thickness);
+}
 
-void Graphics::fillRoundedRect(const Rect<int> &rect, float radius) const { context->fillRoundRect(rect.x, rect.y, rect.width, rect.height, radius, fillValue); }
+void Graphics::drawRoundedRect(const Rect<int> &rect, float radius) const { drawRoundedRect(rect.x, rect.y, rect.width, rect.height, radius); }
 
-void Graphics::strokeRect(int x, int y, int w, int h) const { context->strokeRect(x, y, w, h, strokeValue, thickness); }
+void Graphics::drawRoundedRect(int x, int y, int width, int height, int topLeft, int topRight, int bottomRight, int bottomLeft) const
+{
+}
 
-void Graphics::strokeRect(const Rect<int> &rectangle) const { strokeRect(rectangle.x, rectangle.y, rectangle.width, rectangle.height); }
-
-void Graphics::strokeRoundedRect(int x, int y, int w, int h, float radius) const { context->strokeRoundRect(x, y, w, h, radius, strokeValue, thickness); }
-
-void Graphics::strokeRoundedRect(const Rect<int> &rect, float radius) const { context->strokeRoundRect(rect.x, rect.y, rect.width, rect.height, radius, strokeValue, thickness); }
+void Graphics::drawRoundedRect(const Rect<int> &rect, int topLeft, int topRight, int bottomRight, int bottomLeft) const
+{
+}
 
 //----------[ ELLIPSE ]----------//
 
-void Graphics::fillEllipse(int cx, int cy, int rx, int ry) const { context->fillEllipse(cx, cy, rx, ry, fillValue); }
-
-void Graphics::fillEllipse(const Point<int> &center, int rx, int ry) const { context->fillEllipse(center.x, center.y, rx, ry, fillValue); }
-
-void Graphics::fillEllipseInRect(int x, int y, int w, int h) const { fillEllipseInRect(Rect<int>(x, y, w, h)); }
-
-void Graphics::fillEllipseInRect(const Rect<int> &area) const {
-    const auto center = area.getCenter();
-    context->fillEllipse(center.x, center.y, area.width / 2, area.height / 2, fillValue);
+void Graphics::drawEllipse(int cx, int cy, int rx, int ry) const {
+    if (fill.enabled) context->ellipse(cx, cy, rx, ry, fill.value);
+    if (stroke.enabled) context->strokeEllipse(cx, cy, rx, ry, stroke.value, thickness);
 }
 
-void Graphics::strokeEllipse(int cx, int cy, int rx, int ry) const { context->strokeEllipse(cx, cy, rx, ry, strokeValue, 1); }
+void Graphics::drawEllipse(const Point<int> &center, int rx, int ry) const { drawEllipse(center.x, center.y, rx, ry); }
 
-void Graphics::strokeEllipse(const Point<int> &center, int rx, int ry) const { context->strokeEllipse(center.x, center.y, rx, ry, fillValue, thickness); }
+void Graphics::drawEllipseInRect(int x, int y, int w, int h) const { drawEllipseInRect(Rect<int>(x, y, w, h)); }
 
-void Graphics::strokeEllipseInRect(int x, int y, int w, int h) const { strokeEllipseInRect(Rect<int>(x, y, w, h)); }
-
-void Graphics::strokeEllipseInRect(const Rect<int> &area) const {
+void Graphics::drawEllipseInRect(const Rect<int> &area) const {
     const auto center = area.getCenter();
-    context->strokeEllipse(center.x, center.y, area.width / 2, area.height / 2, strokeValue, thickness);
+    drawEllipse(center, area.width / 2, area.height / 2);
 }
 
 //----------[ CIRCLE ]----------//
 
-void Graphics::fillCircle(int cx, int cy, int radius) const { context->fillCircle(cx, cy, radius, fillValue); }
-
-void Graphics::fillCircle(const Point<int> &center, int radius) const { context->fillCircle(center.x, center.y, radius, fillValue); }
-
-void Graphics::fillCircleInRect(int x, int y, int w, int h) const { fillCircleInRect(Rect<int>(x, y, w, h)); }
-
-void Graphics::fillCircleInRect(const Rect<int> &area) const {
-    const auto center = area.getCenter();
-    context->fillCircle(center.x, center.y, std::min(area.width / 2, area.height / 2), fillValue);
+void Graphics::drawCircle(int cx, int cy, int radius) const {
+    if (fill.enabled) context->circle(cx, cy, radius, fill.value);
+    if (stroke.enabled) context->strokeCircle(cx, cy, radius, stroke.value, thickness);
 }
 
-void Graphics::strokeCircle(int cx, int cy, int radius) const { context->strokeCircle(cx, cy, radius, strokeValue, 1); }
+void Graphics::drawCircle(const Point<int> &center, int radius) const { drawCircle(center.x, center.y, radius); }
 
-void Graphics::strokeCircle(const Point<int> &center, int radius) const { context->strokeCircle(center.x, center.y, radius, strokeValue, thickness); }
+void Graphics::drawCircleInRect(int x, int y, int w, int h) const { drawCircleInRect(Rect<int>(x, y, w, h)); }
 
-void Graphics::strokeCircleInRect(int x, int y, int w, int h) const { strokeCircleInRect(Rect<int>(x, y, w, h));  }
-
-void Graphics::strokeCircleInRect(const Rect<int> &area) const {
+void Graphics::drawCircleInRect(const Rect<int> &area) const {
     const auto center = area.getCenter();
-    context->strokeCircle(center.x, center.y, std::min(area.width / 2, area.height / 2), strokeValue, thickness);
+    drawCircle(center, std::min(area.width / 2, area.height / 2));
 }
+
+//----------[ RING ]----------//
+
+void Graphics::drawRing(int cx, int cy, int r1, int r2) const {
+    if (fill.enabled) context->ring(cx, cy, r1, r2, fill.value);
+    if (stroke.enabled) context->strokeRing(cx, cy, r1, r2, stroke.value, thickness);
+}
+
+void Graphics::drawRing(const Point<int> &center, int r1, int r2) const { drawRing(center.x, center.y, r1, r2); }
 
 //----------[ ARC ]----------//
 
-void Graphics::fillArc(int cx, int cy, int r1, int r2, float startAngle, float endAngle) const { context->fillArc(cx, cy, r1, r2, startAngle, endAngle, fillValue); }
+void Graphics::drawArc(int cx, int cy, int r1, int r2, float startAngle, float endAngle) const {
+    if (fill.enabled) context->arc(cx, cy, r1, r2, startAngle, endAngle, fill.value);
+    if (stroke.enabled) context->strokeArc(cx, cy, r1, r2, startAngle, endAngle, stroke.value, thickness);
+}
 
-void Graphics::fillArc(const Point<int> &center, int r1, int r2, float startAngle, float endAngle) const { context->fillArc(center.x, center.y, r1, r2, startAngle, endAngle, fillValue); }
-
-void Graphics::strokeArc(int cx, int cy, int r1, int r2, float startAngle, float endAngle) const { context->strokeArc(cx, cy, r1, r2, startAngle, endAngle, strokeValue, thickness); }
-
-void Graphics::strokeArc(const Point<int> &center, int r1, int r2, float startAngle, float endAngle) const { context->strokeArc(center.x, center.y, r1, r2, startAngle, endAngle, strokeValue, thickness); }
+void Graphics::drawArc(const Point<int> &center, int r1, int r2, float startAngle, float endAngle) const { drawArc(center.x, center.y, r1, r2, startAngle, endAngle); }
 
 //----------[ TRIANGLE ]----------//
 
-void Graphics::fillTri(int x0, int y0, int x1, int y1, int x2, int y2) const { context->fillTriangle(x0, y0, x1, y1, x2, y2, fillValue); }
+void Graphics::drawTri(int x0, int y0, int x1, int y1, int x2, int y2) const {
+    if (fill.enabled) context->tri(x0, y0, x1, y1, x2, y2, fill.value); 
+    if (stroke.enabled) context->strokeTri(x0, y0, x1, y1, x2, y2, stroke.value, thickness);
+}
 
-void Graphics::fillTri(const Point<int> &p1, const Point<int> &p2, const Point<int> &p3) const { context->fillTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, fillValue); }
-
-void Graphics::strokeTri(int x0, int y0, int x1, int y1, int x2, int y2) const { context->strokeTriangle(x0, y0, x1, y1, x2, y2, strokeValue, thickness); }
-
-void Graphics::strokeTri(const Point<int> &p1, const Point<int> &p2, const Point<int> &p3) const { context->strokeTriangle(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y, strokeValue, thickness); }
+void Graphics::drawTri(const Point<int> &p1, const Point<int> &p2, const Point<int> &p3) const { drawTri(p1.x, p1.y, p2.x, p2.y, p3.x, p3.y); }
 
 //----------[ FONT ]----------//
 
@@ -165,26 +177,42 @@ void Graphics::setFontSlant(FontSlant slant) { slant = slant; }
 
 void Graphics::setFontPoint(float pt) { this->pt = pt; }
 
-void Graphics::setTextColor(rgba color) { textValue = color; }
-
-void Graphics::setTextColor(const Color &color) { textValue = getCachedColor(color); }
-
-void Graphics::setTextStyle(const TextStyle &style) {
-    setFontFamily(style.family);
-    setFontPoint(style.pt);
-    setFontWeight(style.weight);
-    setFontSlant(style.slant);
-
-    if (style.color) setTextColor(*style.color);
+void Graphics::setTextColor(rgba color) {
+    fill.enabled = true;
+    textColor.value = color;
 }
+
+void Graphics::setTextColor(const Color *color) { 
+    if (color) setTextColor(getCachedColor(*color));
+    else textColor.enabled = false;
+}
+
+void Graphics::setTextPaint(rgba color, const std::string &family, FontWeight weight, FontSlant slant, float pt) {
+    setTextColor(color);
+    setFontFamily(family);
+    setFontPoint(pt);
+    setFontWeight(weight);
+    setFontSlant(slant);
+}
+
+void Graphics::setTextPaint(const Color *color, const std::string &family, FontWeight weight, FontSlant slant, float pt) {
+    setTextColor(color);
+    setFontFamily(family);
+    setFontPoint(pt);
+    setFontWeight(weight);
+    setFontSlant(slant);
+}
+
+void Graphics::setTextPaint(const TextPaint &style) { setTextPaint(style.color.get(), style.family, style.weight, style.slant, style.pt); }
 
 //----------[ TEXT ]----------//
 
-void Graphics::drawText(const std::string &text, int x, int y, Anchor anchor) { context->drawText(text.c_str(), x, y, family, pt, weight, slant, textValue, anchor); }
+void Graphics::drawText(const std::string &text, int x, int y, Anchor anchor) { if (textColor.enabled) context->drawText(text.c_str(), x, y, family, pt, weight, slant, textColor.value, anchor); }
 
 void Graphics::drawText(const std::string &text, Point<int> pos, Anchor anchor) { drawText(text, pos.x, pos.y, anchor); }
 
 void Graphics::drawTextVertical(const std::string& text, int x, int y, Anchor anchor) {
+    if (!textColor.enabled) return;
     if (text.empty()) return;
 
     const int step = pt;
@@ -222,13 +250,14 @@ void Graphics::drawTextVertical(const std::string& text, int x, int y, Anchor an
         if (c == '\n') continue;
 
         buf[0] = c;
-        context->drawText(buf, drawX, drawY, family, pt, weight, slant, textValue, Anchor::TopLeft);
+        context->drawText(buf, drawX, drawY, family, pt, weight, slant, textColor.value, Anchor::TopLeft);
 
         drawY += dir * step;
     }
 }
 
 void Graphics::drawTextArea(const std::string& text, int x, int y, int width, int height, Anchor anchor, bool useEllipses, bool useHyphens) {
+    if (!textColor.enabled) return;
     if (width <= 0 || height <= 0 || text.empty()) return;
 
     Rect<int> rect(x, y, width, height);
@@ -239,7 +268,7 @@ void Graphics::drawTextArea(const std::string& text, int x, int y, int width, in
     const int maxLines = rect.height / lineHeight;
     if (maxLines <= 0) return;
 
-    rgba textColor = fillValue;
+    rgba textColor = this->textColor.value;
 
     std::string scratch;
     scratch.reserve(128);
@@ -440,20 +469,97 @@ void Graphics::drawTextArea(const std::string& text, int x, int y, int width, in
         if (hAlign == HAlign::Center) drawX = rect.x + (rect.width - lineW) / 2;
         if (hAlign == HAlign::Right)  drawX = rect.x + rect.width - lineW;
 
-        context->drawText(line.c_str(), drawX, drawY, family, pt, weight, slant, textValue, anchor);
+        context->drawText(line.c_str(), drawX, drawY, family, pt, weight, slant, this->textColor.value, anchor);
     }
 }
 
 void Graphics::drawTextArea(const std::string &text, Rect<int> rectangle, Anchor anchor, bool useEllipses, bool useHyphens) { drawTextArea(text, rectangle.x, rectangle.y, rectangle.width, rectangle.height, anchor, useEllipses, useHyphens); }
 
-void Graphics::drawImage(const Image &image, int x, int y, Anchor anchor) const { context->drawImage(image, x, y, anchor); }
+//----------[ IMAGE ]----------//
 
-void Graphics::drawImage(const Image &image, Rect<int> rect) const { context->drawImage(image, rect.x, rect.y, rect.width, rect.height); }
+void Graphics::drawImage(const Image &image, int x, int y, Anchor anchor) const { if (!image.empty()) context->drawImage(image, x, y, anchor); }
 
-void Graphics::setClipRect(int x, int y, int w, int h) { context->setClipRect(x, y, w, h); }
+void Graphics::drawImage(const Image &image, Point<int> pos, Anchor anchor) const { drawImage(image, pos.x, pos.y, anchor); }
 
-void Graphics::setClipRect(const Rect<int> &rect) { context->setClipRect(rect.x, rect.y, rect.width, rect.height); }
+void Graphics::drawImageRotated(const Image &image, int x, int y, float angle, Anchor anchor, int pivotX, int pivotY) const { if (!image.empty()) context->drawImageRotated(image, x, y, angle, anchor, pivotX, pivotY); }
 
-void Graphics::clearClipRect() { context->clearClipRect(); }
+void Graphics::drawImageRotated(const Image &image, Point<int> pos, float angle, Anchor anchor, Point<int> pivot) const { drawImageRotated(image, pos.x, pos.y, angle, anchor, pivot.x, pivot.y); }
+
+void Graphics::drawImageArea(const Image &image, int x, int y, int width, int height, ImageFit fit) const { drawImageArea(image, Rect<int>(x, y, width, height), fit); }
+
+void Graphics::drawImageArea(const Image &image, Rect<int> rect, ImageFit fit) const {
+    if (rect.width <= 0 || rect.height <= 0 || image.empty()) return;
+
+    switch(fit) {
+        case ImageFit::Fill: {
+            const int iw = image.width;
+            const int ih = image.height;
+
+            const int64_t lhs = (int64_t)rect.width  * ih;
+            const int64_t rhs = (int64_t)rect.height * iw;
+
+            int srcX = 0, srcY = 0, srcW = iw, srcH = ih;
+
+            if (lhs > rhs) {
+                srcH = (int)((int64_t)iw * rect.height / rect.width);
+                if (srcH < 1) srcH = 1;
+                if (srcH > ih) srcH = ih;
+                srcY = (ih - srcH) / 2;
+            } else if (lhs < rhs) {
+                srcW = (int)((int64_t)ih * rect.width / rect.height);
+                if (srcW < 1) srcW = 1;
+                if (srcW > iw) srcW = iw;
+                srcX = (iw - srcW) / 2;
+            }
+
+            context->drawImageRegion(
+                image,
+                srcX, srcY, srcW, srcH,
+                rect.x, rect.y, rect.width, rect.height
+            );
+            return;
+        }
+
+        case ImageFit::Fit: {
+            const int iw = image.width;
+            const int ih = image.height;
+
+            const int64_t lhs = (int64_t)rect.width * ih;
+            const int64_t rhs = (int64_t)rect.height * iw;
+
+            int drawW = 0;
+            int drawH = 0;
+
+            if (lhs <= rhs) {
+                drawW = rect.width;
+                drawH = (int)((int64_t)rect.width * ih / iw);
+            } else {
+                drawH = rect.height;
+                drawW = (int)((int64_t)rect.height * iw / ih);
+            }
+
+            const int dx = rect.x + (rect.width  - drawW) / 2;
+            const int dy = rect.y + (rect.height - drawH) / 2;
+
+            context->drawImageStretched(image, dx, dy, drawW, drawH);
+            return;
+        }
+
+        case ImageFit::Stretch: {
+            context->drawImageStretched(image, rect.x, rect.y, rect.width, rect.height);
+            return;
+        }
+    }
+}
+
+void Graphics::drawImageRegion(const Image &image, int srcX, int srcY, int srcW, int srcH, int destX, int destY, int destW, int destH) const { if (!image.empty()) context->drawImageRegion(image, srcX, srcY, srcW, srcH, destX, destY, destW, destH); }
+
+void Graphics::drawImageRegion(const Image &image, Rect<int> srcRect, Rect<int> destRect) const { drawImageRegion(image, srcRect.x, srcRect.y, srcRect.width, srcRect.height, destRect.x, destRect.y, destRect.width, destRect.height); }
 
 //----------[ CLIP ]----------//
+
+void Graphics::setClip(int x, int y, int w, int h) { context->clip(x, y, w, h); }
+
+void Graphics::setClip(const Rect<int> &rect) { context->clip(rect.x, rect.y, rect.width, rect.height); }
+
+void Graphics::clearClip() { context->clearClip(); }

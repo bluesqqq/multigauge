@@ -1,4 +1,5 @@
-#include <multigauge/values/units.h>
+#include <multigauge/values/UnitType.h>
+
 #include <multigauge/utils.h>
 
 UnitType::UnitType(const char* baseName, const char* baseAbbreviation, uint8_t baseDecimalPlaces, const std::vector<Unit>& conversionUnits, uint8_t defaultUnitIndex) {
@@ -129,13 +130,3 @@ UnitType volumePerTime(
         {"GPH", "GPH", 0.264172, 0.0, 1}
     }
 );
-
-/*
-UnitType time(
-    "second", "s", 2,
-    {
-        {"minute", "min", 0.0166667, 0.0, 1},
-        {"hour", "hr", 0.00027777833333, 0.0, 1}
-    }
-);
-*/

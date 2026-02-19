@@ -4,7 +4,7 @@
 
 class CircleElement : public Element {
     private:
-        FillStroke color;
+        Paint color;
         
     public:
         explicit CircleElement(Element* parent);

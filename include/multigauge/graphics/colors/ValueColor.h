@@ -19,7 +19,7 @@ class ValueColor : public Color {
         
         ValueColor& operator=(const ValueColor& other);
 
-        std::unique_ptr<Color> clone() const override;
+        OwnedColor clone() const override;
 
         /// @brief Gets the current color value on the timeline.
         /// @return The current 16-bit color value
@@ -37,11 +37,11 @@ class ValueColor : public Color {
         /// @param color The 16-bit color value to blend with
         /// @param alpha The blend amount (0.0 = this color, 1.0 = blend color)
         /// @return A new ValueColor object with the blended result
-        std::unique_ptr<Color> blended(rgba color, float alpha) const override;
+        OwnedColor blended(rgba color, float alpha) const override;
 
         /// @brief Blends this color with another Color object.
         /// @param color The Color object to blend with
         /// @param alpha The blend amount (0.0 = this color, 1.0 = other color)
         /// @return A new Color object with the blended result (will always be a ValueColor)
-        std::unique_ptr<Color> blended(const Color& color, float alpha) const override;
+        OwnedColor blended(const Color& color, float alpha) const override;
 };

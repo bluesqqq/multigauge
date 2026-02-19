@@ -9,7 +9,7 @@
 
 class GaugeFace : public Element {
     private:
-        std::unique_ptr<Color> backgroundColor;
+        OwnedColor backgroundColor;
 
         const char* title = NO_TITLE_TEXT;
 

@@ -2,7 +2,7 @@
 
 #include <string>
 #include <functional>
-#include "units.h"
+#include <multigauge/values/UnitType.h>
 #include <unordered_map>
 
 class Value {

@@ -2,8 +2,6 @@
 #include <yoga/Yoga.h>
 #include <cctype>
 
-// ---------- helpers: strings -> Yoga enums ----------
-
 static YGFlexDirection parseFlexDirection(const char* s) {
 	if (!s) return YGFlexDirectionColumn;
 	if (strcmp(s, "row") == 0) return YGFlexDirectionRow;
@@ -58,8 +56,6 @@ static YGOverflow parseOverflow(const char* s) {
 	return YGOverflowVisible;
 }
 
-	// ---------- helpers: "value objects" (px/%/auto) ----------
-
 struct JsonSize {
 	enum class Unit { Px, Percent, Auto, Undefined } unit = Unit::Undefined;
 	float value = 0.0f;
@@ -73,17 +69,14 @@ static const char* skipWs(const char* s) {
 static JsonSize parseSize(const rapidjson::Value& v) {
     JsonSize out;
 
-    // null => unset
     if (v.IsNull()) return out;
-
-    // number => px
+	
     if (v.IsNumber()) {
         out.unit = JsonSize::Unit::Px;
         out.value = v.GetFloat();
         return out;
     }
 
-    // string => parse "100%", "36px", "auto", "undefined", or bare "12"
     if (v.IsString()) {
         const char* raw = v.GetString();
         const char* s = skipWs(raw);
@@ -101,36 +94,31 @@ static JsonSize parseSize(const rapidjson::Value& v) {
 
         char* end = nullptr;
         float num = std::strtof(s, &end);
-        if (end == s) return out; // no numeric prefix
+        if (end == s) return out;
 
         end = const_cast<char*>(skipWs(end));
 
-        // bare number string => px
         if (*end == '\0') {
             out.unit = JsonSize::Unit::Px;
             out.value = num;
             return out;
         }
 
-        // percent
         if (*end == '%') {
             out.unit = JsonSize::Unit::Percent;
             out.value = num;
             return out;
         }
 
-        // px suffix
         if ((end[0] == 'p' || end[0] == 'P') && (end[1] == 'x' || end[1] == 'X')) {
             out.unit = JsonSize::Unit::Px;
             out.value = num;
             return out;
         }
 
-        // unknown suffix => unset
         return out;
     }
 
-    // any other type (object/array/bool) => unset
     return out;
 }
 
@@ -248,7 +236,5 @@ static void applyPositionEdges(YGNodeRef node, const rapidjson::Value::ConstObje
 		else if (s.unit == JsonSize::Unit::Percent) YGNodeStyleSetPositionPercent(node, YGEdgeBottom, s.value);
 	}
 }
-
-// ---------- main: apply Yoga layout style ----------
 
 void loadLayout(YGNodeRef node, const rapidjson::Value::ConstObject json);

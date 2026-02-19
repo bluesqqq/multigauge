@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/geometry/point.h>
+#include <multigauge/geometry/Point.h>
 
 #include <optional>
 #include <vector>

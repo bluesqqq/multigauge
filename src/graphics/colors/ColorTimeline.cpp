@@ -6,7 +6,7 @@
 #include <set>
 #include <algorithm>
 
-ColorKeyframe::ColorKeyframe(std::unique_ptr<Color> color, float position) : color(std::move(color)), position(position) { }
+ColorKeyframe::ColorKeyframe(OwnedColor color, float position) : color(std::move(color)), position(position) { }
 
 ColorKeyframe::ColorKeyframe(const rapidjson::Value::ConstObject json)
     : position(json.HasMember("position") && json["position"].IsNumber() ? json["position"].GetFloat() : 0.0f),
@@ -116,7 +116,7 @@ ColorTimeline ColorTimeline::blended(const ColorTimeline &other, float alpha) co
 
 void ColorTimeline::addKeyframe(rgba color, float position) { addKeyframe(ColorKeyframe(std::make_unique<StaticColor>(color), position)); }
 
-void ColorTimeline::addKeyframe(std::unique_ptr<Color> color, float position) { addKeyframe(ColorKeyframe(std::move(color), position)); }
+void ColorTimeline::addKeyframe(OwnedColor color, float position) { addKeyframe(ColorKeyframe(std::move(color), position)); }
 
 void ColorTimeline::addKeyframe(ColorKeyframe keyframe) {
     auto it = keyframes.begin();
@@ -201,34 +201,34 @@ std::vector<rgba> ColorTimeline::sample(float startPosition, float endPosition, 
     return result;
 }
 
-FillStrokeTimeline::FillStrokeTimeline(ColorTimeline f, ColorTimeline s, float t) : fill(f), stroke(s), thickness(t) {}
+PaintTimeline::PaintTimeline(ColorTimeline f, ColorTimeline s, float t) : fill(f), stroke(s), thickness(t) {}
 
-FillStrokeTimeline::FillStrokeTimeline(const rapidjson::Value::ConstObject json) {
+PaintTimeline::PaintTimeline(const rapidjson::Value::ConstObject json) {
     setValue(json, "fill", fill);
     setValue(json, "stroke", stroke);
     setFloat(json, "thickness", thickness);
 }
 
-FillStrokeTimeline FillStrokeTimeline::blended(rgba color, float alpha) const {
-    return FillStrokeTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
+PaintTimeline PaintTimeline::blended(rgba color, float alpha) const {
+    return PaintTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
 }
 
-FillStrokeTimeline FillStrokeTimeline::blended(const Color &color, float alpha) const {
-    return FillStrokeTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
+PaintTimeline PaintTimeline::blended(const Color &color, float alpha) const {
+    return PaintTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
 }
 
-FillStrokeTimeline FillStrokeTimeline::blended(const ColorTimeline &color, float alpha) const {
-    return FillStrokeTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
+PaintTimeline PaintTimeline::blended(const ColorTimeline &color, float alpha) const {
+    return PaintTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
 }
 
-FillStrokeTimeline FillStrokeTimeline::blended(const FillStrokeTimeline &other, float alpha) const {
-    return FillStrokeTimeline(fill.blended(other.fill, alpha), stroke.blended(other.stroke, alpha), (thickness + other.thickness) / 2.0f);
+PaintTimeline PaintTimeline::blended(const PaintTimeline &other, float alpha) const {
+    return PaintTimeline(fill.blended(other.fill, alpha), stroke.blended(other.stroke, alpha), (thickness + other.thickness) / 2.0f);
 }
 
 #include <multigauge/graphics/colors/StaticColor.h>
 
-FillStroke FillStrokeTimeline::getFillStrokeAtPosition(float position) const {
-    return FillStroke(
+Paint PaintTimeline::getPaintAtPosition(float position) const {
+    return Paint(
         fill.empty() ? nullptr : std::make_unique<StaticColor>(fill.getColor(position)),
         stroke.empty() ? nullptr : std::make_unique<StaticColor>(stroke.getColor(position)),
         thickness

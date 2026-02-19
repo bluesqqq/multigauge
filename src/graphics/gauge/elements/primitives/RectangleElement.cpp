@@ -13,18 +13,10 @@ RectangleElement::RectangleElement(Element* parent, const rapidjson::Value::Cons
 void RectangleElement::draw(Graphics &g) const {
     const auto& b = getBounds().toInt();
 
-    if (color.fill) {
-        g.setFill(*color.fill);
-        if (radius > 0.0f) g.fillRoundedRect(b, radius);
-        else g.fillRect(b);
-    }
+    g.setPaint(color);
 
-    if (color.stroke) {
-        g.setStroke(*color.stroke);
-        g.setStrokeThickness(color.thickness);
-        if (radius > 0.0f) g.strokeRoundedRect(b, radius);
-        else g.strokeRect(b);
-    }
+    if (radius > 0.0f) g.drawRoundedRect(b, radius);
+    else g.drawRect(b);
 }
 
 REGISTER_ELEMENT_TYPE("rectangle", RectangleElement);

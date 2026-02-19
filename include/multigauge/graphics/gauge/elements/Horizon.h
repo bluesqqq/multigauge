@@ -16,10 +16,10 @@ class Horizon : public Element {
         float zPosition = 0;
         float xPosition = 0;
 
-        std::unique_ptr<Color> backgroundColor = nullptr;
-        std::unique_ptr<Color> groundColor     = nullptr;
-        std::unique_ptr<Color> horizonColor    = nullptr;
-        std::unique_ptr<Color> borderColor     = nullptr;
+        OwnedColor backgroundColor = nullptr;
+        OwnedColor groundColor     = nullptr;
+        OwnedColor horizonColor    = nullptr;
+        OwnedColor borderColor     = nullptr;
         
     public:
         Horizon(Element* parent, const rapidjson::Value::ConstObject json) : Element(parent, json) {
@@ -51,20 +51,20 @@ class Horizon : public Element {
             background.reduce(1);
 
             if (groundColor) {
-                g.setFill(*groundColor);
-                g.fillRect(ground);
+                g.setPaint(groundColor.get());
+                g.drawRect(ground);
             }
 
             if (backgroundColor) {
-                g.setFill(*backgroundColor);
-                g.fillRect(background);
+                g.setPaint(backgroundColor.get());
+                g.drawRect(background);
             }
 
             if (horizonColor) {
-                g.setStroke(*horizonColor);
+                g.setPaint(horizonColor.get());
 
                 // Horizon line (middle)
-                g.strokeLine(left, halfY, right, halfY);
+                g.drawLine(left, halfY, right, halfY);
 
                 // Vertical lines
                 const float stepX = b.width / float(horizonDensityVertical);
@@ -83,7 +83,7 @@ class Horizon : public Element {
 
                     if (auto clipped = raw.intersection(b.toFloat())) {
                         auto li = clipped->toInt();
-                        g.strokeLine(li.p1.x, li.p1.y, li.p2.x, li.p2.y);
+                        g.drawLine(li.p1.x, li.p1.y, li.p2.x, li.p2.y);
                     }
                 }
 
@@ -96,13 +96,13 @@ class Horizon : public Element {
                     float localHalf = b.height / 2.0f;
                     int y = (int)(halfY + powf(pos, (float)horizonHAngle) * (localHalf / maxValue));
 
-                    g.strokeLine(left, y, right, y);
+                    g.drawLine(left, y, right, y);
                 }
             }
 
             if (borderColor) {
-                g.setStroke(*borderColor);
-                g.strokeRect(b);
+                g.setPaint(nullptr, borderColor.get(), 1.0f);
+                g.drawRect(b);
             }
         }
 

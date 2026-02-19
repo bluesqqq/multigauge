@@ -20,7 +20,7 @@ class UserColor : public Color {
 
         UserColor(const rapidjson::Value::ConstObject json);
 
-        std::unique_ptr<Color> clone() const override;
+        OwnedColor clone() const override;
         
         /// @brief Gets the user-defined color value.
         /// @return The 16-bit color value
@@ -34,11 +34,11 @@ class UserColor : public Color {
         /// @param color The 16-bit color value to blend with
         /// @param alpha The blend amount (0.0 = this color, 1.0 = blend color)
         /// @return A new StaticColor object with the blended result
-        std::unique_ptr<Color> blended(rgba color, float alpha) const override;
+        OwnedColor blended(rgba color, float alpha) const override;
 
         /// @brief Blends this color with another Color object.
         /// @param color The Color object to blend with
         /// @param alpha The blend amount (0.0 = this color, 1.0 = other color)
         /// @return A new Color object of the same derived type as the input (e.g., blending with a TimeColor returns a TimeColor)
-        std::unique_ptr<Color> blended(const Color& other, float alpha) const override;
+        OwnedColor blended(const Color& other, float alpha) const override;
 };

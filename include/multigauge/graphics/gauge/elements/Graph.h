@@ -15,10 +15,10 @@ class Graph : public Element {
         
         int samplePx = 10;
 
-        std::unique_ptr<Color> backgroundColor;
-        std::unique_ptr<Color> secondsColor;
-        std::unique_ptr<Color> graphColor;
-        std::unique_ptr<Color> borderColor;
+        OwnedColor backgroundColor;
+        OwnedColor secondsColor;
+        OwnedColor graphColor;
+        OwnedColor borderColor;
 
         DisplayValue value;
         std::vector<TimeValue> valueMemory = {};
@@ -84,8 +84,8 @@ class Graph : public Element {
             const float secondLength = b.width / seconds; // length of 1 second
 
             if (backgroundColor) {
-                g.setFill(*backgroundColor);
-                g.fillRect(b.toInt());
+                g.setPaint(backgroundColor.get());
+                g.drawRect(b.toInt());
             }
 
             if (graphColor) {
@@ -95,8 +95,7 @@ class Graph : public Element {
                 // X position of the right line
                 int lineX = b.getRight();
 
-                g.setFill(*graphColor);
-                g.setStroke(*graphColor);
+                g.setPaint(graphColor.get());
 
                 switch (style) {
                     case Line: {
@@ -120,7 +119,7 @@ class Graph : public Element {
                             // (optional, since x is already in-bounds)
                             if ((y >= b.getTop() && y <= b.getBottom()) ||
                                 (prevY >= b.getTop() && prevY <= b.getBottom())) {
-                                g.strokeLine(prevX, prevY, x, y);
+                                g.drawLine(prevX, prevY, x, y);
                             }
 
                             prevX = x; prevY = y;
@@ -140,7 +139,7 @@ class Graph : public Element {
                             if (barH <= 0) continue;
 
                             const int w = std::max(1, samplePx);
-                            g.fillRect({x, yVal, w, barH});
+                            g.drawRect({x, yVal, w, barH});
                         }
                         break;
                     }
@@ -154,7 +153,7 @@ class Graph : public Element {
                             const int y = mapf(v, minimum, maximum, b.getBottom(), b.getTop());
 
                             if (y >= b.getTop() && y <= b.getBottom()) {
-                                g.fillPixel(x, y);
+                                g.drawPixel(x, y);
                             }
                         }
                         break;
@@ -164,7 +163,7 @@ class Graph : public Element {
             }
 
             if (secondsColor) {
-                g.setStroke(*secondsColor);
+                g.setPaint(secondsColor.get());
 
                 const long adj = (long)currentTime - (long)bufferMilliseconds;
                 const float frac = float(((adj % 1000) + 1000) % 1000) / 1000.0f;
@@ -176,7 +175,7 @@ class Graph : public Element {
                 for (int i = 0; i < n; ++i) {
                     const int x = xNow - (int)std::lround(i * secondLength);
                     if (x < b.getLeft()) break;
-                    g.strokeLine(x, b.getBottom(), x, b.getBottom() + 3);
+                    g.drawLine(x, b.getBottom(), x, b.getBottom() + 3);
                 }
             }
 
@@ -185,8 +184,8 @@ class Graph : public Element {
             g.drawText(s, b.getTopLeft().toInt().translated(2, 2), Anchor::TopLeft);
 
             if (borderColor) {
-                g.setStroke(*borderColor);
-                g.strokeRect(b.toInt()); 
+                g.setPaint(nullptr, borderColor.get());
+                g.drawRect(b.toInt()); 
             }
         }
 

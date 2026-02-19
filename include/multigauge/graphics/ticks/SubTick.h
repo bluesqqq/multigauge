@@ -12,7 +12,7 @@ struct SubTick {
     std::optional<float> thickness;
 
     std::optional<TickStyle> style;
-    std::optional<FillStrokeTimeline> color;
+    std::optional<PaintTimeline> color;
 
     std::optional<TickValueStyle> valueStyle;
 

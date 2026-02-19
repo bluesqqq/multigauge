@@ -11,25 +11,9 @@ CircleElement::CircleElement(Element* parent, const rapidjson::Value::ConstObjec
 
 void CircleElement::draw(Graphics &g) const {
     const auto& b = getBounds();
-
-    const float w = b.width;
-    const float h = b.height;
-    const float diameter = std::min(w, h);
-    const float radius   = diameter * 0.5f;
-
-    const float cx = b.x + w * 0.5f;
-    const float cy = b.y + h * 0.5f;
-
-    if (color.fill) {
-        g.setFill(*color.fill);
-        g.fillCircle(cx, cy, radius);
-    }
-
-    if (color.stroke) {
-        g.setStroke(*color.stroke);
-        g.setStrokeThickness(color.thickness);
-        g.strokeCircle(cx, cy, radius);
-    }
+    
+    g.setPaint(color);
+    g.drawCircleInRect(b.toInt());
 }
 
 REGISTER_ELEMENT_TYPE("circle", CircleElement);

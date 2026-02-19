@@ -5,7 +5,7 @@
 
 class RectangleElement : public Element {
     private:
-        FillStroke color;
+        Paint color;
 
         float radius = 0.0f;
 

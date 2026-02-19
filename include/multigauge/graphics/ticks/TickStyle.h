@@ -1,7 +1,7 @@
 #pragma once
 
 #include <multigauge/graphics/colors/ColorTimeline.h>
-#include <multigauge/graphics/TextStyle.h>
+#include <multigauge/graphics/TextPaint.h>
 
 #include <multigauge/utils.h>
 
@@ -10,7 +10,7 @@ enum TickStyle { LINE, TRIANGLE, CIRCLE };
 struct TickValueStyle {
     ColorTimeline color;
 
-    TextStyle textStyle;
+    TextPaint textPaint;
 
     int spacing = 1;
 
@@ -18,7 +18,7 @@ struct TickValueStyle {
 
     TickValueStyle(const rapidjson::Value::ConstObject& json) {
         setValue(json, "color", color);
-        setObj(json, "textStyle", textStyle);
+        setObj(json, "textPaint", textPaint);
         setInt(json, "spacing", spacing);
         setBool(json, "flipValuesPosition", flipValuesPosition);
     }

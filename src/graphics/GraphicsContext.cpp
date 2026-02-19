@@ -1,8 +1,8 @@
 #include <multigauge/graphics/GraphicsContext.h>
 
-int GraphicsContext::getScreenWidth() const { return width; }
+int GraphicsContext::width() const { return w; }
 
-int GraphicsContext::getScreenHeight() const { return height; }
+int GraphicsContext::height() const { return h; }
 
 float GraphicsContext::getTextWidth(std::string_view text, std::string family, float pt, FontWeight weight, FontSlant slant) {
     if (text.empty()) return 0;

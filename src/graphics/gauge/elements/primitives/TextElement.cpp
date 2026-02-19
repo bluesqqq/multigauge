@@ -9,7 +9,7 @@ TextElement::TextElement(Element* parent, const rapidjson::Value::ConstObject js
     if (props.HasMember("text") && props["text"].IsString())
         text = props["text"].GetString();
 
-   setObj(props, "textStyle", textStyle);
+   setObj(props, "textPaint", textPaint);
 
     // TODO: Add anchor parsing
 
@@ -20,8 +20,8 @@ TextElement::TextElement(Element* parent, const rapidjson::Value::ConstObject js
 void TextElement::draw(Graphics &g) const {
     const auto& b = getBounds();
 
-    if (textStyle.color) { 
-        g.setTextStyle(textStyle);
+    if (textPaint.color) { 
+        g.setTextPaint(textPaint);
 
         if (text.find('{') != std::string::npos) {
             const std::string expanded = embed_render::replaceEmbeds(text);

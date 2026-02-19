@@ -5,7 +5,7 @@
 
 class CircularNeedle : public CircularElement {
     private:
-        FillStroke color;
+        Paint color;
         float radius = 1.0f;
 
     public:

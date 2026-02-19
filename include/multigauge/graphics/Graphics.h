@@ -9,9 +9,15 @@
 
 #include <multigauge/graphics/GraphicsContext.h>
 #include <multigauge/images/Image.h>
-#include <multigauge/graphics/TextStyle.h>
+#include <multigauge/images/NineSlice.h>
+#include <multigauge/graphics/TextPaint.h>
 
 #define MIN_HYPHEN_PREFIX 3 // Prefix must be this number of chars or higher to be hyphenated in text wrap
+
+struct PaintState {
+    bool enabled = false;
+    rgba value{};
+};
 
 class Graphics final {
     private:
@@ -19,9 +25,9 @@ class Graphics final {
 
         //----------[ COLORS ]----------//
 
-        rgba fillValue;
-        rgba strokeValue;
-        rgba textValue;
+        PaintState fill;
+        PaintState stroke;
+        PaintState textColor;
 
         float thickness = 0.0f; // for stroke
 
@@ -39,139 +45,176 @@ class Graphics final {
         FontSlant slant = FontSlant::Normal;
         float pt = 16.0f;
 
+
     public:
         Graphics(GraphicsContext* context);
 
+        /// @brief Returns the full rawable bounds of the current target (in pixels).
         Rect<int> getScreenBounds();
+
+        void clearColorCache();
         
         //----------[ COLOR ]----------//
 
-        void clearColorCache();
-
+        /// @brief Sets the current fill color.
         void setFill(rgba color);
-        void setFill(const Color& color);
+        /// @brief Sets the fill color. Passing `nullptr` disables fill.
+        void setFill(const Color* color = nullptr);
 
-        void setStroke(rgba color);
-        void setStroke(const Color& color);
+        /// @brief Sets the current stroke color and thickness (in pixels).
+        void setStroke(rgba color, float t = 1.0f);
+        /// @brief Sets the stroke color and thickness (in pixels). Passing `nullptr` disables stroke.
+        void setStroke(const Color* color = nullptr, float t = 1.0f);
+        /// @brief Sets the stroke thickness (in pixels).
         void setStrokeThickness(float thickness);
 
-        void setFillStroke(const FillStroke& fillStroke);
+        /// @brief Sets the current fill and stroke colors and stroke thickness (in pixels).
+        void setPaint(rgba fill, rgba stroke, float thickness = 1.0f);
+        /// @brief Sets the current fill and stroke colors and stroke thickness (in pixels). Passing `nullptr` for either color disables that color.
+        void setPaint(const Color* fill = nullptr, const Color* stroke = nullptr, float thickness = 1.0f);
+        /// @brief Sets the current fill and stroke colors and stroke thickness (in pixels).
+        void setPaint(const Paint& paint);
 
         //----------[ FILL ]----------//
+
+        /// @brief Fills the entire drawing surface with the current fill color.
         void fillAll() const;
-        void fillAll(const Color& color);
+        /// @brief Fills the entire drawing surface with the specified color.
         void fillAll(rgba color) const;
+        /// @brief Fills the entire drawing surface with the specified color. Passing `nullptr` uses the current fill color, if enabled.
+        void fillAll(const Color* color);
 
         //----------[ PIXEL ]----------//
-        void fillPixel(int x, int y) const;
-        void fillPixel(const Point<int>& pos) const;
+        void drawPixel(int x, int y) const;
+        void drawPixel(const Point<int>& pos) const;
 
         //----------[ LINE ]----------//
-        void strokeLine(int x0, int y0, int x1, int y1) const;
-        void strokeLine(const Point<int>& p1, const Point<int>& p2) const;
-        void strokeLine(const Line<int>& line) const;
-
-        void fillWideLine(int x0, int y0, int x1, int y1, float thickness) const;
-        void fillWideLine(const Point<int>& p1, const Point<int>& p2, float thickness) const;
-        void fillWideLine(const Line<int>& line, float thickness) const;
-
-        void strokeWideLine(int x0, int y0, int x1, int y1, float thickness) const;
-        void strokeWideLine(const Point<int>& p1, const Point<int>& p2, float thickness) const;
-        void strokeWideLine(const Line<int>& line, float thickness) const;
+        void drawLine(int x0, int y0, int x1, int y1, float thickness = 1.0f) const;
+        void drawLine(const Point<int>& p1, const Point<int>& p2, float thickness = 1.0f) const;
+        void drawLine(const Line<int>& line, float thickness = 1.0f) const;
 
         //----------[ RECTANGLE ]----------//
-        void fillRect(int x, int y, int width, int height) const;
-        void fillRect(const Rect<int>& rect) const;
+        void drawRect(int x, int y, int width, int height) const;
+        void drawRect(const Rect<int>& rect) const;
 
-        void strokeRect(int x, int y, int width, int height) const;
-        void strokeRect(const Rect<int>& rect) const;
-
-        void fillRoundedRect(int x, int y, int width, int height, float radius) const;
-        void fillRoundedRect(const Rect<int>& rect, float radius) const;
-        void fillRoundedRect(int x, int y, int width, int height, int topLeft, int topRight, int bottomRight, int bottomLeft) const;
-        void fillRoundedRect(const Rect<int>& rect, int topLeft, int topRight, int bottomRight, int bottomLeft) const;
-
-        void strokeRoundedRect(int x, int y, int width, int height, float radius) const;
-        void strokeRoundedRect(const Rect<int>& rect, float radius) const;
-        void strokeRoundedRect(int x, int y, int width, int height, int topLeft, int topRight, int bottomRight, int bottomLeft) const;
-        void strokeRoundedRect(const Rect<int>& rect, int topLeft, int topRight, int bottomRight, int bottomLeft) const;
+        void drawRoundedRect(int x, int y, int width, int height, float radius) const;
+        void drawRoundedRect(const Rect<int>& rect, float radius) const;
+        void drawRoundedRect(int x, int y, int width, int height, int topLeft, int topRight, int bottomRight, int bottomLeft) const;
+        void drawRoundedRect(const Rect<int>& rect, int topLeft, int topRight, int bottomRight, int bottomLeft) const;
 
         //----------[ ELLIPSE ]----------//
-        void fillEllipse(int cx, int cy, int rx, int ry) const;
-        void fillEllipse(const Point<int>& center, int rx, int ry) const;
+        void drawEllipse(int cx, int cy, int rx, int ry) const;
+        void drawEllipse(const Point<int>& center, int rx, int ry) const;
 
-        void fillEllipseInRect(int x, int y, int width, int height) const;
-        void fillEllipseInRect(const Rect<int>& area) const;
-
-        void strokeEllipse(int cx, int cy, int rx, int ry) const;
-        void strokeEllipse(const Point<int>& center, int rx, int ry) const;
-
-        void strokeEllipseInRect(int x, int y, int width, int height) const;
-        void strokeEllipseInRect(const Rect<int>& area) const;
+        void drawEllipseInRect(int x, int y, int width, int height) const;
+        void drawEllipseInRect(const Rect<int>& area) const;
 
         //----------[ CIRCLE ]----------//
-        void fillCircle(int cx, int cy, int radius) const;
-        void fillCircle(const Point<int>& center, int radius) const;
+        void drawCircle(int cx, int cy, int radius) const;
+        void drawCircle(const Point<int>& center, int radius) const;
 
-        void fillCircleInRect(int x, int y, int width, int height) const;
-        void fillCircleInRect(const Rect<int>& area) const;
-
-        void strokeCircle(int cx, int cy, int radius) const;
-        void strokeCircle(const Point<int>& center, int radius) const;
-
-        void strokeCircleInRect(int x, int y, int width, int height) const;
-        void strokeCircleInRect(const Rect<int>& area) const;
+        void drawCircleInRect(int x, int y, int width, int height) const;
+        void drawCircleInRect(const Rect<int>& area) const;
 
         //----------[ RING ]----------//
-        void fillRing(int cx, int cy, int r1, int r2) const;
-        void fillRing(const Point<int>& center, int r1, int r2) const;
-
-        void strokeRing(int cx, int cy, int r1, int r2) const;
-        void strokeRing(const Point<int>& center, int r1, int r2) const;
+        void drawRing(int cx, int cy, int r1, int r2) const;
+        void drawRing(const Point<int>& center, int r1, int r2) const;
 
         //----------[ ARC ]----------//
-        void fillArc(int cx, int cy, int r1, int r2, float startAngle, float endAngle) const;
-        void fillArc(const Point<int>& center, int r1, int r2, float startAngle, float endAngle) const;
-
-        void strokeArc(int cx, int cy, int r1, int r2, float startAngle, float endAngle) const;
-        void strokeArc(const Point<int>& center, int r1, int r2, float startAngle, float endAngle) const;
+        void drawArc(int cx, int cy, int r1, int r2, float startAngle, float endAngle) const;
+        void drawArc(const Point<int>& center, int r1, int r2, float startAngle, float endAngle) const;
 
         //----------[ TRIANGLE ]----------//
-        void fillTri(int x0, int y0, int x1, int y1, int x2, int y2) const;
-        void fillTri(const Point<int>& p1, const Point<int>& p2, const Point<int>& p3) const;
-
-        void strokeTri(int x0, int y0, int x1, int y1, int x2, int y2) const;
-        void strokeTri(const Point<int>& p1, const Point<int>& p2, const Point<int>& p3) const;
+        void drawTri(int x0, int y0, int x1, int y1, int x2, int y2) const;
+        void drawTri(const Point<int>& p1, const Point<int>& p2, const Point<int>& p3) const;
 
         //----------[ PATH ]----------//
-        void fillPath(const Path<int>& path) const;
-        void strokePath(const Path<int>& path) const;
+        void drawPath(const Path<int>& path) const;
 
         //----------[ FONT ]----------//
+
+        /// @brief Sets the current font family.
         void setFontFamily(const std::string& family);
+        /// @brief Sets the current font weight.
         void setFontWeight(FontWeight weight);
+        /// @brief Sets the current font slant.
         void setFontSlant(FontSlant slant);
+        /// @brief Sets the current font size in points (pt).
         void setFontPoint(float pt);
 
+        /// @brief Sets the current text color.
         void setTextColor(rgba color);
-        void setTextColor(const Color& color);
+        /// @brief Sets the current text color. Passing `nullptr` disables text.
+        void setTextColor(const Color* color = nullptr);
 
-        void setTextStyle(const TextStyle& style);
+        /// @brief Sets the current text color and font settings.
+        void setTextPaint(rgba color, const std::string& family, FontWeight weight, FontSlant slant, float pt);
+        /// @brief Sets the current text color and font settings.
+        void setTextPaint(const Color* color, const std::string& family, FontWeight weight, FontSlant slant, float pt);
+        /// @brief Sets the current text color and font settings.
+        void setTextPaint(const TextPaint& style);
 
         //----------[ TEXT ]----------//
+
+        /// @brief Draws a single horizontal line of text.
         void drawText(const std::string& text, int x, int y, Anchor anchor);
+        /// @brief Draws a single horizontal line of text.
         void drawText(const std::string& text, Point<int> pos, Anchor anchor);
+        /// @brief Draws a single vertical text (each character on a new line).
         void drawTextVertical(const std::string& text, int x, int y, Anchor anchor);
 
+        /// @brief Draws multi-line text wrapped withing a specific rectangle.
         void drawTextArea(const std::string& text, int x, int y, int width, int height, Anchor anchor, bool useEllipses = true, bool useHyphens = false);
+        /// @brief Draws multi-line text wrapped withing a specific rectangle.
         void drawTextArea(const std::string& text, Rect<int> rectangle, Anchor anchor, bool useEllipses = true, bool useHyphens = false);
 
+        /// @brief Draws multi-line text scaled to fit within a specific rectangle.
+        void drawTextFit(const std::string& text, int x, int y, int width, int height, Anchor anchor, bool useEllipses = true, bool useHyphens = false  );
+        /// @brief Draws multi-line text scaled to fit within a specific rectangle.
+        void drawTextFit(const std::string& text, Rect<int> rectangle, Anchor anchor, bool useEllipses = true, bool useHyphens = false);
+
+        /// @brief Measures the width and height of a block of text if it were to be drawn with the current font settings.
+        Rect<int> measureText(const std::string& text) const;
+
         //----------[ IMAGES ]----------//
+
+        /// @brief Draws an image at a specific position.
         void drawImage(const Image& image, int x, int y, Anchor anchor) const;
-        void drawImage(const Image& image, Rect<int> rectangle) const;
-        
+        /// @brief Draws an image at a specific position.
+        void drawImage(const Image& image, Point<int> pos, Anchor anchor) const;
+
+        /// @brief Draws an image rotated by a specific angle (in degrees) around a pivot point (relative to image).
+        void drawImageRotated(const Image& image, int x, int y, float angle, Anchor anchor, int pivotX, int pivotY) const;
+        /// @brief Draws an image rotated by a specific angle (in degrees) around a pivot point (relative to image).
+        void drawImageRotated(const Image& image, Point<int> pos, float angle, Anchor anchor, Point<int> pivot) const;
+
+        enum class ImageFit { 
+            Fill, // Preserves image aspect ratio, may crop image
+            Fit, // Preserves image aspect ratio, may leave empty space
+            Stretch // Stretches image to fill area
+        };
+
+        /// @brief Draws an image fit within a specific rectangle.
+        void drawImageArea(const Image& image, int x, int y, int width, int height, ImageFit fit = ImageFit::Fit) const;
+        /// @brief Draws an image fit within a specific rectangle.
+        void drawImageArea(const Image& image, Rect<int> rectangle, ImageFit fit = ImageFit::Fit) const;
+
+        /// @brief Draws a region of an image fit within a specific rectangle.
+        void drawImageRegion(const Image& image, int srcX, int srcY, int srcW, int srcH, int destX, int destY, int destW, int destH) const;
+        /// @brief Draws a region of an image fit within a specific rectangle.
+        void drawImageRegion(const Image& image, Rect<int> srcRect, Rect<int> destRect) const;
+
+        //----------[ NINE-SLICE ]----------//
+
+        void drawNineSlice(const NineSlice& nineSlice, int x, int y, int width, int height) const;
+        void drawNineSlice(const NineSlice& nineSlice, Rect<int> rectangle) const;
+
         //----------[ CLIP ]----------//
-        void setClipRect(int x, int y, int width, int height);
-        void setClipRect(const Rect<int>& rect);
-        void clearClipRect();
+
+        /// @brief Sets the clipping region to a specific rectangle. Only drawing operations that intersect with this region will be visible.
+        void setClip(int x, int y, int width, int height);
+        /// @brief Sets the clipping region to a specific rectangle. Only drawing operations that intersect with this region will be visible.
+        void setClip(const Rect<int>& rect);
+        /// @brief Resets the clipping region, allowing all drawing operations to be visible again.
+        void clearClip();
 };

@@ -41,7 +41,7 @@ class TickList {
         float getLength(uint8_t index) const;
         float getThickness(uint8_t index) const;
         const TickStyle& getStyle(uint8_t index) const;
-        const FillStrokeTimeline& getColor(uint8_t index) const;
+        const PaintTimeline& getColor(uint8_t index) const;
         const std::optional<TickValueStyle>& getValueStyle(uint8_t index) const;
 
         std::vector<std::vector<float>> getTickPositions(float startValue, float endValue) const {
@@ -75,16 +75,16 @@ class TickList {
             }
         }
 
-        void drawLineTick(Graphics& g, Line<float> line, float thickness, FillStroke& fillStroke) const {
-            g.setFill(fillStroke.fill.get()->getColor());
-            g.fillWideLine(line.toInt(), thickness);
+        void drawLineTick(Graphics& g, Line<float> line, float thickness, Paint& Paint) const {
+            g.setFill(Paint.fill.get()->getColor());
+            g.drawLine(line.toInt(), thickness);
         }
 
-        void drawCircleTick(Graphics& g, Line<float> line, float thickness, FillStroke& fillStroke) const {
+        void drawCircleTick(Graphics& g, Line<float> line, float thickness, Paint& Paint) const {
             
         }
 
-        void drawTriangleTick(Graphics& g, Line<float> line, float thickness, FillStroke& fillStroke) const {
+        void drawTriangleTick(Graphics& g, Line<float> line, float thickness, Paint& Paint) const {
             
         }
 

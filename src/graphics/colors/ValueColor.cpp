@@ -21,9 +21,9 @@ ValueColor &ValueColor::operator=(const ValueColor &other) {
     return *this;
 }
 
-std::unique_ptr<Color> ValueColor::blended(rgba color, float alpha) const { return std::make_unique<ValueColor>(this->value, timeline.blended(color, alpha)); }
+OwnedColor ValueColor::blended(rgba color, float alpha) const { return std::make_unique<ValueColor>(this->value, timeline.blended(color, alpha)); }
 
-std::unique_ptr<Color> ValueColor::blended(const Color &other, float alpha) const{
+OwnedColor ValueColor::blended(const Color &other, float alpha) const{
     switch(other.getType()) {
         case (Type::Static):
             return blended(other.getColor(), alpha);
@@ -39,7 +39,7 @@ std::unique_ptr<Color> ValueColor::blended(const Color &other, float alpha) cons
     return std::make_unique<ValueColor>(this->value);
 }
 
-std::unique_ptr<Color> ValueColor::clone() const { return std::make_unique<ValueColor>(*this); }
+OwnedColor ValueColor::clone() const { return std::make_unique<ValueColor>(*this); }
 
 rgba ValueColor::getColor() const { return timeline.getColor((value != nullptr) ? value->getValueBase() : 0.0f); }
 

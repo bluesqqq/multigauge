@@ -7,7 +7,7 @@
 class TextElement : public Element {
     private:
         std::string text;
-        TextStyle textStyle;
+        TextPaint textPaint;
 
         Anchor anchor = Anchor::TopLeft;
         bool useEllipses = false;

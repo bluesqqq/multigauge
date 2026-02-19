@@ -8,9 +8,9 @@ struct ColorKeyframe {
     /// @brief Position in the timeline
     float position;
     /// @brief The color at this position
-    std::unique_ptr<Color> color;
+    OwnedColor color;
 
-    ColorKeyframe(std::unique_ptr<Color> color, float position);
+    ColorKeyframe(OwnedColor color, float position);
 
     ColorKeyframe(const rapidjson::Value::ConstObject json);
 
@@ -62,7 +62,7 @@ class ColorTimeline {
         /// @brief Adds a color keyframe to the timeline.
         /// @param color The color object for this keyframe
         /// @param position The position in the timeline
-        void addKeyframe(std::unique_ptr<Color> color, float position);
+        void addKeyframe(OwnedColor color, float position);
 
         /// @brief Adds a color keyframe to the timeline.
         /// @param keyframe The ColorKeyframe to add
@@ -133,23 +133,23 @@ class ColorTimeline {
 
 //----------[ FILL STROKE TIMELINE ]----------//
 
-struct FillStrokeTimeline {
+struct PaintTimeline {
     ColorTimeline fill;
     ColorTimeline stroke;
     float thickness = 1.0f;
 
-    FillStrokeTimeline() = default;
+    PaintTimeline() = default;
 
-    FillStrokeTimeline(ColorTimeline fill, ColorTimeline stroke, float thickness);
+    PaintTimeline(ColorTimeline fill, ColorTimeline stroke, float thickness);
 
-    FillStrokeTimeline(const rapidjson::Value::ConstObject json);
+    PaintTimeline(const rapidjson::Value::ConstObject json);
 
     //----------[ BLENDING ]----------//
 
-    FillStrokeTimeline blended(rgba color, float alpha) const;
-    FillStrokeTimeline blended(const Color& color, float alpha) const;
-    FillStrokeTimeline blended(const ColorTimeline& color, float alpha) const;
-    FillStrokeTimeline blended(const FillStrokeTimeline& other, float alpha) const;
+    PaintTimeline blended(rgba color, float alpha) const;
+    PaintTimeline blended(const Color& color, float alpha) const;
+    PaintTimeline blended(const ColorTimeline& color, float alpha) const;
+    PaintTimeline blended(const PaintTimeline& other, float alpha) const;
 
-    FillStroke getFillStrokeAtPosition(float position) const;
+    Paint getPaintAtPosition(float position) const;
 };

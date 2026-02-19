@@ -24,7 +24,7 @@ const TickStyle &TickList::getStyle(uint8_t index) const {
     return root.style;
 }
 
-const FillStrokeTimeline &TickList::getColor(uint8_t index) const {
+const PaintTimeline &TickList::getColor(uint8_t index) const {
     while (index > 0) {
         if (subs[index - 1].color.has_value()) return subs[index - 1].color.value();
         --index;
@@ -44,7 +44,7 @@ void TickList::drawCircularTick(Graphics &g, uint8_t index, Point<float> pos, fl
     float length    = getLength(index);
     float thickness = getThickness(index);
     const TickStyle& style = getStyle(index);
-    const FillStrokeTimeline& color = getColor(index);
+    const PaintTimeline& color = getColor(index);
     const std::optional<TickValueStyle>& valueStyle = getValueStyle(index);
 
     if (highlightFactor >= 0) {
@@ -58,15 +58,15 @@ void TickList::drawCircularTick(Graphics &g, uint8_t index, Point<float> pos, fl
     Line<float> line = Line<float>(pos + unitVector * tickRadii.first, pos + unitVector * tickRadii.second);
 
     // Get the color at the current position  
-    FillStroke temporaryFS = color.getFillStrokeAtPosition(value);
+    Paint temporaryFS = color.getPaintAtPosition(value);
 
-    //if (fillStrokeModifier.fill != nullptr) temporaryFS.blendFill(fillStrokeModifier.fill->getColor(), highlightFactor);
-    //if (fillStrokeModifier.stroke != nullptr) temporaryFS.blendStroke(fillStrokeModifier.stroke->getColor(), fillStrokeModifier.stroke->thickness, highlightFactor);
+    //if (PaintModifier.fill != nullptr) temporaryFS.blendFill(PaintModifier.fill->getColor(), highlightFactor);
+    //if (PaintModifier.stroke != nullptr) temporaryFS.blendStroke(PaintModifier.stroke->getColor(), PaintModifier.stroke->thickness, highlightFactor);
 
     /*
     if (fade != nullptr) { // Apply fade
         uint8_t alpha = fade->getAlpha(position);
-        temporaryFS = temporaryFS.getBlendFillStroke(fade->color->getColor(), alpha);
+        temporaryFS = temporaryFS.getBlendPaint(fade->color->getColor(), alpha);
     }
     */
 

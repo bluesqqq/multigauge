@@ -6,7 +6,7 @@
 
 const ColorTimeline* Color::getTimeline() const { return nullptr; }
 
-std::unique_ptr<Color> Color::fromJson(const rapidjson::Value& json) {
+OwnedColor Color::fromJson(const rapidjson::Value& json) {
     // Parse string as rgba
     if (json.IsString()) { return std::make_unique<StaticColor>(rgba(json.GetString())); }
 
@@ -27,22 +27,22 @@ std::unique_ptr<Color> Color::fromJson(const rapidjson::Value& json) {
 
 //----------[ FILL STROKE ]----------//
 
-FillStroke::FillStroke() : fill(nullptr), stroke(nullptr) {}
+Paint::Paint() : fill(nullptr), stroke(nullptr) {}
 
-FillStroke::FillStroke(std::unique_ptr<Color> fill, std::unique_ptr<Color> stroke, float thickness) : fill(std::move(fill)), stroke(std::move(stroke)), thickness(thickness) {}
+Paint::Paint(OwnedColor fill, OwnedColor stroke, float thickness) : fill(std::move(fill)), stroke(std::move(stroke)), thickness(thickness) {}
 
-FillStroke::FillStroke(const rapidjson::Value::ConstObject json)
+Paint::Paint(const rapidjson::Value::ConstObject json)
     : fill((json.HasMember("fill") ? Color::fromJson(json["fill"]) : nullptr)),
       stroke((json.HasMember("stroke") ? Color::fromJson(json["stroke"]) : nullptr)),
       thickness((json.HasMember("thickness") && json["thickness"].IsNumber()) ? json["thickness"].GetFloat() :  1.0f) {}
 
-FillStroke FillStroke::blended(rgba c, float alpha) const { return FillStroke((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }
+Paint Paint::blended(rgba c, float alpha) const { return Paint((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }
 
-FillStroke FillStroke::blended(const Color &c, float alpha) const { return FillStroke((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }
+Paint Paint::blended(const Color &c, float alpha) const { return Paint((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }
 
-FillStroke FillStroke::blended(const FillStroke &other, float alpha) const {
-    std::unique_ptr<Color> outFill;
-    std::unique_ptr<Color> outStroke;
+Paint Paint::blended(const Paint &other, float alpha) const {
+    OwnedColor outFill;
+    OwnedColor outStroke;
 
     if (fill && other.fill) outFill = fill->blended(*other.fill, alpha);
     else if (fill) outFill = fill->clone();
@@ -52,5 +52,5 @@ FillStroke FillStroke::blended(const FillStroke &other, float alpha) const {
     else if (stroke) outStroke = stroke->clone();
     else if (other.stroke) outStroke = other.stroke->clone();
 
-    return FillStroke(std::move(outFill), std::move(outStroke), thickness);
+    return Paint(std::move(outFill), std::move(outStroke), thickness);
 }
