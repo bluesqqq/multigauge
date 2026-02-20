@@ -33,7 +33,7 @@ void Graphics::setFill(const Color *color) {
 void Graphics::setStroke(rgba color, float t) {
     stroke.enabled = true;
     stroke.value = color;
-    thickness = std::min(0.0f, t);
+    thickness = std::max(0.0f, t);
 }
 
 void Graphics::setStroke(const Color *color, float t) {
