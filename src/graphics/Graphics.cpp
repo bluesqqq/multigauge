@@ -477,11 +477,19 @@ void Graphics::drawTextArea(const std::string &text, Rect<int> rectangle, Anchor
 
 //----------[ IMAGE ]----------//
 
-void Graphics::drawImage(const Image &image, int x, int y, Anchor anchor) const { if (!image.empty()) context->drawImage(image, x, y, anchor); }
+void Graphics::drawImage(const Image &image, int x, int y, Anchor anchor) const { 
+    if (image.empty()) return;
+    auto pos = Point<int>::getAnchored(x, y, image.width, image.height, anchor);
+    context->drawImage(image, pos.x, pos.y); 
+}
 
 void Graphics::drawImage(const Image &image, Point<int> pos, Anchor anchor) const { drawImage(image, pos.x, pos.y, anchor); }
 
-void Graphics::drawImageRotated(const Image &image, int x, int y, float angle, Anchor anchor, int pivotX, int pivotY) const { if (!image.empty()) context->drawImageRotated(image, x, y, angle, anchor, pivotX, pivotY); }
+void Graphics::drawImageRotated(const Image &image, int x, int y, float angle, Anchor anchor, int pivotX, int pivotY) const {
+    if (image.empty()) return;
+    auto pos = Point<int>::getAnchored(x, y, image.width, image.height, anchor);
+    context->drawImageRotated(image, pos.x, pos.y, angle, pivotX, pivotY);
+}
 
 void Graphics::drawImageRotated(const Image &image, Point<int> pos, float angle, Anchor anchor, Point<int> pivot) const { drawImageRotated(image, pos.x, pos.y, angle, anchor, pivot.x, pivot.y); }
 

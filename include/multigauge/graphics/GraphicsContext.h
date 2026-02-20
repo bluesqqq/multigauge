@@ -75,10 +75,10 @@ class GraphicsContext {
         //----------[ IMAGE ]----------//
         virtual Image createNativeImage(const rgba* pixels, int w, int h) = 0;
 
-        virtual void drawImage(const Image& img, int x, int y, Anchor anchor = Anchor::TopLeft) = 0;
-        virtual void drawImageRotated(const Image& img, int x, int y, float angle, Anchor anchor, int pivotX, int pivotY) = 0;
-        virtual void drawImageScaled(const Image& img, int x, int y, float sx, float sy, Anchor anchor) = 0;
-        virtual void drawImageTransformed(const Image& img, int x, int y, float angle, float sx, float sy, Anchor anchor, int pivotX, int pivotY) = 0;
+        virtual void drawImage(const Image& img, int x, int y) = 0;
+        virtual void drawImageRotated(const Image& img, int x, int y, float angle, int pivotX, int pivotY) = 0;
+        virtual void drawImageScaled(const Image& img, int x, int y, float sx, float sy) = 0;
+        virtual void drawImageTransformed(const Image& img, int x, int y, float angle, float sx, float sy, int pivotX, int pivotY) = 0;
 
         virtual void drawImageStretched(const Image& img, int x, int y, int width, int height) = 0;
         virtual void drawImageRegion(const Image& img, int srcX, int srcY, int srcW, int srcH, int destX, int destY, int destW, int destH) = 0;
