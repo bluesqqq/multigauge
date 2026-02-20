@@ -6,7 +6,9 @@
     "includeDir": "include",
     "srcFilter": [
       "+<src/**>",
-      "+<lib/yoga/src/**>"
+      "+<lib/yoga/src/**>",
+      "+<*>",
+      "+<../lib/lodepng/src/lodepng.cpp>"
     ],
     "flags": [
       "-Ilib/rapidjson/src",

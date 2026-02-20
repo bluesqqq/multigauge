@@ -178,7 +178,7 @@ void Graphics::setFontSlant(FontSlant slant) { slant = slant; }
 void Graphics::setFontPoint(float pt) { this->pt = pt; }
 
 void Graphics::setTextColor(rgba color) {
-    fill.enabled = true;
+    textColor.enabled = true;
     textColor.value = color;
 }
 
