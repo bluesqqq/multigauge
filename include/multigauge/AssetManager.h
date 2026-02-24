@@ -1,7 +1,7 @@
 #pragma once
 
-#include <multigaugeio/FileSystem.h>
-#include <multigaugeio/Logger.h>
+#include <multigauge/io/FileSystem.h>
+#include <multigauge/io/Logger.h>
 
 #include <rapidjson/document.h>
 
