@@ -55,9 +55,10 @@ Element::~Element() {
 #include <multigauge/graphics/gauge/elements/primitives/TextElement.h>
 #include <multigauge/graphics/gauge/elements/primitives/RectangleElement.h>
 #include <multigauge/graphics/gauge/elements/primitives/CircleElement.h>
-#include <multigauge/graphics/gauge/elements/Horizon.h>
 #include <multigauge/graphics/gauge/elements/primitives/ImageElement.h>
+#include <multigauge/graphics/gauge/elements/Horizon.h>
 #include <multigauge/graphics/gauge/elements/Graph.h>
+#include <multigauge/graphics/gauge/elements/circular/CircularElement.h>
 #include <multigauge/graphics/gauge/elements/circular/CircularNeedle.h>
 #include <multigauge/graphics/gauge/elements/circular/CircularScale.h>
 

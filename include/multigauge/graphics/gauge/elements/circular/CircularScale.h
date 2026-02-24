@@ -20,3 +20,4 @@ class CircularScale : public CircularElement {
 
         void update(int deltaTime) override;
 };
+REGISTER_ELEMENT_TYPE("circular-scale", CircularScale);
