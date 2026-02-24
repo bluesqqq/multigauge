@@ -17,3 +17,5 @@ class ImageElement : public Element {
         bool init(AssetManager& assetManager) override;
         void draw(Graphics& g) const override;
 };
+
+REGISTER_ELEMENT_TYPE("image", ImageElement);

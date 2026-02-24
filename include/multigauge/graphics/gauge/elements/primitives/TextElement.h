@@ -20,3 +20,5 @@ class TextElement : public Element {
         
         void draw(Graphics& g) const override;
 };
+
+REGISTER_ELEMENT_TYPE("text", TextElement);
