@@ -21,6 +21,7 @@ struct Platform {
 
 Platform& platform();
 void setPlatform(Platform&);
+bool initPlatform();
 
 inline GraphicsContext& GFX() { return platform().gfx; }
 inline FileSystem& FS() { return platform().fs; }

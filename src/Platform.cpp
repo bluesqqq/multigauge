@@ -33,3 +33,16 @@ void setPlatform(Platform& p) {
     }
     g_platform = &p;
 }
+
+bool initPlatform() {
+    auto& p = platform();
+
+    if (p.logger) {
+        if (!p.logger->init()) return false;
+    }
+
+    if (!p.fs.init()) return false;
+    if (!p.gfx.init()) return false;
+
+    return true;
+}
