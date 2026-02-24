@@ -1,10 +1,11 @@
 #pragma once
 
-#include <stdint.h>
-#include <string>
 #include <multigauge/graphics/colors/Color.h>
 
 #include <rapidjson/document.h>
+
+#include <stdint.h>
+#include <string>
 
 enum class FontWeight : uint16_t { Normal = 400, Bold = 700 };
 enum class FontSlant  : uint8_t { Normal, Italic };

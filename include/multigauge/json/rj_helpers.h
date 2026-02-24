@@ -1,7 +1,9 @@
 #pragma once
 
-#include <multigauge/io/Logger.h>
+#include <multigauge/io/Log.h>
+
 #include <rapidjson/document.h>
+
 #include <optional>
 #include <type_traits>
 #include <vector>

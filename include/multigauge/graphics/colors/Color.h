@@ -1,11 +1,13 @@
 #pragma once
 
 #include <multigauge/graphics/colors/rgba.h>
-
-#include <rapidjson/document.h>
-#include <memory>
+#include <multigauge/io/Log.h>
 #include <multigauge/values/value.h>
 #include <multigauge/json/rj_helpers.h>
+
+#include <rapidjson/document.h>
+
+#include <memory>
 
 #define DEFAULT_COLOR { 0, 0, 0, 255}
 

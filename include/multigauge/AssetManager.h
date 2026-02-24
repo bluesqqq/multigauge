@@ -1,12 +1,11 @@
 #pragma once
 
 #include <multigauge/io/FileSystem.h>
-#include <multigauge/io/Logger.h>
+#include <multigauge/graphics/GraphicsContext.h>
+#include <multigauge/images/Image.h>
 
 #include <rapidjson/document.h>
 
-#include <multigauge/images/Image.h>
-#include <multigauge/graphics/GraphicsContext.h>
 #include <cstddef>
 
 class AssetManager {

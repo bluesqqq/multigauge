@@ -1,6 +1,6 @@
 #include <multigauge/values/Value.h>
 
-#include <multigauge/io/Logger.h>
+#include <multigauge/io/Log.h>
 
 #include <algorithm>
 

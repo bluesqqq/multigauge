@@ -1,15 +1,15 @@
 #pragma once
 
-#include <cstdint>
-#include <cstddef>
-#include <vector>
-#include <algorithm>
-
-#include <multigauge/io/Logger.h>
+#include <multigauge/io/Log.h>
 #include <multigauge/utils.h>
 
 #include "lodepng.h"
 #include "tjpgd.h"
+
+#include <cstdint>
+#include <cstddef>
+#include <vector>
+#include <algorithm>
 
 // BMP compression types (from BMP spec)
 constexpr uint32_t BI_RGB            = 0; // no compression
