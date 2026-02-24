@@ -31,5 +31,3 @@ void TextElement::draw(Graphics &g) const {
         }
     }
 }
-
-REGISTER_ELEMENT_TYPE("text", TextElement);

@@ -31,5 +31,3 @@ void CircularScale::update(int deltaTime) {
 
     ticks.setDisplayValue(value.getValueBase());
 }
-
-REGISTER_ELEMENT_TYPE("circular-scale", CircularScale);

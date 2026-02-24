@@ -33,5 +33,3 @@ void CircularNeedle::draw(Graphics &g) const {
     g.setPaint(color);
     g.drawLine(needle.toInt(), 10);
 }
-
-REGISTER_ELEMENT_TYPE("circular-needle", CircularNeedle);

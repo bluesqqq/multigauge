@@ -16,3 +16,5 @@ class RectangleElement : public Element {
 
         void draw(Graphics& g) const override;
 };
+
+REGISTER_ELEMENT_TYPE("rectangle", RectangleElement);

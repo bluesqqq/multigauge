@@ -15,5 +15,3 @@ void CircleElement::draw(Graphics &g) const {
     g.setPaint(color);
     g.drawCircleInRect(b.toInt());
 }
-
-REGISTER_ELEMENT_TYPE("circle", CircleElement);

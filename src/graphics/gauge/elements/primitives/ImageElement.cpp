@@ -18,5 +18,3 @@ void ImageElement::draw(Graphics &g) const {
 
     g.drawImageArea(image, b);
 }
-
-REGISTER_ELEMENT_TYPE("image", ImageElement);

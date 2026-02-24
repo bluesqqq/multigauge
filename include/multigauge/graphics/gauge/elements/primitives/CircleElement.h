@@ -13,3 +13,5 @@ class CircleElement : public Element {
 
         void draw(Graphics& g) const override;
 };
+
+REGISTER_ELEMENT_TYPE("circle", CircleElement);

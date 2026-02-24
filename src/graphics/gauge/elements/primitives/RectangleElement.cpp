@@ -18,5 +18,3 @@ void RectangleElement::draw(Graphics &g) const {
     if (radius > 0.0f) g.drawRoundedRect(b, radius);
     else g.drawRect(b);
 }
-
-REGISTER_ELEMENT_TYPE("rectangle", RectangleElement);

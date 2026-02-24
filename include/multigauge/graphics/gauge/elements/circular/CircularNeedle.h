@@ -15,3 +15,5 @@ class CircularNeedle : public CircularElement {
 
         void draw(Graphics& g) const override;
 };
+
+REGISTER_ELEMENT_TYPE("circular-needle", CircularNeedle);
