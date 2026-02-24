@@ -16,6 +16,8 @@ using OwnedColor = std::unique_ptr<Color>;
 
 class Color {
     public:
+        virtual ~Color() = default;
+        
         /// @brief Creates a clone of this Color object
         /// @return A unique pointer to the created Color object
         virtual OwnedColor clone() const = 0;

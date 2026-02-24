@@ -40,18 +40,16 @@ target_sources(multigauge_core PRIVATE ${YOGA_SOURCES})
 # ------------------------------------------------------------
 # Include directories
 # ------------------------------------------------------------
-# Public API headers (for consumers)
+# Public API headers
 target_include_directories(multigauge_core PUBLIC
   "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/rapidjson/src"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/lodepng/src"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/tjpgd/src"
+  "${CMAKE_CURRENT_SOURCE_DIR}/lib/yoga/src"
 )
 
 # Private/internal headers 
 target_include_directories(multigauge_core PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
-
-  # third-party headers
-  "${CMAKE_CURRENT_SOURCE_DIR}/lib/rapidjson/src"
-  "${CMAKE_CURRENT_SOURCE_DIR}/lib/lodepng/src"
-  "${CMAKE_CURRENT_SOURCE_DIR}/lib/tjpgd/src"
-  "${CMAKE_CURRENT_SOURCE_DIR}/lib/yoga/src"
 )
