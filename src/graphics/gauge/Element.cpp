@@ -64,24 +64,23 @@ Element::~Element() {
 bool Element::registerType(const char *type, FactoryFn fn) {
     constexpr const char* TAG = "Element::registerType";
     if (!type || !fn) {
-        LOG_ERROR(TAG, "Invalid registration (type=%p fn=%p)", (void*)type, (void*)fn);
+        // invalid registration
         return false;
     }
 
     for (size_t i = 0; i < registryCount; ++i)
         if (registry[i].type && std::strcmp(registry[i].type, type) == 0) {
-            LOG_WARN(TAG, "Duplicate type '%s' registered; overwriting factory", type);
+            // duplicate type + overwrite
             registry[i].fn = fn; 
             return true;
         }
     
     if (registryCount >= MAX_ELEMENT_REGISTRY_SIZE) {
-        LOG_ERROR(TAG, "Registry full (%u/%u). Cannot register '%s'", (unsigned)registryCount, (unsigned)MAX_ELEMENT_REGISTRY_SIZE, type);
+        // registry full
         return false;
     }
 
     registry[registryCount++] = {type, fn};
-    LOG_DEBUG(TAG, "Registered '%s' (count=%u)", type, (unsigned)registryCount);
     return true;
 }
 
