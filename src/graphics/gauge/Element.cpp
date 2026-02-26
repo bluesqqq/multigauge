@@ -193,8 +193,6 @@ void Element::updateRecursive(int deltaTime) {
 }
 
 void Element::layoutRecursive(float width, float height, YGDirection direction) {
-    if (!layoutDirty) return;
-
     Element* root = this;
     while (root->parent) root = root->parent;
 
