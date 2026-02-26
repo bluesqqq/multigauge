@@ -26,6 +26,8 @@ class GraphicsContext {
 
         /// @brief Height of the drawing surface in pixels 
         int height() const;
+
+        virtual bool resize(int w, int h);
         
         //----------[ FILL ]----------//
         virtual void clear(rgba color) = 0;
