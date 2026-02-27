@@ -7,10 +7,9 @@
 #include <vector>
 #include <optional>
 
-struct RootTick {
+struct RootTick : public Editable {
     int divisions = 2;
     float interval = 1.0f;
-
     bool useDivisions = true;
 
     float length = 0;
@@ -21,17 +20,17 @@ struct RootTick {
 
     std::optional<TickValueStyle> valueStyle;
 
-    RootTick() = default;
+    MG_EDITABLE_BEGIN()
+        MG_PROP(divisions)
+        MG_PROP(interval)
+        MG_PROP(useDivisions)
+        MG_PROP(length)
+        MG_PROP(thickness)
+        MG_PROP(color)
+        // TODO: need to do valueStyle
+    MG_EDITABLE_END()
 
-    RootTick(const rapidjson::Value::ConstObject& json) {
-        setInt(json, "divisions", divisions);
-        setFloat(json, "interval", interval);
-        setBool(json, "useDivisions", useDivisions);
-        setFloat(json, "length", length);
-        setFloat(json, "thickness", thickness);
-        setObj(json, "color", color);
-        setOptObj(json, "valueStyle", valueStyle);
-    }
+    RootTick() = default;
 
     float getInterval(float lower, float upper) const {
         return useDivisions ? 1.0f / (float)divisions : interval / (upper - lower);

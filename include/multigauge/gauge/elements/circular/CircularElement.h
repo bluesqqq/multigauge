@@ -37,17 +37,6 @@ class CircularElement : public Element {
 
     public:
         using Element::Element;
-
-        CircularElement(Element* parent, const rapidjson::Value::ConstObject json) : Element(parent, json) {
-            if (!json.HasMember("props") || !json["props"].IsObject()) return;
-            const rapidjson::Value::ConstObject props = json["props"].GetObject();
-
-            setOptFloat(props, "startAngle", startAngle);
-            setOptFloat(props, "endAngle", endAngle);
-            setOptObj<DisplayValue>(props, "value", value);
-        }
         
         Type getType() const override { return Type::Circular; }
 };
-
-REGISTER_ELEMENT_TYPE("circular-element", CircularElement);

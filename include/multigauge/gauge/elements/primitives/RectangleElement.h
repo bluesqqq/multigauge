@@ -15,11 +15,9 @@ class RectangleElement : public Element {
         MG_EDITABLE_END()
 
     public:
+        using Element::Element;
+        
         explicit RectangleElement(Element* parent);
-
-        RectangleElement(Element* parent, const rapidjson::Value::ConstObject json);
 
         void draw(Graphics& g) const override;
 };
-
-REGISTER_ELEMENT_TYPE("rectangle", RectangleElement);

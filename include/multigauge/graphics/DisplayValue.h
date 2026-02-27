@@ -2,6 +2,7 @@
 
 #include <multigauge/values/value.h>
 #include <multigauge/utils.h>
+#include <multigauge/editor/Codec.h>
 
 /// @brief A class that wraps around a `Value` object, allowing the use of custom minimum and maximum limits & units
 /// @note This class does not have setter functions for setting the value of the `Value` reference, as it is meant to supply context to the `Value` object.
@@ -30,9 +31,7 @@ class DisplayValue {
     public: 
         DisplayValue();
         
-        DisplayValue(Value* value, std::optional<int> unitIndex = std::nullopt, std::optional<float> minimum = std::nullopt, std::optional<float> maximum = std::nullopt);
-
-        DisplayValue(const rapidjson::Value::ConstObject json);
+        DisplayValue(const char* id);
 
         /// @brief Retrieves the raw value stored in the 'Value' reference without any conversion, clamped to the `GaugeValue`s custom limits if defined.
         /// @return The raw value from `value.getValueRaw()`, with additional custom limits if defined.
@@ -54,4 +53,17 @@ class DisplayValue {
         std::string getValueString(bool abbreviation = false) const;
 
         const char* getName() const;
+};
+
+template<>
+struct Codec<DisplayValue> {
+    static bool decode(const rapidjson::Value& v, DisplayValue& out) {
+        if (v.IsString()) {
+            out = DisplayValue(v.GetString());
+            return true;
+        }
+        return false;
+
+        // TODO: CHANGE TO ADD LIMITS
+    }
 };

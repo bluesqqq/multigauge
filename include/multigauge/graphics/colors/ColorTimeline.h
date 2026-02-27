@@ -144,16 +144,20 @@ class ColorTimeline : public Editable {
 
 //----------[ FILL STROKE TIMELINE ]----------//
 
-struct PaintTimeline {
+struct PaintTimeline : public Editable {
     ColorTimeline fill;
     ColorTimeline stroke;
     float thickness = 1.0f;
 
+    MG_EDITABLE_BEGIN()
+        MG_PROP(fill)
+        MG_PROP(stroke)
+        MG_PROP(thickness)
+    MG_EDITABLE_END()
+
     PaintTimeline() = default;
 
     PaintTimeline(ColorTimeline fill, ColorTimeline stroke, float thickness);
-
-    PaintTimeline(const rapidjson::Value::ConstObject json);
 
     //----------[ BLENDING ]----------//
 

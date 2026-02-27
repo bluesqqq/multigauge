@@ -4,14 +4,6 @@
 
 CircularNeedle::CircularNeedle(Element* parent) : CircularElement(parent) {}
 
-CircularNeedle::CircularNeedle(Element* parent, const rapidjson::Value::ConstObject json) : CircularElement(parent, json) {
-    if (!json.HasMember("props") || !json["props"].IsObject()) return;
-    const rapidjson::Value::ConstObject props = json["props"].GetObject();
-
-    setFloat(props, "radius", radius);
-    setObj(props, "color", color);
-}
-
 void CircularNeedle::draw(Graphics &g) const {
     const auto& b = getBounds();
 

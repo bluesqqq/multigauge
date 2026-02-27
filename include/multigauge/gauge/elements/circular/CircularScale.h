@@ -13,16 +13,16 @@ class CircularScale : public CircularElement {
 
         // Editable props list
         MG_EDITABLE_BEGIN()
+            MG_PROP(ticks)
             MG_PROP(radius)
         MG_EDITABLE_END()
 
     public:
-        explicit CircularScale(Element* parent);
+        using CircularElement::CircularElement;
 
-        CircularScale(Element* parent, const rapidjson::Value::ConstObject json);
+        explicit CircularScale(Element* parent);
 
         void draw(Graphics& g) const override;
 
         void update(int deltaTime) override;
 };
-REGISTER_ELEMENT_TYPE("circular-scale", CircularScale);

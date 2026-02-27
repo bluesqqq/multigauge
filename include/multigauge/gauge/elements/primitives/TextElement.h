@@ -16,16 +16,15 @@ class TextElement : public Element {
         // Editable props list
         MG_EDITABLE_BEGIN()
             MG_PROP(text)
+            MG_PROP(textPaint)
             MG_PROP(useEllipses)
             MG_PROP(useHyphens)
         MG_EDITABLE_END()
 
     public:
+        using Element::Element;
+        
         explicit TextElement(Element* parent, std::string text);
-
-        TextElement(Element* parent, const rapidjson::Value::ConstObject json);
         
         void draw(Graphics& g) const override;
 };
-
-REGISTER_ELEMENT_TYPE("text", TextElement);

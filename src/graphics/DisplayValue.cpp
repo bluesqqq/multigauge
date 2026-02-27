@@ -6,17 +6,7 @@ int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitInde
 
 DisplayValue::DisplayValue() {}
 
-DisplayValue::DisplayValue(Value *value, std::optional<int> unitIndex, std::optional<float> minimum, std::optional<float> maximum)
-    : value(value), unitIndex(unitIndex), minimum(minimum), maximum(maximum) {}
-
-DisplayValue::DisplayValue(const rapidjson::Value::ConstObject json) {
-    if (json.HasMember("id") && json["id"].IsString())
-        value = Value::find(json["id"].GetString());
-
-    setOptFloat(json, "min", minimum);
-    setOptFloat(json, "max", maximum);
-    setOptInt(json, "unitIndex", unitIndex);
-}
+DisplayValue::DisplayValue(const char *id) { value = Value::find(id); }
 
 float DisplayValue::getValueBase() const {
     if (!value) return 0.0f;

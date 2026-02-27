@@ -1,13 +1,5 @@
 #include <multigauge/gauge/elements/circular/CircularScale.h>
 
-CircularScale::CircularScale(Element* parent, const rapidjson::Value::ConstObject json) : CircularElement(parent, json) {
-    if (!json.HasMember("props") || !json["props"].IsObject()) return;
-    const rapidjson::Value::ConstObject props = json["props"].GetObject();
-
-    setFloat(props, "radius", radius);
-    setObj(props, "ticks", ticks);
-}
-
 void CircularScale::draw(Graphics &g) const {
     const auto& b = getBounds();
 

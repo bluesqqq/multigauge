@@ -6,6 +6,8 @@
 
 #include <multigauge/utils.h>
 
+#include <multigauge/editor/Codec.h>
+
 struct rgba {
     uint8_t r, g, b, a;
 
@@ -18,6 +20,19 @@ struct rgba {
     void blend(const rgba& other, float t);
 
     rgba blended(const rgba& other, float t) const;
+};
+
+template<>
+struct Codec<rgba> {
+    static bool decode(const rapidjson::Value& v, rgba& out) {
+        if (v.IsString()) {
+            rgba tmp(v.GetString());
+            out = tmp;
+            return true;
+        }
+
+        return false;
+    }
 };
 
 inline bool parse_hex(const char* s, rgba& out) {

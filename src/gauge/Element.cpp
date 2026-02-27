@@ -2,9 +2,6 @@
 
 #include <multigauge/layout.h>
 
-Element::Entry Element::registry[MAX_ELEMENT_REGISTRY_SIZE] = {};
-size_t Element::registryCount = 0;
-
 void Element::clearLayoutDirtyRecursive() {
     layoutDirty = false;
     for (auto& child : children) child->clearLayoutDirtyRecursive();
@@ -64,69 +61,38 @@ Element::~Element() {
 #include <multigauge/gauge/elements/circular/CircularNeedle.h>
 #include <multigauge/gauge/elements/circular/CircularScale.h>
 
-bool Element::registerType(const char *type, FactoryFn fn) {
-    constexpr const char* TAG = "Element::registerType";
-    if (!type || !fn) {
-        // invalid registration
-        return false;
-    }
-
-    for (size_t i = 0; i < registryCount; ++i)
-        if (registry[i].type && std::strcmp(registry[i].type, type) == 0) {
-            // duplicate type + overwrite
-            registry[i].fn = fn; 
-            return true;
-        }
-    
-    if (registryCount >= MAX_ELEMENT_REGISTRY_SIZE) {
-        // registry full
-        return false;
-    }
-
-    registry[registryCount++] = {type, fn};
-    return true;
-}
-
-std::unique_ptr<Element> Element::fromJson(Element *parent, const rapidjson::Value::ConstObject json) {
+OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObject json) {
     constexpr const char* TAG = "Element::fromJson";
 
-    if (!json.HasMember("type")) {
-        LOG_INFO(TAG, "No 'type' field; constructing base Element.");
+    const char* type = nullptr;
+    if (auto it = json.FindMember("type"); it != json.MemberEnd() && it->value.IsString())
+        type = it->value.GetString();
+
+    if (!type) {
+        LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
         return std::make_unique<Element>(parent, json);
-    } 
-    
-    if (!json["type"].IsString()) {
-        LOG_WARN(TAG, "'type' field exists but is not a string; falling back to base Element.");
-        return std::make_unique<Element>(parent, json);
-    } 
-
-    const char* type = json["type"].GetString();
-
-    if (registryCount == 0) LOG_ERROR(TAG, "Registry is empty. No element types registered. type='%s'", type);
-
-    if (type) {
-        for (size_t i = 0; i < registryCount; ++i) {
-            if (!registry[i].type || !registry[i].fn) {
-                LOG_WARN(TAG, "Bad registry entry %u (type=%p fn=%p)", (unsigned)i, (void*)registry[i].type, (void*)registry[i].fn);
-                continue;
-            }
-
-            if (std::strcmp(registry[i].type, type) == 0) {
-                LOG_INFO(TAG, "Matched type='%s'; constructing", type);
-                return registry[i].fn(parent, json);
-            }
-        }
     }
 
-    LOG_WARN(TAG, "Unknown type='%s' (registryCount=%u). Falling back to base Element.", type, (unsigned)registryCount);
+    // --- big strcmp chain ---
+    if (std::strcmp(type, "rectangle") == 0) return std::make_unique<RectangleElement>(parent, json);
+    if (std::strcmp(type, "circle")    == 0) return std::make_unique<CircleElement>(parent, json);
+    if (std::strcmp(type, "image")     == 0) return std::make_unique<ImageElement>(parent, json);
+    if (std::strcmp(type, "text")      == 0) return std::make_unique<TextElement>(parent, json);
+    if (std::strcmp(type, "horizon")   == 0) return std::make_unique<Horizon>(parent, json);
+    if (std::strcmp(type, "graph")     == 0) return std::make_unique<Graph>(parent, json);
 
+    if (std::strcmp(type, "circular-element") == 0) return std::make_unique<CircularElement>(parent, json);
+    if (std::strcmp(type, "circular-needle")  == 0) return std::make_unique<CircularNeedle>(parent, json);
+    if (std::strcmp(type, "circular-scale")   == 0) return std::make_unique<CircularScale>(parent, json);
+
+    LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
     return std::make_unique<Element>(parent, json);
 }
 
 void Element::addChild(const rapidjson::Value::ConstObject json) {
     constexpr const char* TAG = "Element::addChild";
 
-    std::unique_ptr<Element> child = fromJson(this, json);
+    OwnedElement child = fromJson(this, json);
     if (!child) {
         LOG_ERROR(TAG, "fromJson returned nullptr; child skipped");
         return;

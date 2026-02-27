@@ -5,13 +5,15 @@
 class CircleElement : public Element {
     private:
         Paint color;
+
+        MG_EDITABLE_BEGIN()
+            MG_PROP(color)
+        MG_EDITABLE_END()
         
     public:
+        using Element::Element;
+        
         explicit CircleElement(Element* parent);
-
-        CircleElement(Element* parent, const rapidjson::Value::ConstObject json);
 
         void draw(Graphics& g) const override;
 };
-
-REGISTER_ELEMENT_TYPE("circle", CircleElement);

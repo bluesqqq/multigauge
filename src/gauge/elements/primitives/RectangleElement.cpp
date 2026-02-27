@@ -2,10 +2,6 @@
 
 RectangleElement::RectangleElement(Element* parent) : Element(parent) {}
 
-RectangleElement::RectangleElement(Element* parent, const rapidjson::Value::ConstObject json) : Element(parent, json) {
-
-}
-
 void RectangleElement::draw(Graphics &g) const {
     const auto& b = getBounds().toInt();
 

@@ -2,16 +2,7 @@
 
 GaugeFace::GaugeFace() : Element(nullptr) {}
 
-GaugeFace::GaugeFace(const rapidjson::Document& json) : Element(nullptr, json.GetObject()) {
-    if (!json.HasMember("props") || !json["props"].IsObject()) return;
-    const rapidjson::Value::ConstObject props = json["props"].GetObject();
-
-    if (props.HasMember("backgroundColor"))
-        backgroundColor = Color::fromJson(props["backgroundColor"]);
-
-    setCString(props, "title", title);
-    setCString(props, "description", description);
-}
+GaugeFace::GaugeFace(const rapidjson::Document& json) : Element(nullptr, json.GetObject()) {}
 
 void GaugeFace::draw(Graphics &g) const {
     g.fillAll(backgroundColor.get());

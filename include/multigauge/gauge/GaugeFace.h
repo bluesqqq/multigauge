@@ -17,6 +17,12 @@ class GaugeFace : public Element {
 
         unsigned long lastUpdateTime = 0;
 
+        MG_EDITABLE_BEGIN()
+            MG_PROP(title)
+            MG_PROP(description)
+            MG_PROP(backgroundColor)
+        MG_EDITABLE_END()
+
     public:
         explicit GaugeFace();
 

@@ -15,12 +15,10 @@ class ImageElement : public Element {
         MG_EDITABLE_END()
 
     public:
+        using Element::Element;
+        
         explicit ImageElement(Element* parent);
-
-        ImageElement(Element* parent, const rapidjson::Value::ConstObject json);
 
         bool init(AssetManager& assetManager) override;
         void draw(Graphics& g) const override;
 };
-
-REGISTER_ELEMENT_TYPE("image", ImageElement);

@@ -64,18 +64,3 @@ bool set(const rapidjson::Value::ConstObject& o, const char* key, T& out) {
     if (it == o.MemberEnd()) return false;
     return Codec<T>::decode(it->value, out);
 }
-
-//----------[ CUSTOM TYPES ]----------//
-
-template<>
-struct Codec<rgba> {
-    static bool decode(const rapidjson::Value& v, rgba& out) {
-        if (v.IsString()) {
-            rgba tmp(v.GetString());
-            out = tmp;
-            return true;
-        }
-
-        return false;
-    }
-};

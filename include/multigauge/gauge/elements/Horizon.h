@@ -20,18 +20,17 @@ class Horizon : public Element {
         OwnedColor groundColor     = nullptr;
         OwnedColor horizonColor    = nullptr;
         OwnedColor borderColor     = nullptr;
+
+        MG_EDITABLE_BEGIN()
+            MG_PROP(backgroundColor)
+            MG_PROP(groundColor)
+            MG_PROP(horizonColor)
+            MG_PROP(borderColor)
+        MG_EDITABLE_END()
         
     public:
-        Horizon(Element* parent, const rapidjson::Value::ConstObject json) : Element(parent, json) {
-            if (!json.HasMember("props") || !json["props"].IsObject()) return;
-            const rapidjson::Value::ConstObject props = json["props"].GetObject();
-
-            setColor(props, "backgroundColor", backgroundColor);
-            setColor(props, "groundColor", groundColor);
-            setColor(props, "horizonColor", horizonColor);
-            setColor(props, "borderColor", borderColor);
-        }
-
+        using Element::Element;
+        
         void draw(Graphics& g) const override {
             const auto b = getBounds().toInt();
 
@@ -111,5 +110,3 @@ class Horizon : public Element {
             xPosition -= 0.01f; //speed.getValueRaw() * xVelMultiplier; //xValue.getValue(DEFAULT) * xVelMultiplier;
         }
 };
-
-REGISTER_ELEMENT_TYPE("horizon", Horizon);

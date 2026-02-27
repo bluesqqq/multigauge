@@ -205,12 +205,6 @@ std::vector<rgba> ColorTimeline::sample(float startPosition, float endPosition, 
 
 PaintTimeline::PaintTimeline(ColorTimeline f, ColorTimeline s, float t) : fill(f), stroke(s), thickness(t) {}
 
-PaintTimeline::PaintTimeline(const rapidjson::Value::ConstObject json) {
-    setValue(json, "fill", fill);
-    setValue(json, "stroke", stroke);
-    setFloat(json, "thickness", thickness);
-}
-
 PaintTimeline PaintTimeline::blended(rgba color, float alpha) const {
     return PaintTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
 }

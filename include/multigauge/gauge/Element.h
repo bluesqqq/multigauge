@@ -10,9 +10,12 @@
 #include <multigauge/AssetManager.h>
 #include <multigauge/json/rj_helpers.h>
 
-#define MAX_ELEMENT_REGISTRY_SIZE 64
-
 #include <multigauge/editor/Editable.h>
+
+#include <memory>
+
+class Element;
+using OwnedElement = std::unique_ptr<Element>;
 
 class Element : public Editable {
     private:
@@ -21,7 +24,7 @@ class Element : public Editable {
         /// @brief Parent element in the hierarchy, or nullptr if root
         Element* parent = nullptr;
         /// @brief Owned child elements
-        std::vector<std::unique_ptr<Element>> children;
+        std::vector<OwnedElement> children;
 
         bool inherited = false;
         Element* layoutOwner = nullptr;
@@ -104,25 +107,5 @@ class Element : public Editable {
 
         void layoutRecursive(float width, float height, YGDirection direction = YGDirectionLTR);
 
-        //----------[ REGISTRY ]----------//
-
-        using FactoryFn = std::unique_ptr<Element>(*)(Element*, const rapidjson::Value::ConstObject&);
-
-        static bool registerType(const char* type, FactoryFn fn);
-        static std::unique_ptr<Element> fromJson(Element* parent, const rapidjson::Value::ConstObject json);
-
-    private:
-        struct Entry { const char* type; FactoryFn fn; };
-        static Entry registry[MAX_ELEMENT_REGISTRY_SIZE];
-        static size_t registryCount;
+        static OwnedElement fromJson(Element *parent, const rapidjson::Value::ConstObject json);
 };
-
-#define REGISTER_ELEMENT_TYPE(TYPE_STR, CLASS)                                \
-    namespace {                                                               \
-        static std::unique_ptr<Element> _make_##CLASS(                        \
-            Element* parent, const rapidjson::Value::ConstObject& json) {     \
-            return std::make_unique<CLASS>(parent, json);                     \
-        }                                                                     \
-        static const bool _registered_##CLASS =                               \
-            Element::registerType(TYPE_STR, &_make_##CLASS);                  \
-    }

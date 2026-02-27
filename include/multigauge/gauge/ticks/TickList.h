@@ -15,7 +15,7 @@
 #include <cmath>
 #include <algorithm>
 
-class TickList {
+class TickList : public Editable {
     private:
         RootTick root;
         std::vector<SubTick> subs;
@@ -37,6 +37,12 @@ class TickList {
         float rightHighlightBase = 0.0f;
         float rightHighlightFactor = 1.0f;
         float rightHighlightDistance = 1000;
+
+        MG_EDITABLE_BEGIN()
+            MG_PROP(root)
+            MG_PROP(subs)
+            MG_PROP(offset)
+        MG_EDITABLE_END()
 
         float getLength(uint8_t index) const;
         float getThickness(uint8_t index) const;
@@ -107,13 +113,7 @@ class TickList {
         }
 
     public:
-        TickList() {}
-        
-        TickList(const rapidjson::Value::ConstObject& json) {
-            setObj(json, "root", root);
-            setObjVector(json, "subs", subs);
-            setFloat(json, "offset", offset);
-        }
+        TickList() = default;
 
         void drawCircular(Graphics& g, Point<float> pos, float radius, float startAngle, float endAngle, float startValue, float endValue) const {
             auto tickPositions = getTickPositions(startValue, endValue);

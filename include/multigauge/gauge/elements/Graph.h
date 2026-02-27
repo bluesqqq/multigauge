@@ -27,6 +27,15 @@ class Graph : public Element {
 
         Style style = Bars;
 
+        MG_EDITABLE_BEGIN()
+            MG_PROP(seconds)
+            MG_PROP(backgroundColor)
+            MG_PROP(secondsColor)
+            MG_PROP(graphColor)
+            MG_PROP(borderColor)
+            MG_PROP(value)
+        MG_EDITABLE_END()
+
         unsigned long timeAtX(int x, int left, int width, unsigned long currentTime, float windowMs) const {
             float t01 = float(x - left) / float(std::max(1, width)); // 0..1
             return currentTime - (unsigned long)std::lround((1.0f - t01) * windowMs) - (unsigned long)bufferMilliseconds;
@@ -60,20 +69,8 @@ class Graph : public Element {
         }
 
     public:
-        Graph(Element* parent, const rapidjson::Value::ConstObject json) : Element(parent, json) {
-            if (!json.HasMember("props") || !json["props"].IsObject()) return;
-            const rapidjson::Value::ConstObject props = json["props"].GetObject();
-
-            setFloat(props, "seconds", seconds);
-
-            setColor(props, "backgroundColor", backgroundColor);
-            setColor(props, "secondsColor", secondsColor);
-            setColor(props, "graphColor", graphColor);
-            setColor(props, "borderColor", borderColor);
-
-            setObj(props, "value", value);
-        }
-
+        using Element::Element;
+        
         void draw(Graphics& g) const override {
             const auto b = getBounds();
 
@@ -204,5 +201,3 @@ class Graph : public Element {
             }
         }
 };
-
-REGISTER_ELEMENT_TYPE("graph", Graph);

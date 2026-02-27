@@ -5,7 +5,7 @@
 #include <multigauge/gauge/ticks/TickStyle.h>
 #include <multigauge/utils.h>
 
-struct SubTick {
+struct SubTick : public Editable {
     int divisions = 1;
 
     std::optional<float> length;
@@ -16,13 +16,11 @@ struct SubTick {
 
     std::optional<TickValueStyle> valueStyle;
 
-    SubTick(const rapidjson::Value::ConstObject& json) {
-        setInt(json, "divisions", divisions);
-        setOptFloat(json, "length", length);
-        setOptFloat(json, "thickness", thickness);
-        setOptObj(json, "color", color);
-        setOptObj(json, "valueStyle", valueStyle);
-    }
+    MG_EDITABLE_BEGIN()
+        MG_PROP(divisions)
+    MG_EDITABLE_END()
+
+    SubTick() = default;
 
     float getInterval(float lower, float upper) const { return (upper - lower) / (divisions + 1); }
 

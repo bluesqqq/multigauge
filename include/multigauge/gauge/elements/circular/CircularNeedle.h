@@ -8,12 +8,15 @@ class CircularNeedle : public CircularElement {
         Paint color;
         float radius = 1.0f;
 
+        MG_EDITABLE_BEGIN()
+            MG_PROP(color)
+            MG_PROP(radius)
+        MG_EDITABLE_END()
+        
     public:
-        explicit CircularNeedle(Element* parent);
+        using CircularElement::CircularElement;
 
-        CircularNeedle(Element* parent, const rapidjson::Value::ConstObject json);
+        explicit CircularNeedle(Element* parent);
 
         void draw(Graphics& g) const override;
 };
-
-REGISTER_ELEMENT_TYPE("circular-needle", CircularNeedle);

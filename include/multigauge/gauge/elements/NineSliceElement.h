@@ -3,6 +3,7 @@
 #include <multigauge/gauge/Element.h>
 #include <multigauge/images/NineSlice.h>
 
+/*
 class NineSliceElement : public Element {
     private:
         NineSlice nineSlice;
@@ -27,3 +28,4 @@ class NineSliceElement : public Element {
             g.drawNineSlice(nineSlice, b.toInt());
         }
 };
+*/
