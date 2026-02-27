@@ -81,16 +81,16 @@ class TickList : public Editable {
             }
         }
 
-        void drawLineTick(Graphics& g, Line<float> line, float thickness, Paint& Paint) const {
-            g.setFill(Paint.fill.get()->getColor());
+        void drawLineTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
+            g.setPaint(paint);
             g.drawLine(line.toInt(), thickness);
         }
 
-        void drawCircleTick(Graphics& g, Line<float> line, float thickness, Paint& Paint) const {
+        void drawCircleTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
             
         }
 
-        void drawTriangleTick(Graphics& g, Line<float> line, float thickness, Paint& Paint) const {
+        void drawTriangleTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
             
         }
 
