@@ -31,11 +31,6 @@ Paint::Paint() : fill(nullptr), stroke(nullptr) {}
 
 Paint::Paint(OwnedColor fill, OwnedColor stroke, float thickness) : fill(std::move(fill)), stroke(std::move(stroke)), thickness(thickness) {}
 
-Paint::Paint(const rapidjson::Value::ConstObject json)
-    : fill((json.HasMember("fill") ? Color::fromJson(json["fill"]) : nullptr)),
-      stroke((json.HasMember("stroke") ? Color::fromJson(json["stroke"]) : nullptr)),
-      thickness((json.HasMember("thickness") && json["thickness"].IsNumber()) ? json["thickness"].GetFloat() :  1.0f) {}
-
 Paint Paint::blended(rgba c, float alpha) const { return Paint((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }
 
 Paint Paint::blended(const Color &c, float alpha) const { return Paint((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }

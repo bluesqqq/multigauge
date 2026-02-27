@@ -93,13 +93,14 @@ struct Paint : public Editable {
     float thickness = 1.0f;
 
     MG_EDITABLE_BEGIN()
+        MG_PROP(fill)
+        MG_PROP(stroke)
         MG_PROP(thickness)
     MG_EDITABLE_END()
 
     Paint();
 
     Paint(OwnedColor fill, OwnedColor stroke, float thickness = 1.0f);
-    Paint(const rapidjson::Value::ConstObject json);
 
     Paint blended(rgba color, float alpha) const;
     Paint blended(const Color& color, float alpha) const;
