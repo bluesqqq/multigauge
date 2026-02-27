@@ -20,8 +20,6 @@ class CircularScale : public CircularElement {
     public:
         using CircularElement::CircularElement;
 
-        explicit CircularScale(Element* parent);
-
         void draw(Graphics& g) const override;
 
         void update(int deltaTime) override;

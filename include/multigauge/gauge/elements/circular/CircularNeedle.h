@@ -16,7 +16,5 @@ class CircularNeedle : public CircularElement {
     public:
         using CircularElement::CircularElement;
 
-        explicit CircularNeedle(Element* parent);
-
         void draw(Graphics& g) const override;
 };

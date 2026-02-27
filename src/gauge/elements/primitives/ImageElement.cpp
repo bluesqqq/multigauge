@@ -1,7 +1,5 @@
 #include <multigauge/gauge/elements/primitives/ImageElement.h>
 
-ImageElement::ImageElement(Element* parent) : Element(parent), path("/placeholder.bmp") { }
-
 bool ImageElement::init(AssetManager &assetManager) {
     return assetManager.loadImage(path, image);
 }

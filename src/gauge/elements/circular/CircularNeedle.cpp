@@ -2,8 +2,6 @@
 
 #include <multigauge/constants.h>
 
-CircularNeedle::CircularNeedle(Element* parent) : CircularElement(parent) {}
-
 void CircularNeedle::draw(Graphics &g) const {
     const auto& b = getBounds();
 

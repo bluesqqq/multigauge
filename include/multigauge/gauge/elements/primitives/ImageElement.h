@@ -17,8 +17,6 @@ class ImageElement : public Element {
     public:
         using Element::Element;
         
-        explicit ImageElement(Element* parent);
-
         bool init(AssetManager& assetManager) override;
         void draw(Graphics& g) const override;
 };

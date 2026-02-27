@@ -112,7 +112,7 @@ void Element::loadProps(const rapidjson::Value::ConstObject &json) {
 
 void Element::loadChildren(const rapidjson::Value::ConstObject &json) {
     if (json.HasMember("children") && json["children"].IsArray()) {
-        clearChildren();
+        children.clear();
         for (const auto& child : json["children"].GetArray())
             addChild(child.GetObject());
     }

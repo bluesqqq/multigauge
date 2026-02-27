@@ -89,7 +89,6 @@ class Element : public Editable {
 
         void addChild(const rapidjson::Value::ConstObject json);
         bool removeChild(Element* child);
-        void clearChildren();
 
         bool isRoot() const { return parent == nullptr; }
 

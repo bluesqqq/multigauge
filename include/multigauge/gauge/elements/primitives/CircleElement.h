@@ -13,7 +13,5 @@ class CircleElement : public Element {
     public:
         using Element::Element;
         
-        explicit CircleElement(Element* parent);
-
         void draw(Graphics& g) const override;
 };

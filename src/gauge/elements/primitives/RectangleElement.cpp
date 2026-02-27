@@ -1,7 +1,5 @@
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
 
-RectangleElement::RectangleElement(Element* parent) : Element(parent) {}
-
 void RectangleElement::draw(Graphics &g) const {
     const auto& b = getBounds().toInt();
 

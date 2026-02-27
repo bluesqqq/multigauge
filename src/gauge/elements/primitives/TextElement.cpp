@@ -1,7 +1,5 @@
 #include <multigauge/gauge/elements/primitives/TextElement.h>
 
-TextElement::TextElement(Element* parent, std::string text) : Element(parent), text(text) {}
-
 void TextElement::draw(Graphics &g) const {
     const auto& b = getBounds();
 

@@ -17,7 +17,5 @@ class RectangleElement : public Element {
     public:
         using Element::Element;
         
-        explicit RectangleElement(Element* parent);
-
         void draw(Graphics& g) const override;
 };

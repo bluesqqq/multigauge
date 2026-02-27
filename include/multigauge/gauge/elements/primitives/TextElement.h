@@ -24,7 +24,5 @@ class TextElement : public Element {
     public:
         using Element::Element;
         
-        explicit TextElement(Element* parent, std::string text);
-        
         void draw(Graphics& g) const override;
 };
