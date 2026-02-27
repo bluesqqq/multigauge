@@ -11,7 +11,7 @@ class ImageElement : public Element {
 
         // Editable props list
         MG_EDITABLE_BEGIN()
-            MG_PROP(path)
+            MG_EDITABLE_PROP(path)
         MG_EDITABLE_END()
 
     public:

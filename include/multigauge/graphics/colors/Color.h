@@ -93,9 +93,9 @@ struct Paint : public Editable {
     float thickness = 1.0f;
 
     MG_EDITABLE_BEGIN()
-        MG_PROP(fill)
-        MG_PROP(stroke)
-        MG_PROP(thickness)
+        MG_EDITABLE_PROP(fill)
+        MG_EDITABLE_PROP(stroke)
+        MG_EDITABLE_PROP(thickness)
     MG_EDITABLE_END()
 
     Paint();

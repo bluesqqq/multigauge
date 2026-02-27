@@ -21,12 +21,12 @@ struct RootTick : public Editable {
     std::optional<TickValueStyle> valueStyle;
 
     MG_EDITABLE_BEGIN()
-        MG_PROP(divisions)
-        MG_PROP(interval)
-        MG_PROP(useDivisions)
-        MG_PROP(length)
-        MG_PROP(thickness)
-        MG_PROP(color)
+        MG_EDITABLE_PROP(divisions)
+        MG_EDITABLE_PROP(interval)
+        MG_EDITABLE_PROP(useDivisions)
+        MG_EDITABLE_PROP(length)
+        MG_EDITABLE_PROP(thickness)
+        MG_EDITABLE_PROP(color)
         // TODO: need to do valueStyle
     MG_EDITABLE_END()
 

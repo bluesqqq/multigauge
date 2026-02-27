@@ -11,10 +11,12 @@ class CircularScale : public CircularElement {
 
         float radius = 1.0f;
 
-        // Editable props list
         MG_EDITABLE_BEGIN()
-            MG_PROP(ticks)
-            MG_PROP(radius)
+            MG_EDITABLE_PROP(value)
+            MG_EDITABLE_PROP(startAngle)
+            MG_EDITABLE_PROP(endAngle)
+            MG_EDITABLE_PROP(ticks)
+            MG_EDITABLE_PROP(radius)
         MG_EDITABLE_END()
 
     public:

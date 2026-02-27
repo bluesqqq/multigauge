@@ -22,10 +22,10 @@ class Horizon : public Element {
         OwnedColor borderColor     = nullptr;
 
         MG_EDITABLE_BEGIN()
-            MG_PROP(backgroundColor)
-            MG_PROP(groundColor)
-            MG_PROP(horizonColor)
-            MG_PROP(borderColor)
+            MG_EDITABLE_PROP(backgroundColor)
+            MG_EDITABLE_PROP(groundColor)
+            MG_EDITABLE_PROP(horizonColor)
+            MG_EDITABLE_PROP(borderColor)
         MG_EDITABLE_END()
         
     public:

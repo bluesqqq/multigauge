@@ -19,9 +19,9 @@ struct TextPaint : public Editable {
 
     MG_EDITABLE_BEGIN()
         // TODO : WEIGHT AND SLANT
-        MG_PROP(family)
-        MG_PROP(pt)
-        MG_PROP(color)
+        MG_EDITABLE_PROP(family)
+        MG_EDITABLE_PROP(pt)
+        MG_EDITABLE_PROP(color)
     MG_EDITABLE_END()
 
     TextPaint() = default;

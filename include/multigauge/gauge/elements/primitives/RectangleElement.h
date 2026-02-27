@@ -10,8 +10,8 @@ class RectangleElement : public Element {
 
         // Editable props list
         MG_EDITABLE_BEGIN()
-            MG_PROP(radius)
-            MG_PROP(color)
+            MG_EDITABLE_PROP(radius)
+            MG_EDITABLE_PROP(color)
         MG_EDITABLE_END()
 
     public:

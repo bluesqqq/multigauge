@@ -28,12 +28,12 @@ class Graph : public Element {
         Style style = Bars;
 
         MG_EDITABLE_BEGIN()
-            MG_PROP(seconds)
-            MG_PROP(backgroundColor)
-            MG_PROP(secondsColor)
-            MG_PROP(graphColor)
-            MG_PROP(borderColor)
-            MG_PROP(value)
+            MG_EDITABLE_PROP(seconds)
+            MG_EDITABLE_PROP(backgroundColor)
+            MG_EDITABLE_PROP(secondsColor)
+            MG_EDITABLE_PROP(graphColor)
+            MG_EDITABLE_PROP(borderColor)
+            MG_EDITABLE_PROP(value)
         MG_EDITABLE_END()
 
         unsigned long timeAtX(int x, int left, int width, unsigned long currentTime, float windowMs) const {

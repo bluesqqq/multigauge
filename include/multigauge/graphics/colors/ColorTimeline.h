@@ -11,8 +11,8 @@ struct ColorKeyframe : public Editable {
     OwnedColor color = nullptr;
 
     MG_EDITABLE_BEGIN()
-        MG_PROP(position)
-        MG_PROP(color)
+        MG_EDITABLE_PROP(position)
+        MG_EDITABLE_PROP(color)
     MG_EDITABLE_END()
 
     ColorKeyframe();
@@ -37,7 +37,7 @@ class ColorTimeline : public Editable {
         std::vector<ColorKeyframe> keyframes;
 
         MG_EDITABLE_BEGIN()
-            MG_PROP(keyframes)
+            MG_EDITABLE_PROP(keyframes)
         MG_EDITABLE_END()
 
         /// @brief Finds the index of the keyframe at or before the given position.
@@ -150,9 +150,9 @@ struct PaintTimeline : public Editable {
     float thickness = 1.0f;
 
     MG_EDITABLE_BEGIN()
-        MG_PROP(fill)
-        MG_PROP(stroke)
-        MG_PROP(thickness)
+        MG_EDITABLE_PROP(fill)
+        MG_EDITABLE_PROP(stroke)
+        MG_EDITABLE_PROP(thickness)
     MG_EDITABLE_END()
 
     PaintTimeline() = default;

@@ -10,6 +10,12 @@ class CircularElement : public Element {
         std::optional<float> startAngle;
         std::optional<float> endAngle;
 
+        MG_EDITABLE_BEGIN()
+            MG_EDITABLE_PROP(value)
+            MG_EDITABLE_PROP(startAngle)
+            MG_EDITABLE_PROP(endAngle)
+        MG_EDITABLE_END()
+
         const CircularElement* parentCircular() const {
             const Element* p = getParent();           // assumes you have a const getParent()
             if (!p) return nullptr;

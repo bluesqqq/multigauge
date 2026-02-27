@@ -39,9 +39,9 @@ class TickList : public Editable {
         float rightHighlightDistance = 1000;
 
         MG_EDITABLE_BEGIN()
-            MG_PROP(root)
-            MG_PROP(subs)
-            MG_PROP(offset)
+            MG_EDITABLE_PROP(root)
+            MG_EDITABLE_PROP(subs)
+            MG_EDITABLE_PROP(offset)
         MG_EDITABLE_END()
 
         float getLength(uint8_t index) const;

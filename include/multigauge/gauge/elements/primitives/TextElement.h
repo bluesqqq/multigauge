@@ -15,10 +15,10 @@ class TextElement : public Element {
 
         // Editable props list
         MG_EDITABLE_BEGIN()
-            MG_PROP(text)
-            MG_PROP(textPaint)
-            MG_PROP(useEllipses)
-            MG_PROP(useHyphens)
+            MG_EDITABLE_PROP(text)
+            MG_EDITABLE_PROP(textPaint)
+            MG_EDITABLE_PROP(useEllipses)
+            MG_EDITABLE_PROP(useHyphens)
         MG_EDITABLE_END()
 
     public:

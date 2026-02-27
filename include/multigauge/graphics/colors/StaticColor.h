@@ -7,7 +7,7 @@ class StaticColor : public Color {
         rgba color;
 
         MG_EDITABLE_BEGIN()
-            MG_PROP(color)
+            MG_EDITABLE_PROP(color)
         MG_EDITABLE_END()
     
     public:
