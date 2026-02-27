@@ -6,6 +6,8 @@
 #include <set>
 #include <algorithm>
 
+ColorKeyframe::ColorKeyframe() { }
+
 ColorKeyframe::ColorKeyframe(OwnedColor color, float position) : color(std::move(color)), position(position) { }
 
 ColorKeyframe::ColorKeyframe(const rapidjson::Value::ConstObject json)
