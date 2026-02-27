@@ -15,7 +15,7 @@
 namespace {
     std::unique_ptr<AssetManager> assets;
     std::unique_ptr<Graphics> g;
-    std::unique_ptr<GaugeFace> face;
+    OwnedElement face;
 
     uint32_t lastUs = 0;
     int t = 0;
@@ -29,7 +29,8 @@ bool init(const char* gaugePath) {
 
     rapidjson::Document doc;
     if (assets->loadJson(gaugePath, doc)) {
-        face = std::make_unique<GaugeFace>(doc);
+        const rapidjson::Document& cdoc = doc;
+        face = Element::fromJson(nullptr, cdoc.GetObject());
         LOG_INFO("gauge", "Loaded gaugeface: %s", gaugePath);
     } else {
         face = std::make_unique<GaugeFace>();

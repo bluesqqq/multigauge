@@ -26,7 +26,5 @@ class GaugeFace : public Element {
     public:
         explicit GaugeFace();
 
-        GaugeFace(const rapidjson::Document& json);
-
         void draw(Graphics& g) const override;
 };

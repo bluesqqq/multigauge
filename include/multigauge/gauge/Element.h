@@ -55,12 +55,8 @@ class Element : public Editable {
 
         YGConfigRef createConfig();
 
-        static bool styleIsInherit(const rapidjson::Value::ConstObject& json) {
-            auto it = json.FindMember("style");
-            if (it == json.MemberEnd()) return false;
-            if (!it->value.IsString()) return false;
-            return std::strcmp(it->value.GetString(), "inherit") == 0;
-        }
+        void makeNode();
+        void removeNode();
 
     protected:
         void markLayoutDirty();
@@ -76,8 +72,7 @@ class Element : public Editable {
     public:
         enum Type { Base, Circular };
 
-        explicit Element(Element* parent, bool inherit = false);
-        explicit Element(Element* parent, const rapidjson::Value::ConstObject json);
+        explicit Element(Element* parent);
         virtual ~Element();
 
         virtual Type getType() const { return Type::Base; }
@@ -94,6 +89,7 @@ class Element : public Editable {
 
         void addChild(const rapidjson::Value::ConstObject json);
         bool removeChild(Element* child);
+        void clearChildren();
 
         bool isRoot() const { return parent == nullptr; }
 
@@ -107,5 +103,44 @@ class Element : public Editable {
 
         void layoutRecursive(float width, float height, YGDirection direction = YGDirectionLTR);
 
+        //----------[ LAYOUT ]----------//
+        
         static OwnedElement fromJson(Element *parent, const rapidjson::Value::ConstObject json);
+       
+        void loadFromJson(const rapidjson::Value::ConstObject& json) {
+            loadLayout(json);
+            loadProps(json);
+            loadChildren(json);
+        }
+
+        void applyInheritance() {
+            if (inherited) removeNode();
+            else makeNode();
+
+            refreshInheritanceCacheRecursive();
+            markLayoutDirty();
+        }
+
+        void setInherited(bool newInherited) {
+            if (!parent) newInherited = false; // To be inherited element MUST have parent
+            if (inherited == newInherited) return;
+            inherited = newInherited;
+            applyInheritance();
+        }
+
+        static bool isInheritString(const rapidjson::Value::ConstObject& json) {
+            auto it = json.FindMember("style");
+            if (it == json.MemberEnd())
+                return false;
+
+            const rapidjson::Value& style = it->value;
+
+            return style.IsString() && std::strcmp(style.GetString(), "inherit") == 0;
+        }
+
+        void loadLayout(const rapidjson::Value::ConstObject& json);
+
+        void loadProps(const rapidjson::Value::ConstObject& json);
+
+        void loadChildren(const rapidjson::Value::ConstObject& json);
 };

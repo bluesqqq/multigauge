@@ -5,7 +5,7 @@ static inline const rapidjson::Value* getMember(const rapidjson::Value::ConstObj
     return (it != o.MemberEnd()) ? &it->value : nullptr;
 }
 
-void loadLayout(YGNodeRef node, const rapidjson::Value::ConstObject json) {
+void loadYogaLayout(YGNodeRef node, const rapidjson::Value::ConstObject json) {
     if (!node) return;
 
     const rapidjson::Value* styleV = getMember(json, "style");

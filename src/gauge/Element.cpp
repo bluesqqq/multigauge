@@ -13,44 +13,47 @@ YGConfigRef Element::createConfig() {
     return config;
 }
 
+void Element::makeNode() {
+    if (!node) {
+        if (!config) config = parent ? parent->getConfig() : createConfig();
+        node = YGNodeNewWithConfig(config);
+        YGNodeSetContext(node, this);
+    }
+}
+
+void Element::removeNode() {
+    if (!node) return;
+
+    if (parent) {
+        Element* yogaParent = parent->getLayoutOwner();
+        if (yogaParent && yogaParent->node) {
+            YGNodeRemoveChild(yogaParent->node, node);
+        }
+    }
+
+    YGNodeSetContext(node, nullptr);
+    YGNodeFree(node);
+    node = nullptr;
+}
+
 void Element::markLayoutDirty() {
     Element* n = this;
     while (n->parent) n = n->parent;
     n->layoutDirty = true;
 }
 
-Element::Element(Element* p, bool inherit) : parent(p), inherited(inherit) {
-    config = parent ? parent->getConfig() : createConfig();
-
-    if (!parent) inherited = false; // root must own layout
-
-    if (!inherited) {
-        node = YGNodeNewWithConfig(config);
-        YGNodeSetContext(node, this);
-    }
-
-    refreshInheritanceCacheRecursive();
-}
-
-Element::Element(Element* p, const rapidjson::Value::ConstObject json) : Element(p, styleIsInherit(json)) {
-    if (!inherited) loadLayout(getNode(), json);
-
-    if (json.HasMember("props") && json["props"].IsObject()) loadProperties(json["props"].GetObject());
-
-    if (!json.HasMember("children") || !json["children"].IsArray()) return;
-    for (const auto& child : json["children"].GetArray())
-        addChild(child.GetObject());
-}
+Element::Element(Element* p) : parent(p) { applyInheritance(); }
 
 Element::~Element() {
     children.clear();
-    
-    if (node) {
-        YGNodeFree(node);
-        node = nullptr;
+    removeNode();
+    if (!parent && config) {
+        YGConfigFree(config);
+        config = nullptr;
     }
 }
 
+#include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/gauge/elements/primitives/TextElement.h>
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
 #include <multigauge/gauge/elements/primitives/CircleElement.h>
@@ -68,25 +71,51 @@ OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObj
     if (auto it = json.FindMember("type"); it != json.MemberEnd() && it->value.IsString())
         type = it->value.GetString();
 
-    if (!type) {
+    OwnedElement out;
+
+    if (!parent) { // No parent = gauge face (for now)
+        out = std::make_unique<GaugeFace>();
+    } else if (!type) {
         LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
-        return std::make_unique<Element>(parent, json);
+        out = std::make_unique<Element>(parent);
+    } else {
+        if (std::strcmp(type, "rectangle")             == 0) out = std::make_unique<RectangleElement>(parent);
+        else if (std::strcmp(type, "circle")           == 0) out = std::make_unique<CircleElement>(parent);
+        else if (std::strcmp(type, "image")            == 0) out = std::make_unique<ImageElement>(parent);
+        else if (std::strcmp(type, "text")             == 0) out = std::make_unique<TextElement>(parent);
+        else if (std::strcmp(type, "horizon")          == 0) out = std::make_unique<Horizon>(parent);
+        else if (std::strcmp(type, "graph")            == 0) out = std::make_unique<Graph>(parent);
+        else if (std::strcmp(type, "circular-element") == 0) out = std::make_unique<CircularElement>(parent);
+        else if (std::strcmp(type, "circular-needle")  == 0) out = std::make_unique<CircularNeedle>(parent);
+        else if (std::strcmp(type, "circular-scale")   == 0) out = std::make_unique<CircularScale>(parent);
+        else {
+            LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
+            out = std::make_unique<Element>(parent);
+        }
     }
 
-    // --- big strcmp chain ---
-    if (std::strcmp(type, "rectangle") == 0) return std::make_unique<RectangleElement>(parent, json);
-    if (std::strcmp(type, "circle")    == 0) return std::make_unique<CircleElement>(parent, json);
-    if (std::strcmp(type, "image")     == 0) return std::make_unique<ImageElement>(parent, json);
-    if (std::strcmp(type, "text")      == 0) return std::make_unique<TextElement>(parent, json);
-    if (std::strcmp(type, "horizon")   == 0) return std::make_unique<Horizon>(parent, json);
-    if (std::strcmp(type, "graph")     == 0) return std::make_unique<Graph>(parent, json);
+    out->loadFromJson(json);
 
-    if (std::strcmp(type, "circular-element") == 0) return std::make_unique<CircularElement>(parent, json);
-    if (std::strcmp(type, "circular-needle")  == 0) return std::make_unique<CircularNeedle>(parent, json);
-    if (std::strcmp(type, "circular-scale")   == 0) return std::make_unique<CircularScale>(parent, json);
+    return out;
+}
 
-    LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
-    return std::make_unique<Element>(parent, json);
+void Element::loadLayout(const rapidjson::Value::ConstObject &json) {
+    setInherited(parent ? isInheritString(json) : false);
+
+    if (!inherited) loadYogaLayout(node, json);
+}
+
+void Element::loadProps(const rapidjson::Value::ConstObject &json) {
+    if (json.HasMember("props") && json["props"].IsObject())
+        loadProperties(json["props"].GetObject());
+}
+
+void Element::loadChildren(const rapidjson::Value::ConstObject &json) {
+    if (json.HasMember("children") && json["children"].IsArray()) {
+        clearChildren();
+        for (const auto& child : json["children"].GetArray())
+            addChild(child.GetObject());
+    }
 }
 
 void Element::addChild(const rapidjson::Value::ConstObject json) {

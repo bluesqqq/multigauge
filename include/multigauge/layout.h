@@ -237,4 +237,4 @@ static void applyPositionEdges(YGNodeRef node, const rapidjson::Value::ConstObje
 	}
 }
 
-void loadLayout(YGNodeRef node, const rapidjson::Value::ConstObject json);
+void loadYogaLayout(YGNodeRef node, const rapidjson::Value::ConstObject json);
