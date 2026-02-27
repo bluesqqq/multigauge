@@ -6,7 +6,7 @@
 
 #include <multigauge/AssetManager.h>
 #include <multigauge/graphics/Graphics.h>
-#include <multigauge/graphics/gauge/GaugeFace.h>
+#include <multigauge/gauge/GaugeFace.h>
 
 #include <rapidjson/document.h>
 #include <memory>

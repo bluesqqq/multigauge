@@ -4,6 +4,7 @@
 #include <multigauge/io/Log.h>
 #include <multigauge/values/value.h>
 #include <multigauge/json/rj_helpers.h>
+#include <multigauge/editor/Editable.h>
 
 #include <rapidjson/document.h>
 
@@ -16,7 +17,7 @@ class ColorTimeline;      // forward declare
 
 using OwnedColor = std::unique_ptr<Color>;
 
-class Color {
+class Color : public Editable {
     public:
         virtual ~Color() = default;
         
@@ -76,12 +77,24 @@ inline bool setColor(const rapidjson::Value::ConstObject &json, const char *key,
     return true;
 }
 
+template<>
+struct Codec<OwnedColor> {
+    static bool decode(const rapidjson::Value& v, OwnedColor& out) {
+        out = Color::fromJson(v);
+        return (out != nullptr);
+    }
+};
+
 //----------[ FILL STROKE ]----------//
 
-struct Paint {
+struct Paint : public Editable {
     OwnedColor fill;
     OwnedColor stroke;
     float thickness = 1.0f;
+
+    MG_EDITABLE_BEGIN()
+        MG_PROP(thickness)
+    MG_EDITABLE_END()
 
     Paint();
 

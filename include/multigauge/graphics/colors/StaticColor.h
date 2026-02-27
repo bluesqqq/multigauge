@@ -5,6 +5,10 @@
 class StaticColor : public Color {
     private:
         rgba color;
+
+        MG_EDITABLE_BEGIN()
+            MG_PROP(color)
+        MG_EDITABLE_END()
     
     public:
         /// @brief Constructs a StaticColor with default color

@@ -4,12 +4,19 @@
 
 //----------[ KEYFRAME ]----------//
 
-struct ColorKeyframe {
+struct ColorKeyframe : public Editable {
     /// @brief Position in the timeline
-    float position;
+    float position = 0;
     /// @brief The color at this position
-    OwnedColor color;
+    OwnedColor color = nullptr;
 
+    MG_EDITABLE_BEGIN()
+        MG_PROP(position)
+        MG_PROP(color)
+    MG_EDITABLE_END()
+
+    ColorKeyframe();
+    
     ColorKeyframe(OwnedColor color, float position);
 
     ColorKeyframe(const rapidjson::Value::ConstObject json);
@@ -25,9 +32,13 @@ struct ColorKeyframe {
 
 //----------[ TIMELINE ]----------//
 
-class ColorTimeline {
+class ColorTimeline : public Editable {
     private:
         std::vector<ColorKeyframe> keyframes;
+
+        MG_EDITABLE_BEGIN()
+            MG_PROP(keyframes)
+        MG_EDITABLE_END()
 
         /// @brief Finds the index of the keyframe at or before the given position.
         /// @param position The position to search for

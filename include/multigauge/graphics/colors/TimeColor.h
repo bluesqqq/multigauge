@@ -19,6 +19,10 @@ class TimeColor : public Color {
         ColorTimeline timeline;
         LoopType loopType;
 
+        MG_EDITABLE_BEGIN()
+            MG_PROP(timeline)
+        MG_EDITABLE_END()
+
         /// @brief Retrieves the current time value.
         /// @return The current time position in milliseconds
         float getTime() const;
