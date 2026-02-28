@@ -6,6 +6,7 @@
 #include <multigauge/gauge/elements/circular/CircularElement.h>
 
 class CircularScale : public CircularElement {
+    MG_EDITOR_NAME("Circular Scale")
     private:
         TickList ticks;
 

@@ -8,6 +8,8 @@
 #include <optional>
 
 struct RootTick : public Editable {
+    MG_EDITOR_NAME("Tick")
+    
     int divisions = 2;
     float interval = 1.0f;
     bool useDivisions = true;
