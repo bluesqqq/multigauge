@@ -16,6 +16,8 @@
 #include <algorithm>
 
 class TickList : public Editable {
+    MG_EDITOR_NAME("Tick List")
+    
     private:
         RootTick root;
         std::vector<SubTick> subs;

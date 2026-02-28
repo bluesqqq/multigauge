@@ -5,6 +5,7 @@
 #include <multigauge/values/ValueEmbed.h>
 
 class TextElement : public Element {
+    MG_EDITOR_NAME("Text")
     private:
         std::string text;
         TextPaint textPaint;

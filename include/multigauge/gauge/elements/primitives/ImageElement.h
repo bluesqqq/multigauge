@@ -4,6 +4,7 @@
 #include <multigauge/graphics/colors/Color.h>
 
 class ImageElement : public Element {
+    MG_EDITOR_NAME("Image")
     private:
         const char* path = "";
 

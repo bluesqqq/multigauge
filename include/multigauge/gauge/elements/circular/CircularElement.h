@@ -5,6 +5,7 @@
 #include <multigauge/gauge/Element.h>
 
 class CircularElement : public Element {
+    MG_EDITOR_NAME("Circular Element")
     protected:
         std::optional<DisplayValue> value;
         std::optional<float> startAngle;

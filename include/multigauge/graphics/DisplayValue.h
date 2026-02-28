@@ -8,6 +8,7 @@
 /// @note This class does not have setter functions for setting the value of the `Value` reference, as it is meant to supply context to the `Value` object.
 class DisplayValue : public Editable {
     CODEC_FRIEND(DisplayValue)
+    MG_EDITOR_NAME("Value")
 
     /*
         This class allows for `GaugeElement` objects that require `Value` references to not be limited to displaying the

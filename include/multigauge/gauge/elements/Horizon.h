@@ -4,6 +4,7 @@
 #include <multigauge/graphics/colors/StaticColor.h>
 
 class Horizon : public Element {
+    MG_EDITOR_NAME("Horizon")
     private:
         int horizonDensityVertical = 25; // Density variables can be changed to show more/less lines
         int horizonDensityHorizontal = 12;

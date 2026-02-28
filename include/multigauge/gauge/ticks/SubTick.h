@@ -6,6 +6,8 @@
 #include <multigauge/utils.h>
 
 struct SubTick : public Editable {
+    MG_EDITOR_NAME("Tick")
+    
     int divisions = 1;
 
     std::optional<float> length;

@@ -9,6 +9,7 @@ struct TimeValue {
 };
 
 class Graph : public Element {
+    MG_EDITOR_NAME("Graph")
     private:
         float seconds = 1;
         int bufferMilliseconds = 0;

@@ -17,6 +17,8 @@ class Element;
 using OwnedElement = std::unique_ptr<Element>;
 
 class Element : public Editable {
+    MG_EDITOR_NAME("Element")
+
     private:
         //----------[ TREE ]----------//
 

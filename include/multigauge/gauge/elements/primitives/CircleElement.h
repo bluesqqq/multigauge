@@ -3,6 +3,7 @@
 #include <multigauge/gauge/Element.h>
 
 class CircleElement : public Element {
+    MG_EDITOR_NAME("Circle")
     private:
         Paint color;
 

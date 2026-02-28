@@ -42,7 +42,7 @@ class GaugeEditor {
             node.id = id;
             node.parentId = parentId;
             node.order = order;
-            node.type = "test";
+            node.type = e.editorTypeName();
 
             nodes.push_back(std::move(node));
 

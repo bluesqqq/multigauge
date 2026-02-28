@@ -8,6 +8,7 @@
 #define NO_DESCRIPTION_TEXT "No description."
 
 class GaugeFace : public Element {
+    MG_EDITOR_NAME("Gauge Face")
     private:
         OwnedColor backgroundColor;
 

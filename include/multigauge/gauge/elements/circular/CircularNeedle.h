@@ -4,6 +4,7 @@
 #include <multigauge/gauge/elements/circular/CircularElement.h>
 
 class CircularNeedle : public CircularElement {
+    MG_EDITOR_NAME("Circular Needle")
     private:
         Paint color;
         float radius = 1.0f;

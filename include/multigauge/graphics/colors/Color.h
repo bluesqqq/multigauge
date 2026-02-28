@@ -18,6 +18,7 @@ class ColorTimeline;      // forward declare
 using OwnedColor = std::unique_ptr<Color>;
 
 class Color : public Editable {
+    MG_EDITOR_NAME("Color")
     public:
         virtual ~Color() = default;
         
@@ -64,6 +65,8 @@ CODEC_END()
 //----------[ FILL STROKE ]----------//
 
 struct Paint : public Editable {
+    MG_EDITOR_NAME("Paint")
+    
     OwnedColor fill;
     OwnedColor stroke;
     float thickness = 1.0f;

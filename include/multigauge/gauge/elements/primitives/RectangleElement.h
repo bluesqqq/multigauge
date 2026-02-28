@@ -4,6 +4,7 @@
 #include <multigauge/graphics/colors/Color.h>
 
 class RectangleElement : public Element {
+    MG_EDITOR_NAME("Rectangle")
     private:
         Paint color;
         float radius = 0.0f;

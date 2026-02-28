@@ -5,6 +5,8 @@
 //----------[ KEYFRAME ]----------//
 
 struct ColorKeyframe : public Editable {
+    MG_EDITOR_NAME("Keyframe")
+
     /// @brief Position in the timeline
     float position = 0;
     /// @brief The color at this position
@@ -31,7 +33,9 @@ struct ColorKeyframe : public Editable {
 //----------[ TIMELINE ]----------//
 
 class ColorTimeline : public Editable {
+    MG_EDITOR_NAME("Timeline")
     CODEC_FRIEND(ColorTimeline)
+    
     private:
         std::vector<ColorKeyframe> keyframes;
 

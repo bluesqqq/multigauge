@@ -11,6 +11,7 @@ enum class FontWeight : uint16_t { Normal = 400, Bold = 700 };
 enum class FontSlant  : uint8_t { Normal, Italic };
 
 struct TextPaint : public Editable {
+    MG_EDITOR_NAME("Text Paint")
     std::string family = "default";
     FontWeight weight = FontWeight::Normal;
     FontSlant slant = FontSlant::Normal;
