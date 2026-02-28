@@ -7,7 +7,6 @@
 #include <multigauge/AssetManager.h>
 #include <multigauge/graphics/Graphics.h>
 #include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/editor/GaugeEditor.h>
 
 #include <rapidjson/document.h>
 #include <memory>
@@ -18,10 +17,7 @@ namespace {
     std::unique_ptr<Graphics> g;
     OwnedElement face;
 
-    std::unique_ptr<GaugeEditor> editor;
-
     uint32_t lastUs = 0;
-    int t = 0;
 }
 
 namespace mg {
@@ -40,32 +36,18 @@ bool init(const char* gaugePath) {
         LOG_WARN("gauge", "Failed to load gaugeface: %s", gaugePath);
     }
 
-    face->initRecursive(*assets);
-
-    editor = std::make_unique<GaugeEditor>(*face);
+    if (face) face->initRecursive(*assets);
 
     lastUs = TIME().getMicros();
     return true;
 }
 
 void frame() {
+    if (!face || !g) return;
+
     uint64_t nowUs = TIME().getMicros();
     uint64_t deltaUs = nowUs - lastUs;
     lastUs = nowUs;
-
-    static uint64_t accUs = 0;
-    static uint64_t frames = 0;
-
-    accUs += deltaUs;
-    frames++;
-
-    if (accUs >= 1'000'000u) {
-        float fps = (frames * 1'000'000.0f) / (float)accUs;
-        LOG_INFO("perf", "fps=%.2f frames=%u window_us=%u",
-                 fps, (unsigned)frames, (unsigned)accUs);
-        accUs = 0;
-        frames = 0;
-    }
 
     auto screen = g->getScreenBounds().toFloat();
 
@@ -82,4 +64,8 @@ void frame() {
     engineCoolantTemp.setValueBase(std::sin((float)nowUs / 5000000.0f) * 10 + 0);
 }
 
+Element* getFaceRoot() {
+    return face.get();
 }
+
+} // namespace mg
