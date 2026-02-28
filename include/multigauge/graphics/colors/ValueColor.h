@@ -7,6 +7,7 @@ class ValueColor : public Color {
     private:
         ColorTimeline timeline;
         Value* value = nullptr;
+        std::string id; ///< reference string used during JSON serialization
 
     public:
         ValueColor() = default;
@@ -42,4 +43,14 @@ class ValueColor : public Color {
         /// @param alpha The blend amount (0.0 = this color, 1.0 = other color)
         /// @return A new Color object with the blended result (will always be a ValueColor)
         OwnedColor blended(const Color& color, float alpha) const override;
+
+        // internal helper called after deserialization to resolve `id` -> pointer
+        void resolve() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
+
+        MG_EDITABLE_BEGIN()
+            MG_EDITABLE_PROP(timeline)
+            MG_EDITABLE_PROP(id)
+        MG_EDITABLE_END()
+
+        void loadProperties(rapidjson::Value::ConstObject json);
 };

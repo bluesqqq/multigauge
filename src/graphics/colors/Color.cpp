@@ -7,7 +7,12 @@
 
 const ColorTimeline* Color::getTimeline() const { return nullptr; }
 
-inline bool Codec<OwnedColor>::decode(const rapidjson::Value &v, OwnedColor &out) {
+DECODE_IMPL(OwnedColor) {
+    if (v.IsNull()) {
+        out = nullptr;
+        return true;
+    }
+
     if (v.IsString()) {
         out = std::make_unique<StaticColor>(rgba(v.GetString()));
         return true;
@@ -18,24 +23,44 @@ inline bool Codec<OwnedColor>::decode(const rapidjson::Value &v, OwnedColor &out
     const auto obj = v.GetObject();
 
     const char* type = nullptr;
-    if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) {
-        type = it->value.GetString();
-    }
+    if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) type = it->value.GetString();
 
-    if (!type) {
-        out = std::make_unique<StaticColor>();
-    } else if (std::strcmp(type, "value") == 0) {
-        out = std::make_unique<ValueColor>();
-    } else if (std::strcmp(type, "time") == 0) {
-        out = std::make_unique<TimeColor>();
-    } else if (std::strcmp(type, "user") == 0) {
-        out = std::make_unique<UserColor>();
-    } else {
-        out = std::make_unique<StaticColor>();
-    }
+    if (!type) out = std::make_unique<StaticColor>();
+    else if (std::strcmp(type, "value") == 0) out = std::make_unique<ValueColor>();
+    else if (std::strcmp(type, "time") == 0) out = std::make_unique<TimeColor>();
+    else if (std::strcmp(type, "user") == 0) out = std::make_unique<UserColor>();
+    else out = std::make_unique<StaticColor>();
 
     out->loadProperties(obj);
 
+    return true;
+}
+
+ENCODE_IMPL(OwnedColor) {
+    if (!v) { 
+        out.SetNull(); 
+        return true; 
+    }
+
+    out.SetObject();
+    
+    const char* typeStr = nullptr;
+    switch (v->getType()) {
+        case Color::Type::Value:  typeStr = "value"; break;
+        case Color::Type::Time:   typeStr = "time"; break;
+        case Color::Type::User:   typeStr = "user"; break;
+        case Color::Type::Static: typeStr = "static"; break;
+    }
+    
+    if (typeStr) {
+        rapidjson::Value typeKey("type", a);
+        rapidjson::Value typeVal(typeStr, a);
+        out.AddMember(typeKey, typeVal, a);
+    }
+
+    // Save all properties
+    v->saveProperties(out, a);
+    
     return true;
 }
 

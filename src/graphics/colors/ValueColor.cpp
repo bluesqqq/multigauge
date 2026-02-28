@@ -10,6 +10,7 @@ ValueColor &ValueColor::operator=(const ValueColor &other) {
     if (this != &other) {
         this->timeline = other.timeline;
         this->value = other.value;
+        this->id = other.id;
     }
     return *this;
 }
@@ -36,3 +37,10 @@ OwnedColor ValueColor::clone() const { return std::make_unique<ValueColor>(*this
 rgba ValueColor::getColor() const { return value ? timeline.getColor((value != nullptr) ? value->getValueBase() : 0.0f) : rgba(); }
 
 Color::Type ValueColor::getType() const { return Type::Value; }
+
+// ----------[ JSON helpers ]----------
+
+void ValueColor::loadProperties(rapidjson::Value::ConstObject json) {
+    Editable::loadProperties(json);
+    resolve();
+}

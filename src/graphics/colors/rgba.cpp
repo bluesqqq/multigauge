@@ -9,6 +9,16 @@ rgba::rgba(const char *s) {
     if (parse_hex(s, newRgba) || parse_keyword(s, newRgba)) *this = newRgba;
 }
 
+bool rgba::fromString(const char *s, rgba &out) {
+    return parse_hex(s, out) || parse_keyword(s, out);
+}
+
+const char *rgba::toHex() const {
+    thread_local char buf[10];
+    std::snprintf(buf, sizeof(buf), "#%02X%02X%02X%02X", (unsigned)r, (unsigned)g, (unsigned)b, (unsigned)a);
+    return buf;
+}
+
 void rgba::blend(const rgba &other, float t) {
     t = std::clamp(t, 0.0f, 1.0f);
 

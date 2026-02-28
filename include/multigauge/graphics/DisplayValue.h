@@ -7,6 +7,8 @@
 /// @brief A class that wraps around a `Value` object, allowing the use of custom minimum and maximum limits & units
 /// @note This class does not have setter functions for setting the value of the `Value` reference, as it is meant to supply context to the `Value` object.
 class DisplayValue : public Editable {
+    CODEC_FRIEND(DisplayValue)
+
     /*
         This class allows for `GaugeElement` objects that require `Value` references to not be limited to displaying the
         minimum and maximum values defined in the `Value` object. A unit index can be defined as well to specify which
@@ -72,13 +74,26 @@ class DisplayValue : public Editable {
         }
 };
 
-template<>
-struct Codec<DisplayValue> {
-    static bool decode(const rapidjson::Value& v, DisplayValue& out) {
+CODEC_BEGIN(DisplayValue)
+    DECODE() {
         if (v.IsString()) {
+            // TODO: change this to test Value::find
             out = DisplayValue(v.GetString());
             return true;
         }
         return false;
     }
-};
+
+    ENCODE() {
+        // we only encode as a plain id string when no optional fields are set
+        if (v.minimum.has_value() || v.maximum.has_value() || v.unitIndex.has_value()) return false;
+        
+        if (v.value) {
+            out.SetString(v.value->getId(), a);
+            return true;
+        } else {
+            out.SetNull();
+            return true;
+        }
+    }
+CODEC_END()

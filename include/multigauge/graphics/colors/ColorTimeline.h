@@ -31,6 +31,7 @@ struct ColorKeyframe : public Editable {
 //----------[ TIMELINE ]----------//
 
 class ColorTimeline : public Editable {
+    CODEC_FRIEND(ColorTimeline)
     private:
         std::vector<ColorKeyframe> keyframes;
 
@@ -140,9 +141,8 @@ class ColorTimeline : public Editable {
         std::vector<float> getPositionsMapped(float start = 0.0f, float end = 1.0f) const;
 };
 
-template<>
-struct Codec<ColorTimeline> {
-    static bool decode(const rapidjson::Value& v, ColorTimeline& out) {
+CODEC_BEGIN(ColorTimeline)
+    DECODE() {
         OwnedColor color;
         if (Codec<OwnedColor>::decode(v, color)) {
             out = ColorTimeline(std::move(color));
@@ -150,7 +150,12 @@ struct Codec<ColorTimeline> {
         }
         return false;
     }
-};
+
+    ENCODE() {
+        if (v.size() == 1) return Codec<OwnedColor>::encode(out, a, v.keyframes[0].color);
+        return false;
+    }
+CODEC_END()
 
 //----------[ FILL STROKE TIMELINE ]----------//
 

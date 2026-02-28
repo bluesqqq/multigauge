@@ -21,6 +21,7 @@ class TimeColor : public Color {
 
         MG_EDITABLE_BEGIN()
             MG_EDITABLE_PROP(timeline)
+            MG_EDITABLE_PROP(loopType)
         MG_EDITABLE_END()
 
         /// @brief Retrieves the current time value.
@@ -66,3 +67,27 @@ class TimeColor : public Color {
         /// @return A new Color object with the blended result (will always be a TimeColor)
         OwnedColor blended(const Color& other, float alpha) const override;
 };
+
+CODEC_BEGIN(TimeColor::LoopType)
+    DECODE() {
+        if (!v.IsString()) return false;
+        const char* s = v.GetString();
+        if (std::strcmp(s, "forward") == 0) out = TimeColor::LoopType::Forward;
+        else if (std::strcmp(s, "reverse") == 0) out = TimeColor::LoopType::Reverse;
+        else if (std::strcmp(s, "pingpong") == 0) out = TimeColor::LoopType::PingPong;
+        else return false;
+        return true;
+    }
+
+    ENCODE() {
+        const char* s = nullptr;
+        switch (v) {
+            case TimeColor::LoopType::Forward:  s = "forward"; break;
+            case TimeColor::LoopType::Reverse:  s = "reverse"; break;
+            case TimeColor::LoopType::PingPong: s = "pingpong"; break;
+        }
+        if (s) out.SetString(s, a);
+        else out.SetNull();
+        return true;
+    }
+CODEC_END()

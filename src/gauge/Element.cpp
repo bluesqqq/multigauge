@@ -53,52 +53,6 @@ Element::~Element() {
     }
 }
 
-#include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/gauge/elements/primitives/TextElement.h>
-#include <multigauge/gauge/elements/primitives/RectangleElement.h>
-#include <multigauge/gauge/elements/primitives/CircleElement.h>
-#include <multigauge/gauge/elements/primitives/ImageElement.h>
-#include <multigauge/gauge/elements/Horizon.h>
-#include <multigauge/gauge/elements/Graph.h>
-#include <multigauge/gauge/elements/circular/CircularElement.h>
-#include <multigauge/gauge/elements/circular/CircularNeedle.h>
-#include <multigauge/gauge/elements/circular/CircularScale.h>
-
-OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObject json) {
-    constexpr const char* TAG = "Element::fromJson";
-
-    const char* type = nullptr;
-    if (auto it = json.FindMember("type"); it != json.MemberEnd() && it->value.IsString())
-        type = it->value.GetString();
-
-    OwnedElement out;
-
-    if (!parent) { // No parent = gauge face (for now)
-        out = std::make_unique<GaugeFace>();
-    } else if (!type) {
-        LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
-        out = std::make_unique<Element>(parent);
-    } else {
-        if (std::strcmp(type, "rectangle")             == 0) out = std::make_unique<RectangleElement>(parent);
-        else if (std::strcmp(type, "circle")           == 0) out = std::make_unique<CircleElement>(parent);
-        else if (std::strcmp(type, "image")            == 0) out = std::make_unique<ImageElement>(parent);
-        else if (std::strcmp(type, "text")             == 0) out = std::make_unique<TextElement>(parent);
-        else if (std::strcmp(type, "horizon")          == 0) out = std::make_unique<Horizon>(parent);
-        else if (std::strcmp(type, "graph")            == 0) out = std::make_unique<Graph>(parent);
-        else if (std::strcmp(type, "circular-element") == 0) out = std::make_unique<CircularElement>(parent);
-        else if (std::strcmp(type, "circular-needle")  == 0) out = std::make_unique<CircularNeedle>(parent);
-        else if (std::strcmp(type, "circular-scale")   == 0) out = std::make_unique<CircularScale>(parent);
-        else {
-            LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
-            out = std::make_unique<Element>(parent);
-        }
-    }
-
-    out->loadFromJson(json);
-
-    return out;
-}
-
 void Element::loadLayout(const rapidjson::Value::ConstObject &json) {
     setInherited(parent ? isInheritString(json) : false);
 
@@ -219,4 +173,50 @@ void Element::layoutRecursive(float width, float height, YGDirection direction) 
     walk(walk, root, 0, 0);
 
     root->clearLayoutDirtyRecursive();
+}
+
+#include <multigauge/gauge/GaugeFace.h>
+#include <multigauge/gauge/elements/primitives/TextElement.h>
+#include <multigauge/gauge/elements/primitives/RectangleElement.h>
+#include <multigauge/gauge/elements/primitives/CircleElement.h>
+#include <multigauge/gauge/elements/primitives/ImageElement.h>
+#include <multigauge/gauge/elements/Horizon.h>
+#include <multigauge/gauge/elements/Graph.h>
+#include <multigauge/gauge/elements/circular/CircularElement.h>
+#include <multigauge/gauge/elements/circular/CircularNeedle.h>
+#include <multigauge/gauge/elements/circular/CircularScale.h>
+
+OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObject json) {
+    constexpr const char* TAG = "Element::fromJson";
+
+    const char* type = nullptr;
+    if (auto it = json.FindMember("type"); it != json.MemberEnd() && it->value.IsString())
+        type = it->value.GetString();
+
+    OwnedElement out;
+
+    if (!parent) { // No parent = gauge face (for now)
+        out = std::make_unique<GaugeFace>();
+    } else if (!type) {
+        LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
+        out = std::make_unique<Element>(parent);
+    } else {
+        if (std::strcmp(type, "rectangle")             == 0) out = std::make_unique<RectangleElement>(parent);
+        else if (std::strcmp(type, "circle")           == 0) out = std::make_unique<CircleElement>(parent);
+        else if (std::strcmp(type, "image")            == 0) out = std::make_unique<ImageElement>(parent);
+        else if (std::strcmp(type, "text")             == 0) out = std::make_unique<TextElement>(parent);
+        else if (std::strcmp(type, "horizon")          == 0) out = std::make_unique<Horizon>(parent);
+        else if (std::strcmp(type, "graph")            == 0) out = std::make_unique<Graph>(parent);
+        else if (std::strcmp(type, "circular-element") == 0) out = std::make_unique<CircularElement>(parent);
+        else if (std::strcmp(type, "circular-needle")  == 0) out = std::make_unique<CircularNeedle>(parent);
+        else if (std::strcmp(type, "circular-scale")   == 0) out = std::make_unique<CircularScale>(parent);
+        else {
+            LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
+            out = std::make_unique<Element>(parent);
+        }
+    }
+
+    out->loadFromJson(json);
+
+    return out;
 }

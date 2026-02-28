@@ -17,23 +17,27 @@ struct rgba {
 
     rgba(const char* s);
 
+    static bool fromString(const char* s, rgba& out);
+
+    const char* toHex() const;
+
     void blend(const rgba& other, float t);
 
     rgba blended(const rgba& other, float t) const;
 };
 
-template<>
-struct Codec<rgba> {
-    static bool decode(const rapidjson::Value& v, rgba& out) {
-        if (v.IsString()) {
-            rgba tmp(v.GetString());
-            out = tmp;
-            return true;
-        }
+CODEC_BEGIN(rgba)
+    DECODE() {
+        if (v.IsString()) return rgba::fromString(v.GetString(), out);
 
         return false;
     }
-};
+
+    ENCODE() {
+        out.SetString(v.toHex(), 9, a);
+        return true;
+    }
+CODEC_END()
 
 inline bool parse_hex(const char* s, rgba& out) {
     if (!s) return false;
@@ -162,7 +166,6 @@ inline bool parse_rgb(const char* s, rgba& out) {
 
     return true;
 }
-
 
 inline rgba rgb(uint8_t r, uint8_t g, uint8_t b) { return rgba(r, g, b); }
 

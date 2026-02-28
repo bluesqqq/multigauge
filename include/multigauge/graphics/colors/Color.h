@@ -55,10 +55,11 @@ class Color : public Editable {
         virtual OwnedColor blended(const Color& color, float alpha) const = 0;
 };
 
-template<>
-struct Codec<OwnedColor> {
-    static bool decode(const rapidjson::Value& v, OwnedColor& out);
-};
+CODEC_BEGIN(OwnedColor)
+    DECODE();
+
+    ENCODE();
+CODEC_END()
 
 //----------[ FILL STROKE ]----------//
 

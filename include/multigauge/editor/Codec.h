@@ -20,73 +20,123 @@ struct HasCodec : std::false_type {};
 
 template <typename T>
 struct HasCodec<T, std::void_t<
-    decltype(Codec<T>::decode(std::declval<const rapidjson::Value&>(), std::declval<T&>()))
+    decltype(Codec<T>::decode(std::declval<const rapidjson::Value&>(), std::declval<T&>())),
+    decltype(Codec<T>::encode(std::declval<rapidjson::Value&>(), std::declval<rapidjson::Document::AllocatorType&>(), std::declval<const T&>()))
 >> : std::true_type {};
 
 template <typename T>
 inline constexpr bool HasCodecV = HasCodec<T>::value;
 
-// ---- decodeAny declaration (definition is in Editable.h, after Editable is complete) ----
 template <typename T>
 bool decodeAny(const rapidjson::Value& v, T& out);
 
+template <typename T>
+bool encodeAny(rapidjson::Value& out, rapidjson::Document::AllocatorType& a, const T& v);
+
+//----------[ MACROS ]----------//
+
+template <class T>
+struct mg_remove_cvref {
+    using type = std::remove_cv_t<std::remove_reference_t<T>>;
+};
+
+#define CODEC_FRIEND(T) friend struct Codec<T>;
+
+// Declaration
+
+#define CODEC_BEGIN(CODEC_T) \
+    template<> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+
+#define CODEC_BEGIN_TPARAMS(TPARAMS, CODEC_T) \
+    template<TPARAMS> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+
+#define DECODE() \
+    static bool decode(const rapidjson::Value& v, CodecType& out)
+
+#define ENCODE() \
+    static bool encode(rapidjson::Value& out, rapidjson::Document::AllocatorType& a, const CodecType& v)
+
+#define CODEC_END() \
+    };
+
+// Implementation
+
+#define DECODE_IMPL(CODEC_T) \
+    bool Codec<CODEC_T>::decode(const rapidjson::Value& v, CodecType& out)
+
+#define ENCODE_IMPL(CODEC_T) \
+    bool Codec<CODEC_T>::encode(rapidjson::Value& out, rapidjson::Document::AllocatorType& a, const CodecType& v)
+
 //----------[ PRIMITIVE TYPES ]----------//
 
-// bool
-template<>
-struct Codec<bool> {
-    static bool decode(const rapidjson::Value& v, bool& out) {
+CODEC_BEGIN(bool)
+    DECODE() {
         if (!v.IsBool()) return false;
         out = v.GetBool();
         return true;
     }
-};
 
-// int
-template<>
-struct Codec<int> {
-    static bool decode(const rapidjson::Value& v, int& out) {
+    ENCODE() {
+        out.SetBool(v);
+        return true;
+    }
+CODEC_END()
+
+CODEC_BEGIN(int)
+    DECODE() {
         if (!v.IsNumber()) return false;
         out = v.GetInt();
         return true;
     }
-};
 
-// float
-template<>
-struct Codec<float> {
-    static bool decode(const rapidjson::Value& v, float& out) {
+    ENCODE() {
+        out.SetInt(v);
+        return true;
+    }
+CODEC_END()
+
+CODEC_BEGIN(float)
+    DECODE() {
         if (!v.IsNumber()) return false;
         out = v.GetFloat();
         return true;
     }
-};
 
-// std::string
-template<>
-struct Codec<std::string> {
-    static bool decode(const rapidjson::Value& v, std::string& out) {
+    ENCODE() {
+        out.SetFloat(v);
+        return true;
+    }
+CODEC_END()
+
+CODEC_BEGIN(std::string)
+    DECODE() {
         if (!v.IsString()) return false;
         out.assign(v.GetString(), v.GetStringLength());
         return true;
     }
-};
 
-// const char*
-template<>
-struct Codec<const char*> {
-    static bool decode(const rapidjson::Value& v, const char*& out) {
+    ENCODE() {
+        out.SetString(v.c_str(), static_cast<rapidjson::SizeType>(v.size()), a);
+        return true;
+    }
+CODEC_END()
+
+CODEC_BEGIN(const char*)
+    DECODE() {
         if (!v.IsString()) return false;
         out = v.GetString();
         return true;
     }
-};
 
-// std::optional<T>
-// NOTE: uses decodeAny so optional<EditableDerived> works without Codec<T>.
-template<typename T>
-struct Codec<std::optional<T>> {
-    static bool decode(const rapidjson::Value& v, std::optional<T>& out) {
+    ENCODE() {
+        if (!v) { out.SetNull(); return true; }
+        out.SetString(v, a);
+        return true;
+    }
+CODEC_END()
+
+CODEC_BEGIN_TPARAMS(typename T, std::optional<T>)
+    DECODE() {
         if (v.IsNull()) {
             out.reset();
             return true;
@@ -97,7 +147,13 @@ struct Codec<std::optional<T>> {
         out = std::move(tmp);
         return true;
     }
-};
+    
+    ENCODE() {
+        if (!v) { out.SetNull(); return true; }
+        return encodeAny(out, a, *v);
+        return true;
+    }
+CODEC_END()
 
 // Convenience: read key from object and decode using decodeAny
 template<typename T>

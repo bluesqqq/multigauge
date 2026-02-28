@@ -9,11 +9,47 @@
 #include <rapidjson/document.h>
 #include <multigauge/editor/Codec.h>
 
+template <typename T>
+inline bool decodeAny(const rapidjson::Value& v, T& out) {
+    if constexpr (HasCodecV<T>) {
+        if (Codec<T>::decode(v, out)) return true;
+
+        if constexpr (std::is_base_of_v<Editable, T>) {
+            if (!v.IsObject()) return false;
+            out.loadProperties(v.GetObject());
+            return true;
+        } else {
+            return false;
+        }
+    } else if constexpr (std::is_base_of_v<Editable, T>) {
+        if (!v.IsObject()) return false;
+        out.loadProperties(v.GetObject());
+        return true;
+    }
+
+    static_assert(HasCodecV<T> || std::is_base_of_v<Editable, T>, "Type must have Codec<T> or derive from Editable.");
+    return false;
+}
+
+template <typename T>
+inline bool encodeAny(rapidjson::Value& out, rapidjson::Document::AllocatorType& a, const T& v) {
+    if constexpr (HasCodecV<T>) {
+        return Codec<T>::encode(out, a, v);
+    } else if constexpr (std::is_base_of_v<Editable, T>) {
+        v.saveProperties(out, a);
+        return true;
+    }
+
+    static_assert(HasCodecV<T> || std::is_base_of_v<Editable, T>, "Type must have Codec<T> with encode/decode or derive from Editable.");
+    return false;
+}
+
 class Editable {
 public:
     struct Property {
         const char* name;
-        bool (*setFn)(Editable* obj, const rapidjson::Value& v);
+        bool (*set)(Editable* obj, const rapidjson::Value& v);
+        bool (*get)(const Editable* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
     };
 
     struct PropertyList {
@@ -23,35 +59,60 @@ public:
 
     virtual ~Editable() = default;
 
-    // Overridden by macros.
+    //----------[ Properties ]----------//
+
+    // Returns the list of all properties
     virtual PropertyList propertyList() const { return {nullptr, 0}; }
 
-    const Property* findProperty(const char* name) const {
-        if (!name) return nullptr;
+    // Finds a property by key
+    const Property* findProperty(const char* key) const {
+        if (!key) return nullptr;
 
         PropertyList pl = propertyList();
         if (!pl.props || pl.count == 0) return nullptr;
 
         for (std::size_t i = 0; i < pl.count; ++i) {
             const char* propName = pl.props[i].name;
-            if (propName && std::strcmp(propName, name) == 0)
+            if (propName && std::strcmp(propName, key) == 0)
                 return &pl.props[i];
         }
         return nullptr;
     }
 
+    // Finds and sets a single property using a json value
     bool set(const char* name, const rapidjson::Value& v) {
         const Property* p = findProperty(name);
-        if (!p || !p->setFn) return false;
-        return p->setFn(this, v);
+        if (!p || !p->set) return false;
+        return p->set(this, v);
     }
 
+    // Loads all properties from a single json object
     void loadProperties(rapidjson::Value::ConstObject json) {
         for (auto it = json.MemberBegin(); it != json.MemberEnd(); ++it) {
             const char* key = it->name.GetString();
             set(key, it->value);
         }
     }
+
+    // Saves all properties to a single json value
+    void saveProperties(rapidjson::Value& obj, rapidjson::Document::AllocatorType& a) const {
+        obj.SetObject();
+
+        PropertyList pl = propertyList();
+        for (std::size_t i = 0; i < pl.count; ++i) {
+            const Property& p = pl.props[i];
+            if (!p.name || !p.get) continue;
+
+            rapidjson::Value key;
+            key.SetString(p.name, a);
+
+            rapidjson::Value val;
+            if (!p.get(this, val, a)) continue;
+
+            obj.AddMember(key, val, a);
+        }
+    }
+
 
 protected:
     // ---- std::vector traits ----
@@ -90,7 +151,6 @@ protected:
 
     template <typename E>
     static bool decodeElement(const rapidjson::Value& v, E& out) {
-        // Central rule: Codec<T> if available, else Editable if T derives from it.
         return decodeAny(v, out);
     }
 
@@ -126,35 +186,37 @@ protected:
     }
 
     template <auto MemberPtr>
-    static constexpr Property makeProperty(const char* name) {
-        return Property{ name, &Editable::setMember<MemberPtr> };
-    }
-};
+    static bool getMember(const Editable* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+        using C = MemberClass<MemberPtr>;
+        using T = MemberType<MemberPtr>;
 
-// ---- decodeAny definition (after Editable is complete) ----
-// This is why decodeAny is only declared in Codec.h.
-template <typename T>
-inline bool decodeAny(const rapidjson::Value& v, T& out) {
-    if constexpr (HasCodecV<T>) {
-        if (Codec<T>::decode(v, out)) return true;
+        const C* self = static_cast<const C*>(obj);
 
-        if constexpr (std::is_base_of_v<Editable, T>) {
-            if (!v.IsObject()) return false;
-            out.loadProperties(v.GetObject());
+        if constexpr (IsStdVectorV<T>) {
+            out.SetArray();
+            const T& vec = self->*MemberPtr;
+            out.Reserve(static_cast<rapidjson::SizeType>(vec.size()), a);
+
+            for (const auto& e : vec) {
+                rapidjson::Value elem;
+                if (!encodeAny(elem, a, e)) return false;
+                out.PushBack(elem, a);
+            }
             return true;
         } else {
-            return false;
+            return encodeAny(out, a, self->*MemberPtr);
         }
-    } else if constexpr (std::is_base_of_v<Editable, T>) {
-        if (!v.IsObject()) return false;
-        out.loadProperties(v.GetObject());
-        return true;
-    } else {
-        static_assert(HasCodecV<T> || std::is_base_of_v<Editable, T>,
-            "Type must have Codec<T> or derive from Editable.");
-        return false;
     }
-}
+
+    template <auto MemberPtr>
+    static constexpr Property makeProperty(const char* name) {
+        return Property{
+            name, 
+            &Editable::setMember<MemberPtr>,
+            &Editable::getMember<MemberPtr> 
+        };
+    }
+};
 
 // -------- Macros --------
 //
