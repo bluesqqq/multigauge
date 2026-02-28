@@ -19,8 +19,6 @@ struct ColorKeyframe : public Editable {
     
     ColorKeyframe(OwnedColor color, float position);
 
-    ColorKeyframe(const rapidjson::Value::ConstObject json);
-
     ColorKeyframe(const ColorKeyframe& other);
 
     ColorKeyframe& operator=(const ColorKeyframe& other);
@@ -50,7 +48,7 @@ class ColorTimeline : public Editable {
 
         ColorTimeline(rgba color);
 
-        ColorTimeline(const rapidjson::Value& json);
+        ColorTimeline(OwnedColor color);
 
         ColorTimeline(const ColorTimeline& other);
 
@@ -140,6 +138,18 @@ class ColorTimeline : public Editable {
         /// @param end The new end position
         /// @return Vector of remapped position values
         std::vector<float> getPositionsMapped(float start = 0.0f, float end = 1.0f) const;
+};
+
+template<>
+struct Codec<ColorTimeline> {
+    static bool decode(const rapidjson::Value& v, ColorTimeline& out) {
+        OwnedColor color;
+        if (Codec<OwnedColor>::decode(v, color)) {
+            out = ColorTimeline(std::move(color));
+            return true;
+        }
+        return false;
+    }
 };
 
 //----------[ FILL STROKE TIMELINE ]----------//

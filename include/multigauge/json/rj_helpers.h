@@ -73,20 +73,6 @@ bool setObjVector(const rapidjson::Value::ConstObject& o, const char* k, std::ve
 }
 
 template <class T>
-bool setValue(const rapidjson::Value::ConstObject& o, const char* k, T& out) {
-    static_assert(std::is_constructible_v<T, const rapidjson::Value&>, "T must be constructible from const rapidjson::Value&");
-
-    auto it = o.FindMember(k);
-    if (it == o.MemberEnd()) return false;
-
-    const rapidjson::Value& v = it->value;
-    if (v.IsNull()) return false;
-
-    out = T(v);
-    return true;
-}
-
-template <class T>
 bool setOptObj(const rapidjson::Value::ConstObject& o, const char* k, std::optional<T>& out) {
     auto it = o.FindMember(k);
     if (it == o.MemberEnd()) return false;

@@ -10,10 +10,6 @@ ColorKeyframe::ColorKeyframe() { }
 
 ColorKeyframe::ColorKeyframe(OwnedColor color, float position) : color(std::move(color)), position(position) { }
 
-ColorKeyframe::ColorKeyframe(const rapidjson::Value::ConstObject json)
-    : position(json.HasMember("position") && json["position"].IsNumber() ? json["position"].GetFloat() : 0.0f),
-      color((json.HasMember("color")) ? Color::fromJson(json["color"]) : std::make_unique<StaticColor>()) {}
-
 ColorKeyframe::ColorKeyframe(const ColorKeyframe &other) : position(other.position), color(other.color ? other.color->clone() : nullptr) {}
 
 ColorKeyframe &ColorKeyframe::operator=(const ColorKeyframe &other) {
@@ -46,22 +42,7 @@ ColorTimeline::ColorTimeline() {}
 
 ColorTimeline::ColorTimeline(rgba color) { addKeyframe(color, 0.0f); }
 
-ColorTimeline::ColorTimeline(const rapidjson::Value &json) {
-    if (json.IsString() || json.IsObject()) {
-        addKeyframe(Color::fromJson(json), 0.0f);
-        return;
-    }
-
-    if (json.IsArray()) {
-        for (const auto& keyframe : json.GetArray()) {
-            if (keyframe.IsObject()) keyframes.emplace_back(ColorKeyframe(keyframe.GetObject()));
-            else LOG_WARN("ColorTimeline", "Bad entry type: %s", rjTypeName(keyframe));
-        }
-        return;
-    }
-
-    LOG_WARN("ColorTimeline", "Bad timeline type: %s", rjTypeName(json));
-}
+ColorTimeline::ColorTimeline(OwnedColor color) { addKeyframe(std::move(color), 0.0f); }
 
 ColorTimeline::ColorTimeline(const ColorTimeline &other) {
     keyframes.reserve(other.keyframes.size());
