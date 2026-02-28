@@ -8,7 +8,6 @@
 #include <rapidjson/document.h>
 
 #include <multigauge/AssetManager.h>
-#include <multigauge/json/rj_helpers.h>
 
 #include <multigauge/editor/Editable.h>
 

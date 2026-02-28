@@ -3,26 +3,40 @@
 #include <multigauge/graphics/colors/StaticColor.h>
 #include <multigauge/graphics/colors/ValueColor.h>
 #include <multigauge/graphics/colors/TimeColor.h>
+#include <multigauge/graphics/colors/UserColor.h>
 
 const ColorTimeline* Color::getTimeline() const { return nullptr; }
 
-OwnedColor Color::fromJson(const rapidjson::Value& json) {
-    // Parse string as rgba
-    if (json.IsString()) { return std::make_unique<StaticColor>(rgba(json.GetString())); }
+inline bool Codec<OwnedColor>::decode(const rapidjson::Value &v, OwnedColor &out) {
+    if (v.IsString()) {
+        out = std::make_unique<StaticColor>(rgba(v.GetString()));
+        return true;
+    }
 
-    if (!json.IsObject()) return std::make_unique<StaticColor>();
+    if (!v.IsObject()) return false;
 
-    const auto obj = json.GetObject();
+    const auto obj = v.GetObject();
 
-    if (!obj.HasMember("type") || !obj["type"].IsString()) return std::make_unique<StaticColor>();
+    const char* type = nullptr;
+    if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) {
+        type = it->value.GetString();
+    }
 
-    const char* type = obj["type"].GetString();
+    if (!type) {
+        out = std::make_unique<StaticColor>();
+    } else if (std::strcmp(type, "value") == 0) {
+        out = std::make_unique<ValueColor>();
+    } else if (std::strcmp(type, "time") == 0) {
+        out = std::make_unique<TimeColor>();
+    } else if (std::strcmp(type, "user") == 0) {
+        out = std::make_unique<UserColor>();
+    } else {
+        out = std::make_unique<StaticColor>();
+    }
 
-    if (strcmp(type, "value")  == 0) return std::make_unique<ValueColor>(obj);
-    if (strcmp(type, "time")   == 0) return std::make_unique<TimeColor>(obj);
-    if (strcmp(type, "user")   == 0) return std::make_unique<StaticColor>();
+    out->loadProperties(obj);
 
-    return std::make_unique<StaticColor>();
+    return true;
 }
 
 //----------[ FILL STROKE ]----------//

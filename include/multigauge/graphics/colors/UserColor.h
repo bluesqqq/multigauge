@@ -17,9 +17,7 @@ class UserColor : public Color {
     
     public:
         UserColor(Slot slot = Slot::Primary);
-
-        UserColor(const rapidjson::Value::ConstObject json);
-
+        
         OwnedColor clone() const override;
         
         /// @brief Gets the user-defined color value.

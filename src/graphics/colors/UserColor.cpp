@@ -3,18 +3,6 @@
 
 UserColor::UserColor(Slot slot) : slot(slot) { }
 
-UserColor::UserColor(const rapidjson::Value::ConstObject json) {
-    if (json.HasMember("Slot") && json["slot"].IsString()) {
-        const char* slotStr = json["slot"].GetString();
-
-        if (slotStr == "primary")       slot = Slot::Primary;
-        else if (slotStr == "secondary") slot = Slot::Secondary;
-        else                             slot = Slot::Background;
-    } else {
-        slot = Slot::Background;
-    }
-}
-
 OwnedColor UserColor::clone() const { return std::make_unique<UserColor>(*this); }
 
 rgba UserColor::getColor() const { return userColors[static_cast<size_t>(slot)]; }

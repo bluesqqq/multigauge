@@ -3,8 +3,8 @@
 #include <multigauge/graphics/colors/rgba.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/values/value.h>
-#include <multigauge/json/rj_helpers.h>
 #include <multigauge/editor/Editable.h>
+#include <multigauge/io/Log.h>
 
 #include <rapidjson/document.h>
 
@@ -24,11 +24,6 @@ class Color : public Editable {
         /// @brief Creates a clone of this Color object
         /// @return A unique pointer to the created Color object
         virtual OwnedColor clone() const = 0;
-
-        /// @brief Creates a Color object from JSON.
-        /// @param colorJson The JSON object containing Color data
-        /// @return A unique pointer to the created Color object (defaults to StaticColor if type is missing or invalid)
-        static OwnedColor fromJson(const rapidjson::Value& json);
 
         /// @brief Gets the current color value.
         /// @return The 16-bit color value
@@ -60,29 +55,9 @@ class Color : public Editable {
         virtual OwnedColor blended(const Color& color, float alpha) const = 0;
 };
 
-inline bool setColor(const rapidjson::Value::ConstObject &json, const char *key, OwnedColor& out) {
-    auto it = json.FindMember(key);
-    if (it == json.MemberEnd()) return false;
-
-    const auto& v = it->value;
-
-    if (v.IsNull()) { out.reset(); return true; }
-    auto color = Color::fromJson(v);
-    if (!color) {
-        LOG_WARN("setColor", "Key '%s' could not be parsed as Color from %s", key, rjTypeName(v));
-        return false;
-    }
-
-    out = std::move(color);
-    return true;
-}
-
 template<>
 struct Codec<OwnedColor> {
-    static bool decode(const rapidjson::Value& v, OwnedColor& out) {
-        out = Color::fromJson(v);
-        return (out != nullptr);
-    }
+    static bool decode(const rapidjson::Value& v, OwnedColor& out);
 };
 
 //----------[ FILL STROKE ]----------//

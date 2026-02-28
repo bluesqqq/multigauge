@@ -3,7 +3,6 @@
 #include <multigauge/images/Image.h>
 #include <multigauge/AssetManager.h>
 #include "rapidjson/document.h"
-#include <multigauge/json/rj_helpers.h>
 
 struct NineSlice {
     const char* path = "";

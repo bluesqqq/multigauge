@@ -36,10 +36,6 @@ class TimeColor : public Color {
         /// @param loopType The looping mode
         TimeColor(ColorTimeline timeline, LoopType loopType = LoopType::Forward);
 
-        /// @brief Constructs a TimeColor from JSON
-        /// @param timeColorJson The JSON object containing color data
-        TimeColor(const rapidjson::Value::ConstObject json);
-
         TimeColor(const TimeColor& other);
         
         TimeColor& operator=(const TimeColor& other);

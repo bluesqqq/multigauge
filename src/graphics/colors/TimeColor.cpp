@@ -31,19 +31,6 @@ TimeColor::TimeColor() : timeline(ColorTimeline()), loopType(LoopType::Forward) 
 
 TimeColor::TimeColor(ColorTimeline timeline, LoopType loopType) : timeline(std::move(timeline)), loopType(loopType) {}
 
-TimeColor::TimeColor(const rapidjson::Value::ConstObject json) {
-    setValue(json, "timeline", timeline);
-    if (json.HasMember("loopType") && json["loopType"].IsString()) {
-        const char* loopStr = json["loopType"].GetString();
-        if (strcmp(loopStr, "forward") == 0) loopType = LoopType::Forward;
-        else if (strcmp(loopStr, "reverse") == 0) loopType = LoopType::Reverse;
-        else if (strcmp(loopStr, "pingpong") == 0) loopType = LoopType::PingPong;
-        else loopType = LoopType::Forward;
-    } else {
-        loopType = LoopType::Forward;
-    }
-}
-
 TimeColor::TimeColor(const TimeColor &other) : timeline(other.timeline), loopType(other.loopType) {}
 
 TimeColor &TimeColor::operator=(const TimeColor &other) {

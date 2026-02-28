@@ -2,14 +2,7 @@
 
 const ColorTimeline *ValueColor::getTimeline() const { return &timeline; }
 
-ValueColor::ValueColor(Value *value) : timeline(ColorTimeline()), value(value) {}
-
 ValueColor::ValueColor(Value *value, ColorTimeline timeline) : timeline(std::move(timeline)), value(value) { }
-
-ValueColor::ValueColor(const rapidjson::Value::ConstObject json) {
-    setValue(json, "timeline", timeline);
-    if (json.HasMember("id") && json["id"].IsString()) value = Value::find(json["id"].GetString());
-}
 
 ValueColor::ValueColor(const ValueColor &other) : timeline(other.timeline), value(other.value) {}
 
@@ -35,12 +28,11 @@ OwnedColor ValueColor::blended(const Color &other, float alpha) const{
         }
     }
 
-    //return std::make_unique<ValueColor>(this->value, this->timeline);
-    return std::make_unique<ValueColor>(this->value);
+    return std::make_unique<ValueColor>(this->value, this->timeline);
 }
 
 OwnedColor ValueColor::clone() const { return std::make_unique<ValueColor>(*this); }
 
-rgba ValueColor::getColor() const { return timeline.getColor((value != nullptr) ? value->getValueBase() : 0.0f); }
+rgba ValueColor::getColor() const { return value ? timeline.getColor((value != nullptr) ? value->getValueBase() : 0.0f) : rgba(); }
 
 Color::Type ValueColor::getType() const { return Type::Value; }

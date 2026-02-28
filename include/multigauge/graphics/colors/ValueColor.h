@@ -6,14 +6,12 @@
 class ValueColor : public Color {
     private:
         ColorTimeline timeline;
-        Value* value;
+        Value* value = nullptr;
 
     public:
-        ValueColor(Value* value);
+        ValueColor() = default;
 
         ValueColor(Value* value, ColorTimeline timeline);
-
-        ValueColor(const rapidjson::Value::ConstObject json);
 
         ValueColor(const ValueColor& other);
         
