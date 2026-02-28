@@ -7,6 +7,7 @@
 #include <multigauge/AssetManager.h>
 #include <multigauge/graphics/Graphics.h>
 #include <multigauge/gauge/GaugeFace.h>
+#include <multigauge/editor/GaugeEditor.h>
 
 #include <rapidjson/document.h>
 #include <memory>
@@ -16,6 +17,8 @@ namespace {
     std::unique_ptr<AssetManager> assets;
     std::unique_ptr<Graphics> g;
     OwnedElement face;
+
+    std::unique_ptr<GaugeEditor> editor;
 
     uint32_t lastUs = 0;
     int t = 0;
@@ -38,6 +41,8 @@ bool init(const char* gaugePath) {
     }
 
     face->initRecursive(*assets);
+
+    editor = std::make_unique<GaugeEditor>(*face);
 
     lastUs = TIME().getMicros();
     return true;

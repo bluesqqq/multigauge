@@ -78,39 +78,32 @@ class Element : public Editable {
         
         //----------[ TREE ]----------//
 
-        const Element* getLayoutOwner() const { return layoutOwner ? layoutOwner : this; }
-        Element* getLayoutOwner() { return layoutOwner ? layoutOwner : this; }
-
+        Element* getRoot() {
+            Element* n = this;
+            while (n->getParent()) n = n->getParent();
+            return n;
+        }
         Element* getParent() const { return parent; }
         YGNodeRef getNode() const { return node; }
         YGConfigRef getConfig() const { return config; }
         const Rect<float>& getBounds() const { return getLayoutOwner()->bounds; }
 
+        bool isRoot() const { return parent == nullptr; }
+
+        //----------[ CHILDREN ]----------//
+
+        std::size_t childCount() const { return children.size(); }
+        Element* childAt(std::size_t i) { return children[i].get(); }
+        const Element* childAt(std::size_t i) const { return children[i].get(); }
+
         void addChild(const rapidjson::Value::ConstObject json);
         bool removeChild(Element* child);
 
-        bool isRoot() const { return parent == nullptr; }
+        //----------[ INHERITANCE ]----------//
 
-        //----------[ TRAVERSAL ]----------//
-
-        bool initRecursive(AssetManager& assetManager);
-        void drawRecursive(Graphics& g) const;
-        void updateRecursive(int deltaTime);
-
-        //----------[ LAYOUT ]----------//
-
-        void layoutRecursive(float width, float height, YGDirection direction = YGDirectionLTR);
-
-        //----------[ LAYOUT ]----------//
+        const Element* getLayoutOwner() const { return layoutOwner ? layoutOwner : this; }
+        Element* getLayoutOwner() { return layoutOwner ? layoutOwner : this; }
         
-        static OwnedElement fromJson(Element *parent, const rapidjson::Value::ConstObject json);
-       
-        void loadFromJson(const rapidjson::Value::ConstObject& json) {
-            loadLayout(json);
-            loadProps(json);
-            loadChildren(json);
-        }
-
         void applyInheritance() {
             if (inherited) removeNode();
             else makeNode();
@@ -134,6 +127,26 @@ class Element : public Editable {
             const rapidjson::Value& style = it->value;
 
             return style.IsString() && std::strcmp(style.GetString(), "inherit") == 0;
+        }
+
+        //----------[ TRAVERSAL ]----------//
+
+        bool initRecursive(AssetManager& assetManager);
+        void drawRecursive(Graphics& g) const;
+        void updateRecursive(int deltaTime);
+
+        //----------[ LAYOUT ]----------//
+
+        void layoutRecursive(float width, float height, YGDirection direction = YGDirectionLTR);
+
+        //----------[ LAYOUT ]----------//
+        
+        static OwnedElement fromJson(Element *parent, const rapidjson::Value::ConstObject json);
+       
+        void loadFromJson(const rapidjson::Value::ConstObject& json) {
+            loadLayout(json);
+            loadProps(json);
+            loadChildren(json);
         }
 
         void loadLayout(const rapidjson::Value::ConstObject& json);
