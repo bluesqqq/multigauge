@@ -1,6 +1,12 @@
 #include <multigauge/graphics/colors/UserColor.h>
 #include <multigauge/graphics/colors/StaticColor.h>
 
+rgba UserColor::userColors[3] = {
+    rgba("white"),     // Primary
+    rgba("red"),       // Secondary
+    rgba("black")      // Background
+};
+
 UserColor::UserColor(Slot slot) : slot(slot) { }
 
 OwnedColor UserColor::clone() const { return std::make_unique<UserColor>(*this); }
