@@ -2,11 +2,11 @@
 
 #include <multigauge/values/value.h>
 #include <multigauge/utils.h>
-#include <multigauge/editor/Codec.h>
+#include <multigauge/editor/Editable.h>
 
 /// @brief A class that wraps around a `Value` object, allowing the use of custom minimum and maximum limits & units
 /// @note This class does not have setter functions for setting the value of the `Value` reference, as it is meant to supply context to the `Value` object.
-class DisplayValue {
+class DisplayValue : public Editable {
     /*
         This class allows for `GaugeElement` objects that require `Value` references to not be limited to displaying the
         minimum and maximum values defined in the `Value` object. A unit index can be defined as well to specify which
@@ -14,6 +14,8 @@ class DisplayValue {
     */
 
     private:
+        std::string id;
+
         /// @brief The base `Value` object being wrapped
         Value* value = nullptr;
 
@@ -27,6 +29,8 @@ class DisplayValue {
         std::optional<int> unitIndex = std::nullopt;
 
         int getUnitIndex() const;
+
+        void resolve() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
     public: 
         DisplayValue();
@@ -53,6 +57,19 @@ class DisplayValue {
         std::string getValueString(bool abbreviation = false) const;
 
         const char* getName() const;
+
+        MG_EDITABLE_BEGIN()
+            MG_EDITABLE_PROP(id)
+            MG_EDITABLE_PROP(minimum)
+            MG_EDITABLE_PROP(maximum)
+            MG_EDITABLE_PROP(unitIndex)
+        MG_EDITABLE_END()
+
+        void loadProperties(rapidjson::Value::ConstObject json) {
+            Editable::loadProperties(json);
+            resolve();
+            // TODO: maybe make a way to have changing a prop have a callback function?
+        }
 };
 
 template<>
@@ -63,7 +80,5 @@ struct Codec<DisplayValue> {
             return true;
         }
         return false;
-
-        // TODO: CHANGE TO ADD LIMITS
     }
 };

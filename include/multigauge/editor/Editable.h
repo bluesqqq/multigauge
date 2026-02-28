@@ -136,7 +136,15 @@ protected:
 template <typename T>
 inline bool decodeAny(const rapidjson::Value& v, T& out) {
     if constexpr (HasCodecV<T>) {
-        return Codec<T>::decode(v, out);
+        if Codec<T>::decode(v, out) return true;
+
+        if constexpr (std::is_base_of_v<Editable, T>) {
+            if (!v.IsObject()) return false;
+            out.loadProperties(v.GetObject());
+            return true;
+        } else {
+            return false;
+        }
     } else if constexpr (std::is_base_of_v<Editable, T>) {
         if (!v.IsObject()) return false;
         out.loadProperties(v.GetObject());

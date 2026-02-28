@@ -6,7 +6,7 @@ int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitInde
 
 DisplayValue::DisplayValue() {}
 
-DisplayValue::DisplayValue(const char *id) { value = Value::find(id); }
+DisplayValue::DisplayValue(const char *newId) : id(newId ? newId : "") { resolve(); }
 
 float DisplayValue::getValueBase() const {
     if (!value) return 0.0f;
