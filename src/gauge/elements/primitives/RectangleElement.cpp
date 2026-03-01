@@ -3,7 +3,7 @@
 void RectangleElement::draw(Graphics &g) const {
     const auto& b = getBounds().toInt();
 
-    g.setPaint(color);
+    g.setPaint(paint);
 
     if (radius > 0.0f) g.drawRoundedRect(b, radius);
     else g.drawRect(b);

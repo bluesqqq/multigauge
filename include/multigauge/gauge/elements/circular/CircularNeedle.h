@@ -6,15 +6,15 @@
 class CircularNeedle : public CircularElement {
     MG_EDITOR_NAME("Circular Needle")
     private:
-        Paint color;
+        Paint paint;
         float radius = 1.0f;
 
         MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP(value)
-            MG_EDITABLE_PROP(startAngle)
-            MG_EDITABLE_PROP(endAngle)
-            MG_EDITABLE_PROP(color)
-            MG_EDITABLE_PROP(radius)
+            MG_EDITABLE_PROP_META(value, "value", "Value", "Value to display. Make null to inherit from parent.")
+            MG_EDITABLE_PROP_META(startAngle, "startAngle", "Start Angle", "Angle to start from. Make null to inherit from parent.")
+            MG_EDITABLE_PROP_META(endAngle, "endAngle", "End Angle", "Angle to end at. Make null to inherit from parent.")
+            MG_EDITABLE_PROP_META(paint, "paint", "Paint", "Paint options for the needle.")
+            MG_EDITABLE_PROP_META(radius, "radius", "Radius", "Radius of the needle.")
         MG_EDITABLE_END()
         
     public:

@@ -62,10 +62,10 @@ class DisplayValue : public Editable {
         const char* getName() const;
 
         MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_CALLBACK(id, &DisplayValue::updateValueId)
-            MG_EDITABLE_PROP(minimum)
-            MG_EDITABLE_PROP(maximum)
-            MG_EDITABLE_PROP(unitIndex)
+            MG_EDITABLE_PROP_CALLBACK_META(id, "id", &DisplayValue::updateValueId, "ID", "Value ID.")
+            MG_EDITABLE_PROP_META(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.")
+            MG_EDITABLE_PROP_META(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.")
+            MG_EDITABLE_PROP_META(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.")
         MG_EDITABLE_END()
 };
 

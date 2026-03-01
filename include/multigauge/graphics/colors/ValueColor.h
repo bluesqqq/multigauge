@@ -48,9 +48,7 @@ class ValueColor : public Color {
         void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
         MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP(timeline)
-            MG_EDITABLE_PROP_CALLBACK(id, &ValueColor::updateValueId)
+            MG_EDITABLE_PROP_META(timeline, "timeline", "Timeline", "Color timeline.")
+            MG_EDITABLE_PROP_CALLBACK_META(id, "id", &ValueColor::updateValueId, "ID", "Value ID.")
         MG_EDITABLE_END()
-
-        void loadProperties(rapidjson::Value::ConstObject json);
 };

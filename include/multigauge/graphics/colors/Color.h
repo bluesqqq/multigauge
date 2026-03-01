@@ -72,9 +72,9 @@ struct Paint : public Editable {
     float thickness = 1.0f;
 
     MG_EDITABLE_BEGIN()
-        MG_EDITABLE_PROP(fill)
-        MG_EDITABLE_PROP(stroke)
-        MG_EDITABLE_PROP(thickness)
+        MG_EDITABLE_PROP_META(fill, "fill", "Fill", "Fill color.")
+        MG_EDITABLE_PROP_META(stroke, "stroke", "Stroke", "Stroke color.")
+        MG_EDITABLE_PROP_META(thickness, "thickness", "Thickness", "Thickness of the stroke.")
     MG_EDITABLE_END()
 
     Paint();

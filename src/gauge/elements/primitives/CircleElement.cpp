@@ -3,6 +3,6 @@
 void CircleElement::draw(Graphics &g) const {
     const auto& b = getBounds();
     
-    g.setPaint(color);
+    g.setPaint(paint);
     g.drawCircleInRect(b.toInt());
 }

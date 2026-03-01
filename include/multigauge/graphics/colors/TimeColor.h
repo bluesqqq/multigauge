@@ -20,8 +20,8 @@ class TimeColor : public Color {
         LoopType loopType;
 
         MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP(timeline)
-            MG_EDITABLE_PROP(loopType)
+            MG_EDITABLE_PROP_META(timeline, "timeline", "Timeline", "Color timeline.")
+            MG_EDITABLE_PROP_META(loopType, "loop", "Loop", "Type of looping to use.")
         MG_EDITABLE_END()
 
         /// @brief Retrieves the current time value.

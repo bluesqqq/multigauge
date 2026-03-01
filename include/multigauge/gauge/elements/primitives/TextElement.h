@@ -8,7 +8,7 @@ class TextElement : public Element {
     MG_EDITOR_NAME("Text")
     private:
         std::string text;
-        TextPaint textPaint;
+        TextPaint paint;
 
         Anchor anchor = Anchor::TopLeft;
         bool useEllipses = false;
@@ -16,10 +16,10 @@ class TextElement : public Element {
 
         // Editable props list
         MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP(text)
-            MG_EDITABLE_PROP(textPaint)
-            MG_EDITABLE_PROP(useEllipses)
-            MG_EDITABLE_PROP(useHyphens)
+            MG_EDITABLE_PROP_META(text, "text", "Text", "Text to display.")
+            MG_EDITABLE_PROP_META(paint, "paint", "Paint", "Paint options for the text.")
+            MG_EDITABLE_PROP_META(useEllipses, "ellipses", "Ellipses", "Use ellipses for overflowing text.")
+            MG_EDITABLE_PROP_META(useHyphens, "hyphens", "Hyphens", "Use hyphens for text justification.")
         MG_EDITABLE_END()
 
     public:

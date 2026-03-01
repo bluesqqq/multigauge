@@ -39,8 +39,3 @@ rgba ValueColor::getColor() const { return value ? timeline.getColor((value != n
 Color::Type ValueColor::getType() const { return Type::Value; }
 
 // ----------[ JSON helpers ]----------
-
-void ValueColor::loadProperties(rapidjson::Value::ConstObject json) {
-    Editable::loadProperties(json);
-    resolve();
-}

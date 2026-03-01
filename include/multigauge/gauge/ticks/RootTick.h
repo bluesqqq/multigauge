@@ -18,17 +18,17 @@ struct RootTick : public Editable {
     float thickness= 0;
 
     TickStyle style = TickStyle::LINE;
-    PaintTimeline color;
+    PaintTimeline paint;
 
     std::optional<TickValueStyle> valueStyle;
 
     MG_EDITABLE_BEGIN()
-        MG_EDITABLE_PROP(divisions)
-        MG_EDITABLE_PROP(interval)
-        MG_EDITABLE_PROP(useDivisions)
-        MG_EDITABLE_PROP(length)
-        MG_EDITABLE_PROP(thickness)
-        MG_EDITABLE_PROP(color)
+        MG_EDITABLE_PROP_META(divisions, "divisions", "Divisions", "Number of times to divide ticks.")
+        MG_EDITABLE_PROP_META(interval, "interval", "Interval", "Gap between ticks as a value.")
+        MG_EDITABLE_PROP_META(useDivisions, "useDivisions", "Use Divisions", "Whether to use division or interval spacing.")
+        MG_EDITABLE_PROP_META(length, "length", "Length", "Length in pixels.")
+        MG_EDITABLE_PROP_META(thickness, "thickness", "Thickness", "Thickness in pixels.")
+        MG_EDITABLE_PROP_META(paint, "paint", "Paint", "Paint options for this tick.")
         // TODO: need to do valueStyle
     MG_EDITABLE_END()
 

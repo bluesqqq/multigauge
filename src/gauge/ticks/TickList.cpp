@@ -26,10 +26,10 @@ const TickStyle &TickList::getStyle(uint8_t index) const {
 
 const PaintTimeline &TickList::getColor(uint8_t index) const {
     while (index > 0) {
-        if (subs[index - 1].color.has_value()) return subs[index - 1].color.value();
+        if (subs[index - 1].paint.has_value()) return subs[index - 1].paint.value();
         --index;
     }
-    return root.color;
+    return root.paint;
 }
 
 const std::optional<TickValueStyle>& TickList::getValueStyle(uint8_t index) const {

@@ -12,6 +12,7 @@ enum class FontSlant  : uint8_t { Normal, Italic };
 
 struct TextPaint : public Editable {
     MG_EDITOR_NAME("Text Paint")
+
     std::string family = "default";
     FontWeight weight = FontWeight::Normal;
     FontSlant slant = FontSlant::Normal;
@@ -20,9 +21,9 @@ struct TextPaint : public Editable {
 
     MG_EDITABLE_BEGIN()
         // TODO : WEIGHT AND SLANT
-        MG_EDITABLE_PROP(family)
-        MG_EDITABLE_PROP(pt)
-        MG_EDITABLE_PROP(color)
+        MG_EDITABLE_PROP_META(family, "family", "Family", "Font family to display.")
+        MG_EDITABLE_PROP_META(pt, "pt", "Point", "Point size (in pixels) to display.")
+        MG_EDITABLE_PROP_META(color, "color", "Color", "Color of the text.")
     MG_EDITABLE_END()
 
     TextPaint() = default;

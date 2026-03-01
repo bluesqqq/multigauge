@@ -48,8 +48,16 @@ class Editable {
     public:
         virtual const char* editorTypeName() const { return "Editable"; }
         struct Property {
+            /// @brief Key used in JSON schema
+            const char* key;
+            /// @brief Display name used in editor
             const char* name;
+            /// @brief Brief description used in editor.
+            const char* description;
+
+            /// @brief Setter function using json value as input
             bool (*set)(Editable* obj, const rapidjson::Value& v);
+            /// @brief Getter function using json value as output
             bool (*get)(const Editable* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
         };
 
@@ -73,7 +81,7 @@ class Editable {
             if (!pl.props || pl.count == 0) return nullptr;
 
             for (std::size_t i = 0; i < pl.count; ++i) {
-                const char* propName = pl.props[i].name;
+                const char* propName = pl.props[i].key;
                 if (propName && std::strcmp(propName, key) == 0)
                     return &pl.props[i];
             }
@@ -81,8 +89,8 @@ class Editable {
         }
 
         // Finds and sets a single property using a json value
-        bool set(const char* name, const rapidjson::Value& v) {
-            const Property* p = findProperty(name);
+        bool set(const char* key, const rapidjson::Value& v) {
+            const Property* p = findProperty(key);
             if (!p || !p->set) return false;
             return p->set(this, v);
         }
@@ -102,10 +110,10 @@ class Editable {
             PropertyList pl = propertyList();
             for (std::size_t i = 0; i < pl.count; ++i) {
                 const Property& p = pl.props[i];
-                if (!p.name || !p.get) continue;
+                if (!p.key || !p.get) continue;
 
                 rapidjson::Value key;
-                key.SetString(p.name, a);
+                key.SetString(p.key, a);
 
                 rapidjson::Value val;
                 if (!p.get(this, val, a)) continue;
@@ -223,13 +231,13 @@ class Editable {
         }
 
         template <auto MemberPtr>
-        static constexpr Property makeProperty(const char* name) {
-            return Property{ name, &Editable::setMember<MemberPtr>, &Editable::getMember<MemberPtr> };
+        static constexpr Property makeProperty(const char* key, const char* name = nullptr, const char* desc = nullptr) {
+            return Property{ key, name ? name : key, desc ? desc : "No description.", &Editable::setMember<MemberPtr>, &Editable::getMember<MemberPtr> };
         }
 
         template <auto MemberPtr, auto CallbackPtr>
-        static constexpr Property makeProperty(const char* name) {
-            return Property{ name, &Editable::setMemberThen<MemberPtr, CallbackPtr>, &Editable::getMember<MemberPtr> };
+        static constexpr Property makeProperty(const char* key, const char* name = nullptr, const char* desc = nullptr) {
+            return Property{ key, name ? name : key, desc ? desc : "No description.", &Editable::setMemberThen<MemberPtr, CallbackPtr>, &Editable::getMember<MemberPtr> };
         }
 };
 
@@ -252,11 +260,20 @@ public: \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
         static const ::Editable::Property props[] = {
 
-#define MG_EDITABLE_PROP(member) \
-        ::Editable::makeProperty<&Self::member>(#member),
 
-#define MG_EDITABLE_PROP_CALLBACK(member, callback) \
-    ::Editable::makeProperty<&Self::member, callback>(#member),
+
+#define MG_EDITABLE_PROP(member, key) \
+        ::Editable::makeProperty<&Self::member>(key),
+
+#define MG_EDITABLE_PROP_META(member, key, display_name, description) \
+    ::Editable::makeProperty<&Self::member>(key, display_name, description),
+
+#define MG_EDITABLE_PROP_CALLBACK(member, key, callback) \
+    ::Editable::makeProperty<&Self::member, callback>(key),
+
+#define MG_EDITABLE_PROP_CALLBACK_META(member, key, callback, display_name, description) \
+    ::Editable::makeProperty<&Self::member, callback>(key, display_name, description),
+
 
 #define MG_EDITABLE_END() \
         }; \

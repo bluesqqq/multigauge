@@ -29,12 +29,12 @@ class Graph : public Element {
         Style style = Bars;
 
         MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP(seconds)
-            MG_EDITABLE_PROP(backgroundColor)
-            MG_EDITABLE_PROP(secondsColor)
-            MG_EDITABLE_PROP(graphColor)
-            MG_EDITABLE_PROP(borderColor)
-            MG_EDITABLE_PROP(value)
+            MG_EDITABLE_PROP_META(seconds, "seconds", "Seconds", "Number of seconds to display on the graph.")
+            MG_EDITABLE_PROP_META(backgroundColor, "bgColor", "Background Color", "Color of the background.")
+            MG_EDITABLE_PROP_META(secondsColor, "secondsColor", "Seconds Color", "Color of the seconds tick marks.")
+            MG_EDITABLE_PROP_META(graphColor, "graphColor", "Graph Color", "Color of the graph.")
+            MG_EDITABLE_PROP_META(borderColor, "borderColor", "Border Color", "Color of the border.")
+            MG_EDITABLE_PROP_META(value, "value", "Value", "Value to display.")
         MG_EDITABLE_END()
 
         unsigned long timeAtX(int x, int left, int width, unsigned long currentTime, float windowMs) const {
