@@ -7,9 +7,12 @@
 #define NO_TITLE_TEXT "No Title"
 #define NO_DESCRIPTION_TEXT "No description."
 
-class GaugeFace : public Element {
+class GaugeFace : public Editable {
     MG_EDITOR_NAME("Gauge Face")
+
     private:
+        OwnedElement root;
+
         OwnedColor backgroundColor;
 
         const char* title = NO_TITLE_TEXT;
@@ -27,5 +30,15 @@ class GaugeFace : public Element {
     public:
         explicit GaugeFace();
 
-        void draw(Graphics& g) const override;
+        void load(const rapidjson::Document& doc);
+
+        void layout(Graphics& g);
+
+        void draw(Graphics& g) const;
+
+        void update(int deltaTime);
+
+        bool init(AssetManager& assetManager);
+
+        Element* getRoot() const { return root.get(); }
 };

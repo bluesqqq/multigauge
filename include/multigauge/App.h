@@ -1,9 +1,9 @@
 #pragma once
 
-class Element;
+#include <multigauge/gauge/GaugeFace.h>
 
 namespace mg {
     bool init(const char* gaugePath);
     void frame();
-    Element* getFaceRoot();
+    GaugeFace& getGaugeFace();
 }

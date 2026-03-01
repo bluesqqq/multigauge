@@ -195,9 +195,7 @@ OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObj
 
     OwnedElement out;
 
-    if (!parent) { // No parent = gauge face (for now)
-        out = std::make_unique<GaugeFace>();
-    } else if (!type) {
+    if (!type) {
         LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
         out = std::make_unique<Element>(parent);
     } else {

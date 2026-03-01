@@ -15,7 +15,7 @@
 namespace {
     std::unique_ptr<AssetManager> assets;
     std::unique_ptr<Graphics> g;
-    OwnedElement face;
+    GaugeFace face;
 
     uint32_t lastUs = 0;
 }
@@ -29,34 +29,29 @@ bool init(const char* gaugePath) {
     rapidjson::Document doc;
     if (assets->loadJson(gaugePath, doc)) {
         const rapidjson::Document& cdoc = doc;
-        face = Element::fromJson(nullptr, cdoc.GetObject());
+        face.load(doc);
         LOG_INFO("gauge", "Loaded gaugeface: %s", gaugePath);
-    } else {
-        face = std::make_unique<GaugeFace>();
-        LOG_WARN("gauge", "Failed to load gaugeface: %s", gaugePath);
     }
 
-    if (face) face->initRecursive(*assets);
+    face.init(*assets);
 
     lastUs = TIME().getMicros();
     return true;
 }
 
 void frame() {
-    if (!face || !g) return;
+    if (!g) return;
 
     uint64_t nowUs = TIME().getMicros();
     uint64_t deltaUs = nowUs - lastUs;
     lastUs = nowUs;
 
-    auto screen = g->getScreenBounds().toFloat();
-
     g->clearColorCache();
     GFX().beginFrame();
 
-    face->layoutRecursive(screen.width, screen.height);
-    face->updateRecursive(deltaUs);
-    face->drawRecursive(*g);
+    face.layout(*g);
+    face.update(deltaUs);
+    face.draw(*g);
 
     GFX().endFrame();
 
@@ -64,8 +59,6 @@ void frame() {
     engineCoolantTemp.setValueBase(std::sin((float)nowUs / 5000000.0f) * 10 + 0);
 }
 
-Element* getFaceRoot() {
-    return face.get();
-}
+GaugeFace& getGaugeFace() { return face; }
 
 } // namespace mg
