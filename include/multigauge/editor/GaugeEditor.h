@@ -190,8 +190,24 @@ public:
         rapidjson::Value props;
         e->saveProperties(props, a);
 
+        rapidjson::Value meta(rapidjson::kArrayType);
+        {
+            auto pl = e->propertyList();
+            for (std::size_t i = 0; i < pl.count; ++i) {
+                const auto& p = pl.props[i];
+                rapidjson::Value m(rapidjson::kObjectType);
+
+                m.AddMember("key", rapidjson::Value(p.key, a), a);
+                m.AddMember("name", rapidjson::Value(p.name ? p.name : p.key, a), a);
+                m.AddMember("description", rapidjson::Value(p.description ? p.description : "", a), a);
+
+                meta.PushBack(m, a);
+            }
+        }
+
         d.AddMember("ok", true, a);
         d.AddMember("properties", props, a);
+        d.AddMember("meta", meta, a);
         return toString(d);
     }
 
