@@ -45,11 +45,11 @@ class ValueColor : public Color {
         OwnedColor blended(const Color& color, float alpha) const override;
 
         // internal helper called after deserialization to resolve `id` -> pointer
-        void resolve() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
+        void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
         MG_EDITABLE_BEGIN()
             MG_EDITABLE_PROP(timeline)
-            MG_EDITABLE_PROP(id)
+            MG_EDITABLE_PROP_CALLBACK(id, &ValueColor::updateValueId)
         MG_EDITABLE_END()
 
         void loadProperties(rapidjson::Value::ConstObject json);

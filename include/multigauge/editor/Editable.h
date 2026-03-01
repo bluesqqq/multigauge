@@ -60,7 +60,7 @@ class Editable {
 
         virtual ~Editable() = default;
 
-        //----------[ Properties ]----------//
+        //----------[ PROPERTIES ]----------//
 
         // Returns the list of all properties
         virtual PropertyList propertyList() const { return {nullptr, 0}; }
@@ -155,6 +155,9 @@ class Editable {
             return decodeAny(v, out);
         }
 
+
+        //----------[ GET + SET ]----------//
+
         template <auto MemberPtr>
         static bool setMember(Editable* obj, const rapidjson::Value& v) {
             using C = MemberClass<MemberPtr>;
@@ -186,6 +189,16 @@ class Editable {
             }
         }
 
+        template <auto MemberPtr, auto CallbackPtr>
+        static bool setMemberThen(Editable* obj, const rapidjson::Value& v) {
+            if (!setMember<MemberPtr>(obj, v)) return false;
+
+            using CbClass = MemberClass<CallbackPtr>;
+            auto* self = static_cast<CbClass*>(obj);
+            (self->*CallbackPtr)();
+            return true;
+        }
+
         template <auto MemberPtr>
         static bool getMember(const Editable* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
             using C = MemberClass<MemberPtr>;
@@ -211,11 +224,12 @@ class Editable {
 
         template <auto MemberPtr>
         static constexpr Property makeProperty(const char* name) {
-            return Property{
-                name, 
-                &Editable::setMember<MemberPtr>,
-                &Editable::getMember<MemberPtr> 
-            };
+            return Property{ name, &Editable::setMember<MemberPtr>, &Editable::getMember<MemberPtr> };
+        }
+
+        template <auto MemberPtr, auto CallbackPtr>
+        static constexpr Property makeProperty(const char* name) {
+            return Property{ name, &Editable::setMemberThen<MemberPtr, CallbackPtr>, &Editable::getMember<MemberPtr> };
         }
 };
 
@@ -240,6 +254,9 @@ public: \
 
 #define MG_EDITABLE_PROP(member) \
         ::Editable::makeProperty<&Self::member>(#member),
+
+#define MG_EDITABLE_PROP_CALLBACK(member, callback) \
+    ::Editable::makeProperty<&Self::member, callback>(#member),
 
 #define MG_EDITABLE_END() \
         }; \

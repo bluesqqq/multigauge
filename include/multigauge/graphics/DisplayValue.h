@@ -33,7 +33,7 @@ class DisplayValue : public Editable {
 
         int getUnitIndex() const;
 
-        void resolve() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
+        void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
     public: 
         DisplayValue();
@@ -62,17 +62,11 @@ class DisplayValue : public Editable {
         const char* getName() const;
 
         MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP(id)
+            MG_EDITABLE_PROP_CALLBACK(id, &DisplayValue::updateValueId)
             MG_EDITABLE_PROP(minimum)
             MG_EDITABLE_PROP(maximum)
             MG_EDITABLE_PROP(unitIndex)
         MG_EDITABLE_END()
-
-        void loadProperties(rapidjson::Value::ConstObject json) {
-            Editable::loadProperties(json);
-            resolve();
-            // TODO: maybe make a way to have changing a prop have a callback function?
-        }
 };
 
 CODEC_BEGIN(DisplayValue)
