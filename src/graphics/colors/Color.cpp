@@ -42,8 +42,14 @@ ENCODE_IMPL(OwnedColor) {
         return true; 
     }
 
+    if (v->getType() == Color::Type::Static) {
+        const char* s = v->getColor().toHex();
+        out.SetString(s, a);
+        return true;
+    }
+
     out.SetObject();
-    
+
     const char* typeStr = nullptr;
     switch (v->getType()) {
         case Color::Type::Value:  typeStr = "value"; break;
@@ -51,16 +57,12 @@ ENCODE_IMPL(OwnedColor) {
         case Color::Type::User:   typeStr = "user"; break;
         case Color::Type::Static: typeStr = "static"; break;
     }
-    
+
     if (typeStr) {
-        rapidjson::Value typeKey("type", a);
-        rapidjson::Value typeVal(typeStr, a);
-        out.AddMember(typeKey, typeVal, a);
+        out.AddMember(rapidjson::Value("type", a), rapidjson::Value(typeStr, a), a);
     }
 
-    // Save all properties
     v->saveProperties(out, a);
-    
     return true;
 }
 

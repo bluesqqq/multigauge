@@ -28,7 +28,7 @@ class GaugeFace : public Editable {
         MG_EDITABLE_END()
 
     public:
-        explicit GaugeFace();
+        explicit GaugeFace() = default;
 
         void load(const rapidjson::Document& doc);
 
