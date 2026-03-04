@@ -47,8 +47,8 @@ class ValueColor : public Color {
         // internal helper called after deserialization to resolve `id` -> pointer
         void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(timeline, "timeline", "Timeline", "Color timeline.")
-            MG_EDITABLE_PROP_CALLBACK_META(id, "id", &ValueColor::updateValueId, "ID", "Value ID.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(timeline, "timeline", "Timeline", "Color timeline.")
+            MG_EDITOR_PROP_CALLBACK(id, "id", &ValueColor::updateValueId, "ID", "Value ID.")
+        MG_EDITOR_END()
 };

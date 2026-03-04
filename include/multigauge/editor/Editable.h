@@ -9,19 +9,15 @@
 #include <rapidjson/document.h>
 #include <multigauge/editor/Codec.h>
 
+#include <multigauge/editor/Property.h>
+
 template <typename T>
 inline bool decodeAny(const rapidjson::Value& v, T& out) {
     if constexpr (HasCodecV<T>) {
         if (Codec<T>::decode(v, out)) return true;
+    }
 
-        if constexpr (std::is_base_of_v<Editable, T>) {
-            if (!v.IsObject()) return false;
-            out.loadProperties(v.GetObject());
-            return true;
-        } else {
-            return false;
-        }
-    } else if constexpr (std::is_base_of_v<Editable, T>) {
+    if constexpr (std::is_base_of_v<Editable, T>) {
         if (!v.IsObject()) return false;
         out.loadProperties(v.GetObject());
         return true;
@@ -34,8 +30,10 @@ inline bool decodeAny(const rapidjson::Value& v, T& out) {
 template <typename T>
 inline bool encodeAny(rapidjson::Value& out, rapidjson::Document::AllocatorType& a, const T& v) {
     if constexpr (HasCodecV<T>) {
-        return Codec<T>::encode(out, a, v);
-    } else if constexpr (std::is_base_of_v<Editable, T>) {
+        if (Codec<T>::encode(out, a, v)) return true;
+    }
+
+    if constexpr (std::is_base_of_v<Editable, T>) {
         v.saveProperties(out, a);
         return true;
     }
@@ -47,19 +45,6 @@ inline bool encodeAny(rapidjson::Value& out, rapidjson::Document::AllocatorType&
 class Editable {
     public:
         virtual const char* editorTypeName() const { return "Editable"; }
-        struct Property {
-            /// @brief Key used in JSON schema
-            const char* key;
-            /// @brief Display name used in editor
-            const char* name;
-            /// @brief Brief description used in editor.
-            const char* description;
-
-            /// @brief Setter function using json value as input
-            bool (*set)(Editable* obj, const rapidjson::Value& v);
-            /// @brief Getter function using json value as output
-            bool (*get)(const Editable* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
-        };
 
         struct PropertyList {
             const Property* props;
@@ -70,61 +55,26 @@ class Editable {
 
         //----------[ PROPERTIES ]----------//
 
-        // Returns the list of all properties
+        /// @brief Returns the list of all properties. Override this to set properties, see macros below
         virtual PropertyList propertyList() const { return {nullptr, 0}; }
 
-        // Finds a property by key
-        const Property* findProperty(const char* key) const {
-            if (!key) return nullptr;
+        /// @brief Finds a single property by key
+        const Property* findProperty(const char* key) const;
 
-            PropertyList pl = propertyList();
-            if (!pl.props || pl.count == 0) return nullptr;
+        /// @brief Loads a single property from JSON
+        bool loadProperty(const char* key, const rapidjson::Value& v) ;
 
-            for (std::size_t i = 0; i < pl.count; ++i) {
-                const char* propName = pl.props[i].key;
-                if (propName && std::strcmp(propName, key) == 0)
-                    return &pl.props[i];
-            }
-            return nullptr;
-        }
+        /// @brief Saves a single property as JSON
+        bool saveProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
 
-        // Finds and sets a single property using a json value
-        bool set(const char* key, const rapidjson::Value& v) {
-            const Property* p = findProperty(key);
-            if (!p || !p->set) return false;
-            return p->set(this, v);
-        }
+        /// @brief Loads all properties from JSON
+        void loadProperties(rapidjson::Value::ConstObject json);
 
-        // Loads all properties from a single json object
-        void loadProperties(rapidjson::Value::ConstObject json) {
-            for (auto it = json.MemberBegin(); it != json.MemberEnd(); ++it) {
-                const char* key = it->name.GetString();
-                set(key, it->value);
-            }
-        }
-
-        // Saves all properties to a single json value
-        void saveProperties(rapidjson::Value& obj, rapidjson::Document::AllocatorType& a) const {
-            obj.SetObject();
-
-            PropertyList pl = propertyList();
-            for (std::size_t i = 0; i < pl.count; ++i) {
-                const Property& p = pl.props[i];
-                if (!p.key || !p.get) continue;
-
-                rapidjson::Value key;
-                key.SetString(p.key, a);
-
-                rapidjson::Value val;
-                if (!p.get(this, val, a)) continue;
-
-                obj.AddMember(key, val, a);
-            }
-        }
-
+        /// @brief Saves all properties to JSON
+        void saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
 
     protected:
-        // ---- std::vector traits ----
+        //----------[ std::vector traits ]----------//
         template <typename T>
         struct IsStdVector : std::false_type {};
 
@@ -143,7 +93,7 @@ class Editable {
         template <typename T>
         using VectorElemT = typename VectorElem<T>::Type;
 
-        // -------- Member-pointer traits --------
+        //----------[ Member-pointer traits ]----------//
         template <typename M> struct MemberPtrTraits;
 
         template <typename C, typename T>
@@ -157,12 +107,6 @@ class Editable {
 
         template <auto MemberPtr>
         using MemberType = typename MemberPtrTraits<decltype(MemberPtr)>::Type;
-
-        template <typename E>
-        static bool decodeElement(const rapidjson::Value& v, E& out) {
-            return decodeAny(v, out);
-        }
-
 
         //----------[ GET + SET ]----------//
 
@@ -183,7 +127,7 @@ class Editable {
 
                 for (auto it = v.Begin(); it != v.End(); ++it) {
                     E elem{};
-                    if (!decodeElement<E>(*it, elem)) return false;
+                    if (!decodeAny<E>(*it, elem)) return false;
                     tmp.push_back(std::move(elem));
                 }
 
@@ -191,7 +135,7 @@ class Editable {
                 return true;
             } else {
                 T decoded{};
-                if (!decodeElement<T>(v, decoded)) return false;
+                if (!decodeAny<T>(v, decoded)) return false;
                 self->*MemberPtr = std::move(decoded);
                 return true;
             }
@@ -246,36 +190,31 @@ class Editable {
 // Usage:
 //   class X : public Editable {
 //     int a;
-//     MG_EDITABLE_BEGIN()
-//       MG_EDITABLE_PROP(a)
-//     MG_EDITABLE_END()
+//     MG_EDITOR_BEGIN()
+//       MG_EDITOR_PROP(a)
+//     MG_EDITOR_END()
 //   };
 //
 #define MG_EDITOR_NAME(name_literal) \
     public: const char* editorTypeName() const override { return name_literal; }
 
-#define MG_EDITABLE_BEGIN() \
+#define MG_EDITOR_BEGIN() \
 public: \
     ::Editable::PropertyList propertyList() const override { \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
-        static const ::Editable::Property props[] = {
+        static const ::Property props[] = {
 
 
 
-#define MG_EDITABLE_PROP(member, key) \
-        ::Editable::makeProperty<&Self::member>(key),
-
-#define MG_EDITABLE_PROP_META(member, key, display_name, description) \
+#define MG_EDITOR_PROP(member, key, display_name, description) \
     ::Editable::makeProperty<&Self::member>(key, display_name, description),
 
-#define MG_EDITABLE_PROP_CALLBACK(member, key, callback) \
-    ::Editable::makeProperty<&Self::member, callback>(key),
-
-#define MG_EDITABLE_PROP_CALLBACK_META(member, key, callback, display_name, description) \
+#define MG_EDITOR_PROP_CALLBACK(member, key, callback, display_name, description) \
     ::Editable::makeProperty<&Self::member, callback>(key, display_name, description),
 
 
-#define MG_EDITABLE_END() \
+
+#define MG_EDITOR_END() \
         }; \
         return { props, sizeof(props) / sizeof(props[0]) }; \
     }

@@ -58,11 +58,11 @@ ENCODE_IMPL(OwnedColor) {
         case Color::Type::Static: typeStr = "static"; break;
     }
 
+    v->saveProperties(out, a);
+
     if (typeStr) {
         out.AddMember(rapidjson::Value("type", a), rapidjson::Value(typeStr, a), a);
     }
-
-    v->saveProperties(out, a);
     return true;
 }
 

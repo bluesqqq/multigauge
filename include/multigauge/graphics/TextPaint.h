@@ -19,12 +19,12 @@ struct TextPaint : public Editable {
     float pt = 12.0f;
     OwnedColor color;
 
-    MG_EDITABLE_BEGIN()
+    MG_EDITOR_BEGIN()
         // TODO : WEIGHT AND SLANT
-        MG_EDITABLE_PROP_META(family, "family", "Family", "Font family to display.")
-        MG_EDITABLE_PROP_META(pt, "pt", "Point", "Point size (in pixels) to display.")
-        MG_EDITABLE_PROP_META(color, "color", "Color", "Color of the text.")
-    MG_EDITABLE_END()
+        MG_EDITOR_PROP(family, "family", "Family", "Font family to display.")
+        MG_EDITOR_PROP(pt, "pt", "Point", "Point size (in pixels) to display.")
+        MG_EDITOR_PROP(color, "color", "Color", "Color of the text.")
+    MG_EDITOR_END()
 
     TextPaint() = default;
 };

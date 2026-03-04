@@ -12,10 +12,10 @@ struct ColorKeyframe : public Editable {
     /// @brief The color at this position
     OwnedColor color = nullptr;
 
-    MG_EDITABLE_BEGIN()
-        MG_EDITABLE_PROP_META(position, "pos", "Position", "Position of the keyframe")
-        MG_EDITABLE_PROP_META(color, "color", "Color", "Color of the keyframe.")
-    MG_EDITABLE_END()
+    MG_EDITOR_BEGIN()
+        MG_EDITOR_PROP(position, "pos", "Position", "Position of the keyframe")
+        MG_EDITOR_PROP(color, "color", "Color", "Color of the keyframe.")
+    MG_EDITOR_END()
 
     ColorKeyframe();
     
@@ -39,9 +39,9 @@ class ColorTimeline : public Editable {
     private:
         std::vector<ColorKeyframe> keyframes;
 
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(keyframes, "keyframes", "Keyframes", "Timeline of keyframes.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(keyframes, "keyframes", "Keyframes", "Timeline of keyframes.")
+        MG_EDITOR_END()
 
         /// @brief Finds the index of the keyframe at or before the given position.
         /// @param position The position to search for
@@ -168,11 +168,11 @@ struct PaintTimeline : public Editable {
     ColorTimeline stroke;
     float thickness = 1.0f;
 
-    MG_EDITABLE_BEGIN()
-        MG_EDITABLE_PROP_META(fill, "fill", "Fill", "Fill color.")
-        MG_EDITABLE_PROP_META(stroke, "stroke", "Stroke", "Stroke color.")
-        MG_EDITABLE_PROP_META(thickness, "thickness", "Thickness", "Thickness of the stroke.")
-    MG_EDITABLE_END()
+    MG_EDITOR_BEGIN()
+        MG_EDITOR_PROP(fill, "fill", "Fill", "Fill color.")
+        MG_EDITOR_PROP(stroke, "stroke", "Stroke", "Stroke color.")
+        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.")
+    MG_EDITOR_END()
 
     PaintTimeline() = default;
 

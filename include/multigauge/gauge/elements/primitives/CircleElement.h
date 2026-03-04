@@ -7,9 +7,9 @@ class CircleElement : public Element {
     private:
         Paint paint;
 
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(paint, "paint", "Paint", "Paint options for the circle.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for the circle.")
+        MG_EDITOR_END()
         
     public:
         using Element::Element;

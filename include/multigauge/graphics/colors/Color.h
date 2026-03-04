@@ -71,11 +71,11 @@ struct Paint : public Editable {
     OwnedColor stroke;
     float thickness = 1.0f;
 
-    MG_EDITABLE_BEGIN()
-        MG_EDITABLE_PROP_META(fill, "fill", "Fill", "Fill color.")
-        MG_EDITABLE_PROP_META(stroke, "stroke", "Stroke", "Stroke color.")
-        MG_EDITABLE_PROP_META(thickness, "thickness", "Thickness", "Thickness of the stroke.")
-    MG_EDITABLE_END()
+    MG_EDITOR_BEGIN()
+        MG_EDITOR_PROP(fill, "fill", "Fill", "Fill color.")
+        MG_EDITOR_PROP(stroke, "stroke", "Stroke", "Stroke color.")
+        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.")
+    MG_EDITOR_END()
 
     Paint();
 

@@ -422,7 +422,7 @@ public:
 
         // Object
 
-        const ValueType* properties = GetMember(value, GetPropertiesString());
+        const ValueType* properties = GetMember(value, savePropertiesString());
         const ValueType* required = GetMember(value, GetRequiredString());
         const ValueType* dependencies = GetMember(value, GetDependenciesString());
         {
@@ -459,10 +459,10 @@ public:
         }
 
         if (properties && properties->IsObject()) {
-            PointerType q = p.Append(GetPropertiesString(), allocator_);
+            PointerType q = p.Append(savePropertiesString(), allocator_);
             for (ConstMemberIterator itr = properties->MemberBegin(); itr != properties->MemberEnd(); ++itr) {
                 SizeType index;
-                if (FindPropertyIndex(itr->name, &index))
+                if (findIndex(itr->name, &index))
                     schemaDocument->CreateSchema(&properties_[index].schema, q.Append(itr->name, allocator_), itr->value, document);
             }
         }
@@ -484,7 +484,7 @@ public:
             for (ConstValueIterator itr = required->Begin(); itr != required->End(); ++itr)
                 if (itr->IsString()) {
                     SizeType index;
-                    if (FindPropertyIndex(*itr, &index)) {
+                    if (findIndex(*itr, &index)) {
                         properties_[index].required = true;
                         hasRequired_ = true;
                     }
@@ -495,13 +495,13 @@ public:
             hasDependencies_ = true;
             for (ConstMemberIterator itr = dependencies->MemberBegin(); itr != dependencies->MemberEnd(); ++itr) {
                 SizeType sourceIndex;
-                if (FindPropertyIndex(itr->name, &sourceIndex)) {
+                if (findIndex(itr->name, &sourceIndex)) {
                     if (itr->value.IsArray()) {
                         properties_[sourceIndex].dependencies = static_cast<bool*>(allocator_->Malloc(sizeof(bool) * propertyCount_));
                         std::memset(properties_[sourceIndex].dependencies, 0, sizeof(bool)* propertyCount_);
                         for (ConstValueIterator targetItr = itr->value.Begin(); targetItr != itr->value.End(); ++targetItr) {
                             SizeType targetIndex;
-                            if (FindPropertyIndex(*targetItr, &targetIndex))
+                            if (findIndex(*targetItr, &targetIndex))
                                 properties_[sourceIndex].dependencies[targetIndex] = true;
                         }
                     }
@@ -789,7 +789,7 @@ public:
         }
 
         SizeType index;
-        if (FindPropertyIndex(ValueType(str, len).Move(), &index)) {
+        if (findIndex(ValueType(str, len).Move(), &index)) {
             if (context.patternPropertiesSchemaCount > 0) {
                 context.patternPropertiesSchemas[context.patternPropertiesSchemaCount++] = properties_[index].schema;
                 context.valueSchema = GetTypeless();
@@ -1083,7 +1083,7 @@ private:
     }
 
     // O(n)
-    bool FindPropertyIndex(const ValueType& name, SizeType* outIndex) const {
+    bool findIndex(const ValueType& name, SizeType* outIndex) const {
         SizeType len = name.GetStringLength();
         const Ch* str = name.GetString();
         for (SizeType index = 0; index < propertyCount_; index++)

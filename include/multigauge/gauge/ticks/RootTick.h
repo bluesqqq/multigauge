@@ -22,15 +22,15 @@ struct RootTick : public Editable {
 
     std::optional<TickValueStyle> valueStyle;
 
-    MG_EDITABLE_BEGIN()
-        MG_EDITABLE_PROP_META(divisions, "divisions", "Divisions", "Number of times to divide ticks.")
-        MG_EDITABLE_PROP_META(interval, "interval", "Interval", "Gap between ticks as a value.")
-        MG_EDITABLE_PROP_META(useDivisions, "useDivisions", "Use Divisions", "Whether to use division or interval spacing.")
-        MG_EDITABLE_PROP_META(length, "length", "Length", "Length in pixels.")
-        MG_EDITABLE_PROP_META(thickness, "thickness", "Thickness", "Thickness in pixels.")
-        MG_EDITABLE_PROP_META(paint, "paint", "Paint", "Paint options for this tick.")
+    MG_EDITOR_BEGIN()
+        MG_EDITOR_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks.")
+        MG_EDITOR_PROP(interval, "interval", "Interval", "Gap between ticks as a value.")
+        MG_EDITOR_PROP(useDivisions, "useDivisions", "Use Divisions", "Whether to use division or interval spacing.")
+        MG_EDITOR_PROP(length, "length", "Length", "Length in pixels.")
+        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness in pixels.")
+        MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for this tick.")
         // TODO: need to do valueStyle
-    MG_EDITABLE_END()
+    MG_EDITOR_END()
 
     RootTick() = default;
 

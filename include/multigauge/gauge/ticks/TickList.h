@@ -40,11 +40,11 @@ class TickList : public Editable {
         float rightHighlightFactor = 1.0f;
         float rightHighlightDistance = 1000;
 
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(root, "root", "Root Tick", "First tick drawn.")
-            MG_EDITABLE_PROP_META(subs, "subs", "Sub Ticks", "Sequentially drawn ticks.")
-            MG_EDITABLE_PROP_META(offset, "offset", "Offset", "Value offset to start ticks from.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(root, "root", "Root Tick", "First tick drawn.")
+            MG_EDITOR_PROP(subs, "subs", "Sub Ticks", "Sequentially drawn ticks.")
+            MG_EDITOR_PROP(offset, "offset", "Offset", "Value offset to start ticks from.")
+        MG_EDITOR_END()
 
         float getLength(uint8_t index) const;
         float getThickness(uint8_t index) const;

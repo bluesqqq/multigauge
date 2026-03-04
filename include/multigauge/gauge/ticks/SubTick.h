@@ -18,12 +18,12 @@ struct SubTick : public Editable {
 
     std::optional<TickValueStyle> valueStyle;
 
-    MG_EDITABLE_BEGIN()
-        MG_EDITABLE_PROP_META(divisions, "divisions", "Divisions", "Number of times to divide ticks. Make null to inherit from parent.")
-        MG_EDITABLE_PROP_META(length, "length", "Length", "Length in pixels. Make null to inherit from parent.")
-        MG_EDITABLE_PROP_META(thickness, "thickness", "Thickness", "Thickness in pixels. Make null to inherit from parent.")
-        MG_EDITABLE_PROP_META(paint, "paint", "Paint", "Paint options for this tick. Make null to inherit from parent.")
-    MG_EDITABLE_END()
+    MG_EDITOR_BEGIN()
+        MG_EDITOR_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks. Make null to inherit from parent.")
+        MG_EDITOR_PROP(length, "length", "Length", "Length in pixels. Make null to inherit from parent.")
+        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness in pixels. Make null to inherit from parent.")
+        MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for this tick. Make null to inherit from parent.")
+    MG_EDITOR_END()
 
     SubTick() = default;
 

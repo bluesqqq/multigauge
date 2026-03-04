@@ -15,12 +15,12 @@ class TextElement : public Element {
         bool useHyphens = false;
 
         // Editable props list
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(text, "text", "Text", "Text to display.")
-            MG_EDITABLE_PROP_META(paint, "paint", "Paint", "Paint options for the text.")
-            MG_EDITABLE_PROP_META(useEllipses, "ellipses", "Ellipses", "Use ellipses for overflowing text.")
-            MG_EDITABLE_PROP_META(useHyphens, "hyphens", "Hyphens", "Use hyphens for text justification.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(text, "text", "Text", "Text to display.")
+            MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for the text.")
+            MG_EDITOR_PROP(useEllipses, "ellipses", "Ellipses", "Use ellipses for overflowing text.")
+            MG_EDITOR_PROP(useHyphens, "hyphens", "Hyphens", "Use hyphens for text justification.")
+        MG_EDITOR_END()
 
     public:
         using Element::Element;

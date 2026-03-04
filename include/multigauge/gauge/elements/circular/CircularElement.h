@@ -11,11 +11,11 @@ class CircularElement : public Element {
         std::optional<float> startAngle;
         std::optional<float> endAngle;
 
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(value, "value", "Value", "Value to display. Make null to inherit from parent.")
-            MG_EDITABLE_PROP_META(startAngle, "startAngle", "Start Angle", "Angle to start from. Make null to inherit from parent.")
-            MG_EDITABLE_PROP_META(endAngle, "endAngle", "End Angle", "Angle to end at. Make null to inherit from parent.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(value, "value", "Value", "Value to display. Make null to inherit from parent.")
+            MG_EDITOR_PROP(startAngle, "startAngle", "Start Angle", "Angle to start from. Make null to inherit from parent.")
+            MG_EDITOR_PROP(endAngle, "endAngle", "End Angle", "Angle to end at. Make null to inherit from parent.")
+        MG_EDITOR_END()
 
         const CircularElement* parentCircular() const {
             const Element* p = getParent();           // assumes you have a const getParent()

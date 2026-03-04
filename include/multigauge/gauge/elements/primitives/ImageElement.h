@@ -11,9 +11,9 @@ class ImageElement : public Element {
         Image image;
 
         // Editable props list
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(path, "path", "Image Path", "Filepath of image.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(path, "path", "Image Path", "Filepath of image.")
+        MG_EDITOR_END()
 
     public:
         using Element::Element;

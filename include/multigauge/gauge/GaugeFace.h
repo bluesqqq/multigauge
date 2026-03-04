@@ -21,11 +21,11 @@ class GaugeFace : public Editable {
 
         unsigned long lastUpdateTime = 0;
 
-        MG_EDITABLE_BEGIN()
-            MG_EDITABLE_PROP_META(title, "title", "Title", "Title to display.")
-            MG_EDITABLE_PROP_META(description, "description", "Description", "Description to display.")
-            MG_EDITABLE_PROP_META(backgroundColor, "bgColor", "Background Color", "Color to fill the background with.")
-        MG_EDITABLE_END()
+        MG_EDITOR_BEGIN()
+            MG_EDITOR_PROP(title, "title", "Title", "Title to display.")
+            MG_EDITOR_PROP(description, "description", "Description", "Description to display.")
+            MG_EDITOR_PROP(backgroundColor, "bgColor", "Background Color", "Color to fill the background with.")
+        MG_EDITOR_END()
 
     public:
         explicit GaugeFace() = default;
