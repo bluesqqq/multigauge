@@ -32,6 +32,8 @@ class GaugeFace : public Editable {
 
         void load(const rapidjson::Document& doc);
 
+        rapidjson::Document save() const;
+
         void layout(Graphics& g);
 
         void draw(Graphics& g) const;

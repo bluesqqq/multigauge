@@ -11,6 +11,8 @@
 
 #include <multigauge/editor/Editable.h>
 
+#include <multigauge/gauge/Layout.h>
+
 #include <memory>
 
 class Element;
@@ -31,6 +33,8 @@ class Element : public Editable {
         Element* layoutOwner = nullptr;
 
         //----------[ LAYOUT ]----------//
+
+        Layout layout;
 
         /// @brief Absolute bounds computer from Yoga
         Rect<float> bounds = Rect<float>(0.0f, 0.0f, 0.0f, 0.0f);
@@ -58,6 +62,31 @@ class Element : public Editable {
 
         void makeNode();
         void removeNode();
+
+        void applyInheritance() {
+            if (inherited) removeNode();
+            else makeNode();
+
+            refreshInheritanceCacheRecursive();
+            markLayoutDirty();
+        }
+
+        void setInherited(bool newInherited) {
+            if (!parent) newInherited = false; // To be inherited element MUST have parent
+            if (inherited == newInherited) return;
+            inherited = newInherited;
+            applyInheritance();
+        }
+
+        static bool isInheritString(const rapidjson::Value::ConstObject& json) {
+            auto it = json.FindMember("style");
+            if (it == json.MemberEnd())
+                return false;
+
+            const rapidjson::Value& style = it->value;
+
+            return style.IsString() && std::strcmp(style.GetString(), "inherit") == 0;
+        }
 
     protected:
         void markLayoutDirty();
@@ -105,31 +134,6 @@ class Element : public Editable {
 
         const Element* getLayoutOwner() const { return layoutOwner ? layoutOwner : this; }
         Element* getLayoutOwner() { return layoutOwner ? layoutOwner : this; }
-        
-        void applyInheritance() {
-            if (inherited) removeNode();
-            else makeNode();
-
-            refreshInheritanceCacheRecursive();
-            markLayoutDirty();
-        }
-
-        void setInherited(bool newInherited) {
-            if (!parent) newInherited = false; // To be inherited element MUST have parent
-            if (inherited == newInherited) return;
-            inherited = newInherited;
-            applyInheritance();
-        }
-
-        static bool isInheritString(const rapidjson::Value::ConstObject& json) {
-            auto it = json.FindMember("style");
-            if (it == json.MemberEnd())
-                return false;
-
-            const rapidjson::Value& style = it->value;
-
-            return style.IsString() && std::strcmp(style.GetString(), "inherit") == 0;
-        }
 
         //----------[ TRAVERSAL ]----------//
 
@@ -156,4 +160,5 @@ class Element : public Editable {
         void loadProps(const rapidjson::Value::ConstObject& json);
 
         void loadChildren(const rapidjson::Value::ConstObject& json);
+
 };

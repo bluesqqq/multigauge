@@ -11,16 +11,17 @@ const Property *Editable::findProperty(const char *key) const {
         if (propName && std::strcmp(propName, key) == 0)
             return &pl.props[i];
     }
+
     return nullptr;
 }
 
-bool Editable::loadProperty(const char *key, const rapidjson::Value &v){
+bool Editable::loadProperty(const char *key, const rapidjson::Value &v) {
     auto property = findProperty(key);
     if (!property || !property->set) return false;
     return property->set(this, v);
 }
 
-bool Editable::saveProperty(const char *key, rapidjson::Value &out, rapidjson::Document::AllocatorType &a) {
+bool Editable::saveProperty(const char *key, rapidjson::Value &out, rapidjson::Document::AllocatorType &a) const {
     auto property = findProperty(key);
     if (!property || !property->get) return false;
     return property->get(this, out, a);
@@ -37,16 +38,32 @@ void Editable::saveProperties(rapidjson::Value &out, rapidjson::Document::Alloca
     out.SetObject();
 
     PropertyList pl = propertyList();
-    for (std::size_t i = 0; i < pl.count; ++i) {
-        const Property& p = pl.props[i];
-        if (!p.key || !p.get) continue;
+    if (!pl.props || pl.count == 0) return;
 
-        rapidjson::Value key;
-        key.SetString(p.key, a);
+    for (std::size_t i = 0; i < pl.count; ++i) {
+        const Property& property = pl.props[i];
+        if (!property.key || !property.get) continue;
 
         rapidjson::Value val;
-        if (!p.get(this, val, a)) continue;
+        if (!property.get(this, val, a)) continue;
 
-        out.AddMember(key, val, a);
+        out.AddMember(rapidjson::StringRef(property.key), val, a);
     }
+}
+
+std::vector<const Property*> Editable::getEditableProperties() const {
+    PropertyList pl = propertyList();
+    if (!pl.props || pl.count == 0) return {};
+
+    std::vector<const Property*> result;
+
+    for (std::size_t i = 0; i < pl.count; ++i) {
+        const auto& property = pl.props[i];
+        if (!property.key || !property.get) continue;
+
+        // Check if property is Editable class
+        if (false) result.push_back(&property);
+    }
+
+    return result;
 }

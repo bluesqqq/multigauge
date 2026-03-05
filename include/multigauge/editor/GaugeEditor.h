@@ -42,36 +42,32 @@ class GaugeEditor {
 
         Editable* find(Id id);
 
-        rapidjson::Value exportEditableProps(const Editable& e, rapidjson::Document::AllocatorType& a) const;
-
-        rapidjson::Value exportElementRecursive(const Element& e, rapidjson::Document::AllocatorType& a) const;
+        void rebuildIndex();
 
     public:
         explicit GaugeEditor(GaugeFace& f) { setFace(f); }
+
+        //----------[ GAUGE FACE ]----------//
 
         void setFace(GaugeFace& f);
 
         GaugeFace* getFace() const { return face; }
 
-        void rebuildIndex();
+        void loadFace(const std::string& json);
 
-        // -----------------------------
-        // Tree for hierarchy panel
-        // -----------------------------
+        std::string saveFace(const std::string& json) const;
+
+        //----------[ HIERARCHY ]----------//
 
         const std::vector<EditorNode>& getNodes() const { return nodes; }
 
         std::string listTreeJson() const;
 
-        // -----------------------------
-        // Properties for inspector
-        // -----------------------------
+        //----------[ PROPERTIES ]----------//
 
         std::string savePropertiesJson(Id id) const;
 
         std::string loadPropertyJson(Id id, const std::string& propName, const std::string& jsonValueText);
 
         std::string patchPropertyJson(Id id, const std::string& propName, const std::string& patchObjectText);
-
-        std::string exportFaceJson() const;
 };

@@ -13,6 +13,28 @@ void GaugeFace::load(const rapidjson::Document& doc) {
         loadProperties(json["props"].GetObject());
 }
 
+rapidjson::Document GaugeFace::save() const {
+    rapidjson::Document doc;
+
+    doc.SetObject();
+    auto& a = doc.GetAllocator();
+
+    rapidjson::Value props(rapidjson::kObjectType);
+    saveProperties(props, a);
+    doc.AddMember("props", props, a);
+
+    const Element* rootElement = getRoot();
+    if (rootElement) {
+        rapidjson::Value root(rapidjson::kObjectType);
+
+        //TODO: save to root
+
+        doc.AddMember("root", root, a);
+    }
+
+    return doc;
+}
+
 void GaugeFace::layout(Graphics &g) {
     auto screen = g.getScreenBounds().toFloat();
 

@@ -62,16 +62,19 @@ class Editable {
         const Property* findProperty(const char* key) const;
 
         /// @brief Loads a single property from JSON
-        bool loadProperty(const char* key, const rapidjson::Value& v) ;
+        bool loadProperty(const char* key, const rapidjson::Value& v);
 
         /// @brief Saves a single property as JSON
-        bool saveProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
+        bool saveProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
 
         /// @brief Loads all properties from JSON
         void loadProperties(rapidjson::Value::ConstObject json);
 
         /// @brief Saves all properties to JSON
         void saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+
+        /// @brief Returns a list of all properties that are 
+        std::vector<const Property*> getEditableProperties() const;
 
     protected:
         //----------[ std::vector traits ]----------//

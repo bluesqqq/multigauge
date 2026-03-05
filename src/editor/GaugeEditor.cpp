@@ -50,47 +50,23 @@ Editable *GaugeEditor::find(Id id) {
     return it == idToPtr.end() ? nullptr : it->second;
 }
 
-rapidjson::Value GaugeEditor::exportEditableProps(const Editable &e, rapidjson::Document::AllocatorType &a) const {
-    rapidjson::Value props(rapidjson::kObjectType);
-    e.saveProperties(props, a);
-    return props;
-}
-
-rapidjson::Value GaugeEditor::exportElementRecursive(const Element &e, rapidjson::Document::AllocatorType &a) const {
-    rapidjson::Value obj(rapidjson::kObjectType);
-
-    // type
-    {
-        const std::string tname = e.editorTypeName();
-        rapidjson::Value t;
-        t.SetString(tname.c_str(), static_cast<rapidjson::SizeType>(tname.size()), a);
-        obj.AddMember("type", t, a);
-    }
-
-    // props
-    {
-        rapidjson::Value props = exportEditableProps(e, a);
-        obj.AddMember("props", props, a);
-    }
-
-    // children
-    {
-        rapidjson::Value arr(rapidjson::kArrayType);
-        const std::size_t count = e.childCount();
-        for (std::size_t i = 0; i < count; ++i) {
-            const Element* c = e.childAt(i);
-            if (!c) continue;
-            arr.PushBack(exportElementRecursive(*c, a), a);
-        }
-        obj.AddMember("children", arr, a);
-    }
-
-    return obj;
-}
-
 void GaugeEditor::setFace(GaugeFace &f) {
     face = &f;
     rebuildIndex();
+}
+
+void GaugeEditor::loadFace(const std::string &json) {
+    if (!face) return;
+
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+    face->load(doc);
+}
+
+std::string GaugeEditor::saveFace(const std::string &json) const {
+    if (!face) return "";
+    rapidjson::Document doc = face->save();
+    return toString(doc);
 }
 
 void GaugeEditor::rebuildIndex() {
@@ -211,36 +187,4 @@ std::string GaugeEditor::patchPropertyJson(Id id, const std::string &propName, c
     if (!p->set(e, current)) return R"({"ok":false,"error":"TypeMismatch"})";
 
     return R"({"ok":true})";
-}
-
-std::string GaugeEditor::exportFaceJson() const {
-    if (!face) return R"({"ok":false,"error":"NoFace"})";
-
-    rapidjson::Document d;
-    d.SetObject();
-    auto& a = d.GetAllocator();
-
-    d.AddMember("ok", true, a);
-
-    // face object: props + root element
-    rapidjson::Value faceObj(rapidjson::kObjectType);
-
-    // face props (via Editable)
-    {
-        rapidjson::Value props = exportEditableProps(*face, a);
-        faceObj.AddMember("props", props, a);
-    }
-
-    // root element
-    {
-        const Element* root = face->getRoot();
-        if (root) {
-            faceObj.AddMember("root", exportElementRecursive(*root, a), a);
-        } else {
-            faceObj.AddMember("root", rapidjson::Value(rapidjson::kNullType), a);
-        }
-    }
-
-    d.AddMember("face", faceObj, a);
-    return toString(d);
 }
