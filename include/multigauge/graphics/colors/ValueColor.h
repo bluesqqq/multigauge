@@ -4,6 +4,8 @@
 #include <multigauge/graphics/colors/ColorTimeline.h>
 
 class ValueColor : public Color {
+    MG_TYPE_ID("value")
+
     private:
         ColorTimeline timeline;
         Value* value = nullptr;
@@ -47,8 +49,8 @@ class ValueColor : public Color {
         // internal helper called after deserialization to resolve `id` -> pointer
         void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(timeline, "timeline", "Timeline", "Color timeline.")
-            MG_EDITOR_PROP_CALLBACK(id, "id", &ValueColor::updateValueId, "ID", "Value ID.")
-        MG_EDITOR_END()
+        MG_PROPS_BEGIN()
+            MG_PROP(timeline, "timeline", "Timeline", "Color timeline.")
+            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", &ValueColor::updateValueId)
+        MG_PROPS_END()
 };

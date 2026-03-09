@@ -3,7 +3,7 @@
 #include <multigauge/graphics/colors/rgba.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/values/value.h>
-#include <multigauge/editor/Editable.h>
+#include <multigauge/editor/PropertyObject.h>
 #include <multigauge/io/Log.h>
 
 #include <rapidjson/document.h>
@@ -17,7 +17,7 @@ class ColorTimeline;      // forward declare
 
 using OwnedColor = std::unique_ptr<Color>;
 
-class Color : public Editable {
+class Color : public PropertyObject {
     MG_EDITOR_NAME("Color")
     public:
         virtual ~Color() = default;
@@ -64,18 +64,18 @@ CODEC_END()
 
 //----------[ FILL STROKE ]----------//
 
-struct Paint : public Editable {
+struct Paint : public PropertyObject {
     MG_EDITOR_NAME("Paint")
     
     OwnedColor fill;
     OwnedColor stroke;
     float thickness = 1.0f;
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP(fill, "fill", "Fill", "Fill color.")
-        MG_EDITOR_PROP(stroke, "stroke", "Stroke", "Stroke color.")
-        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP(fill, "fill", "Fill", "Fill color.")
+        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.")
+        MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.")
+    MG_PROPS_END()
 
     Paint();
 

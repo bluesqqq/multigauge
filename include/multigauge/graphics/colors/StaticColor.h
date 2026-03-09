@@ -3,12 +3,14 @@
 #include <multigauge/graphics/colors/Color.h>
 
 class StaticColor : public Color {
+    MG_TYPE_ID("static")
+
     private:
         rgba color;
 
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(color, "color", "Color", "RGBA color value.")
-        MG_EDITOR_END()
+        MG_PROPS_BEGIN()
+            MG_PROP(color, "color", "Color", "RGBA color value.")
+        MG_PROPS_END()
     
     public:
         /// @brief Constructs a StaticColor with default color

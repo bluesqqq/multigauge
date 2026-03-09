@@ -4,6 +4,8 @@
 #include <multigauge/graphics/colors/ColorTimeline.h>
 
 class TimeColor : public Color {
+    MG_TYPE_ID("time")
+    
     public:
         /// @brief Defines how the timeline loops
         enum class LoopType {
@@ -19,10 +21,10 @@ class TimeColor : public Color {
         ColorTimeline timeline;
         LoopType loopType;
 
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(timeline, "timeline", "Timeline", "Color timeline.")
-            MG_EDITOR_PROP(loopType, "loop", "Loop", "Type of looping to use.")
-        MG_EDITOR_END()
+        MG_PROPS_BEGIN()
+            MG_PROP(timeline, "timeline", "Timeline", "Color timeline.")
+            MG_PROP(loopType, "loop", "Loop", "Type of looping to use.")
+        MG_PROPS_END()
 
         /// @brief Retrieves the current time value.
         /// @return The current time position in milliseconds

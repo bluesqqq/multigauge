@@ -3,6 +3,8 @@
 #include <multigauge/graphics/colors/Color.h>
 
 class UserColor : public Color {
+    MG_TYPE_ID("user")
+
     public:
         enum class Slot : uint8_t {
             Primary,

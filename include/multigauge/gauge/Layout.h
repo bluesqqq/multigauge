@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/editor/Editable.h>
+#include <multigauge/editor/PropertyObject.h>
 #include <yoga/Yoga.h>
 
 struct LayoutSize {
@@ -114,6 +114,8 @@ CODEC_BEGIN(LayoutSize)
             out = {LayoutSize::Unit::Px, num};
             return true;
         }
+
+        return false;
     }
 
     ENCODE() {
@@ -136,7 +138,7 @@ CODEC_BEGIN(LayoutSize)
     }
 CODEC_END()
 
-struct FlexContainer : public Editable {
+struct FlexContainer : public PropertyObject {
     YGNodeRef node = nullptr;
 
     YGFlexDirection direction = YGFlexDirectionRow;
@@ -155,16 +157,16 @@ struct FlexContainer : public Editable {
         YGNodeStyleSetFlexWrap(node, wrap);
     }
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP_CALLBACK(direction,    "direction",     &FlexContainer::update, "Direction",     "Direction of flex content.")
-        MG_EDITOR_PROP_CALLBACK(justify,      "justify",       &FlexContainer::update, "Justify",       "Main-axis alignment of children.")
-        MG_EDITOR_PROP_CALLBACK(alignItems,   "align-items",   &FlexContainer::update, "Align Items",   "Cross-axis alignment of children.")
-        MG_EDITOR_PROP_CALLBACK(alignContent, "align-content", &FlexContainer::update, "Align Content", "Cross-axis alignment of children.")
-        MG_EDITOR_PROP_CALLBACK(wrap,         "wrap",          &FlexContainer::update, "Wrap",          "Wrap setting for children.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP_CALLBACK(direction,    "direction",     "Direction",     "Direction of flex content.",        &FlexContainer::update)
+        MG_PROP_CALLBACK(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  &FlexContainer::update)
+        MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", &FlexContainer::update)
+        MG_PROP_CALLBACK(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::update)
+        MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        &FlexContainer::update)
+    MG_PROPS_END()
 };
 
-struct FlexItem : public Editable {
+struct FlexItem : public PropertyObject {
     YGNodeRef node = nullptr; 
 
     float grow = 0;
@@ -181,15 +183,15 @@ struct FlexItem : public Editable {
         YGNodeStyleSetAlignSelf(node, alignSelf);
     }
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP_CALLBACK(grow,      "grow",       &FlexItem::update, "Grow",       "Rate element expands to fill avaiable space.")
-        MG_EDITOR_PROP_CALLBACK(shrink,    "shrink",     &FlexItem::update, "Shrink",     "Rate element contracts to avoid overflow.")
-        MG_EDITOR_PROP_CALLBACK(basis,     "basis",      &FlexItem::update, "Basis",      "Flex basis.")
-        MG_EDITOR_PROP_CALLBACK(alignSelf, "align-self", &FlexItem::update, "Align Self", "Align self.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", &FlexItem::update)
+        MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    &FlexItem::update)
+        MG_PROP_CALLBACK(basis,     "basis",      "Basis",      "Flex basis.",                                  &FlexItem::update)
+        MG_PROP_CALLBACK(alignSelf, "align-self", "Align Self", "Align self.",                                  &FlexItem::update)
+    MG_PROPS_END()
 };
 
-struct Position : public Editable {
+struct Position : public PropertyObject {
     YGNodeRef node = nullptr;
     
     YGPositionType type = YGPositionTypeStatic;
@@ -210,17 +212,17 @@ struct Position : public Editable {
         bottom.setPosition(node, YGEdgeBottom);
     }
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP_CALLBACK(type, "type", &Position::update, "Type", "Positioning type.")
+    MG_PROPS_BEGIN()
+        MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", &Position::update)
 
-        MG_EDITOR_PROP_CALLBACK(left,   "left",   &Position::update,   "Left",   "Left edge position.")
-        MG_EDITOR_PROP_CALLBACK(right,  "right",  &Position::update,  "Right",  "Right edge position.")
-        MG_EDITOR_PROP_CALLBACK(top,    "top",    &Position::update,    "Top",    "Top edge position.")
-        MG_EDITOR_PROP_CALLBACK(bottom, "bottom", &Position::update, "Bottom", "Bottom edge position.")
-    MG_EDITOR_END()
+        MG_PROP_CALLBACK(left,   "left",     "Left",   "Left edge position.", &Position::update)
+        MG_PROP_CALLBACK(right,  "right",   "Right",  "Right edge position.", &Position::update)
+        MG_PROP_CALLBACK(top,    "top",       "Top",    "Top edge position.", &Position::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Position::update)
+    MG_PROPS_END()
 };
 
-struct Margin : public Editable {
+struct Margin : public PropertyObject {
     YGNodeRef node = nullptr;
 
     LayoutSize left{LayoutSize::Unit::Px, 0.0f};
@@ -237,15 +239,15 @@ struct Margin : public Editable {
         bottom.setMargin(node, YGEdgeBottom);
     }
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP_CALLBACK(left,   "left",   &Margin::update,   "Left",   "Left edge position.")
-        MG_EDITOR_PROP_CALLBACK(right,  "right",  &Margin::update,  "Right",  "Right edge position.")
-        MG_EDITOR_PROP_CALLBACK(top,    "top",    &Margin::update,    "Top",    "Top edge position.")
-        MG_EDITOR_PROP_CALLBACK(bottom, "bottom", &Margin::update, "Bottom", "Bottom edge position.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP_CALLBACK(left,   "left",     "Left",   "Left edge position.", &Margin::update)
+        MG_PROP_CALLBACK(right,  "right",   "Right",  "Right edge position.", &Margin::update)
+        MG_PROP_CALLBACK(top,    "top",       "Top",    "Top edge position.", &Margin::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Margin::update)
+    MG_PROPS_END()
 };
 
-struct Padding : public Editable {
+struct Padding : public PropertyObject {
     YGNodeRef node = nullptr;
 
     LayoutSize left;
@@ -262,15 +264,15 @@ struct Padding : public Editable {
         bottom.setPadding(node, YGEdgeBottom);
     }
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP_CALLBACK(left,   "left",   &Padding::update,   "Left",   "Left edge position.")
-        MG_EDITOR_PROP_CALLBACK(right,  "right",  &Padding::update,  "Right",  "Right edge position.")
-        MG_EDITOR_PROP_CALLBACK(top,    "top",    &Padding::update,    "Top",    "Top edge position.")
-        MG_EDITOR_PROP_CALLBACK(bottom, "bottom", &Padding::update, "Bottom", "Bottom edge position.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP_CALLBACK(left,   "left",     "Left",   "Left edge position.", &Padding::update)
+        MG_PROP_CALLBACK(right,  "right",   "Right",  "Right edge position.", &Padding::update)
+        MG_PROP_CALLBACK(top,    "top",       "Top",    "Top edge position.", &Padding::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Padding::update)
+    MG_PROPS_END()
 };
 
-struct Gap : public Editable {
+struct Gap : public PropertyObject {
     YGNodeRef node = nullptr;
 
     float row = 0;
@@ -283,13 +285,13 @@ struct Gap : public Editable {
         YGNodeStyleSetGap(node, YGGutterColumn, column);
     }
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP_CALLBACK(row,     "row",     &Gap::update,  "Row",     "Row gap.")
-        MG_EDITOR_PROP_CALLBACK(column,  "column",  &Gap::update,  "Column",  "Column gap.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP_CALLBACK(row,     "row",     "Row",     "Row gap.",    &Gap::update)
+        MG_PROP_CALLBACK(column,  "column",  "Column",  "Column gap.", &Gap::update)
+    MG_PROPS_END()
 };
 
-struct Layout : public Editable {
+struct Layout : public PropertyObject {
     YGNodeRef node = nullptr;
 
     FlexContainer flexContainer;
@@ -327,6 +329,13 @@ struct Layout : public Editable {
     void update() {
         if (!node) return;
 
+        flexContainer.update();
+        flexItem.update();
+        position.update();
+        margin.update();
+        padding.update();
+        gap.update();
+
         YGNodeStyleSetDisplay(node, display);
         YGNodeStyleSetOverflow(node, overflow);
 
@@ -340,24 +349,24 @@ struct Layout : public Editable {
         YGNodeStyleSetAspectRatio(node, aspectRatio);
     }
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.")
-        MG_EDITOR_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.")
-        MG_EDITOR_PROP(position,      "position",       "Position",       "Position options.")
-        MG_EDITOR_PROP(margin,        "margin",         "Margin",         "Margin options.")
-        MG_EDITOR_PROP(padding,       "padding",        "Padding",        "Padding options.")
-        MG_EDITOR_PROP(gap,           "gap",            "Gap",            "Gap options.")
+    MG_PROPS_BEGIN()
+        MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.")
+        MG_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.")
+        MG_PROP(position,      "position",       "Position",       "Position options.")
+        MG_PROP(margin,        "margin",         "Margin",         "Margin options.")
+        MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
+        MG_PROP(gap,           "gap",            "Gap",            "Gap options.")
         
-        MG_EDITOR_PROP_CALLBACK(overflow,    "overflow",     &Layout::update, "Overflow",     "Overflow setting for content.")
-        MG_EDITOR_PROP_CALLBACK(display,     "display",      &Layout::update, "Display",      "Display setting.")
-        MG_EDITOR_PROP_CALLBACK(width,       "width",        &Layout::update, "Width",        "Width of the element.")
-        MG_EDITOR_PROP_CALLBACK(height,      "height",       &Layout::update, "Height",       "Height of the element.")
-        MG_EDITOR_PROP_CALLBACK(minWidth,    "min-width",    &Layout::update, "Min Width",    "Width of the element.")
-        MG_EDITOR_PROP_CALLBACK(minHeight,   "min-height",   &Layout::update, "Min Height",   "Height of the element.")
-        MG_EDITOR_PROP_CALLBACK(maxWidth,    "max-width",    &Layout::update, "Max Width",    "Width of the element.")
-        MG_EDITOR_PROP_CALLBACK(maxHeight,   "max-height",   &Layout::update, "Max Height",   "Height of the element.")
-        MG_EDITOR_PROP_CALLBACK(aspectRatio, "aspect-ratio", &Layout::update, "Aspect Ratio", "Aspect ratio of the element.")
-    MG_EDITOR_END()
+        MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", &Layout::update)
+        MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              &Layout::update)
+        MG_PROP_CALLBACK(width,       "width",        "Width",        "Width of the element.",         &Layout::update)
+        MG_PROP_CALLBACK(height,      "height",       "Height",       "Height of the element.",        &Layout::update)
+        MG_PROP_CALLBACK(minWidth,    "min-width",    "Min Width",    "Width of the element.",         &Layout::update)
+        MG_PROP_CALLBACK(minHeight,   "min-height",   "Min Height",   "Height of the element.",        &Layout::update)
+        MG_PROP_CALLBACK(maxWidth,    "max-width",    "Max Width",    "Width of the element.",         &Layout::update)
+        MG_PROP_CALLBACK(maxHeight,   "max-height",   "Max Height",   "Height of the element.",        &Layout::update)
+        MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.",  &Layout::update)
+    MG_PROPS_END()
 };
 
 CODEC_BEGIN(YGFlexDirection)

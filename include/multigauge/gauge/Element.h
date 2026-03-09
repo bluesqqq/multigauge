@@ -9,7 +9,7 @@
 
 #include <multigauge/AssetManager.h>
 
-#include <multigauge/editor/Editable.h>
+#include <multigauge/editor/PropertyObject.h>
 
 #include <multigauge/gauge/Layout.h>
 
@@ -18,7 +18,7 @@
 class Element;
 using OwnedElement = std::unique_ptr<Element>;
 
-class Element : public Editable {
+class Element : public PropertyObject {
     MG_EDITOR_NAME("Element")
 
     private:
@@ -34,7 +34,7 @@ class Element : public Editable {
 
         //----------[ LAYOUT ]----------//
 
-        Layout layout;
+        Layout style;
 
         /// @brief Absolute bounds computer from Yoga
         Rect<float> bounds = Rect<float>(0.0f, 0.0f, 0.0f, 0.0f);
@@ -161,4 +161,7 @@ class Element : public Editable {
 
         void loadChildren(const rapidjson::Value::ConstObject& json);
 
+        MG_PROPS_BEGIN()
+            MG_PROP(style, "style", "Style", "Layout options.")
+        MG_PROPS_END()
 };

@@ -9,11 +9,11 @@ class RectangleElement : public Element {
         Paint paint;
         float radius = 0.0f;
 
-        // Editable props list
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for the circle.")
-            MG_EDITOR_PROP(radius, "radius", "Radius", "Radius of the rectangle's corners.")
-        MG_EDITOR_END()
+        // PropertyObject props list
+        MG_PROPS_BEGIN()
+            MG_PROP(paint, "paint", "Paint", "Paint options for the circle.")
+            MG_PROP(radius, "radius", "Radius", "Radius of the rectangle's corners.")
+        MG_PROPS_END()
 
     public:
         using Element::Element;

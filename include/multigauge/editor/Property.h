@@ -2,9 +2,12 @@
 
 #include <rapidjson/document.h>
 
-class Editable;
+class PropertyObject;
 
 struct Property {
+    using Setter = bool (*)(PropertyObject*, const rapidjson::Value&);
+    using Getter = bool (*)(const PropertyObject*, rapidjson::Value&, rapidjson::Document::AllocatorType&);
+    
     //----------[ JSON ]----------//
 
     /// @brief Key used in JSON schema
@@ -22,7 +25,7 @@ struct Property {
     //----------[ HANDLERS ]----------//
 
     /// @brief Setter function using json value as input
-    bool (*set)(Editable* obj, const rapidjson::Value& v);
+    Setter set;
     /// @brief Getter function using json value as output
-    bool (*get)(const Editable* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
+    Getter get;
 };

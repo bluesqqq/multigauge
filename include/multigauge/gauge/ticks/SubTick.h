@@ -5,7 +5,7 @@
 #include <multigauge/gauge/ticks/TickStyle.h>
 #include <multigauge/utils.h>
 
-struct SubTick : public Editable {
+struct SubTick : public PropertyObject {
     MG_EDITOR_NAME("Tick")
     
     int divisions = 1;
@@ -18,12 +18,12 @@ struct SubTick : public Editable {
 
     std::optional<TickValueStyle> valueStyle;
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks. Make null to inherit from parent.")
-        MG_EDITOR_PROP(length, "length", "Length", "Length in pixels. Make null to inherit from parent.")
-        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness in pixels. Make null to inherit from parent.")
-        MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for this tick. Make null to inherit from parent.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks. Make null to inherit from parent.")
+        MG_PROP(length, "length", "Length", "Length in pixels. Make null to inherit from parent.")
+        MG_PROP(thickness, "thickness", "Thickness", "Thickness in pixels. Make null to inherit from parent.")
+        MG_PROP(paint, "paint", "Paint", "Paint options for this tick. Make null to inherit from parent.")
+    MG_PROPS_END()
 
     SubTick() = default;
 

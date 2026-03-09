@@ -4,7 +4,7 @@
 
 //----------[ KEYFRAME ]----------//
 
-struct ColorKeyframe : public Editable {
+struct ColorKeyframe : public PropertyObject {
     MG_EDITOR_NAME("Keyframe")
 
     /// @brief Position in the timeline
@@ -12,10 +12,10 @@ struct ColorKeyframe : public Editable {
     /// @brief The color at this position
     OwnedColor color = nullptr;
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP(position, "pos", "Position", "Position of the keyframe")
-        MG_EDITOR_PROP(color, "color", "Color", "Color of the keyframe.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP(position, "pos", "Position", "Position of the keyframe")
+        MG_PROP(color, "color", "Color", "Color of the keyframe.")
+    MG_PROPS_END()
 
     ColorKeyframe();
     
@@ -32,16 +32,16 @@ struct ColorKeyframe : public Editable {
 
 //----------[ TIMELINE ]----------//
 
-class ColorTimeline : public Editable {
+class ColorTimeline : public PropertyObject {
     MG_EDITOR_NAME("Timeline")
     CODEC_FRIEND(ColorTimeline)
     
     private:
         std::vector<ColorKeyframe> keyframes;
 
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(keyframes, "keyframes", "Keyframes", "Timeline of keyframes.")
-        MG_EDITOR_END()
+        MG_PROPS_BEGIN()
+            MG_PROP(keyframes, "keyframes", "Keyframes", "Timeline of keyframes.")
+        MG_PROPS_END()
 
         /// @brief Finds the index of the keyframe at or before the given position.
         /// @param position The position to search for
@@ -163,16 +163,16 @@ CODEC_END()
 
 //----------[ FILL STROKE TIMELINE ]----------//
 
-struct PaintTimeline : public Editable {
+struct PaintTimeline : public PropertyObject {
     ColorTimeline fill;
     ColorTimeline stroke;
     float thickness = 1.0f;
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP(fill, "fill", "Fill", "Fill color.")
-        MG_EDITOR_PROP(stroke, "stroke", "Stroke", "Stroke color.")
-        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.")
-    MG_EDITOR_END()
+    MG_PROPS_BEGIN()
+        MG_PROP(fill, "fill", "Fill", "Fill color.")
+        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.")
+        MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.")
+    MG_PROPS_END()
 
     PaintTimeline() = default;
 

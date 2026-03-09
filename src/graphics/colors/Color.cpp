@@ -13,11 +13,6 @@ DECODE_IMPL(OwnedColor) {
         return true;
     }
 
-    if (v.IsString()) {
-        out = std::make_unique<StaticColor>(rgba(v.GetString()));
-        return true;
-    }
-
     if (!v.IsObject()) return false;
 
     const auto obj = v.GetObject();
@@ -42,27 +37,8 @@ ENCODE_IMPL(OwnedColor) {
         return true; 
     }
 
-    if (v->getType() == Color::Type::Static) {
-        const char* s = v->getColor().toHex();
-        out.SetString(s, a);
-        return true;
-    }
-
-    out.SetObject();
-
-    const char* typeStr = nullptr;
-    switch (v->getType()) {
-        case Color::Type::Value:  typeStr = "value"; break;
-        case Color::Type::Time:   typeStr = "time"; break;
-        case Color::Type::User:   typeStr = "user"; break;
-        case Color::Type::Static: typeStr = "static"; break;
-    }
-
     v->saveProperties(out, a);
 
-    if (typeStr) {
-        out.AddMember(rapidjson::Value("type", a), rapidjson::Value(typeStr, a), a);
-    }
     return true;
 }
 

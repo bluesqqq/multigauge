@@ -7,7 +7,7 @@ std::string GaugeEditor::toString(const rapidjson::Value &v) {
     return std::string(sb.GetString(), sb.GetSize());
 }
 
-void GaugeEditor::indexEditable(Editable &e, Id parentId, std::uint32_t order, const std::string &typeName) {
+void GaugeEditor::indexPropertyObject(PropertyObject &e, Id parentId, std::uint32_t order, const std::string &typeName) {
     const Id id = nextId++;
     idToPtr[id] = &e;
     ptrToId[&e] = id;
@@ -29,7 +29,7 @@ void GaugeEditor::indexElementRecursive(Element &e, Id parentId, std::uint32_t o
     node.id = id;
     node.parentId = parentId;
     node.order = order;
-    node.type = e.editorTypeName();
+    node.type = e.typeName();
     nodes.push_back(std::move(node));
 
     const std::size_t count = e.childCount();
@@ -40,12 +40,12 @@ void GaugeEditor::indexElementRecursive(Element &e, Id parentId, std::uint32_t o
     }
 }
 
-const Editable *GaugeEditor::find(Id id) const {
+const PropertyObject *GaugeEditor::find(Id id) const {
     auto it = idToPtr.find(id);
     return it == idToPtr.end() ? nullptr : it->second;
 }
 
-Editable *GaugeEditor::find(Id id) {
+PropertyObject *GaugeEditor::find(Id id) {
     auto it = idToPtr.find(id);
     return it == idToPtr.end() ? nullptr : it->second;
 }
@@ -79,7 +79,7 @@ void GaugeEditor::rebuildIndex() {
     if (!face) return;
 
     faceId = nextId;
-    indexEditable(*face, 0, 0, "GaugeFace");
+    indexPropertyObject(*face, 0, 0, "GaugeFace");
 
     const auto elementRoot = face->getRoot();
     if (elementRoot) indexElementRecursive(*elementRoot, faceId, 0);

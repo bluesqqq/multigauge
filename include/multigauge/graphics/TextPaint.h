@@ -10,7 +10,7 @@
 enum class FontWeight : uint16_t { Normal = 400, Bold = 700 };
 enum class FontSlant  : uint8_t { Normal, Italic };
 
-struct TextPaint : public Editable {
+struct TextPaint : public PropertyObject {
     MG_EDITOR_NAME("Text Paint")
 
     std::string family = "default";
@@ -19,12 +19,12 @@ struct TextPaint : public Editable {
     float pt = 12.0f;
     OwnedColor color;
 
-    MG_EDITOR_BEGIN()
+    MG_PROPS_BEGIN()
         // TODO : WEIGHT AND SLANT
-        MG_EDITOR_PROP(family, "family", "Family", "Font family to display.")
-        MG_EDITOR_PROP(pt, "pt", "Point", "Point size (in pixels) to display.")
-        MG_EDITOR_PROP(color, "color", "Color", "Color of the text.")
-    MG_EDITOR_END()
+        MG_PROP(family, "family", "Family", "Font family to display.")
+        MG_PROP(pt, "pt", "Point", "Point size (in pixels) to display.")
+        MG_PROP(color, "color", "Color", "Color of the text.")
+    MG_PROPS_END()
 
     TextPaint() = default;
 };

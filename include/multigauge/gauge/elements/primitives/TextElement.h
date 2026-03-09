@@ -14,13 +14,13 @@ class TextElement : public Element {
         bool useEllipses = false;
         bool useHyphens = false;
 
-        // Editable props list
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(text, "text", "Text", "Text to display.")
-            MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for the text.")
-            MG_EDITOR_PROP(useEllipses, "ellipses", "Ellipses", "Use ellipses for overflowing text.")
-            MG_EDITOR_PROP(useHyphens, "hyphens", "Hyphens", "Use hyphens for text justification.")
-        MG_EDITOR_END()
+        // PropertyObject props list
+        MG_PROPS_BEGIN()
+            MG_PROP(text, "text", "Text", "Text to display.")
+            MG_PROP(paint, "paint", "Paint", "Paint options for the text.")
+            MG_PROP(useEllipses, "ellipses", "Ellipses", "Use ellipses for overflowing text.")
+            MG_PROP(useHyphens, "hyphens", "Hyphens", "Use hyphens for text justification.")
+        MG_PROPS_END()
 
     public:
         using Element::Element;

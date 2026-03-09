@@ -1,6 +1,6 @@
-#include <multigauge/editor/Editable.h>
+#include <multigauge/editor/PropertyObject.h>
 
-const Property *Editable::findProperty(const char *key) const {
+const Property *PropertyObject::findProperty(const char *key) const {
     if (!key) return nullptr;
 
     PropertyList pl = propertyList();
@@ -15,27 +15,31 @@ const Property *Editable::findProperty(const char *key) const {
     return nullptr;
 }
 
-bool Editable::loadProperty(const char *key, const rapidjson::Value &v) {
+bool PropertyObject::loadProperty(const char *key, const rapidjson::Value &v) {
     auto property = findProperty(key);
     if (!property || !property->set) return false;
     return property->set(this, v);
 }
 
-bool Editable::saveProperty(const char *key, rapidjson::Value &out, rapidjson::Document::AllocatorType &a) const {
+bool PropertyObject::saveProperty(const char *key, rapidjson::Value &out, rapidjson::Document::AllocatorType &a) const {
     auto property = findProperty(key);
     if (!property || !property->get) return false;
     return property->get(this, out, a);
 }
 
-void Editable::loadProperties(rapidjson::Value::ConstObject json) {
+void PropertyObject::loadProperties(rapidjson::Value::ConstObject json) {
     for (auto it = json.MemberBegin(); it != json.MemberEnd(); ++it) {
         const char* key = it->name.GetString();
         loadProperty(key, it->value);
     }
 }
 
-void Editable::saveProperties(rapidjson::Value &out, rapidjson::Document::AllocatorType &a) const {
+void PropertyObject::saveProperties(rapidjson::Value &out, rapidjson::Document::AllocatorType &a) const {
     out.SetObject();
+
+    // Add type if it exists for this object
+    const char* type = typeId();
+    if (type) out.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(type, a), a);
 
     PropertyList pl = propertyList();
     if (!pl.props || pl.count == 0) return;
@@ -51,7 +55,7 @@ void Editable::saveProperties(rapidjson::Value &out, rapidjson::Document::Alloca
     }
 }
 
-std::vector<const Property*> Editable::getEditableProperties() const {
+std::vector<const Property*> PropertyObject::getPropertyObjectProperties() const {
     PropertyList pl = propertyList();
     if (!pl.props || pl.count == 0) return {};
 
@@ -61,7 +65,7 @@ std::vector<const Property*> Editable::getEditableProperties() const {
         const auto& property = pl.props[i];
         if (!property.key || !property.get) continue;
 
-        // Check if property is Editable class
+        // Check if property is PropertyObject class
         if (false) result.push_back(&property);
     }
 

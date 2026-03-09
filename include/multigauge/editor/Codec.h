@@ -5,11 +5,10 @@
 #include <string>
 #include <optional>
 #include <type_traits>
-#include <utility>   // std::move, std::declval
+#include <utility>
+#include <vector>
 
-// Forward declaration to avoid include cycles.
-// Full definition is provided by Editable.h.
-class Editable;
+class PropertyObject;
 
 template<typename T>
 struct Codec;
@@ -151,6 +150,37 @@ CODEC_BEGIN_TPARAMS(typename T, std::optional<T>)
     ENCODE() {
         if (!v) { out.SetNull(); return true; }
         return encodeAny(out, a, *v);
+        return true;
+    }
+CODEC_END()
+
+CODEC_BEGIN_TPARAMS(typename T, std::vector<T>)
+    DECODE() {
+        if (!v.IsArray()) return false;
+
+        CodecType tmp;
+        tmp.reserve(v.Size());
+
+        for (auto it = v.Begin(); it != v.End(); ++it) {
+            T elem{};
+            if (!decodeAny(*it, elem)) return false;
+            tmp.push_back(std::move(elem));
+        }
+
+        out = std::move(tmp);
+        return true;
+    }
+
+    ENCODE() {
+        out.SetArray();
+        out.Reserve(static_cast<rapidjson::SizeType>(v.size()), a);
+
+        for (const auto& e : v) {
+            rapidjson::Value elem;
+            if (!encodeAny(elem, a, e)) return false;
+            out.PushBack(elem, a);
+        }
+
         return true;
     }
 CODEC_END()

@@ -15,7 +15,7 @@
 #include <cmath>
 #include <algorithm>
 
-class TickList : public Editable {
+class TickList : public PropertyObject {
     MG_EDITOR_NAME("Tick List")
     
     private:
@@ -40,11 +40,11 @@ class TickList : public Editable {
         float rightHighlightFactor = 1.0f;
         float rightHighlightDistance = 1000;
 
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(root, "root", "Root Tick", "First tick drawn.")
-            MG_EDITOR_PROP(subs, "subs", "Sub Ticks", "Sequentially drawn ticks.")
-            MG_EDITOR_PROP(offset, "offset", "Offset", "Value offset to start ticks from.")
-        MG_EDITOR_END()
+        MG_PROPS_BEGIN()
+            MG_PROP(root, "root", "Root Tick", "First tick drawn.")
+            MG_PROP(subs, "subs", "Sub Ticks", "Sequentially drawn ticks.")
+            MG_PROP(offset, "offset", "Offset", "Value offset to start ticks from.")
+        MG_PROPS_END()
 
         float getLength(uint8_t index) const;
         float getThickness(uint8_t index) const;

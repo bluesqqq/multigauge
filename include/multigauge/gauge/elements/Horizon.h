@@ -22,12 +22,12 @@ class Horizon : public Element {
         OwnedColor horizonColor    = nullptr;
         OwnedColor borderColor     = nullptr;
 
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.")
-            MG_EDITOR_PROP(groundColor, "groundColor", "Ground Color", "Color of the ground.")
-            MG_EDITOR_PROP(horizonColor, "horizonColor", "Horizon Color", "Color of the horizon.")
-            MG_EDITOR_PROP(borderColor, "borderColor", "Border Color", "Color of the border.")
-        MG_EDITOR_END()
+        MG_PROPS_BEGIN()
+            MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.")
+            MG_PROP(groundColor, "groundColor", "Ground Color", "Color of the ground.")
+            MG_PROP(horizonColor, "horizonColor", "Horizon Color", "Color of the horizon.")
+            MG_PROP(borderColor, "borderColor", "Border Color", "Color of the border.")
+        MG_PROPS_END()
         
     public:
         using Element::Element;

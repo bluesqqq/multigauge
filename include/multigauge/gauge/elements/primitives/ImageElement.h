@@ -10,10 +10,10 @@ class ImageElement : public Element {
 
         Image image;
 
-        // Editable props list
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP(path, "path", "Image Path", "Filepath of image.")
-        MG_EDITOR_END()
+        // PropertyObject props list
+        MG_PROPS_BEGIN()
+            MG_PROP(path, "path", "Image Path", "Filepath of image.")
+        MG_PROPS_END()
 
     public:
         using Element::Element;

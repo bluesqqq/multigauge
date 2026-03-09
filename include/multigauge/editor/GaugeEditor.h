@@ -10,7 +10,7 @@
 
 #include <multigauge/gauge/Element.h>
 #include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/editor/Editable.h>
+#include <multigauge/editor/PropertyObject.h>
 
 struct EditorNode {
     std::uint32_t id = 0;
@@ -28,19 +28,19 @@ class GaugeEditor {
         Id nextId = 1;
         Id faceId = 0;
 
-        std::unordered_map<Id, Editable*> idToPtr;
-        std::unordered_map<Editable*, Id> ptrToId;
+        std::unordered_map<Id, PropertyObject*> idToPtr;
+        std::unordered_map<PropertyObject*, Id> ptrToId;
         std::vector<EditorNode> nodes;
 
         static std::string toString(const rapidjson::Value& v);
 
-        void indexEditable(Editable& e, Id parentId, std::uint32_t order, const std::string& typeName);
+        void indexPropertyObject(PropertyObject& e, Id parentId, std::uint32_t order, const std::string& typeName);
 
         void indexElementRecursive(Element& e, Id parentId, std::uint32_t order);
 
-        const Editable* find(Id id) const;
+        const PropertyObject* find(Id id) const;
 
-        Editable* find(Id id);
+        PropertyObject* find(Id id);
 
         void rebuildIndex();
 

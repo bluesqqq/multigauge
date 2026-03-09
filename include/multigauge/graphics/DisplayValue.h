@@ -2,11 +2,11 @@
 
 #include <multigauge/values/value.h>
 #include <multigauge/utils.h>
-#include <multigauge/editor/Editable.h>
+#include <multigauge/editor/PropertyObject.h>
 
 /// @brief A class that wraps around a `Value` object, allowing the use of custom minimum and maximum limits & units
 /// @note This class does not have setter functions for setting the value of the `Value` reference, as it is meant to supply context to the `Value` object.
-class DisplayValue : public Editable {
+class DisplayValue : public PropertyObject {
     CODEC_FRIEND(DisplayValue)
     MG_EDITOR_NAME("Value")
 
@@ -61,12 +61,12 @@ class DisplayValue : public Editable {
 
         const char* getName() const;
 
-        MG_EDITOR_BEGIN()
-            MG_EDITOR_PROP_CALLBACK(id, "id", &DisplayValue::updateValueId, "ID", "Value ID.")
-            MG_EDITOR_PROP(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.")
-            MG_EDITOR_PROP(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.")
-            MG_EDITOR_PROP(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.")
-        MG_EDITOR_END()
+        MG_PROPS_BEGIN()
+            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", &DisplayValue::updateValueId)
+            MG_PROP(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.")
+            MG_PROP(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.")
+            MG_PROP(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.")
+        MG_PROPS_END()
 };
 
 CODEC_BEGIN(DisplayValue)

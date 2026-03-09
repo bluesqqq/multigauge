@@ -7,7 +7,7 @@
 #include <vector>
 #include <optional>
 
-struct RootTick : public Editable {
+struct RootTick : public PropertyObject {
     MG_EDITOR_NAME("Tick")
     
     int divisions = 2;
@@ -22,15 +22,15 @@ struct RootTick : public Editable {
 
     std::optional<TickValueStyle> valueStyle;
 
-    MG_EDITOR_BEGIN()
-        MG_EDITOR_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks.")
-        MG_EDITOR_PROP(interval, "interval", "Interval", "Gap between ticks as a value.")
-        MG_EDITOR_PROP(useDivisions, "useDivisions", "Use Divisions", "Whether to use division or interval spacing.")
-        MG_EDITOR_PROP(length, "length", "Length", "Length in pixels.")
-        MG_EDITOR_PROP(thickness, "thickness", "Thickness", "Thickness in pixels.")
-        MG_EDITOR_PROP(paint, "paint", "Paint", "Paint options for this tick.")
+    MG_PROPS_BEGIN()
+        MG_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks.")
+        MG_PROP(interval, "interval", "Interval", "Gap between ticks as a value.")
+        MG_PROP(useDivisions, "useDivisions", "Use Divisions", "Whether to use division or interval spacing.")
+        MG_PROP(length, "length", "Length", "Length in pixels.")
+        MG_PROP(thickness, "thickness", "Thickness", "Thickness in pixels.")
+        MG_PROP(paint, "paint", "Paint", "Paint options for this tick.")
         // TODO: need to do valueStyle
-    MG_EDITOR_END()
+    MG_PROPS_END()
 
     RootTick() = default;
 
