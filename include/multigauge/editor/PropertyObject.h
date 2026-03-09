@@ -54,10 +54,7 @@ class PropertyObject {
     public:
         virtual const char* typeName() const { return "PropertyObject"; }
 
-        struct PropertyList {
-            const Property* props;
-            std::size_t count;
-        };
+        struct PropertyList { const Property* props; std::size_t count; };
 
         virtual ~PropertyObject() = default;
 
@@ -130,21 +127,16 @@ class PropertyObject {
         }
 };
 
-// -------- Macros --------
+//----------[ MACROS ]----------//
 
-// Usage:
-//   class X : public PropertyObject {
-//     int a;
-//     MG_PROPS_BEGIN()
-//       MG_PROP(a)
-//     MG_PROPS_END()
-//   };
-//
 #define MG_EDITOR_NAME(name_literal) \
     public: const char* typeName() const override { return name_literal; }
 
 #define MG_TYPE_ID(str_literal) \
     public: const char* typeId() const override { return (str_literal); }
+
+
+
 
 #define MG_PROPS_BEGIN() \
 public: \

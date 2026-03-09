@@ -1,34 +1,19 @@
 #pragma once
 
 #include <memory>
-#include <multigauge/gauge/Element.h>
+#include <multigauge/gauge/elements/RootElement.h>
 #include <multigauge/graphics/colors/Color.h>
-
-#define NO_TITLE_TEXT "No Title"
-#define NO_DESCRIPTION_TEXT "No description."
 
 class GaugeFace : public PropertyObject {
     MG_EDITOR_NAME("Gauge Face")
 
     private:
-        OwnedElement root;
-
-        OwnedColor backgroundColor;
-
-        const char* title = NO_TITLE_TEXT;
-
-        const char* description = NO_DESCRIPTION_TEXT;
+        RootElement root;
 
         unsigned long lastUpdateTime = 0;
 
-        MG_PROPS_BEGIN()
-            MG_PROP(title, "title", "Title", "Title to display.")
-            MG_PROP(description, "description", "Description", "Description to display.")
-            MG_PROP(backgroundColor, "bgColor", "Background Color", "Color to fill the background with.")
-        MG_PROPS_END()
-
     public:
-        explicit GaugeFace() = default;
+        explicit GaugeFace() : root(nullptr) {};
 
         void load(const rapidjson::Document& doc);
 
@@ -42,5 +27,6 @@ class GaugeFace : public PropertyObject {
 
         bool init(AssetManager& assetManager);
 
-        Element* getRoot() const { return root.get(); }
+        Element* getRoot() { return &root; }
+        const Element* getRoot() const { return &root; }
 };
