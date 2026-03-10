@@ -50,21 +50,27 @@ class GaugeEditor {
 
         GaugeFace* getFace() const { return face; }
 
+        /// @brief Loads the gauge face from a JSON string, replacing all existing data.
         void loadFace(const std::string& json);
 
+        /// @brief Returns a JSON string containing the current gauge face as a JSON string.
         std::string saveFace() const;
 
         //----------[ HIERARCHY ]----------//
 
         const std::vector<EditorNode>& getNodes() const { return nodes; }
 
+        /// @brief Lists the indexed element hierarchy as a JSON array of editor node.
         std::string listTreeJson() const;
 
         //----------[ PROPERTIES ]----------//
 
-        std::string savePropertiesJson(Id id) const;
+        /// @brief Returns a JSON string containing all properties and property metadata for the given node as JSON
+        std::string getPropertiesMetaJson(Id id) const;
 
+        /// @brief Sets a single property value from a JSON string. Returns a JSON string containing the new value of the property after setting, or an error message if failed.
         std::string loadPropertyJson(Id id, const std::string& propName, const std::string& jsonValueText);
 
+        /// @brief Merges a JSON object patch into an object-valued property and writes it back.
         std::string patchPropertyJson(Id id, const std::string& propName, const std::string& patchObjectText);
 };

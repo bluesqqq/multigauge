@@ -90,66 +90,51 @@ std::string GaugeEditor::listTreeJson() const {
     return toString(d);
 }
 
-std::string GaugeEditor::savePropertiesJson(Id id) const {
-    const auto e = find(id);
-    if (!e) return R"({"ok":false,"error":"NotFound"})";
+std::string GaugeEditor::getPropertiesMetaJson(Id id) const {
+    const auto obj = find(id);
+    if (!obj) return R"({"ok":false,"error":"NotFound"})";
 
-    rapidjson::Document d;
-    d.SetObject();
-    auto& a = d.GetAllocator();
+    rapidjson::Document doc;
+    doc.SetArray();
+    auto& a = doc.GetAllocator();
 
-    rapidjson::Value props;
-    e->saveProperties(props, a);
-
-    rapidjson::Value meta(rapidjson::kArrayType);
-    {
-        auto pl = e->propertyList();
-        for (std::size_t i = 0; i < pl.count; ++i) {
-            const auto& p = pl.props[i];
-            rapidjson::Value m(rapidjson::kObjectType);
-
-            m.AddMember("key", rapidjson::Value(p.key, a), a);
-            m.AddMember("name", rapidjson::Value(p.name ? p.name : p.key, a), a);
-            m.AddMember("description", rapidjson::Value(p.description ? p.description : "", a), a);
-
-            meta.PushBack(m, a);
-        }
+    auto pl = obj->propertyList();
+    for (std::size_t i = 0; i < pl.count; ++i) {
+        const auto& prop = pl.props[i];
+        doc.PushBack(prop.getMeta(a), a);
     }
-
-    d.AddMember("ok", true, a);
-    d.AddMember("properties", props, a);
-    d.AddMember("meta", meta, a);
-    return toString(d);
+    
+    return toString(doc);
 }
 
 std::string GaugeEditor::loadPropertyJson(Id id, const std::string &propName, const std::string &jsonValueText) {
-    auto e = find(id);
-    if (!e) return R"({"ok":false,"error":"NotFound"})";
+    auto obj = find(id);
+    if (!obj) return R"({"ok":false,"error":"NotFound"})";
 
-    const Property* p = e->findProperty(propName.c_str());
-    if (!p || !p->set) return R"({"ok":false,"error":"UnknownProperty"})";
+    const Property* property = obj->findProperty(propName.c_str());
+    if (!property || !property->set) return R"({"ok":false,"error":"UnknownProperty"})";
 
     rapidjson::Document v;
     if (v.Parse(jsonValueText.c_str()).HasParseError()) return R"({"ok":false,"error":"BadJson"})";
 
-    if (!p->set(e, v)) return R"({"ok":false,"error":"TypeMismatch"})";
+    if (!property->set(obj, v)) return R"({"ok":false,"error":"TypeMismatch"})";
 
     return R"({"ok":true})";
 }
 
 std::string GaugeEditor::patchPropertyJson(Id id, const std::string &propName, const std::string &patchObjectText) {
-    auto e = find(id);
-    if (!e) return R"({"ok":false,"error":"NotFound"})";
+    auto obj = find(id);
+    if (!obj) return R"({"ok":false,"error":"NotFound"})";
 
-    const Property *p = e->findProperty(propName.c_str());
-    if (!p || !p->get || !p->set) return R"({"ok":false,"error":"UnknownProperty"})";
+    const Property *property = obj->findProperty(propName.c_str());
+    if (!property || !property->get || !property->set) return R"({"ok":false,"error":"UnknownProperty"})";
 
     rapidjson::Document d;
     d.SetObject();
     auto &a = d.GetAllocator();
 
     rapidjson::Value current;
-    if (!p->get(e, current, a)) return R"({"ok":false,"error":"GetFailed"})";
+    if (!property->get(obj, current, a)) return R"({"ok":false,"error":"GetFailed"})";
     if (!current.IsObject()) return R"({"ok":false,"error":"NotObject"})";
 
     rapidjson::Document patch;
@@ -168,7 +153,7 @@ std::string GaugeEditor::patchPropertyJson(Id id, const std::string &propName, c
         else current.AddMember(name, val, a);
     }
 
-    if (!p->set(e, current)) return R"({"ok":false,"error":"TypeMismatch"})";
+    if (!property->set(obj, current)) return R"({"ok":false,"error":"TypeMismatch"})";
 
     return R"({"ok":true})";
 }

@@ -13,7 +13,7 @@ struct Property {
     /// @brief Key used in JSON schema
     const char* key;
 
-    //----------[ EDITOR ]----------//
+    //----------[ METADATA ]----------//
     
     /// @brief Display name used in editor
     const char* name;
@@ -21,6 +21,8 @@ struct Property {
     const char* description;
     /// @brief Widget type to display for UI in editor
     //const char* type;
+
+    rapidjson::Value getMeta(rapidjson::Document::AllocatorType& a) const;
 
     //----------[ HANDLERS ]----------//
 
