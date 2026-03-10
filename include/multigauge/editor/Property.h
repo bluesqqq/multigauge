@@ -23,7 +23,7 @@ struct Property {
     //const char* type;
 
     /// @brief Returns a JSON object containing metadata about this property.
-    rapidjson::Value getMeta(rapidjson::Document::AllocatorType& a) const;
+    rapidjson::Value getMeta(const PropertyObject* self, rapidjson::Document::AllocatorType& a) const;
 
     //----------[ HANDLERS ]----------//
 
