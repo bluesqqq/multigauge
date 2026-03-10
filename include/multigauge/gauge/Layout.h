@@ -311,7 +311,7 @@ struct Layout : public PropertyObject {
     LayoutSize maxWidth;
     LayoutSize maxHeight;
     
-    float aspectRatio = YGUndefined;
+    float aspectRatio = 0.0f;
 
     Layout(YGNodeRef node = nullptr) { if (node) setNode(node); }
 
@@ -346,7 +346,8 @@ struct Layout : public PropertyObject {
         maxWidth.setMaxWidth(node);
         maxHeight.setMaxHeight(node);
 
-        YGNodeStyleSetAspectRatio(node, aspectRatio);
+        if (aspectRatio > 0.0f) YGNodeStyleSetAspectRatio(node, aspectRatio);
+        else YGNodeStyleSetAspectRatio(node, YGUndefined);
     }
 
     MG_PROPS_BEGIN()
