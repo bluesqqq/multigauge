@@ -22,6 +22,7 @@ struct Property {
     /// @brief Widget type to display for UI in editor
     //const char* type;
 
+    /// @brief Returns a JSON object containing metadata about this property.
     rapidjson::Value getMeta(rapidjson::Document::AllocatorType& a) const;
 
     //----------[ HANDLERS ]----------//

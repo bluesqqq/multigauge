@@ -86,6 +86,8 @@ class PropertyObject {
         /// @brief Saves all properties to JSON
         void saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
 
+        rapidjson::Value getPropertiesMeta(rapidjson::Document::AllocatorType& a) const;
+
         /// @brief Returns a list of all properties that are 
         std::vector<const Property*> getPropertyObjectProperties() const;
 

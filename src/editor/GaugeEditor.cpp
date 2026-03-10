@@ -94,17 +94,7 @@ std::string GaugeEditor::getPropertiesMetaJson(Id id) const {
     const auto obj = find(id);
     if (!obj) return R"({"ok":false,"error":"NotFound"})";
 
-    rapidjson::Document doc;
-    doc.SetArray();
-    auto& a = doc.GetAllocator();
-
-    auto pl = obj->propertyList();
-    for (std::size_t i = 0; i < pl.count; ++i) {
-        const auto& prop = pl.props[i];
-        doc.PushBack(prop.getMeta(a), a);
-    }
-    
-    return toString(doc);
+    return toString(obj->getPropertiesMeta(rapidjson::Document().GetAllocator()));
 }
 
 std::string GaugeEditor::loadPropertyJson(Id id, const std::string &propName, const std::string &jsonValueText) {

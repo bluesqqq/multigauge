@@ -70,6 +70,21 @@ void PropertyObject::saveProperties(rapidjson::Value &out, rapidjson::Document::
     }
 }
 
+rapidjson::Value PropertyObject::getPropertiesMeta(rapidjson::Document::AllocatorType &a) const {
+    rapidjson::Value metas(rapidjson::kArrayType);
+
+    for (auto pl = propertyList(); pl.props || pl.parent; pl = nextPropertyList(this, pl)) {
+        if (!pl.props || pl.count == 0) continue;
+
+        for (std::size_t i = 0; i < pl.count; ++i) {
+            const auto& prop = pl.props[i];
+            metas.PushBack(prop.getMeta(this, a), a);
+        }
+    }
+
+    return metas;
+}
+
 std::vector<const Property*> PropertyObject::getPropertyObjectProperties() const {
     std::vector<const Property*> result;
 

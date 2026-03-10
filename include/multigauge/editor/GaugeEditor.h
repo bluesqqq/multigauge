@@ -65,7 +65,7 @@ class GaugeEditor {
 
         //----------[ PROPERTIES ]----------//
 
-        /// @brief Returns a JSON string containing all properties and property metadata for the given node as JSON
+        /// @brief Returns a JSON string containing an array of property metadata for the given node as JSON
         std::string getPropertiesMetaJson(Id id) const;
 
         /// @brief Sets a single property value from a JSON string. Returns a JSON string containing the new value of the property after setting, or an error message if failed.
