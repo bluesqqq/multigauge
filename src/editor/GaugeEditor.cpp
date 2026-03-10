@@ -7,19 +7,6 @@ std::string GaugeEditor::toString(const rapidjson::Value &v) {
     return std::string(sb.GetString(), sb.GetSize());
 }
 
-void GaugeEditor::indexPropertyObject(PropertyObject &e, Id parentId, std::uint32_t order, const std::string &typeName) {
-    const Id id = nextId++;
-    idToPtr[id] = &e;
-    ptrToId[&e] = id;
-
-    EditorNode node;
-    node.id = id;
-    node.parentId = parentId;
-    node.order = order;
-    node.type = typeName;
-    nodes.push_back(std::move(node));
-}
-
 void GaugeEditor::indexElementRecursive(Element &e, Id parentId, std::uint32_t order) {
     const Id id = nextId++;
     idToPtr[id] = &e;
@@ -61,9 +48,10 @@ void GaugeEditor::loadFace(const std::string &json) {
     rapidjson::Document doc;
     doc.Parse(json.c_str());
     face->load(doc);
+    rebuildIndex();
 }
 
-std::string GaugeEditor::saveFace(const std::string &json) const {
+std::string GaugeEditor::saveFace() const {
     if (!face) return "";
     rapidjson::Document doc = face->save();
     return toString(doc);
@@ -71,18 +59,14 @@ std::string GaugeEditor::saveFace(const std::string &json) const {
 
 void GaugeEditor::rebuildIndex() {
     nextId = 1;
-    faceId = 0;
     idToPtr.clear();
     ptrToId.clear();
     nodes.clear();
 
     if (!face) return;
 
-    faceId = nextId;
-    indexPropertyObject(*face, 0, 0, "GaugeFace");
-
     const auto elementRoot = face->getRoot();
-    if (elementRoot) indexElementRecursive(*elementRoot, faceId, 0);
+    if (elementRoot) indexElementRecursive(*elementRoot, 0, 0);
 }
 
 std::string GaugeEditor::listTreeJson() const {

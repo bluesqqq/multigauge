@@ -26,15 +26,12 @@ class GaugeEditor {
         GaugeFace* face = nullptr;
 
         Id nextId = 1;
-        Id faceId = 0;
 
         std::unordered_map<Id, PropertyObject*> idToPtr;
         std::unordered_map<PropertyObject*, Id> ptrToId;
         std::vector<EditorNode> nodes;
 
         static std::string toString(const rapidjson::Value& v);
-
-        void indexPropertyObject(PropertyObject& e, Id parentId, std::uint32_t order, const std::string& typeName);
 
         void indexElementRecursive(Element& e, Id parentId, std::uint32_t order);
 
@@ -55,7 +52,7 @@ class GaugeEditor {
 
         void loadFace(const std::string& json);
 
-        std::string saveFace(const std::string& json) const;
+        std::string saveFace() const;
 
         //----------[ HIERARCHY ]----------//
 
