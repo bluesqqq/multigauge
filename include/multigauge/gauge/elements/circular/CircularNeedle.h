@@ -9,10 +9,9 @@ class CircularNeedle : public CircularElement {
         Paint paint;
         float radius = 1.0f;
 
+        MG_PROPS_PARENT(CircularElement)
+
         MG_PROPS_BEGIN()
-            MG_PROP(value, "value", "Value", "Value to display. Make null to inherit from parent.")
-            MG_PROP(startAngle, "startAngle", "Start Angle", "Angle to start from. Make null to inherit from parent.")
-            MG_PROP(endAngle, "endAngle", "End Angle", "Angle to end at. Make null to inherit from parent.")
             MG_PROP(paint, "paint", "Paint", "Paint options for the needle.")
             MG_PROP(radius, "radius", "Radius", "Radius of the needle.")
         MG_PROPS_END()
@@ -22,3 +21,4 @@ class CircularNeedle : public CircularElement {
 
         void draw(Graphics& g) const override;
 };
+

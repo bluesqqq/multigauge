@@ -22,6 +22,8 @@ class Horizon : public Element {
         OwnedColor horizonColor    = nullptr;
         OwnedColor borderColor     = nullptr;
 
+        MG_PROPS_PARENT(Element)
+
         MG_PROPS_BEGIN()
             MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.")
             MG_PROP(groundColor, "groundColor", "Ground Color", "Color of the ground.")
@@ -111,3 +113,4 @@ class Horizon : public Element {
             xPosition -= 0.01f; //speed.getValueRaw() * xVelMultiplier; //xValue.getValue(DEFAULT) * xVelMultiplier;
         }
 };
+

@@ -10,6 +10,7 @@ class RectangleElement : public Element {
         float radius = 0.0f;
 
         // PropertyObject props list
+        MG_PROPS_PARENT(Element)
         MG_PROPS_BEGIN()
             MG_PROP(paint, "paint", "Paint", "Paint options for the circle.")
             MG_PROP(radius, "radius", "Radius", "Radius of the rectangle's corners.")
@@ -20,3 +21,4 @@ class RectangleElement : public Element {
         
         void draw(Graphics& g) const override;
 };
+

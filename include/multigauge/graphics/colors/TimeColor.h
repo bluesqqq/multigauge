@@ -21,6 +21,8 @@ class TimeColor : public Color {
         ColorTimeline timeline;
         LoopType loopType;
 
+        MG_PROPS_PARENT(Color)
+
         MG_PROPS_BEGIN()
             MG_PROP(timeline, "timeline", "Timeline", "Color timeline.")
             MG_PROP(loopType, "loop", "Loop", "Type of looping to use.")
@@ -93,3 +95,4 @@ CODEC_BEGIN(TimeColor::LoopType)
         return true;
     }
 CODEC_END()
+

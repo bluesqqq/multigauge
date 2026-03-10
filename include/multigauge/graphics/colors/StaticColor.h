@@ -8,6 +8,8 @@ class StaticColor : public Color {
     private:
         rgba color;
 
+        MG_PROPS_PARENT(Color)
+
         MG_PROPS_BEGIN()
             MG_PROP(color, "color", "Color", "RGBA color value.")
         MG_PROPS_END()
@@ -41,3 +43,4 @@ class StaticColor : public Color {
         OwnedColor blended(const Color& other, float alpha) const override;
 
 };
+

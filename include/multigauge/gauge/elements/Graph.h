@@ -28,6 +28,8 @@ class Graph : public Element {
 
         Style style = Bars;
 
+        MG_PROPS_PARENT(Element)
+
         MG_PROPS_BEGIN()
             MG_PROP(seconds, "seconds", "Seconds", "Number of seconds to display on the graph.")
             MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.")
@@ -202,3 +204,4 @@ class Graph : public Element {
             }
         }
 };
+

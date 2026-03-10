@@ -7,6 +7,8 @@ class CircleElement : public Element {
     private:
         Paint paint;
 
+        MG_PROPS_PARENT(Element)
+
         MG_PROPS_BEGIN()
             MG_PROP(paint, "paint", "Paint", "Paint options for the circle.")
         MG_PROPS_END()
@@ -16,3 +18,4 @@ class CircleElement : public Element {
         
         void draw(Graphics& g) const override;
 };
+

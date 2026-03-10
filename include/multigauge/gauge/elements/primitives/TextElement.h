@@ -15,6 +15,7 @@ class TextElement : public Element {
         bool useHyphens = false;
 
         // PropertyObject props list
+        MG_PROPS_PARENT(Element)
         MG_PROPS_BEGIN()
             MG_PROP(text, "text", "Text", "Text to display.")
             MG_PROP(paint, "paint", "Paint", "Paint options for the text.")
@@ -27,3 +28,4 @@ class TextElement : public Element {
         
         void draw(Graphics& g) const override;
 };
+

@@ -54,7 +54,13 @@ class PropertyObject {
     public:
         virtual const char* typeName() const { return "PropertyObject"; }
 
-        struct PropertyList { const Property* props; std::size_t count; };
+        struct PropertyList {
+            using ParentGetter = PropertyList (*)(const PropertyObject*);
+
+            const Property* props;
+            std::size_t count;
+            ParentGetter parent;
+        };
 
         virtual ~PropertyObject() = default;
 
@@ -63,7 +69,7 @@ class PropertyObject {
         //----------[ PROPERTIES ]----------//
 
         /// @brief Returns the list of all properties. Override this to set properties, see macros below
-        virtual PropertyList propertyList() const { return {nullptr, 0}; }
+        virtual PropertyList propertyList() const { return {nullptr, 0, nullptr}; }
 
         /// @brief Finds a single property by key
         const Property* findProperty(const char* key) const;
@@ -125,9 +131,25 @@ class PropertyObject {
             const C* self = static_cast<const C*>(obj);
             return encodeAny(out, a, self->*MemberPtr);
         }
+
+        template <typename Base>
+        static PropertyList getParentPropertyList(const PropertyObject* obj) {
+            if (!obj) return {nullptr, 0, nullptr};
+            return static_cast<const Base*>(obj)->Base::propertyList();
+        }
 };
 
 //----------[ MACROS ]----------//
+
+template <typename T, typename = void>
+struct MgPropsParentGetter {
+    static constexpr PropertyObject::PropertyList::ParentGetter value = nullptr;
+};
+
+template <typename T>
+struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list)>> {
+    static constexpr PropertyObject::PropertyList::ParentGetter value = &T::__mg_parent_property_list;
+};
 
 #define MG_EDITOR_NAME(name_literal) \
     public: const char* typeName() const override { return name_literal; }
@@ -135,16 +157,17 @@ class PropertyObject {
 #define MG_TYPE_ID(str_literal) \
     public: const char* typeId() const override { return (str_literal); }
 
-
-
+#define MG_PROPS_PARENT(parent_type) \
+    public: \
+    static ::PropertyObject::PropertyList __mg_parent_property_list(const ::PropertyObject* __mg_obj) { \
+        return static_cast<const parent_type*>(__mg_obj)->parent_type::propertyList(); \
+    }
 
 #define MG_PROPS_BEGIN() \
 public: \
     ::PropertyObject::PropertyList propertyList() const override { \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
         static const ::Property props[] = {
-
-
 
 #define MG_PROP(member, key, display_name, description) \
     ::Property{ \
@@ -173,8 +196,8 @@ public: \
         get \
     },
 
-
 #define MG_PROPS_END() \
         }; \
-        return { props, sizeof(props) / sizeof(props[0]) }; \
+        const auto parentGetter = ::MgPropsParentGetter<Self>::value; \
+        return { props, sizeof(props) / sizeof(props[0]), parentGetter }; \
     }

@@ -49,8 +49,11 @@ class ValueColor : public Color {
         // internal helper called after deserialization to resolve `id` -> pointer
         void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
+        MG_PROPS_PARENT(Color)
+
         MG_PROPS_BEGIN()
             MG_PROP(timeline, "timeline", "Timeline", "Color timeline.")
             MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", &ValueColor::updateValueId)
         MG_PROPS_END()
 };
+

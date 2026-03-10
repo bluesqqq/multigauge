@@ -14,6 +14,8 @@ class RootElement : public Element {
         const char* title = NO_TITLE_TEXT;
         const char* description = NO_DESCRIPTION_TEXT;
 
+        MG_PROPS_PARENT(Element)
+
         MG_PROPS_BEGIN()
             MG_PROP(title, "title", "Title", "Title to display.")
             MG_PROP(description, "description", "Description", "Description to display.")
@@ -27,3 +29,4 @@ class RootElement : public Element {
             g.fillAll(backgroundColor.get());
         }
 };
+

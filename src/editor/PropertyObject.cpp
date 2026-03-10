@@ -1,15 +1,26 @@
 #include <multigauge/editor/PropertyObject.h>
 
+namespace {
+    static PropertyObject::PropertyList nextPropertyList(
+        const PropertyObject* self,
+        PropertyObject::PropertyList current
+    ) {
+        if (!current.parent) return {nullptr, 0, nullptr};
+        return current.parent(self);
+    }
+}
+
 const Property *PropertyObject::findProperty(const char *key) const {
     if (!key) return nullptr;
 
-    PropertyList pl = propertyList();
-    if (!pl.props || pl.count == 0) return nullptr;
+    for (PropertyList pl = propertyList(); pl.props || pl.parent; pl = nextPropertyList(this, pl)) {
+        if (!pl.props || pl.count == 0) continue;
 
-    for (std::size_t i = 0; i < pl.count; ++i) {
-        const char* propName = pl.props[i].key;
-        if (propName && std::strcmp(propName, key) == 0)
-            return &pl.props[i];
+        for (std::size_t i = 0; i < pl.count; ++i) {
+            const char* propName = pl.props[i].key;
+            if (propName && std::strcmp(propName, key) == 0)
+                return &pl.props[i];
+        }
     }
 
     return nullptr;
@@ -41,33 +52,42 @@ void PropertyObject::saveProperties(rapidjson::Value &out, rapidjson::Document::
     const char* type = typeId();
     if (type) out.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(type, a), a);
 
-    PropertyList pl = propertyList();
-    if (!pl.props || pl.count == 0) return;
+    for (PropertyList pl = propertyList(); pl.props || pl.parent; pl = nextPropertyList(this, pl)) {
+        if (!pl.props || pl.count == 0) continue;
 
-    for (std::size_t i = 0; i < pl.count; ++i) {
-        const Property& property = pl.props[i];
-        if (!property.key || !property.get) continue;
+        for (std::size_t i = 0; i < pl.count; ++i) {
+            const Property& property = pl.props[i];
+            if (!property.key || !property.get) continue;
 
-        rapidjson::Value val;
-        if (!property.get(this, val, a)) continue;
+            // Skip shadowed base properties when a derived class reuses the same key.
+            if (findProperty(property.key) != &property) continue;
 
-        out.AddMember(rapidjson::StringRef(property.key), val, a);
+            rapidjson::Value val;
+            if (!property.get(this, val, a)) continue;
+
+            out.AddMember(rapidjson::StringRef(property.key), val, a);
+        }
     }
 }
 
 std::vector<const Property*> PropertyObject::getPropertyObjectProperties() const {
-    PropertyList pl = propertyList();
-    if (!pl.props || pl.count == 0) return {};
-
     std::vector<const Property*> result;
 
-    for (std::size_t i = 0; i < pl.count; ++i) {
-        const auto& property = pl.props[i];
-        if (!property.key || !property.get) continue;
+    for (PropertyList pl = propertyList(); pl.props || pl.parent; pl = nextPropertyList(this, pl)) {
+        if (!pl.props || pl.count == 0) continue;
 
-        // Check if property is PropertyObject class
-        if (false) result.push_back(&property);
+        for (std::size_t i = 0; i < pl.count; ++i) {
+            const auto& property = pl.props[i];
+            if (!property.key || !property.get) continue;
+
+            // Skip shadowed base properties when a derived class reuses the same key.
+            if (findProperty(property.key) != &property) continue;
+
+            // Check if property is PropertyObject class
+            if (false) result.push_back(&property);
+        }
     }
 
     return result;
 }
+

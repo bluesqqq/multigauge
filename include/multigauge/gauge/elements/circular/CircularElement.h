@@ -11,6 +11,8 @@ class CircularElement : public Element {
         std::optional<float> startAngle;
         std::optional<float> endAngle;
 
+        MG_PROPS_PARENT(Element)
+
         MG_PROPS_BEGIN()
             MG_PROP(value, "value", "Value", "Value to display. Make null to inherit from parent.")
             MG_PROP(startAngle, "startAngle", "Start Angle", "Angle to start from. Make null to inherit from parent.")
@@ -47,3 +49,4 @@ class CircularElement : public Element {
         
         Type getType() const override { return Type::Circular; }
 };
+
