@@ -14,9 +14,9 @@ class CircularElement : public Element {
         MG_PROPS_PARENT(Element)
 
         MG_PROPS_BEGIN()
-            MG_PROP(value, "value", "Value", "Value to display. Make null to inherit from parent.")
-            MG_PROP(startAngle, "startAngle", "Start Angle", "Angle to start from. Make null to inherit from parent.")
-            MG_PROP(endAngle, "endAngle", "End Angle", "Angle to end at. Make null to inherit from parent.")
+            MG_PROP(value, "value", "Value", "Value to display. Make null to inherit from parent.", "group")
+            MG_PROP(startAngle, "startAngle", "Start Angle", "Angle to start from. Make null to inherit from parent.", "number")
+            MG_PROP(endAngle, "endAngle", "End Angle", "Angle to end at. Make null to inherit from parent.", "number")
         MG_PROPS_END()
 
         const CircularElement* parentCircular() const {

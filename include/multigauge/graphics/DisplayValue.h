@@ -62,10 +62,10 @@ class DisplayValue : public PropertyObject {
         const char* getName() const;
 
         MG_PROPS_BEGIN()
-            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", &DisplayValue::updateValueId)
-            MG_PROP(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.")
-            MG_PROP(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.")
-            MG_PROP(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.")
+            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", "string", &DisplayValue::updateValueId)
+            MG_PROP(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.", "number")
+            MG_PROP(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.", "number")
+            MG_PROP(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.", "number")
         MG_PROPS_END()
 };
 

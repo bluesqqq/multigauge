@@ -31,12 +31,12 @@ class Graph : public Element {
         MG_PROPS_PARENT(Element)
 
         MG_PROPS_BEGIN()
-            MG_PROP(seconds, "seconds", "Seconds", "Number of seconds to display on the graph.")
-            MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.")
-            MG_PROP(secondsColor, "secondsColor", "Seconds Color", "Color of the seconds tick marks.")
-            MG_PROP(graphColor, "graphColor", "Graph Color", "Color of the graph.")
-            MG_PROP(borderColor, "borderColor", "Border Color", "Color of the border.")
-            MG_PROP(value, "value", "Value", "Value to display.")
+            MG_PROP(seconds, "seconds", "Seconds", "Number of seconds to display on the graph.", "number")
+            MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.", "group")
+            MG_PROP(secondsColor, "secondsColor", "Seconds Color", "Color of the seconds tick marks.", "group")
+            MG_PROP(graphColor, "graphColor", "Graph Color", "Color of the graph.", "group")
+            MG_PROP(borderColor, "borderColor", "Border Color", "Color of the border.", "group")
+            MG_PROP(value, "value", "Value", "Value to display.", "group")
         MG_PROPS_END()
 
         unsigned long timeAtX(int x, int left, int width, unsigned long currentTime, float windowMs) const {

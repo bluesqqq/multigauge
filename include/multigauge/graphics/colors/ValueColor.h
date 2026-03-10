@@ -52,8 +52,8 @@ class ValueColor : public Color {
         MG_PROPS_PARENT(Color)
 
         MG_PROPS_BEGIN()
-            MG_PROP(timeline, "timeline", "Timeline", "Color timeline.")
-            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", &ValueColor::updateValueId)
+            MG_PROP(timeline, "timeline", "Timeline", "Color timeline.", "group")
+            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", "string", &ValueColor::updateValueId)
         MG_PROPS_END()
 };
 

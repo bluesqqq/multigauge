@@ -13,6 +13,7 @@
 
 #define TYPE_KEY "type"
 
+
 //----------[ ENCODE + DECODE ]----------//
 
 template <typename T>
@@ -51,94 +52,150 @@ inline bool encodeAny(rapidjson::Value& out, rapidjson::Document::AllocatorType&
 }
 
 class PropertyObject {
-    public:
-        virtual const char* typeName() const { return "PropertyObject"; }
+public:
+    virtual ~PropertyObject() = default;
 
-        struct PropertyList {
-            using ParentGetter = PropertyList (*)(const PropertyObject*);
+    virtual const char* typeName() const { return "PropertyObject"; }
+    virtual const char* typeId() const { return nullptr; }
 
-            const Property* props;
-            std::size_t count;
-            ParentGetter parent;
-        };
+    struct PropertyList {
+        using ParentGetter = PropertyList (*)(const PropertyObject*);
 
-        virtual ~PropertyObject() = default;
+        const Property* props;
+        std::size_t count;
+        ParentGetter parent;
 
-        virtual const char* typeId() const { return nullptr; }
+        static PropertyList next(const PropertyObject* self, PropertyList current) {
+            if (!current.parent) return {};
+            return current.parent(self);
+        }
 
-        //----------[ PROPERTIES ]----------//
+        bool valid() const { return props != nullptr || parent != nullptr; }
 
-        /// @brief Returns the list of all properties. Override this to set properties, see macros below
-        virtual PropertyList propertyList() const { return {nullptr, 0, nullptr}; }
-
-        /// @brief Finds a single property by key
-        const Property* findProperty(const char* key) const;
-
-        /// @brief Loads a single property from JSON
-        bool loadProperty(const char* key, const rapidjson::Value& v);
-
-        /// @brief Saves a single property as JSON
-        bool saveProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
-
-        /// @brief Loads all properties from JSON
-        void loadProperties(rapidjson::Value::ConstObject json);
-
-        /// @brief Saves all properties to JSON
-        void saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
-
-        rapidjson::Value getPropertiesMeta(rapidjson::Document::AllocatorType& a) const;
-
-        /// @brief Returns a list of all properties that are 
-        std::vector<const Property*> getPropertyObjectProperties() const;
-
-    protected:
-        //----------[ Member-pointer traits ]----------//
-        template <typename M> struct MemberPtrTraits;
-
-        template <typename C, typename T>
-        struct MemberPtrTraits<T C::*> {
-            using Class = C;
-            using Type  = T;
-        };
-
-        template <auto MemberPtr>
-        using MemberClass = typename MemberPtrTraits<decltype(MemberPtr)>::Class;
-
-        template <auto MemberPtr>
-        using MemberType = typename MemberPtrTraits<decltype(MemberPtr)>::Type;
-
-        //----------[ GET + SET ]----------//
-
-        template <auto MemberPtr, auto CallbackPtr>
-        static bool setMember(PropertyObject* obj, const rapidjson::Value& v) {
-            using C = MemberClass<MemberPtr>;
-            using T = MemberType<MemberPtr>;
-            C* self = static_cast<C*>(obj);
-
-            T decoded{};
-            if (!decodeAny<T>(v, decoded)) return false;
-            self->*MemberPtr = std::move(decoded);
-
-            if constexpr (!std::is_same_v<decltype(CallbackPtr), std::nullptr_t>) {
-                using CbClass = MemberClass<CallbackPtr>;
-                auto* cbSelf = static_cast<CbClass*>(obj);
-                (cbSelf->*CallbackPtr)();
+        template <typename Fn>
+        void forEach(const PropertyObject* self, Fn&& fn) const {
+            for (PropertyList pl = *this; pl.valid(); pl = next(self, pl)) {
+                if (!pl.props || pl.count == 0) continue;
+                for (std::size_t i = 0; i < pl.count; ++i) {
+                    fn(pl.props[i]);
+                }
             }
-            return true;
+        }
+    };
+
+    virtual PropertyList propertyList() const { return {nullptr, 0, nullptr}; }
+
+    const Property* findProperty(const char* key) const;
+
+    bool loadProperty(const char* key, const rapidjson::Value& v);
+    bool saveProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+
+    void loadProperties(rapidjson::Value::ConstObject json);
+    void saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+
+    rapidjson::Value getPropertiesMeta(rapidjson::Document::AllocatorType& a) const;
+    rapidjson::Value getPropertyMeta(const Property& prop, rapidjson::Document::AllocatorType& a) const;
+
+    bool resolvePath(const std::string& path, PropertyObject*& owner, const Property*& prop);
+    bool resolvePath(const std::string& path, const PropertyObject*& owner, const Property*& prop) const;
+
+protected:
+    static std::vector<std::string> splitPath(const std::string& path);
+
+    template <typename M> struct MemberPtrTraits;
+
+    template <typename C, typename T>
+    struct MemberPtrTraits<T C::*> {
+        using Class = C;
+        using Type = T;
+    };
+
+    template <auto MemberPtr>
+    using MemberClass = typename MemberPtrTraits<decltype(MemberPtr)>::Class;
+
+    template <auto MemberPtr>
+    using MemberType = typename MemberPtrTraits<decltype(MemberPtr)>::Type;
+
+    template <auto MemberPtr, auto CallbackPtr>
+    static bool setMember(PropertyObject* obj, const rapidjson::Value& v) {
+        using C = MemberClass<MemberPtr>;
+        using T = MemberType<MemberPtr>;
+        C* self = static_cast<C*>(obj);
+
+        T decoded{};
+        if (!decodeAny<T>(v, decoded)) return false;
+        self->*MemberPtr = std::move(decoded);
+
+        if constexpr (!std::is_same_v<decltype(CallbackPtr), std::nullptr_t>) {
+            using CbClass = MemberClass<CallbackPtr>;
+            auto* cbSelf = static_cast<CbClass*>(obj);
+            (cbSelf->*CallbackPtr)();
+        }
+        return true;
+    }
+
+    template <auto MemberPtr>
+    static bool getMember(const PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+        using C = MemberClass<MemberPtr>;
+        const C* self = static_cast<const C*>(obj);
+        return encodeAny(out, a, self->*MemberPtr);
+    }
+
+    template <auto MemberPtr>
+    static const PropertyObject* getChildObject(const PropertyObject* obj) {
+        using C = MemberClass<MemberPtr>;
+        using T = MemberType<MemberPtr>;
+        static_assert(std::is_base_of_v<PropertyObject, T>, "Member must derive from PropertyObject.");
+        const C* self = static_cast<const C*>(obj);
+        return &(self->*MemberPtr);
+    }
+
+    template <auto MemberPtr>
+    static PropertyObject* getChildObjectMutable(PropertyObject* obj) {
+        using C = MemberClass<MemberPtr>;
+        using T = MemberType<MemberPtr>;
+        static_assert(std::is_base_of_v<PropertyObject, T>, "Member must derive from PropertyObject.");
+        C* self = static_cast<C*>(obj);
+        return &(self->*MemberPtr);
+    }
+
+    template <typename Base>
+    static PropertyList getParentPropertyList(const PropertyObject* obj) {
+        if (!obj) return {nullptr, 0, nullptr};
+        return static_cast<const Base*>(obj)->Base::propertyList();
+    }
+
+
+    template <auto MemberPtr, auto CallbackPtr = nullptr>
+    static Property makeProperty( const char* key, const char* name, const char* description, const char* widget) {
+        using T = MemberType<MemberPtr>;
+
+        Property p{};
+        p.key = key;
+        p.name = name ? name : key;
+        p.description = description ? description : "No description.";
+        p.widget = widget ? widget : "json";
+        p.set = &PropertyObject::setMember<MemberPtr, CallbackPtr>;
+        p.get = &PropertyObject::getMember<MemberPtr>;
+
+        if constexpr (std::is_base_of_v<PropertyObject, T>) {
+            p.getChild = &PropertyObject::getChildObject<MemberPtr>;
+            p.getChildMutable = &PropertyObject::getChildObjectMutable<MemberPtr>;
         }
 
-        template <auto MemberPtr>
-        static bool getMember(const PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
-            using C = MemberClass<MemberPtr>;
-            const C* self = static_cast<const C*>(obj);
-            return encodeAny(out, a, self->*MemberPtr);
-        }
+        return p;
+    }
 
-        template <typename Base>
-        static PropertyList getParentPropertyList(const PropertyObject* obj) {
-            if (!obj) return {nullptr, 0, nullptr};
-            return static_cast<const Base*>(obj)->Base::propertyList();
-        }
+    static Property makeCustomProperty( const char* key, const char* name, const char* description, const char* widget, Property::Setter set, Property::Getter get) {
+        Property p{};
+        p.key = key;
+        p.name = name ? name : key;
+        p.description = description ? description : "No description.";
+        p.widget = widget ? widget : "json";
+        p.set = set;
+        p.get = get;
+        return p;
+    }
 };
 
 //----------[ MACROS ]----------//
@@ -171,32 +228,31 @@ public: \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
         static const ::Property props[] = {
 
-#define MG_PROP(member, key, display_name, description) \
-    ::Property{ \
+#define MG_PROP(member, key, display_name, description, widget_name) \
+    ::PropertyObject::makeProperty<&Self::member, nullptr>( \
         key, \
-        display_name ? display_name : key, \
-        description ? description : "No description.", \
-        &PropertyObject::setMember<&Self::member, nullptr>, \
-        &PropertyObject::getMember<&Self::member> \
-    },
+        display_name, \
+        description, \
+        widget_name \
+    ),
 
-#define MG_PROP_CALLBACK(member, key, display_name, description, callback) \
-    ::Property{ \
+#define MG_PROP_CALLBACK(member, key, display_name, description, widget_name, callback) \
+    ::PropertyObject::makeProperty<&Self::member, callback>( \
         key, \
-        display_name ? display_name : key, \
-        description ? description : "No description.", \
-        &PropertyObject::setMember<&Self::member, callback>, \
-        &PropertyObject::getMember<&Self::member> \
-    },
+        display_name, \
+        description, \
+        widget_name \
+    ),
 
-#define MG_PROP_CUSTOM(key, display_name, description, set, get) \
-    ::Property{ \
+#define MG_PROP_CUSTOM(key, display_name, description, widget_name, set_fn, get_fn) \
+    ::PropertyObject::makeCustomProperty( \
         key, \
-        display_name ? display_name : key, \
-        description ? description : "No description.", \
-        set, \
-        get \
-    },
+        display_name, \
+        description, \
+        widget_name, \
+        set_fn, \
+        get_fn \
+    ),
 
 #define MG_PROPS_END() \
         }; \
