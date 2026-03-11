@@ -3,7 +3,8 @@
 #include <multigauge/gauge/Element.h>
 
 class CircleElement : public Element {
-    MG_EDITOR_NAME("Circle")
+        MG_EDITOR_NAME("Circle")
+    MG_TYPE_ID("circle")
     private:
         Paint paint;
 
@@ -18,4 +19,6 @@ class CircleElement : public Element {
         
         void draw(Graphics& g) const override;
 };
+
+
 

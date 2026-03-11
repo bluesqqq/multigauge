@@ -148,7 +148,8 @@ class Element : public PropertyObject {
         //----------[ LAYOUT ]----------//
         
         static OwnedElement fromJson(Element *parent, const rapidjson::Value::ConstObject json);
-       
+        void saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+
         void loadFromJson(const rapidjson::Value::ConstObject& json) {
             loadLayout(json);
             loadProps(json);

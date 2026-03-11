@@ -4,7 +4,8 @@
 #include <multigauge/graphics/colors/Color.h>
 
 class ImageElement : public Element {
-    MG_EDITOR_NAME("Image")
+        MG_EDITOR_NAME("Image")
+    MG_TYPE_ID("image")
     private:
         const char* path = "";
 
@@ -22,4 +23,6 @@ class ImageElement : public Element {
         bool init(AssetManager& assetManager) override;
         void draw(Graphics& g) const override;
 };
+
+
 

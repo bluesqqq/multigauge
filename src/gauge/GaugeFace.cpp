@@ -8,7 +8,7 @@ void GaugeFace::load(const rapidjson::Document& doc) {
 rapidjson::Document GaugeFace::save() const {
     rapidjson::Document doc;
     auto& a = doc.GetAllocator();
-    root.saveProperties(doc, a);
+    root.saveToJson(doc, a);
     return doc;
 }
 
@@ -22,3 +22,4 @@ void GaugeFace::draw(Graphics &g) const { root.drawRecursive(g); }
 void GaugeFace::update(int deltaTime) { root.updateRecursive(deltaTime); }
 
 bool GaugeFace::init(AssetManager &assetManager) { return root.initRecursive(assetManager); }
+

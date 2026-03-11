@@ -186,6 +186,45 @@ void Element::layoutRecursive(float width, float height, YGDirection direction) 
 #include <multigauge/gauge/elements/circular/CircularNeedle.h>
 #include <multigauge/gauge/elements/circular/CircularScale.h>
 
+void Element::saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
+    out.SetObject();
+
+    if (const char* type = typeId()) {
+        out.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(type, a), a);
+    }
+
+    if (inherited) {
+        out.AddMember(rapidjson::Value("style", a), rapidjson::Value("inherit", a), a);
+    } else {
+        rapidjson::Value styleValue;
+        if (saveProperty("style", styleValue, a)) {
+            out.AddMember(rapidjson::Value("style", a), std::move(styleValue), a);
+        }
+    }
+
+    rapidjson::Value props(rapidjson::kObjectType);
+    propertyList().forEach(this, [&](const Property& property) {
+        if (!property.key || !property.get) return;
+        if (findProperty(property.key) != &property) return;
+        if (std::strcmp(property.key, "style") == 0) return;
+
+        rapidjson::Value value;
+        if (!property.get(this, value, a)) return;
+
+        props.AddMember(rapidjson::Value(property.key, a), std::move(value), a);
+    });
+    out.AddMember(rapidjson::Value("props", a), std::move(props), a);
+
+    rapidjson::Value childArray(rapidjson::kArrayType);
+    childArray.Reserve(static_cast<rapidjson::SizeType>(children.size()), a);
+    for (const auto& child : children) {
+        if (!child) continue;
+        rapidjson::Value childValue;
+        child->saveToJson(childValue, a);
+        childArray.PushBack(std::move(childValue), a);
+    }
+    out.AddMember(rapidjson::Value("children", a), std::move(childArray), a);
+}
 OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObject json) {
     constexpr const char* TAG = "Element::fromJson";
 

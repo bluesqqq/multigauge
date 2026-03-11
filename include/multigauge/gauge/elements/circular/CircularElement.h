@@ -5,7 +5,8 @@
 #include <multigauge/gauge/Element.h>
 
 class CircularElement : public Element {
-    MG_EDITOR_NAME("Circular Element")
+        MG_EDITOR_NAME("Circular Element")
+    MG_TYPE_ID("circular-element")
     protected:
         std::optional<DisplayValue> value;
         std::optional<float> startAngle;
@@ -49,4 +50,6 @@ class CircularElement : public Element {
         
         Type getType() const override { return Type::Circular; }
 };
+
+
 

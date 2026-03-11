@@ -6,7 +6,8 @@
 #include <multigauge/gauge/elements/circular/CircularElement.h>
 
 class CircularScale : public CircularElement {
-    MG_EDITOR_NAME("Circular Scale")
+        MG_EDITOR_NAME("Circular Scale")
+    MG_TYPE_ID("circular-scale")
     private:
         TickList ticks;
 
@@ -26,4 +27,6 @@ class CircularScale : public CircularElement {
 
         void update(int deltaTime) override;
 };
+
+
 

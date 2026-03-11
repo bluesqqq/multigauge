@@ -5,7 +5,8 @@
 #include <multigauge/values/ValueEmbed.h>
 
 class TextElement : public Element {
-    MG_EDITOR_NAME("Text")
+        MG_EDITOR_NAME("Text")
+    MG_TYPE_ID("text")
     private:
         std::string text;
         TextPaint paint;
@@ -28,4 +29,6 @@ class TextElement : public Element {
         
         void draw(Graphics& g) const override;
 };
+
+
 

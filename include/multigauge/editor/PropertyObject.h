@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <cstring>
+#include <memory>
+#include <optional>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -141,22 +143,59 @@ protected:
         return encodeAny(out, a, self->*MemberPtr);
     }
 
+        template <typename T, typename = void>
+    struct ChildObjectTraits {
+        static constexpr bool supported = false;
+
+        static const PropertyObject* getConst(const T&) { return nullptr; }
+        static PropertyObject* getMutable(T&) { return nullptr; }
+    };
+
+    template <typename T>
+    struct ChildObjectTraits<T, std::enable_if_t<std::is_base_of_v<PropertyObject, T>>> {
+        static constexpr bool supported = true;
+
+        static const PropertyObject* getConst(const T& value) { return &value; }
+        static PropertyObject* getMutable(T& value) { return &value; }
+    };
+
+    template <typename T>
+    struct ChildObjectTraits<std::unique_ptr<T>, std::enable_if_t<std::is_base_of_v<PropertyObject, T>>> {
+        static constexpr bool supported = true;
+
+        static const PropertyObject* getConst(const std::unique_ptr<T>& value) { return value.get(); }
+        static PropertyObject* getMutable(std::unique_ptr<T>& value) { return value.get(); }
+    };
+
+    template <typename T>
+    struct ChildObjectTraits<std::optional<T>, std::enable_if_t<std::is_base_of_v<PropertyObject, T>>> {
+        static constexpr bool supported = true;
+
+        static const PropertyObject* getConst(const std::optional<T>& value) {
+            return value ? &(*value) : nullptr;
+        }
+
+        static PropertyObject* getMutable(std::optional<T>& value) {
+            return value ? &(*value) : nullptr;
+        }
+    };
+
     template <auto MemberPtr>
     static const PropertyObject* getChildObject(const PropertyObject* obj) {
         using C = MemberClass<MemberPtr>;
         using T = MemberType<MemberPtr>;
-        static_assert(std::is_base_of_v<PropertyObject, T>, "Member must derive from PropertyObject.");
+        static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
         const C* self = static_cast<const C*>(obj);
-        return &(self->*MemberPtr);
+        return ChildObjectTraits<T>::getConst(self->*MemberPtr);
     }
 
     template <auto MemberPtr>
     static PropertyObject* getChildObjectMutable(PropertyObject* obj) {
         using C = MemberClass<MemberPtr>;
         using T = MemberType<MemberPtr>;
-        static_assert(std::is_base_of_v<PropertyObject, T>, "Member must derive from PropertyObject.");
+        static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
         C* self = static_cast<C*>(obj);
-        return &(self->*MemberPtr);
+        return ChildObjectTraits<T>::getMutable(self->*MemberPtr);
     }
 
     template <typename Base>
@@ -178,7 +217,7 @@ protected:
         p.set = &PropertyObject::setMember<MemberPtr, CallbackPtr>;
         p.get = &PropertyObject::getMember<MemberPtr>;
 
-        if constexpr (std::is_base_of_v<PropertyObject, T>) {
+                if constexpr (ChildObjectTraits<T>::supported) {
             p.getChild = &PropertyObject::getChildObject<MemberPtr>;
             p.getChildMutable = &PropertyObject::getChildObjectMutable<MemberPtr>;
         }
@@ -259,3 +298,4 @@ public: \
         const auto parentGetter = ::MgPropsParentGetter<Self>::value; \
         return { props, sizeof(props) / sizeof(props[0]), parentGetter }; \
     }
+

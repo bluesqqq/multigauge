@@ -4,7 +4,8 @@
 #include <multigauge/gauge/elements/circular/CircularElement.h>
 
 class CircularNeedle : public CircularElement {
-    MG_EDITOR_NAME("Circular Needle")
+        MG_EDITOR_NAME("Circular Needle")
+    MG_TYPE_ID("circular-needle")
     private:
         Paint paint;
         float radius = 1.0f;
@@ -21,4 +22,6 @@ class CircularNeedle : public CircularElement {
 
         void draw(Graphics& g) const override;
 };
+
+
 
