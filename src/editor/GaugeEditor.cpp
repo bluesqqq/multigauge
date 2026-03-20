@@ -93,6 +93,21 @@ std::string GaugeEditor::listTreeJson() const {
     return toString(d);
 }
 
+std::string GaugeEditor::listElements() const {
+    rapidjson::Document d;
+    d.SetArray();
+    auto& a = d.GetAllocator();
+
+    for (const auto& descriptor : Element::registry()) {
+        rapidjson::Value desc(rapidjson::kObjectType);
+        desc.AddMember("name", rapidjson::Value(descriptor.name, a), a);
+        desc.AddMember("type", rapidjson::Value(descriptor.type, a), a);
+        d.PushBack(desc, a);
+    }
+
+    return toString(d);
+}
+
 std::string GaugeEditor::getPropertiesMetaJson(Id id) const {
     const auto obj = find(id);
     if (!obj) return "[]";

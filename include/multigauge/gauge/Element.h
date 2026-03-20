@@ -18,6 +18,12 @@
 class Element;
 using OwnedElement = std::unique_ptr<Element>;
 
+struct ElementDescriptor {
+    const char* name;
+    const char* type;
+    OwnedElement (*create)(Element* parent);
+};
+
 class Element : public PropertyObject {
     MG_EDITOR_NAME("Element")
 
@@ -101,6 +107,9 @@ class Element : public PropertyObject {
 
     public:
         enum Type { Base, Circular };
+
+        static const std::vector<ElementDescriptor>& registry();
+        static const ElementDescriptor* findDescriptor(const char* type);
 
         explicit Element(Element* parent);
         virtual ~Element();

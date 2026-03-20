@@ -60,6 +60,8 @@ class GaugeEditor {
         /// @brief Lists the indexed element hierarchy as JSON.
         std::string listTreeJson() const;
 
+        std::string listElements() const;
+
         //----------[ PROPERTIES ]----------//
 
         /// @brief Returns the top-level property inspector metadata for the given element id.

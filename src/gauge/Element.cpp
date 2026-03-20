@@ -2,6 +2,51 @@
 
 #include <multigauge/layout.h>
 
+#include <multigauge/gauge/elements/primitives/TextElement.h>
+#include <multigauge/gauge/elements/primitives/RectangleElement.h>
+#include <multigauge/gauge/elements/primitives/CircleElement.h>
+#include <multigauge/gauge/elements/primitives/ImageElement.h>
+#include <multigauge/gauge/elements/Horizon.h>
+#include <multigauge/gauge/elements/Graph.h>
+#include <multigauge/gauge/elements/circular/CircularElement.h>
+#include <multigauge/gauge/elements/circular/CircularNeedle.h>
+#include <multigauge/gauge/elements/circular/CircularScale.h>
+
+namespace {
+    template <typename T>
+    OwnedElement createElement(Element* parent) {
+        return std::make_unique<T>(parent);
+    }
+}
+
+const std::vector<ElementDescriptor>& Element::registry() {
+    static const std::vector<ElementDescriptor> descriptors = {
+        {"Rectangle", "rectangle", &createElement<RectangleElement>},
+        {"Circle", "circle", &createElement<CircleElement>},
+        {"Image", "image", &createElement<ImageElement>},
+        {"Text", "text", &createElement<TextElement>},
+        {"Horizon", "horizon", &createElement<Horizon>},
+        {"Graph", "graph", &createElement<Graph>},
+        {"Circular Element", "circular-element", &createElement<CircularElement>},
+        {"Circular Needle", "circular-needle", &createElement<CircularNeedle>},
+        {"Circular Scale", "circular-scale", &createElement<CircularScale>},
+    };
+
+    return descriptors;
+}
+
+const ElementDescriptor * Element::findDescriptor(const char * type) {
+    if (!type) return nullptr;
+
+    for (const auto& descriptor : registry()) {
+        if (std::strcmp(descriptor.type, type) == 0) {
+            return &descriptor;
+        }
+    }
+
+    return nullptr;
+}
+
 void Element::clearLayoutDirtyRecursive() {
     layoutDirty = false;
     for (auto& child : children) child->clearLayoutDirtyRecursive();
@@ -175,17 +220,6 @@ void Element::layoutRecursive(float width, float height, YGDirection direction) 
     root->clearLayoutDirtyRecursive();
 }
 
-#include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/gauge/elements/primitives/TextElement.h>
-#include <multigauge/gauge/elements/primitives/RectangleElement.h>
-#include <multigauge/gauge/elements/primitives/CircleElement.h>
-#include <multigauge/gauge/elements/primitives/ImageElement.h>
-#include <multigauge/gauge/elements/Horizon.h>
-#include <multigauge/gauge/elements/Graph.h>
-#include <multigauge/gauge/elements/circular/CircularElement.h>
-#include <multigauge/gauge/elements/circular/CircularNeedle.h>
-#include <multigauge/gauge/elements/circular/CircularScale.h>
-
 void Element::saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
     out.SetObject();
 
@@ -238,16 +272,10 @@ OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObj
         LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
         out = std::make_unique<Element>(parent);
     } else {
-        if (std::strcmp(type, "rectangle")             == 0) out = std::make_unique<RectangleElement>(parent);
-        else if (std::strcmp(type, "circle")           == 0) out = std::make_unique<CircleElement>(parent);
-        else if (std::strcmp(type, "image")            == 0) out = std::make_unique<ImageElement>(parent);
-        else if (std::strcmp(type, "text")             == 0) out = std::make_unique<TextElement>(parent);
-        else if (std::strcmp(type, "horizon")          == 0) out = std::make_unique<Horizon>(parent);
-        else if (std::strcmp(type, "graph")            == 0) out = std::make_unique<Graph>(parent);
-        else if (std::strcmp(type, "circular-element") == 0) out = std::make_unique<CircularElement>(parent);
-        else if (std::strcmp(type, "circular-needle")  == 0) out = std::make_unique<CircularNeedle>(parent);
-        else if (std::strcmp(type, "circular-scale")   == 0) out = std::make_unique<CircularScale>(parent);
-        else {
+        const ElementDescriptor* descriptor = findDescriptor(type);
+        if (descriptor && descriptor->create) {
+            out = descriptor->create(parent);
+        } else {
             LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
             out = std::make_unique<Element>(parent);
         }
