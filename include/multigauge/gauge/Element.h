@@ -65,8 +65,6 @@ class Element : public PropertyObject {
 
         void clearLayoutDirtyRecursive();
 
-        YGConfigRef createConfig();
-
         std::uint32_t countTopLevelYogaChildren() const;
         std::uint32_t attachToYogaTree(Element* yogaParent, std::uint32_t insertIndex);
         void detachFromYogaTree(Element* yogaParent);
@@ -116,7 +114,7 @@ class Element : public PropertyObject {
         static const std::vector<ElementDescriptor>& registry();
         static const ElementDescriptor* findDescriptor(const char* type);
 
-        explicit Element(Element* parent);
+        explicit Element(Element* parent, YGConfigRef config = nullptr);
         virtual ~Element();
 
         virtual Type getType() const { return Type::Base; }

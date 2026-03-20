@@ -54,15 +54,8 @@ void Element::clearLayoutDirtyRecursive() {
     for (auto& child : children) child->clearLayoutDirtyRecursive();
 }
 
-YGConfigRef Element::createConfig() {
-    YGConfigRef config = YGConfigNew();
-    YGConfigSetUseWebDefaults(config, false);
-    return config;
-}
-
 void Element::makeNode() {
     if (!node) {
-        if (!config) config = parent ? parent->getConfig() : createConfig();
         node = YGNodeNewWithConfig(config);
         YGNodeSetContext(node, this);
         style.setNode(node);
@@ -88,15 +81,13 @@ void Element::markLayoutDirty() {
     n->layoutDirty = true;
 }
 
-Element::Element(Element* p) : parent(p) { applyInheritance(); }
+Element::Element(Element* p, YGConfigRef cfg) : parent(p), config(p ? p->getConfig() : cfg) {
+    applyInheritance();
+}
 
 Element::~Element() {
     children.clear();
     removeNode();
-    if (!parent && config) {
-        YGConfigFree(config);
-        config = nullptr;
-    }
 }
 
 namespace {
