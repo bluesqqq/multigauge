@@ -65,20 +65,19 @@ void Element::makeNode() {
         if (!config) config = parent ? parent->getConfig() : createConfig();
         node = YGNodeNewWithConfig(config);
         YGNodeSetContext(node, this);
+        style.setNode(node);
     }
 }
 
 void Element::removeNode() {
     if (!node) return;
 
-    if (parent) {
-        Element* yogaParent = parent->getLayoutOwner();
-        if (yogaParent && yogaParent->node) {
-            YGNodeRemoveChild(yogaParent->node, node);
-        }
+    if (YGNodeRef owner = YGNodeGetOwner(node)) {
+        YGNodeRemoveChild(owner, node);
     }
 
     YGNodeSetContext(node, nullptr);
+    style.setNode(nullptr);
     YGNodeFree(node);
     node = nullptr;
 }
@@ -103,6 +102,58 @@ Element::~Element() {
 namespace {
     std::size_t clampChildIndex(const Element* parent, std::size_t index) {
         return std::min(index, parent ? parent->childCount() : std::size_t{0});
+    }
+}
+
+std::uint32_t Element::countTopLevelYogaChildren() const {
+    if (ownsLayout()) {
+        return node ? 1u : 0u;
+    }
+
+    std::uint32_t count = 0;
+    for (const auto& child : children) {
+        if (!child) continue;
+        count += child->countTopLevelYogaChildren();
+    }
+    return count;
+}
+
+std::uint32_t Element::attachToYogaTree(Element* yogaParent, std::uint32_t insertIndex) {
+    if (!yogaParent || !yogaParent->node) return 0;
+
+    if (ownsLayout()) {
+        if (!node) return 0;
+
+        if (YGNodeRef owner = YGNodeGetOwner(node); owner != yogaParent->node) {
+            if (owner) {
+                YGNodeRemoveChild(owner, node);
+            }
+            YGNodeInsertChild(yogaParent->node, node, insertIndex);
+        }
+        return 1;
+    }
+
+    std::uint32_t attachedCount = 0;
+    for (auto& child : children) {
+        if (!child) continue;
+        attachedCount += child->attachToYogaTree(yogaParent, insertIndex + attachedCount);
+    }
+    return attachedCount;
+}
+
+void Element::detachFromYogaTree(Element* yogaParent) {
+    if (!yogaParent || !yogaParent->node) return;
+
+    if (ownsLayout()) {
+        if (node && YGNodeGetOwner(node) == yogaParent->node) {
+            YGNodeRemoveChild(yogaParent->node, node);
+        }
+        return;
+    }
+
+    for (auto& child : children) {
+        if (!child) continue;
+        child->detachFromYogaTree(yogaParent);
     }
 }
 
@@ -159,19 +210,13 @@ bool Element::insertChild(OwnedElement child, std::size_t index) {
     Element* yogaParent = this->getLayoutOwner();
 
     rawChild->parent = this;
-
-    if (rawChild->ownsLayout()) {
-        if (yogaParent && yogaParent->node && rawChild->node) {
-            uint32_t insertIndex = 0;
-            for (std::size_t i = 0; i < childIndex; ++i) {
-                Element* sibling = children[i].get();
-                if (sibling && sibling->ownsLayout()) {
-                    ++insertIndex;
-                }
-            }
-            YGNodeInsertChild(yogaParent->node, rawChild->node, insertIndex);
-        }
+    std::uint32_t insertIndex = 0;
+    for (std::size_t i = 0; i < childIndex; ++i) {
+        Element* sibling = children[i].get();
+        if (!sibling) continue;
+        insertIndex += sibling->countTopLevelYogaChildren();
     }
+    rawChild->attachToYogaTree(yogaParent, insertIndex);
 
     children.insert(children.begin() + static_cast<std::ptrdiff_t>(childIndex), std::move(child));
     refreshInheritanceCacheRecursive();
@@ -190,19 +235,14 @@ OwnedElement Element::detachChild(Element* child) {
         if (children[i].get() != child) continue;
 
         LOG_DEBUG(TAG, "Detaching child=%p from parent=%p", (void*)child, (void*)this);
-        if (child->ownsLayout()) {
-            Element* yogaParent = this->getLayoutOwner();
-            if (yogaParent && yogaParent->node && child->node) {
-                YGNodeRemoveChild(yogaParent->node, child->node);
-            } else {
-                LOG_WARN(TAG, "Could not remove Yoga node (yogaParent=%p yogaNode=%p childNode=%p)", (void*)yogaParent, yogaParent ? (void*)yogaParent->node : nullptr, (void*)child->node);
-            }
-        }
+        Element* yogaParent = this->getLayoutOwner();
+        child->detachFromYogaTree(yogaParent);
 
-        child->parent = nullptr;
         OwnedElement detached = std::move(children[i]);
         children.erase(children.begin() + static_cast<std::ptrdiff_t>(i));
 
+        detached->parent = nullptr;
+        detached->refreshInheritanceCacheRecursive();
         refreshInheritanceCacheRecursive();
         markLayoutDirty();
         return detached;

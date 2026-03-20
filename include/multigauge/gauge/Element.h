@@ -13,6 +13,7 @@
 
 #include <multigauge/gauge/Layout.h>
 
+#include <cstdint>
 #include <memory>
 
 class Element;
@@ -65,6 +66,10 @@ class Element : public PropertyObject {
         void clearLayoutDirtyRecursive();
 
         YGConfigRef createConfig();
+
+        std::uint32_t countTopLevelYogaChildren() const;
+        std::uint32_t attachToYogaTree(Element* yogaParent, std::uint32_t insertIndex);
+        void detachFromYogaTree(Element* yogaParent);
 
         void makeNode();
         void removeNode();
