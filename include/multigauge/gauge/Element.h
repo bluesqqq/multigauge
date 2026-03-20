@@ -136,7 +136,10 @@ class Element : public PropertyObject {
         Element* childAt(std::size_t i) { return children[i].get(); }
         const Element* childAt(std::size_t i) const { return children[i].get(); }
 
-        void addChild(const rapidjson::Value::ConstObject json);
+        Element* addChild(const rapidjson::Value::ConstObject json);
+        Element* insertChild(const rapidjson::Value::ConstObject json, std::size_t index);
+        bool insertChild(OwnedElement child, std::size_t index);
+        OwnedElement detachChild(Element* child);
         bool removeChild(Element* child);
 
         //----------[ INHERITANCE ]----------//

@@ -1,5 +1,7 @@
 #include <multigauge/gauge/Element.h>
 
+#include <algorithm>
+
 #include <multigauge/layout.h>
 
 #include <multigauge/gauge/elements/primitives/TextElement.h>
@@ -98,6 +100,12 @@ Element::~Element() {
     }
 }
 
+namespace {
+    std::size_t clampChildIndex(const Element* parent, std::size_t index) {
+        return std::min(index, parent ? parent->childCount() : std::size_t{0});
+    }
+}
+
 void Element::loadLayout(const rapidjson::Value::ConstObject &json) {
     setInherited(parent ? isInheritString(json) : false);
 
@@ -117,59 +125,95 @@ void Element::loadChildren(const rapidjson::Value::ConstObject &json) {
     }
 }
 
-void Element::addChild(const rapidjson::Value::ConstObject json) {
+Element* Element::addChild(const rapidjson::Value::ConstObject json) {
+    return insertChild(json, childCount());
+}
+
+Element* Element::insertChild(const rapidjson::Value::ConstObject json, std::size_t index) {
     constexpr const char* TAG = "Element::addChild";
 
     OwnedElement child = fromJson(this, json);
     if (!child) {
         LOG_ERROR(TAG, "fromJson returned nullptr; child skipped");
-        return;
+        return nullptr;
     }
 
-    Element* yogaParent = this->getLayoutOwner();
-    
-    if (child->ownsLayout()) {
-        if (yogaParent && yogaParent->node) {
-            const uint32_t index = (uint32_t)YGNodeGetChildCount(yogaParent->node);
-            YGNodeInsertChild(yogaParent->node, child->node, index);
-        }
+    Element* rawChild = child.get();
+    if (!insertChild(std::move(child), index)) {
+        LOG_ERROR(TAG, "insertChild returned false; child skipped");
+        return nullptr;
     }
-    
-    children.push_back(std::move(child));
-    refreshInheritanceCacheRecursive();
-    markLayoutDirty();
+
+    return rawChild;
 }
 
-bool Element::removeChild(Element *child) {
-    constexpr const char* TAG = "Element::removeChild";
+bool Element::insertChild(OwnedElement child, std::size_t index) {
+    constexpr const char* TAG = "Element::insertChild";
     if (!child) {
         LOG_WARN(TAG, "Called with null child");
         return false;
     }
 
-    for (size_t i = 0; i < children.size(); ++i) {
-        if (children[i].get() == child) {
-            LOG_DEBUG(TAG, "Removing child=%p from parent=%p", (void*)child, (void*)parent);
-            if (child->ownsLayout()) {
-                Element* yogaParent = this->getLayoutOwner();
-                if (yogaParent && yogaParent->node && child->node) {
-                    YGNodeRemoveChild(yogaParent->node, child->node);
-                } else {
-                    LOG_WARN(TAG, "Could not remove Yoga node (yogaParent=%p yogaNode=%p childNode=%p)", (void*)yogaParent, yogaParent ? (void*)yogaParent->node : nullptr, (void*)child->node);
+    Element* rawChild = child.get();
+    const std::size_t childIndex = clampChildIndex(this, index);
+    Element* yogaParent = this->getLayoutOwner();
+
+    rawChild->parent = this;
+
+    if (rawChild->ownsLayout()) {
+        if (yogaParent && yogaParent->node && rawChild->node) {
+            uint32_t insertIndex = 0;
+            for (std::size_t i = 0; i < childIndex; ++i) {
+                Element* sibling = children[i].get();
+                if (sibling && sibling->ownsLayout()) {
+                    ++insertIndex;
                 }
             }
-
-            child->parent = nullptr;
-            children.erase(children.begin() + i);
-
-            refreshInheritanceCacheRecursive();
-            markLayoutDirty();
-            return true;
+            YGNodeInsertChild(yogaParent->node, rawChild->node, insertIndex);
         }
     }
 
+    children.insert(children.begin() + static_cast<std::ptrdiff_t>(childIndex), std::move(child));
+    refreshInheritanceCacheRecursive();
+    markLayoutDirty();
+    return true;
+}
+
+OwnedElement Element::detachChild(Element* child) {
+    constexpr const char* TAG = "Element::detachChild";
+    if (!child) {
+        LOG_WARN(TAG, "Called with null child");
+        return nullptr;
+    }
+
+    for (size_t i = 0; i < children.size(); ++i) {
+        if (children[i].get() != child) continue;
+
+        LOG_DEBUG(TAG, "Detaching child=%p from parent=%p", (void*)child, (void*)this);
+        if (child->ownsLayout()) {
+            Element* yogaParent = this->getLayoutOwner();
+            if (yogaParent && yogaParent->node && child->node) {
+                YGNodeRemoveChild(yogaParent->node, child->node);
+            } else {
+                LOG_WARN(TAG, "Could not remove Yoga node (yogaParent=%p yogaNode=%p childNode=%p)", (void*)yogaParent, yogaParent ? (void*)yogaParent->node : nullptr, (void*)child->node);
+            }
+        }
+
+        child->parent = nullptr;
+        OwnedElement detached = std::move(children[i]);
+        children.erase(children.begin() + static_cast<std::ptrdiff_t>(i));
+
+        refreshInheritanceCacheRecursive();
+        markLayoutDirty();
+        return detached;
+    }
+
     LOG_WARN(TAG, "Child=%p not found under parent=%p", (void*)child, (void*)this);
-    return false;
+    return nullptr;
+}
+
+bool Element::removeChild(Element *child) {
+    return static_cast<bool>(detachChild(child));
 }
 
 bool Element::initRecursive(AssetManager &assetManager) {

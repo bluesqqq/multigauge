@@ -34,6 +34,7 @@ class GaugeEditor {
 
         void indexElementRecursive(Element& e, Id parentId, std::uint32_t order);
 
+        const EditorNode* findNode(Id id) const;
         const PropertyObject* find(Id id) const;
         PropertyObject* find(Id id);
 
@@ -61,6 +62,11 @@ class GaugeEditor {
         std::string listTreeJson() const;
 
         std::string listElements() const;
+
+        std::string addElement(Id parentId, const std::string& type);
+        std::string insertElement(Id parentId, const std::string& type, int index);
+        std::string moveElement(Id id, Id newParentId, int index);
+        std::string removeElement(Id id);
 
         //----------[ PROPERTIES ]----------//
 
