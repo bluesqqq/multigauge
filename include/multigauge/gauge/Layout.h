@@ -138,6 +138,77 @@ CODEC_BEGIN(LayoutSize)
     }
 CODEC_END()
 
+template<>
+struct EnumTraits<YGFlexDirection> {
+    static constexpr EnumOption<YGFlexDirection> options[] = {
+        { YGFlexDirectionRow,           "row",            "Row" },
+        { YGFlexDirectionColumn,        "column",         "Column" },
+        { YGFlexDirectionRowReverse,    "row-reverse",    "Row Reverse" },
+        { YGFlexDirectionColumnReverse, "column-reverse", "Column Reverse" },
+    };
+};
+
+template<>
+struct EnumTraits<YGJustify> {
+    static constexpr EnumOption<YGJustify> options[] = {
+        { YGJustifyFlexStart,    "flex-start",    "Flex Start" },
+        { YGJustifyCenter,       "center",        "Center" },
+        { YGJustifyFlexEnd,      "flex-end",      "Flex End" },
+        { YGJustifySpaceBetween, "space-between", "Space Between" },
+        { YGJustifySpaceAround,  "space-around",  "Space Around" },
+        { YGJustifySpaceEvenly,  "space-evenly",  "Space Evenly" },
+    };
+};
+
+template<>
+struct EnumTraits<YGAlign> {
+    static constexpr EnumOption<YGAlign> options[] = {
+        { YGAlignAuto,         "auto",          "Auto" },
+        { YGAlignFlexStart,    "flex-start",    "Flex Start" },
+        { YGAlignCenter,       "center",        "Center" },
+        { YGAlignFlexEnd,      "flex-end",      "Flex End" },
+        { YGAlignStretch,      "stretch",       "Stretch" },
+        { YGAlignBaseline,     "baseline",      "Baseline" },
+        { YGAlignSpaceBetween, "space-between", "Space Between" },
+        { YGAlignSpaceAround,  "space-around",  "Space Around" },
+    };
+};
+
+template<>
+struct EnumTraits<YGWrap> {
+    static constexpr EnumOption<YGWrap> options[] = {
+        { YGWrapNoWrap,      "no-wrap",      "No Wrap" },
+        { YGWrapWrap,        "wrap",         "Wrap" },
+        { YGWrapWrapReverse, "wrap-reverse", "Wrap Reverse" },
+    };
+};
+
+template<>
+struct EnumTraits<YGPositionType> {
+    static constexpr EnumOption<YGPositionType> options[] = {
+        { YGPositionTypeStatic,   "static",   "Static" },
+        { YGPositionTypeRelative, "relative", "Relative" },
+        { YGPositionTypeAbsolute, "absolute", "Absolute" },
+    };
+};
+
+template<>
+struct EnumTraits<YGDisplay> {
+    static constexpr EnumOption<YGDisplay> options[] = {
+        { YGDisplayNone, "none", "None" },
+        { YGDisplayFlex, "flex", "Flex" },
+    };
+};
+
+template<>
+struct EnumTraits<YGOverflow> {
+    static constexpr EnumOption<YGOverflow> options[] = {
+        { YGOverflowVisible, "visible", "Visible" },
+        { YGOverflowHidden,  "hidden",  "Hidden" },
+        { YGOverflowScroll,  "scroll",  "Scroll" },
+    };
+};
+
 struct FlexContainer : public PropertyObject {
     YGNodeRef node = nullptr;
 
@@ -368,77 +439,6 @@ struct Layout : public PropertyObject {
         MG_PROP_CALLBACK_WIDGET(maxHeight,   "max-height",   "Max Height",   "Height of the element.",        "number", &Layout::update)
         MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.", &Layout::update)
     MG_PROPS_END()
-};
-
-template<>
-struct EnumTraits<YGFlexDirection> {
-    static constexpr EnumOption<YGFlexDirection> options[] = {
-        { YGFlexDirectionRow,           "row",            "Row" },
-        { YGFlexDirectionColumn,        "column",         "Column" },
-        { YGFlexDirectionRowReverse,    "row-reverse",    "Row Reverse" },
-        { YGFlexDirectionColumnReverse, "column-reverse", "Column Reverse" },
-    };
-};
-
-template<>
-struct EnumTraits<YGJustify> {
-    static constexpr EnumOption<YGJustify> options[] = {
-        { YGJustifyFlexStart,    "flex-start",    "Flex Start" },
-        { YGJustifyCenter,       "center",        "Center" },
-        { YGJustifyFlexEnd,      "flex-end",      "Flex End" },
-        { YGJustifySpaceBetween, "space-between", "Space Between" },
-        { YGJustifySpaceAround,  "space-around",  "Space Around" },
-        { YGJustifySpaceEvenly,  "space-evenly",  "Space Evenly" },
-    };
-};
-
-template<>
-struct EnumTraits<YGAlign> {
-    static constexpr EnumOption<YGAlign> options[] = {
-        { YGAlignAuto,         "auto",          "Auto" },
-        { YGAlignFlexStart,    "flex-start",    "Flex Start" },
-        { YGAlignCenter,       "center",        "Center" },
-        { YGAlignFlexEnd,      "flex-end",      "Flex End" },
-        { YGAlignStretch,      "stretch",       "Stretch" },
-        { YGAlignBaseline,     "baseline",      "Baseline" },
-        { YGAlignSpaceBetween, "space-between", "Space Between" },
-        { YGAlignSpaceAround,  "space-around",  "Space Around" },
-    };
-};
-
-template<>
-struct EnumTraits<YGWrap> {
-    static constexpr EnumOption<YGWrap> options[] = {
-        { YGWrapNoWrap,      "no-wrap",      "No Wrap" },
-        { YGWrapWrap,        "wrap",         "Wrap" },
-        { YGWrapWrapReverse, "wrap-reverse", "Wrap Reverse" },
-    };
-};
-
-template<>
-struct EnumTraits<YGPositionType> {
-    static constexpr EnumOption<YGPositionType> options[] = {
-        { YGPositionTypeStatic,   "static",   "Static" },
-        { YGPositionTypeRelative, "relative", "Relative" },
-        { YGPositionTypeAbsolute, "absolute", "Absolute" },
-    };
-};
-
-template<>
-struct EnumTraits<YGDisplay> {
-    static constexpr EnumOption<YGDisplay> options[] = {
-        { YGDisplayNone, "none", "None" },
-        { YGDisplayFlex, "flex", "Flex" },
-    };
-};
-
-template<>
-struct EnumTraits<YGOverflow> {
-    static constexpr EnumOption<YGOverflow> options[] = {
-        { YGOverflowVisible, "visible", "Visible" },
-        { YGOverflowHidden,  "hidden",  "Hidden" },
-        { YGOverflowScroll,  "scroll",  "Scroll" },
-    };
 };
 
 CODEC_BEGIN(YGFlexDirection)
