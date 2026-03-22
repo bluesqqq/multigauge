@@ -25,7 +25,7 @@ class TimeColor : public Color {
 
         MG_PROPS_BEGIN()
             MG_PROP(timeline, "timeline", "Timeline", "Color timeline.")
-            MG_PROP_WIDGET(loopType, "loop", "Loop", "Type of looping to use.", "enum")
+            MG_PROP(loopType, "loop", "Loop", "Type of looping to use.")
         MG_PROPS_END()
 
         /// @brief Retrieves the current time value.
@@ -72,27 +72,22 @@ class TimeColor : public Color {
         OwnedColor blended(const Color& other, float alpha) const override;
 };
 
+template<>
+struct EnumTraits<TimeColor::LoopType> {
+    static constexpr EnumOption<TimeColor::LoopType> options[] = {
+        { TimeColor::LoopType::Forward,  "forward",  "Forward" },
+        { TimeColor::LoopType::Reverse,  "reverse",  "Reverse" },
+        { TimeColor::LoopType::PingPong, "pingpong", "Ping Pong" },
+    };
+};
+
 CODEC_BEGIN(TimeColor::LoopType)
     DECODE() {
-        if (!v.IsString()) return false;
-        const char* s = v.GetString();
-        if (std::strcmp(s, "forward") == 0) out = TimeColor::LoopType::Forward;
-        else if (std::strcmp(s, "reverse") == 0) out = TimeColor::LoopType::Reverse;
-        else if (std::strcmp(s, "pingpong") == 0) out = TimeColor::LoopType::PingPong;
-        else return false;
-        return true;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        const char* s = nullptr;
-        switch (v) {
-            case TimeColor::LoopType::Forward:  s = "forward"; break;
-            case TimeColor::LoopType::Reverse:  s = "reverse"; break;
-            case TimeColor::LoopType::PingPong: s = "pingpong"; break;
-        }
-        if (s) out.SetString(s, a);
-        else out.SetNull();
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()
 

@@ -1,12 +1,14 @@
 #pragma once
 
 #include <rapidjson/document.h>
+#include <multigauge/editor/EnumTraits.h>
 
 class PropertyObject;
 
 struct Property {
     using Setter = bool (*)(PropertyObject*, const rapidjson::Value&);
     using Getter = bool (*)(const PropertyObject*, rapidjson::Value&, rapidjson::Document::AllocatorType&);
+    using OptionsGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
     
     using ChildGetter = const PropertyObject* (*)(const PropertyObject*);
     using ChildGetterMutable = PropertyObject* (*)(PropertyObject*);
@@ -24,6 +26,8 @@ struct Property {
     const char* description = nullptr;
     /// @brief Widget type to display for UI in editor
     const char* widget = nullptr;
+    /// @brief Returns dropdown/select options metadata when available.
+    OptionsGetter getOptions = nullptr;
 
     //----------[ HANDLERS ]----------//
 

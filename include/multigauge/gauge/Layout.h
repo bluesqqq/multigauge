@@ -158,11 +158,11 @@ struct FlexContainer : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK_WIDGET(direction,    "direction",     "Direction",     "Direction of flex content.",        "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK_WIDGET(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK_WIDGET(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK_WIDGET(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK_WIDGET(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        "enum", &FlexContainer::update)
+        MG_PROP_CALLBACK(direction,    "direction",     "Direction",     "Direction of flex content.",        &FlexContainer::update)
+        MG_PROP_CALLBACK(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  &FlexContainer::update)
+        MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", &FlexContainer::update)
+        MG_PROP_CALLBACK(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::update)
+        MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        &FlexContainer::update)
     MG_PROPS_END()
 };
 
@@ -187,7 +187,7 @@ struct FlexItem : public PropertyObject {
         MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", &FlexItem::update)
         MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    &FlexItem::update)
         MG_PROP_CALLBACK_WIDGET(basis,     "basis",      "Basis",      "Flex basis.",                                  "json", &FlexItem::update)
-        MG_PROP_CALLBACK_WIDGET(alignSelf, "align-self", "Align Self", "Align self.",                                  "enum", &FlexItem::update)
+        MG_PROP_CALLBACK(alignSelf, "align-self", "Align Self", "Align self.", &FlexItem::update)
     MG_PROPS_END()
 };
 
@@ -213,7 +213,7 @@ struct Position : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK_WIDGET(type, "type", "Type", "Positioning type.", "enum", &Position::update)
+        MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", &Position::update)
 
         MG_PROP_CALLBACK_WIDGET(left,   "left",     "Left",   "Left edge position.", "json", &Position::update)
         MG_PROP_CALLBACK_WIDGET(right,  "right",   "Right",  "Right edge position.", "json", &Position::update)
@@ -358,8 +358,8 @@ struct Layout : public PropertyObject {
         MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
         MG_PROP(gap,           "gap",            "Gap",            "Gap options.")
         
-        MG_PROP_CALLBACK_WIDGET(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", "enum", &Layout::update)
-        MG_PROP_CALLBACK_WIDGET(display,     "display",      "Display",      "Display setting.",              "enum", &Layout::update)
+        MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", &Layout::update)
+        MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              &Layout::update)
         MG_PROP_CALLBACK_WIDGET(width,       "width",        "Width",        "Width of the element.",         "number", &Layout::update)
         MG_PROP_CALLBACK_WIDGET(height,      "height",       "Height",       "Height of the element.",        "number", &Layout::update)
         MG_PROP_CALLBACK_WIDGET(minWidth,    "min-width",    "Min Width",    "Width of the element.",         "number", &Layout::update)
@@ -370,156 +370,148 @@ struct Layout : public PropertyObject {
     MG_PROPS_END()
 };
 
+template<>
+struct EnumTraits<YGFlexDirection> {
+    static constexpr EnumOption<YGFlexDirection> options[] = {
+        { YGFlexDirectionRow,           "row",            "Row" },
+        { YGFlexDirectionColumn,        "column",         "Column" },
+        { YGFlexDirectionRowReverse,    "row-reverse",    "Row Reverse" },
+        { YGFlexDirectionColumnReverse, "column-reverse", "Column Reverse" },
+    };
+};
+
+template<>
+struct EnumTraits<YGJustify> {
+    static constexpr EnumOption<YGJustify> options[] = {
+        { YGJustifyFlexStart,    "flex-start",    "Flex Start" },
+        { YGJustifyCenter,       "center",        "Center" },
+        { YGJustifyFlexEnd,      "flex-end",      "Flex End" },
+        { YGJustifySpaceBetween, "space-between", "Space Between" },
+        { YGJustifySpaceAround,  "space-around",  "Space Around" },
+        { YGJustifySpaceEvenly,  "space-evenly",  "Space Evenly" },
+    };
+};
+
+template<>
+struct EnumTraits<YGAlign> {
+    static constexpr EnumOption<YGAlign> options[] = {
+        { YGAlignAuto,         "auto",          "Auto" },
+        { YGAlignFlexStart,    "flex-start",    "Flex Start" },
+        { YGAlignCenter,       "center",        "Center" },
+        { YGAlignFlexEnd,      "flex-end",      "Flex End" },
+        { YGAlignStretch,      "stretch",       "Stretch" },
+        { YGAlignBaseline,     "baseline",      "Baseline" },
+        { YGAlignSpaceBetween, "space-between", "Space Between" },
+        { YGAlignSpaceAround,  "space-around",  "Space Around" },
+    };
+};
+
+template<>
+struct EnumTraits<YGWrap> {
+    static constexpr EnumOption<YGWrap> options[] = {
+        { YGWrapNoWrap,      "no-wrap",      "No Wrap" },
+        { YGWrapWrap,        "wrap",         "Wrap" },
+        { YGWrapWrapReverse, "wrap-reverse", "Wrap Reverse" },
+    };
+};
+
+template<>
+struct EnumTraits<YGPositionType> {
+    static constexpr EnumOption<YGPositionType> options[] = {
+        { YGPositionTypeStatic,   "static",   "Static" },
+        { YGPositionTypeRelative, "relative", "Relative" },
+        { YGPositionTypeAbsolute, "absolute", "Absolute" },
+    };
+};
+
+template<>
+struct EnumTraits<YGDisplay> {
+    static constexpr EnumOption<YGDisplay> options[] = {
+        { YGDisplayNone, "none", "None" },
+        { YGDisplayFlex, "flex", "Flex" },
+    };
+};
+
+template<>
+struct EnumTraits<YGOverflow> {
+    static constexpr EnumOption<YGOverflow> options[] = {
+        { YGOverflowVisible, "visible", "Visible" },
+        { YGOverflowHidden,  "hidden",  "Hidden" },
+        { YGOverflowScroll,  "scroll",  "Scroll" },
+    };
+};
+
 CODEC_BEGIN(YGFlexDirection)
     DECODE() {
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-
-        if (!s) return false;
-
-        if (strcmp(s, "row") == 0) { out = YGFlexDirectionRow; return true; }
-        if (strcmp(s, "column") == 0) { out = YGFlexDirectionColumn; return true; }
-        if (strcmp(s, "row-reverse") == 0) { out = YGFlexDirectionRowReverse; return true; }
-        if (strcmp(s, "column-reverse") == 0) { out = YGFlexDirectionColumnReverse; return true; }
-
-        return false;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        out.SetString(YGFlexDirectionToString(v), a);
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()
 
 
 CODEC_BEGIN(YGJustify)
     DECODE() {
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-        if (!s) return false;
-
-        if (strcmp(s, "flex-start") == 0) { out = YGJustifyFlexStart; return true; }
-        if (strcmp(s, "center") == 0)     { out = YGJustifyCenter; return true; }
-        if (strcmp(s, "flex-end") == 0)   { out = YGJustifyFlexEnd; return true; }
-        if (strcmp(s, "space-between") == 0) { out = YGJustifySpaceBetween; return true; }
-        if (strcmp(s, "space-around") == 0)  { out = YGJustifySpaceAround; return true; }
-        if (strcmp(s, "space-evenly") == 0)  { out = YGJustifySpaceEvenly; return true; }
-
-        return false;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        out.SetString(YGJustifyToString(v), a);
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()
 
 CODEC_BEGIN(YGAlign)
     DECODE() {
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-        if (!s) return false;
-
-        if (strcmp(s, "auto") == 0)        { out = YGAlignAuto; return true; }
-        if (strcmp(s, "flex-start") == 0)  { out = YGAlignFlexStart; return true; }
-        if (strcmp(s, "center") == 0)      { out = YGAlignCenter; return true; }
-        if (strcmp(s, "flex-end") == 0)    { out = YGAlignFlexEnd; return true; }
-        if (strcmp(s, "stretch") == 0)     { out = YGAlignStretch; return true; }
-        if (strcmp(s, "baseline") == 0)    { out = YGAlignBaseline; return true; }
-        if (strcmp(s, "space-between") == 0) { out = YGAlignSpaceBetween; return true; }
-        if (strcmp(s, "space-around") == 0)  { out = YGAlignSpaceAround; return true; }
-
-        return false;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        out.SetString(YGAlignToString(v), a);
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()
 
 
 CODEC_BEGIN(YGWrap)
     DECODE() {
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-        if (!s) return false;
-
-        if (strcmp(s, "no-wrap") == 0)      { out = YGWrapNoWrap; return true; }
-        if (strcmp(s, "wrap") == 0)         { out = YGWrapWrap; return true; }
-        if (strcmp(s, "wrap-reverse") == 0) { out = YGWrapWrapReverse; return true; }
-
-        return false;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        out.SetString(YGWrapToString(v), a);
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()
 
 
 CODEC_BEGIN(YGPositionType)
     DECODE() {
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-        if (!s) return false;
-
-        if (strcmp(s, "static") == 0)   { out = YGPositionTypeStatic; return true; }
-        if (strcmp(s, "relative") == 0) { out = YGPositionTypeRelative; return true; }
-        if (strcmp(s, "absolute") == 0) { out = YGPositionTypeAbsolute; return true; }
-
-        return false;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        out.SetString(YGPositionTypeToString(v), a);
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()
 
 
 CODEC_BEGIN(YGDisplay)
     DECODE() {
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-        if (!s) return false;
-
-        if (strcmp(s, "none") == 0) { out = YGDisplayNone; return true; }
-        if (strcmp(s, "flex") == 0) { out = YGDisplayFlex; return true; }
-
-        return false;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        out.SetString(YGDisplayToString(v), a);
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()
 
 
 CODEC_BEGIN(YGOverflow)
     DECODE() {
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-        if (!s) return false;
-
-        if (strcmp(s, "visible") == 0) { out = YGOverflowVisible; return true; }
-        if (strcmp(s, "hidden") == 0)  { out = YGOverflowHidden; return true; }
-        if (strcmp(s, "scroll") == 0)  { out = YGOverflowScroll; return true; }
-
-        return false;
+        return decodeEnum(v, out);
     }
 
     ENCODE() {
-        out.SetString(YGOverflowToString(v), a);
-        return true;
+        return encodeEnum(out, a, v);
     }
 CODEC_END()

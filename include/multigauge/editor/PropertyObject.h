@@ -205,6 +205,11 @@ protected:
         return static_cast<const Base*>(obj)->Base::propertyList();
     }
 
+    template <typename T>
+    static rapidjson::Value getEnumOptions(rapidjson::Document::AllocatorType& a) {
+        return enumOptionsMeta<EnumTraitsTypeT<T>>(a);
+    }
+
 
     template <auto MemberPtr, auto CallbackPtr = nullptr>
     static Property makeProperty( const char* key, const char* name, const char* description, const char* widget) {
@@ -217,8 +222,11 @@ protected:
         p.widget = widget ? widget : "json";
         p.set = &PropertyObject::setMember<MemberPtr, CallbackPtr>;
         p.get = &PropertyObject::getMember<MemberPtr>;
+        if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) {
+            p.getOptions = &PropertyObject::getEnumOptions<T>;
+        }
 
-                if constexpr (ChildObjectTraits<T>::supported) {
+        if constexpr (ChildObjectTraits<T>::supported) {
             p.getChild = &PropertyObject::getChildObject<MemberPtr>;
             p.getChildMutable = &PropertyObject::getChildObjectMutable<MemberPtr>;
         }
@@ -253,6 +261,11 @@ struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list
 template <typename T, typename = void>
 struct MgPropWidgetTraits {
     static constexpr const char* value = "json";
+};
+
+template <typename T>
+struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>>> {
+    static constexpr const char* value = "select";
 };
 
 template <>
