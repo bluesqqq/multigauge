@@ -26,10 +26,10 @@ class Horizon : public Element {
         MG_PROPS_PARENT(Element)
 
         MG_PROPS_BEGIN()
-            MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.", "group")
-            MG_PROP(groundColor, "groundColor", "Ground Color", "Color of the ground.", "group")
-            MG_PROP(horizonColor, "horizonColor", "Horizon Color", "Color of the horizon.", "group")
-            MG_PROP(borderColor, "borderColor", "Border Color", "Color of the border.", "group")
+            MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.")
+            MG_PROP(groundColor, "groundColor", "Ground Color", "Color of the ground.")
+            MG_PROP(horizonColor, "horizonColor", "Horizon Color", "Color of the horizon.")
+            MG_PROP(borderColor, "borderColor", "Border Color", "Color of the border.")
         MG_PROPS_END()
         
     public:

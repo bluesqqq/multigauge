@@ -4,6 +4,7 @@
 #include <cstring>
 #include <memory>
 #include <optional>
+#include <string>
 #include <type_traits>
 #include <utility>
 #include <vector>
@@ -249,6 +250,41 @@ struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list
     static constexpr PropertyObject::PropertyList::ParentGetter value = &T::__mg_parent_property_list;
 };
 
+template <typename T, typename = void>
+struct MgPropWidgetTraits {
+    static constexpr const char* value = "json";
+};
+
+template <>
+struct MgPropWidgetTraits<bool> {
+    static constexpr const char* value = "boolean";
+};
+
+template <typename T>
+struct MgPropWidgetTraits<T, std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<T, bool>>> {
+    static constexpr const char* value = "number";
+};
+
+template <>
+struct MgPropWidgetTraits<std::string> {
+    static constexpr const char* value = "string";
+};
+
+template <typename T>
+struct MgPropWidgetTraits<std::optional<T>> {
+    static constexpr const char* value = MgPropWidgetTraits<T>::value;
+};
+
+template <typename T>
+struct MgPropWidgetTraits<T, std::enable_if_t<std::is_base_of_v<PropertyObject, T>>> {
+    static constexpr const char* value = "group";
+};
+
+template <typename T>
+struct MgPropWidgetTraits<std::unique_ptr<T>> {
+    static constexpr const char* value = MgPropWidgetTraits<T>::value;
+};
+
 #define MG_EDITOR_NAME(name_literal) \
     public: const char* typeName() const override { return name_literal; }
 
@@ -267,7 +303,15 @@ public: \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
         static const ::Property props[] = {
 
-#define MG_PROP(member, key, display_name, description, widget_name) \
+#define MG_PROP(member, key, display_name, description) \
+    ::PropertyObject::makeProperty<&Self::member, nullptr>( \
+        key, \
+        display_name, \
+        description, \
+        ::MgPropWidgetTraits<std::remove_cv_t<std::remove_reference_t<decltype(Self::member)>>>::value \
+    ),
+
+#define MG_PROP_WIDGET(member, key, display_name, description, widget_name) \
     ::PropertyObject::makeProperty<&Self::member, nullptr>( \
         key, \
         display_name, \
@@ -275,7 +319,15 @@ public: \
         widget_name \
     ),
 
-#define MG_PROP_CALLBACK(member, key, display_name, description, widget_name, callback) \
+#define MG_PROP_CALLBACK(member, key, display_name, description, callback) \
+    ::PropertyObject::makeProperty<&Self::member, callback>( \
+        key, \
+        display_name, \
+        description, \
+        ::MgPropWidgetTraits<std::remove_cv_t<std::remove_reference_t<decltype(Self::member)>>>::value \
+    ),
+
+#define MG_PROP_CALLBACK_WIDGET(member, key, display_name, description, widget_name, callback) \
     ::PropertyObject::makeProperty<&Self::member, callback>( \
         key, \
         display_name, \

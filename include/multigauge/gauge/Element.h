@@ -178,6 +178,6 @@ class Element : public PropertyObject {
         void loadChildren(const rapidjson::Value::ConstObject& json);
 
         MG_PROPS_BEGIN()
-            MG_PROP(style, "style", "Style", "Layout options.", "group")
+            MG_PROP(style, "style", "Style", "Layout options.")
         MG_PROPS_END()
 };

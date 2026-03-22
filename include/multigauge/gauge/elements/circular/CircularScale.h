@@ -16,8 +16,8 @@ class CircularScale : public CircularElement {
         MG_PROPS_PARENT(CircularElement)
 
         MG_PROPS_BEGIN()
-            MG_PROP(ticks, "ticks", "Ticks", "List of ticks to draw.", "group")
-            MG_PROP(radius, "radius", "Radius", "Radius of the scale.", "number")
+            MG_PROP(ticks, "ticks", "Ticks", "List of ticks to draw.")
+            MG_PROP(radius, "radius", "Radius", "Radius of the scale.")
         MG_PROPS_END()
 
     public:

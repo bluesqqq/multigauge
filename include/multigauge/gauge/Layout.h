@@ -158,11 +158,11 @@ struct FlexContainer : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(direction,    "direction",     "Direction",     "Direction of flex content.",        "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", "enum", &FlexContainer::update)
-        MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        "enum", &FlexContainer::update)
+        MG_PROP_CALLBACK_WIDGET(direction,    "direction",     "Direction",     "Direction of flex content.",        "enum", &FlexContainer::update)
+        MG_PROP_CALLBACK_WIDGET(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  "enum", &FlexContainer::update)
+        MG_PROP_CALLBACK_WIDGET(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", "enum", &FlexContainer::update)
+        MG_PROP_CALLBACK_WIDGET(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", "enum", &FlexContainer::update)
+        MG_PROP_CALLBACK_WIDGET(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        "enum", &FlexContainer::update)
     MG_PROPS_END()
 };
 
@@ -184,10 +184,10 @@ struct FlexItem : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", "number", &FlexItem::update)
-        MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    "number", &FlexItem::update)
-        MG_PROP_CALLBACK(basis,     "basis",      "Basis",      "Flex basis.",                                  "json", &FlexItem::update)
-        MG_PROP_CALLBACK(alignSelf, "align-self", "Align Self", "Align self.",                                  "enum", &FlexItem::update)
+        MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", &FlexItem::update)
+        MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    &FlexItem::update)
+        MG_PROP_CALLBACK_WIDGET(basis,     "basis",      "Basis",      "Flex basis.",                                  "json", &FlexItem::update)
+        MG_PROP_CALLBACK_WIDGET(alignSelf, "align-self", "Align Self", "Align self.",                                  "enum", &FlexItem::update)
     MG_PROPS_END()
 };
 
@@ -213,12 +213,12 @@ struct Position : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", "enum",&Position::update)
+        MG_PROP_CALLBACK_WIDGET(type, "type", "Type", "Positioning type.", "enum", &Position::update)
 
-        MG_PROP_CALLBACK(left,   "left",     "Left",   "Left edge position.", "json", &Position::update)
-        MG_PROP_CALLBACK(right,  "right",   "Right",  "Right edge position.", "json", &Position::update)
-        MG_PROP_CALLBACK(top,    "top",       "Top",    "Top edge position.", "json", &Position::update)
-        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Position::update)
+        MG_PROP_CALLBACK_WIDGET(left,   "left",     "Left",   "Left edge position.", "json", &Position::update)
+        MG_PROP_CALLBACK_WIDGET(right,  "right",   "Right",  "Right edge position.", "json", &Position::update)
+        MG_PROP_CALLBACK_WIDGET(top,    "top",       "Top",    "Top edge position.", "json", &Position::update)
+        MG_PROP_CALLBACK_WIDGET(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Position::update)
     MG_PROPS_END()
 };
 
@@ -240,10 +240,10 @@ struct Margin : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(left,   "left",     "Left",   "Left edge position.", "json", &Margin::update)
-        MG_PROP_CALLBACK(right,  "right",   "Right",  "Right edge position.", "json", &Margin::update)
-        MG_PROP_CALLBACK(top,    "top",       "Top",    "Top edge position.", "json", &Margin::update)
-        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Margin::update)
+        MG_PROP_CALLBACK_WIDGET(left,   "left",     "Left",   "Left edge position.", "json", &Margin::update)
+        MG_PROP_CALLBACK_WIDGET(right,  "right",   "Right",  "Right edge position.", "json", &Margin::update)
+        MG_PROP_CALLBACK_WIDGET(top,    "top",       "Top",    "Top edge position.", "json", &Margin::update)
+        MG_PROP_CALLBACK_WIDGET(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Margin::update)
     MG_PROPS_END()
 };
 
@@ -265,10 +265,10 @@ struct Padding : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(left,   "left",     "Left",   "Left edge position.", "json", &Padding::update)
-        MG_PROP_CALLBACK(right,  "right",   "Right",  "Right edge position.", "json", &Padding::update)
-        MG_PROP_CALLBACK(top,    "top",       "Top",    "Top edge position.", "json", &Padding::update)
-        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Padding::update)
+        MG_PROP_CALLBACK_WIDGET(left,   "left",     "Left",   "Left edge position.", "json", &Padding::update)
+        MG_PROP_CALLBACK_WIDGET(right,  "right",   "Right",  "Right edge position.", "json", &Padding::update)
+        MG_PROP_CALLBACK_WIDGET(top,    "top",       "Top",    "Top edge position.", "json", &Padding::update)
+        MG_PROP_CALLBACK_WIDGET(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Padding::update)
     MG_PROPS_END()
 };
 
@@ -286,8 +286,8 @@ struct Gap : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(row,     "row",     "Row",     "Row gap.",    "number", &Gap::update)
-        MG_PROP_CALLBACK(column,  "column",  "Column",  "Column gap.", "number", &Gap::update)
+        MG_PROP_CALLBACK(row,     "row",     "Row",     "Row gap.",    &Gap::update)
+        MG_PROP_CALLBACK(column,  "column",  "Column",  "Column gap.", &Gap::update)
     MG_PROPS_END()
 };
 
@@ -351,22 +351,22 @@ struct Layout : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.", "group")
-        MG_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.", "group")
-        MG_PROP(position,      "position",       "Position",       "Position options.", "group")
-        MG_PROP(margin,        "margin",         "Margin",         "Margin options.", "group")
-        MG_PROP(padding,       "padding",        "Padding",        "Padding options.", "group")
-        MG_PROP(gap,           "gap",            "Gap",            "Gap options.", "group")
+        MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.")
+        MG_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.")
+        MG_PROP(position,      "position",       "Position",       "Position options.")
+        MG_PROP(margin,        "margin",         "Margin",         "Margin options.")
+        MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
+        MG_PROP(gap,           "gap",            "Gap",            "Gap options.")
         
-        MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", "enum", &Layout::update)
-        MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              "enum", &Layout::update)
-        MG_PROP_CALLBACK(width,       "width",        "Width",        "Width of the element.",         "number", &Layout::update)
-        MG_PROP_CALLBACK(height,      "height",       "Height",       "Height of the element.",        "number", &Layout::update)
-        MG_PROP_CALLBACK(minWidth,    "min-width",    "Min Width",    "Width of the element.",         "number", &Layout::update)
-        MG_PROP_CALLBACK(minHeight,   "min-height",   "Min Height",   "Height of the element.",        "number", &Layout::update)
-        MG_PROP_CALLBACK(maxWidth,    "max-width",    "Max Width",    "Width of the element.",         "number", &Layout::update)
-        MG_PROP_CALLBACK(maxHeight,   "max-height",   "Max Height",   "Height of the element.",        "number", &Layout::update)
-        MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.",  "number", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", "enum", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(display,     "display",      "Display",      "Display setting.",              "enum", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(width,       "width",        "Width",        "Width of the element.",         "number", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(height,      "height",       "Height",       "Height of the element.",        "number", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(minWidth,    "min-width",    "Min Width",    "Width of the element.",         "number", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(minHeight,   "min-height",   "Min Height",   "Height of the element.",        "number", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(maxWidth,    "max-width",    "Max Width",    "Width of the element.",         "number", &Layout::update)
+        MG_PROP_CALLBACK_WIDGET(maxHeight,   "max-height",   "Max Height",   "Height of the element.",        "number", &Layout::update)
+        MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.", &Layout::update)
     MG_PROPS_END()
 };
 

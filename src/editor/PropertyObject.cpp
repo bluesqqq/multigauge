@@ -70,13 +70,11 @@ rapidjson::Value PropertyObject::getPropertiesMeta(rapidjson::Document::Allocato
 rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson::Document::AllocatorType& a) const {
     rapidjson::Value meta = prop.getBaseMeta(a);
 
-    const char* widget = prop.widget ? prop.widget : "json";
-
-    if (std::strcmp(widget, "group") == 0) {
+    if (prop.getChild) {
         meta.AddMember("nullable", false, a);
 
         rapidjson::Value props(rapidjson::kArrayType);
-        const PropertyObject* child = prop.getChild ? prop.getChild(this) : nullptr;
+        const PropertyObject* child = prop.getChild(this);
         if (child) {
             props = child->getPropertiesMeta(a);
         }
@@ -140,8 +138,6 @@ bool PropertyObject::resolvePath(const std::string& path, PropertyObject*& owner
             return true;
         }
 
-        const char* widget = p->widget ? p->widget : "json";
-        if (std::strcmp(widget, "group") != 0) return false;
         if (!p->getChildMutable) return false;
 
         current = p->getChildMutable(current);
@@ -172,8 +168,6 @@ bool PropertyObject::resolvePath(const std::string& path, const PropertyObject*&
             return true;
         }
 
-        const char* widget = p->widget ? p->widget : "json";
-        if (std::strcmp(widget, "group") != 0) return false;
         if (!p->getChild) return false;
 
         current = p->getChild(current);

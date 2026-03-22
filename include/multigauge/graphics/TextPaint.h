@@ -21,9 +21,9 @@ struct TextPaint : public PropertyObject {
 
     MG_PROPS_BEGIN()
         // TODO : WEIGHT AND SLANT
-        MG_PROP(family, "family", "Family", "Font family to display.", "string")
-        MG_PROP(pt, "pt", "Point", "Point size (in pixels) to display.", "number")
-        MG_PROP(color, "color", "Color", "Color of the text.", "group")
+        MG_PROP(family, "family", "Family", "Font family to display.")
+        MG_PROP(pt, "pt", "Point", "Point size (in pixels) to display.")
+        MG_PROP(color, "color", "Color", "Color of the text.")
     MG_PROPS_END()
 
     TextPaint() = default;
