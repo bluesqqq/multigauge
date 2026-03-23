@@ -93,6 +93,19 @@ struct MgPropWidgetTraits<LayoutSize> {
     static constexpr const char* value = "layout-size";
 };
 
+struct Margin;
+struct Padding;
+
+template<>
+struct MgPropWidgetTraits<Margin> {
+    static constexpr const char* value = "box";
+};
+
+template<>
+struct MgPropWidgetTraits<Padding> {
+    static constexpr const char* value = "box";
+};
+
 CODEC_BEGIN(LayoutSize)
     DECODE() {
         if (v.IsNumber()) { out = {LayoutSize::Unit::Px, v.GetFloat()}; return true; }
@@ -298,13 +311,26 @@ struct Position : public PropertyObject {
     MG_PROPS_END()
 };
 
-struct Margin : public PropertyObject {
-    YGNodeRef node = nullptr;
-
+struct LayoutBox : public PropertyObject {
     LayoutSize left{LayoutSize::Unit::Px, 0.0f};
     LayoutSize right{LayoutSize::Unit::Px, 0.0f};
     LayoutSize top{LayoutSize::Unit::Px, 0.0f};
     LayoutSize bottom{LayoutSize::Unit::Px, 0.0f};
+
+    virtual void update() {}
+
+    MG_PROPS_BEGIN()
+        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &LayoutBox::update)
+        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &LayoutBox::update)
+        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &LayoutBox::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &LayoutBox::update)
+    MG_PROPS_END()
+};
+
+struct Margin : public LayoutBox {
+    MG_PROPS_PARENT(LayoutBox)
+
+    YGNodeRef node = nullptr;
 
     void update() {
         if (!node) return;
@@ -314,22 +340,12 @@ struct Margin : public PropertyObject {
         top.setMargin(node, YGEdgeTop);
         bottom.setMargin(node, YGEdgeBottom);
     }
-
-    MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &Margin::update)
-        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &Margin::update)
-        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &Margin::update)
-        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Margin::update)
-    MG_PROPS_END()
 };
 
-struct Padding : public PropertyObject {
-    YGNodeRef node = nullptr;
+struct Padding : public LayoutBox {
+    MG_PROPS_PARENT(LayoutBox)
 
-    LayoutSize left;
-    LayoutSize right;
-    LayoutSize top;
-    LayoutSize bottom;
+    YGNodeRef node = nullptr;
 
     void update() {
         if (!node) return;
@@ -339,13 +355,6 @@ struct Padding : public PropertyObject {
         top.setPadding(node, YGEdgeTop);
         bottom.setPadding(node, YGEdgeBottom);
     }
-
-    MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &Padding::update)
-        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &Padding::update)
-        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &Padding::update)
-        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Padding::update)
-    MG_PROPS_END()
 };
 
 struct Gap : public PropertyObject {
