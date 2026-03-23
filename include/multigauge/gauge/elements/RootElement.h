@@ -11,8 +11,8 @@ class RootElement : public Element {
 
     private:
         OwnedColor backgroundColor;
-        const char* title = NO_TITLE_TEXT;
-        const char* description = NO_DESCRIPTION_TEXT;
+        std::string title = NO_TITLE_TEXT;
+        std::string description = NO_DESCRIPTION_TEXT;
 
         MG_PROPS_PARENT(Element)
 

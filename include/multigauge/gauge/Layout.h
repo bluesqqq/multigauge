@@ -88,6 +88,11 @@ struct LayoutSize {
     }
 };
 
+template<>
+struct MgPropWidgetTraits<LayoutSize> {
+    static constexpr const char* value = "layout-size";
+};
+
 CODEC_BEGIN(LayoutSize)
     DECODE() {
         if (v.IsNumber()) { out = {LayoutSize::Unit::Px, v.GetFloat()}; return true; }
@@ -257,7 +262,7 @@ struct FlexItem : public PropertyObject {
     MG_PROPS_BEGIN()
         MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", &FlexItem::update)
         MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    &FlexItem::update)
-        MG_PROP_CALLBACK_WIDGET(basis,     "basis",      "Basis",      "Flex basis.",                                  "json", &FlexItem::update)
+        MG_PROP_CALLBACK(basis,     "basis",      "Basis",      "Flex basis.",                                     &FlexItem::update)
         MG_PROP_CALLBACK(alignSelf, "align-self", "Align Self", "Align self.", &FlexItem::update)
     MG_PROPS_END()
 };
@@ -286,10 +291,10 @@ struct Position : public PropertyObject {
     MG_PROPS_BEGIN()
         MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", &Position::update)
 
-        MG_PROP_CALLBACK_WIDGET(left,   "left",     "Left",   "Left edge position.", "json", &Position::update)
-        MG_PROP_CALLBACK_WIDGET(right,  "right",   "Right",  "Right edge position.", "json", &Position::update)
-        MG_PROP_CALLBACK_WIDGET(top,    "top",       "Top",    "Top edge position.", "json", &Position::update)
-        MG_PROP_CALLBACK_WIDGET(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Position::update)
+        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &Position::update)
+        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &Position::update)
+        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &Position::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Position::update)
     MG_PROPS_END()
 };
 
@@ -311,10 +316,10 @@ struct Margin : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK_WIDGET(left,   "left",     "Left",   "Left edge position.", "json", &Margin::update)
-        MG_PROP_CALLBACK_WIDGET(right,  "right",   "Right",  "Right edge position.", "json", &Margin::update)
-        MG_PROP_CALLBACK_WIDGET(top,    "top",       "Top",    "Top edge position.", "json", &Margin::update)
-        MG_PROP_CALLBACK_WIDGET(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Margin::update)
+        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &Margin::update)
+        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &Margin::update)
+        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &Margin::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Margin::update)
     MG_PROPS_END()
 };
 
@@ -336,10 +341,10 @@ struct Padding : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK_WIDGET(left,   "left",     "Left",   "Left edge position.", "json", &Padding::update)
-        MG_PROP_CALLBACK_WIDGET(right,  "right",   "Right",  "Right edge position.", "json", &Padding::update)
-        MG_PROP_CALLBACK_WIDGET(top,    "top",       "Top",    "Top edge position.", "json", &Padding::update)
-        MG_PROP_CALLBACK_WIDGET(bottom, "bottom", "Bottom", "Bottom edge position.", "json", &Padding::update)
+        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &Padding::update)
+        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &Padding::update)
+        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &Padding::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Padding::update)
     MG_PROPS_END()
 };
 
@@ -431,12 +436,12 @@ struct Layout : public PropertyObject {
         
         MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", &Layout::update)
         MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              &Layout::update)
-        MG_PROP_CALLBACK_WIDGET(width,       "width",        "Width",        "Width of the element.",         "number", &Layout::update)
-        MG_PROP_CALLBACK_WIDGET(height,      "height",       "Height",       "Height of the element.",        "number", &Layout::update)
-        MG_PROP_CALLBACK_WIDGET(minWidth,    "min-width",    "Min Width",    "Width of the element.",         "number", &Layout::update)
-        MG_PROP_CALLBACK_WIDGET(minHeight,   "min-height",   "Min Height",   "Height of the element.",        "number", &Layout::update)
-        MG_PROP_CALLBACK_WIDGET(maxWidth,    "max-width",    "Max Width",    "Width of the element.",         "number", &Layout::update)
-        MG_PROP_CALLBACK_WIDGET(maxHeight,   "max-height",   "Max Height",   "Height of the element.",        "number", &Layout::update)
+        MG_PROP_CALLBACK(width,       "width",      "Width",      "Width of the element.",  &Layout::update)
+        MG_PROP_CALLBACK(height,      "height",     "Height",     "Height of the element.", &Layout::update)
+        MG_PROP_CALLBACK(minWidth,    "min-width",  "Min Width",  "Width of the element.",  &Layout::update)
+        MG_PROP_CALLBACK(minHeight,   "min-height", "Min Height", "Height of the element.", &Layout::update)
+        MG_PROP_CALLBACK(maxWidth,    "max-width",  "Max Width",  "Width of the element.",  &Layout::update)
+        MG_PROP_CALLBACK(maxHeight,   "max-height", "Max Height", "Height of the element.", &Layout::update)
         MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.", &Layout::update)
     MG_PROPS_END()
 };
