@@ -259,29 +259,25 @@ struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list
 };
 
 template <typename T, typename = void>
-struct MgPropWidgetTraits {
-    static constexpr const char* value = "json";
-};
+struct MgPropWidgetTraits { static constexpr const char* value = "json"; };
 
 template <typename T>
 struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>>> {
     static constexpr const char* value = "select";
 };
 
-template <>
-struct MgPropWidgetTraits<bool> {
-    static constexpr const char* value = "boolean";
-};
+#define MG_EDITOR_WIDGET(type, widget_literal) \
+template <> \
+struct MgPropWidgetTraits<type> { static constexpr const char* value = widget_literal; };
+
+MG_EDITOR_WIDGET(bool, "boolean")
 
 template <typename T>
 struct MgPropWidgetTraits<T, std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<T, bool>>> {
     static constexpr const char* value = "number";
 };
 
-template <>
-struct MgPropWidgetTraits<std::string> {
-    static constexpr const char* value = "string";
-};
+MG_EDITOR_WIDGET(std::string, "string")
 
 template <typename T>
 struct MgPropWidgetTraits<std::optional<T>> {

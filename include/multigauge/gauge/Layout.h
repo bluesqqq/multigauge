@@ -88,23 +88,13 @@ struct LayoutSize {
     }
 };
 
-template<>
-struct MgPropWidgetTraits<LayoutSize> {
-    static constexpr const char* value = "layout-size";
-};
+MG_EDITOR_WIDGET(LayoutSize, "layout-size")
 
 struct Margin;
 struct Padding;
 
-template<>
-struct MgPropWidgetTraits<Margin> {
-    static constexpr const char* value = "box";
-};
-
-template<>
-struct MgPropWidgetTraits<Padding> {
-    static constexpr const char* value = "box";
-};
+MG_EDITOR_WIDGET(Margin, "box")
+MG_EDITOR_WIDGET(Padding, "box")
 
 CODEC_BEGIN(LayoutSize)
     DECODE() {
@@ -191,6 +181,10 @@ struct EnumTraits<YGAlign> {
         { YGAlignSpaceAround,  "space-around",  "Space Around" },
     };
 };
+
+MG_EDITOR_WIDGET(YGFlexDirection, "segmented-select")
+MG_EDITOR_WIDGET(YGJustify, "segmented-select")
+MG_EDITOR_WIDGET(YGAlign, "segmented-select")
 
 template<>
 struct EnumTraits<YGWrap> {
