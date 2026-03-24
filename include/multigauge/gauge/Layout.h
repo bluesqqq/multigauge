@@ -178,8 +178,8 @@ struct EnumTraits<YGAlign> {
 };
 
 MG_EDITOR_WIDGET(YGFlexDirection, "segmented-select")
-MG_EDITOR_WIDGET(YGJustify, "segmented-select")
 MG_EDITOR_WIDGET(YGAlign, "segmented-select")
+MG_EDITOR_WIDGET(YGJustify, "justify")
 
 template<>
 struct EnumTraits<YGWrap> {
