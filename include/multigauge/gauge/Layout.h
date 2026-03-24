@@ -171,14 +171,9 @@ struct EnumTraits<YGJustify> {
 template<>
 struct EnumTraits<YGAlign> {
     static constexpr EnumOption<YGAlign> options[] = {
-        { YGAlignAuto,         "auto",          "Auto" },
         { YGAlignFlexStart,    "flex-start",    "Flex Start" },
         { YGAlignCenter,       "center",        "Center" },
         { YGAlignFlexEnd,      "flex-end",      "Flex End" },
-        { YGAlignStretch,      "stretch",       "Stretch" },
-        { YGAlignBaseline,     "baseline",      "Baseline" },
-        { YGAlignSpaceBetween, "space-between", "Space Between" },
-        { YGAlignSpaceAround,  "space-around",  "Space Around" },
     };
 };
 
