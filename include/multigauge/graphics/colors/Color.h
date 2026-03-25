@@ -17,6 +17,9 @@ class ColorTimeline;      // forward declare
 
 using OwnedColor = std::unique_ptr<Color>;
 
+template <>
+struct MgPropWidgetTraits<OwnedColor> { static constexpr const char* value = "color"; };
+
 class Color : public PropertyObject {
     MG_EDITOR_NAME("Color")
     public:
@@ -72,8 +75,8 @@ struct Paint : public PropertyObject {
     float thickness = 1.0f;
 
     MG_PROPS_BEGIN()
-        MG_PROP(fill, "fill", "Fill", "Fill color.", "group", "Appearance", "Fill & Stroke")
-        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.", "group", "Appearance", "Fill & Stroke")
+        MG_PROP(fill, "fill", "Fill", "Fill color.", "color", "Appearance", "Fill & Stroke")
+        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.", "color", "Appearance", "Fill & Stroke")
         MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.", "number", "Appearance", "Fill & Stroke")
     MG_PROPS_END()
 

@@ -14,7 +14,7 @@ struct ColorKeyframe : public PropertyObject {
 
     MG_PROPS_BEGIN()
         MG_PROP(position, "pos", "Position", "Position of the keyframe", "number", "Timeline", "Keyframes")
-        MG_PROP(color, "color", "Color", "Color of the keyframe.", "group", "Timeline", "Keyframes")
+        MG_PROP(color, "color", "Color", "Color of the keyframe.", "color", "Timeline", "Keyframes")
     MG_PROPS_END()
 
     ColorKeyframe();

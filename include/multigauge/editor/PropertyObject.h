@@ -16,6 +16,8 @@
 
 #define TYPE_KEY "type"
 
+struct rgba;
+
 
 //----------[ ENCODE + DECODE ]----------//
 
@@ -289,6 +291,7 @@ template <> \
 struct MgPropWidgetTraits<type> { static constexpr const char* value = widget_literal; };
 
 MG_EDITOR_WIDGET(bool, "boolean")
+MG_EDITOR_WIDGET(rgba, "color-selector")
 
 template <typename T>
 struct MgPropWidgetTraits<T, std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<T, bool>>> {
