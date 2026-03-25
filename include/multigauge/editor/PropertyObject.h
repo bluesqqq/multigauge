@@ -17,6 +17,10 @@
 #define TYPE_KEY "type"
 
 struct rgba;
+class PropertyObject;
+
+template <typename T, typename = void>
+struct MgPropWidgetTraits;
 
 template <typename T>
 struct MgPropNullableTraits {
@@ -282,7 +286,7 @@ struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list
     static constexpr PropertyObject::PropertyList::ParentGetter value = &T::__mg_parent_property_list;
 };
 
-template <typename T, typename = void>
+template <typename T, typename>
 struct MgPropWidgetTraits { static constexpr const char* value = "json"; };
 
 template <typename T>
