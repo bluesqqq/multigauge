@@ -1,13 +1,13 @@
 #include <multigauge/editor/Property.h>
 
 rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) const {
-    rapidjson::Value meta(rapidjson::kObjectType);
+    rapidjson::Value metaJson(rapidjson::kObjectType);
 
-    meta.AddMember("key", rapidjson::Value(key, a), a);
-    meta.AddMember("name", rapidjson::Value(name ? name : key, a), a);
-    meta.AddMember("description", rapidjson::Value(description ? description : "", a), a);
-    meta.AddMember("widget", rapidjson::Value(widget ? widget : "json", a), a);
-    if (getOptions) meta.AddMember("options", getOptions(a), a);
+    metaJson.AddMember("key", rapidjson::Value(key, a), a);
+    metaJson.AddMember("name", rapidjson::Value(meta.name ? meta.name : key, a), a);
+    metaJson.AddMember("description", rapidjson::Value(meta.description ? meta.description : "", a), a);
+    metaJson.AddMember("widget", rapidjson::Value(meta.widget ? meta.widget : "json", a), a);
+    if (meta.getOptions) metaJson.AddMember("options", meta.getOptions(a), a);
 
-    return meta;
+    return metaJson;
 }

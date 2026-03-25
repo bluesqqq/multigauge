@@ -217,13 +217,15 @@ protected:
 
         Property p{};
         p.key = key;
-        p.name = name ? name : key;
-        p.description = description ? description : "No description.";
-        p.widget = widget ? widget : "json";
         p.set = &PropertyObject::setMember<MemberPtr, CallbackPtr>;
         p.get = &PropertyObject::getMember<MemberPtr>;
+
+        PropertyMetadata meta{};
+        meta.name = name ? name : key;
+        meta.description = description ? description : "No description.";
+        meta.widget = widget ? widget : "json";
         if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) {
-            p.getOptions = &PropertyObject::getEnumOptions<T>;
+            meta.getOptions = &PropertyObject::getEnumOptions<T>;
         }
 
         if constexpr (ChildObjectTraits<T>::supported) {
@@ -231,18 +233,16 @@ protected:
             p.getChildMutable = &PropertyObject::getChildObjectMutable<MemberPtr>;
         }
 
-        return p;
+        return {p.key, p.set, p.get, p.getChild, p.getChildMutable, meta};
     }
 
     static Property makeCustomProperty( const char* key, const char* name, const char* description, const char* widget, Property::Setter set, Property::Getter get) {
-        Property p{};
-        p.key = key;
-        p.name = name ? name : key;
-        p.description = description ? description : "No description.";
-        p.widget = widget ? widget : "json";
-        p.set = set;
-        p.get = get;
-        return p;
+        PropertyMetadata meta{};
+        meta.name = name ? name : key;
+        meta.description = description ? description : "No description.";
+        meta.widget = widget ? widget : "json";
+
+        return {key, set, get, nullptr, nullptr, meta};
     }
 };
 
