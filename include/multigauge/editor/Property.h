@@ -18,6 +18,8 @@ struct PropertyMetadata {
     const char* category = nullptr;
     /// @brief Group label used within the category
     const char* group = nullptr;
+    /// @brief Whether the editor should treat this property as nullable.
+    bool nullable = false;
     /// @brief Returns dropdown/select options metadata when available.
     OptionsGetter getOptions = nullptr;
 };

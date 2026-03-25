@@ -234,6 +234,7 @@ protected:
         meta.widget = widget ? widget : "json";
         meta.category = category ? category : "General";
         meta.group = group ? group : "General";
+        meta.nullable = MgPropNullableTraits<T>::value;
         if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) {
             meta.getOptions = &PropertyObject::getEnumOptions<T>;
         }
@@ -282,6 +283,11 @@ template <typename T, typename = void>
 struct MgPropWidgetTraits { static constexpr const char* value = "json"; };
 
 template <typename T>
+struct MgPropNullableTraits {
+    static constexpr bool value = false;
+};
+
+template <typename T>
 struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>>> {
     static constexpr const char* value = "select";
 };
@@ -303,6 +309,11 @@ MG_EDITOR_WIDGET(std::string, "string")
 template <typename T>
 struct MgPropWidgetTraits<std::optional<T>> {
     static constexpr const char* value = MgPropWidgetTraits<T>::value;
+};
+
+template <typename T>
+struct MgPropNullableTraits<std::optional<T>> {
+    static constexpr bool value = true;
 };
 
 template <typename T>

@@ -71,7 +71,7 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
     rapidjson::Value meta = prop.getBaseMeta(a);
 
     if (prop.getChild) {
-        meta.AddMember("nullable", false, a);
+        meta.AddMember("nullable", prop.meta.nullable, a);
 
         rapidjson::Value props(rapidjson::kArrayType);
         const PropertyObject* child = prop.getChild(this);
@@ -85,10 +85,10 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
 
     rapidjson::Value value;
     if (prop.get && prop.get(this, value, a)) {
-        meta.AddMember("nullable", false, a);
+        meta.AddMember("nullable", prop.meta.nullable, a);
         meta.AddMember("value", value, a);
     } else {
-        meta.AddMember("nullable", false, a);
+        meta.AddMember("nullable", prop.meta.nullable, a);
         meta.AddMember("value", rapidjson::Value(rapidjson::kNullType), a);
     }
 

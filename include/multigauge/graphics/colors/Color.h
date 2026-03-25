@@ -20,6 +20,9 @@ using OwnedColor = std::unique_ptr<Color>;
 template <>
 struct MgPropWidgetTraits<OwnedColor> { static constexpr const char* value = "color"; };
 
+template <>
+struct MgPropNullableTraits<OwnedColor> { static constexpr bool value = true; };
+
 class Color : public PropertyObject {
     MG_EDITOR_NAME("Color")
     public:
