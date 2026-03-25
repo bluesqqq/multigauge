@@ -14,7 +14,7 @@ class ImageElement : public Element {
         // PropertyObject props list
         MG_PROPS_PARENT(Element)
         MG_PROPS_BEGIN()
-            MG_PROP(path, "path", "Image Path", "Filepath of image.")
+            MG_PROP(path, "path", "Image Path", "Filepath of image.", "string", "Content", "Source")
         MG_PROPS_END()
 
     public:

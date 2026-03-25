@@ -41,9 +41,9 @@ class TickList : public PropertyObject {
         float rightHighlightDistance = 1000;
 
         MG_PROPS_BEGIN()
-            MG_PROP(root, "root", "Root Tick", "First tick drawn.")
-            MG_PROP_WIDGET(subs, "subs", "Sub Ticks", "Sequentially drawn ticks.", "array")
-            MG_PROP(offset, "offset", "Offset", "Value offset to start ticks from.")
+            MG_PROP(root, "root", "Root Tick", "First tick drawn.", "group", "Ticks", "Structure")
+            MG_PROP_WIDGET(subs, "subs", "Sub Ticks", "Sequentially drawn ticks.", "array", "Ticks", "Structure")
+            MG_PROP(offset, "offset", "Offset", "Value offset to start ticks from.", "number", "Ticks", "Spacing")
         MG_PROPS_END()
 
         float getLength(uint8_t index) const;

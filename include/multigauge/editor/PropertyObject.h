@@ -212,7 +212,13 @@ protected:
 
 
     template <auto MemberPtr, auto CallbackPtr = nullptr>
-    static Property makeProperty( const char* key, const char* name, const char* description, const char* widget) {
+    static Property makeProperty(
+        const char* key,
+        const char* name,
+        const char* description,
+        const char* widget,
+        const char* category,
+        const char* group) {
         using T = MemberType<MemberPtr>;
 
         Property p{};
@@ -224,6 +230,8 @@ protected:
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
         meta.widget = widget ? widget : "json";
+        meta.category = category ? category : "General";
+        meta.group = group ? group : "General";
         if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) {
             meta.getOptions = &PropertyObject::getEnumOptions<T>;
         }
@@ -236,11 +244,21 @@ protected:
         return {p.key, p.set, p.get, p.getChild, p.getChildMutable, meta};
     }
 
-    static Property makeCustomProperty( const char* key, const char* name, const char* description, const char* widget, Property::Setter set, Property::Getter get) {
+    static Property makeCustomProperty(
+        const char* key,
+        const char* name,
+        const char* description,
+        const char* widget,
+        const char* category,
+        const char* group,
+        Property::Setter set,
+        Property::Getter get) {
         PropertyMetadata meta{};
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
         meta.widget = widget ? widget : "json";
+        meta.category = category ? category : "General";
+        meta.group = group ? group : "General";
 
         return {key, set, get, nullptr, nullptr, meta};
     }
@@ -312,44 +330,54 @@ public: \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
         static const ::Property props[] = {
 
-#define MG_PROP(member, key, display_name, description) \
+#define MG_PROP(member, key, display_name, description, widget_name, category_name, group_name) \
     ::PropertyObject::makeProperty<&Self::member, nullptr>( \
         key, \
         display_name, \
         description, \
-        ::MgPropWidgetTraits<std::remove_cv_t<std::remove_reference_t<decltype(Self::member)>>>::value \
+        widget_name, \
+        category_name, \
+        group_name \
     ),
 
-#define MG_PROP_WIDGET(member, key, display_name, description, widget_name) \
+#define MG_PROP_WIDGET(member, key, display_name, description, widget_name, category_name, group_name) \
     ::PropertyObject::makeProperty<&Self::member, nullptr>( \
         key, \
         display_name, \
         description, \
-        widget_name \
+        widget_name, \
+        category_name, \
+        group_name \
     ),
 
-#define MG_PROP_CALLBACK(member, key, display_name, description, callback) \
+#define MG_PROP_CALLBACK(member, key, display_name, description, widget_name, category_name, group_name, callback) \
     ::PropertyObject::makeProperty<&Self::member, callback>( \
         key, \
         display_name, \
         description, \
-        ::MgPropWidgetTraits<std::remove_cv_t<std::remove_reference_t<decltype(Self::member)>>>::value \
+        widget_name, \
+        category_name, \
+        group_name \
     ),
 
-#define MG_PROP_CALLBACK_WIDGET(member, key, display_name, description, widget_name, callback) \
+#define MG_PROP_CALLBACK_WIDGET(member, key, display_name, description, widget_name, category_name, group_name, callback) \
     ::PropertyObject::makeProperty<&Self::member, callback>( \
         key, \
         display_name, \
         description, \
-        widget_name \
+        widget_name, \
+        category_name, \
+        group_name \
     ),
 
-#define MG_PROP_CUSTOM(key, display_name, description, widget_name, set_fn, get_fn) \
+#define MG_PROP_CUSTOM(key, display_name, description, widget_name, category_name, group_name, set_fn, get_fn) \
     ::PropertyObject::makeCustomProperty( \
         key, \
         display_name, \
         description, \
         widget_name, \
+        category_name, \
+        group_name, \
         set_fn, \
         get_fn \
     ),

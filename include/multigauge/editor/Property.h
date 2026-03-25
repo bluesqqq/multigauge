@@ -14,6 +14,10 @@ struct PropertyMetadata {
     const char* description = nullptr;
     /// @brief Widget type to display for UI in editor
     const char* widget = nullptr;
+    /// @brief Top-level category used to organize the inspector
+    const char* category = nullptr;
+    /// @brief Group label used within the category
+    const char* group = nullptr;
     /// @brief Returns dropdown/select options metadata when available.
     OptionsGetter getOptions = nullptr;
 };

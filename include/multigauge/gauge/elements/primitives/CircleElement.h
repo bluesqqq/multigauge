@@ -11,7 +11,7 @@ class CircleElement : public Element {
         MG_PROPS_PARENT(Element)
 
         MG_PROPS_BEGIN()
-            MG_PROP(paint, "paint", "Paint", "Paint options for the circle.")
+            MG_PROP(paint, "paint", "Paint", "Paint options for the circle.", "group", "Appearance", "Fill & Stroke")
         MG_PROPS_END()
         
     public:

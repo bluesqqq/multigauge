@@ -235,11 +235,11 @@ struct FlexContainer : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(direction,    "direction",     "Direction",     "Direction of flex content.",        &FlexContainer::update)
-        MG_PROP_CALLBACK(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  &FlexContainer::update)
-        MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", &FlexContainer::update)
-        MG_PROP_CALLBACK(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::update)
-        MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        &FlexContainer::update)
+        MG_PROP_CALLBACK(direction,    "direction",     "Direction",     "Direction of flex content.",        "segmented-select", "Layout", "Flex Container", &FlexContainer::update)
+        MG_PROP_CALLBACK(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  "justify", "Layout", "Flex Container", &FlexContainer::update)
+        MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", "segmented-select", "Layout", "Flex Container", &FlexContainer::update)
+        MG_PROP_CALLBACK(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", "segmented-select", "Layout", "Flex Container", &FlexContainer::update)
+        MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        "select", "Layout", "Flex Container", &FlexContainer::update)
     MG_PROPS_END()
 };
 
@@ -261,10 +261,10 @@ struct FlexItem : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", &FlexItem::update)
-        MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    &FlexItem::update)
-        MG_PROP_CALLBACK(basis,     "basis",      "Basis",      "Flex basis.",                                     &FlexItem::update)
-        MG_PROP_CALLBACK(alignSelf, "align-self", "Align Self", "Align self.", &FlexItem::update)
+        MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", "number", "Layout", "Flex Item", &FlexItem::update)
+        MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    "number", "Layout", "Flex Item", &FlexItem::update)
+        MG_PROP_CALLBACK(basis,     "basis",      "Basis",      "Flex basis.",                                   "layout-size", "Layout", "Flex Item", &FlexItem::update)
+        MG_PROP_CALLBACK(alignSelf, "align-self", "Align Self", "Align self.",                                   "segmented-select", "Layout", "Flex Item", &FlexItem::update)
     MG_PROPS_END()
 };
 
@@ -290,12 +290,12 @@ struct Position : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", &Position::update)
+        MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", "select", "Layout", "Position", &Position::update)
 
-        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &Position::update)
-        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &Position::update)
-        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &Position::update)
-        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Position::update)
+        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   "layout-size", "Layout", "Position", &Position::update)
+        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  "layout-size", "Layout", "Position", &Position::update)
+        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    "layout-size", "Layout", "Position", &Position::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", "layout-size", "Layout", "Position", &Position::update)
     MG_PROPS_END()
 };
 
@@ -308,10 +308,10 @@ struct LayoutBox : public PropertyObject {
     virtual void update() {}
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &LayoutBox::update)
-        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &LayoutBox::update)
-        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &LayoutBox::update)
-        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &LayoutBox::update)
+        MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   "layout-size", "Layout", "Box Edges", &LayoutBox::update)
+        MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  "layout-size", "Layout", "Box Edges", &LayoutBox::update)
+        MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    "layout-size", "Layout", "Box Edges", &LayoutBox::update)
+        MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", "layout-size", "Layout", "Box Edges", &LayoutBox::update)
     MG_PROPS_END()
 };
 
@@ -359,8 +359,8 @@ struct Gap : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP_CALLBACK(row,     "row",     "Row",     "Row gap.",    &Gap::update)
-        MG_PROP_CALLBACK(column,  "column",  "Column",  "Column gap.", &Gap::update)
+        MG_PROP_CALLBACK(row,     "row",     "Row",     "Row gap.",    "layout-size", "Layout", "Gap", &Gap::update)
+        MG_PROP_CALLBACK(column,  "column",  "Column",  "Column gap.", "layout-size", "Layout", "Gap", &Gap::update)
     MG_PROPS_END()
 };
 
@@ -424,22 +424,22 @@ struct Layout : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-        MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.")
-        MG_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.")
-        MG_PROP(position,      "position",       "Position",       "Position options.")
-        MG_PROP(margin,        "margin",         "Margin",         "Margin options.")
-        MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
-        MG_PROP(gap,           "gap",            "Gap",            "Gap options.")
-        
-        MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", &Layout::update)
-        MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              &Layout::update)
-        MG_PROP_CALLBACK(width,       "width",      "Width",      "Width of the element.",  &Layout::update)
-        MG_PROP_CALLBACK(height,      "height",     "Height",     "Height of the element.", &Layout::update)
-        MG_PROP_CALLBACK(minWidth,    "min-width",  "Min Width",  "Width of the element.",  &Layout::update)
-        MG_PROP_CALLBACK(minHeight,   "min-height", "Min Height", "Height of the element.", &Layout::update)
-        MG_PROP_CALLBACK(maxWidth,    "max-width",  "Max Width",  "Width of the element.",  &Layout::update)
-        MG_PROP_CALLBACK(maxHeight,   "max-height", "Max Height", "Height of the element.", &Layout::update)
-        MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.", &Layout::update)
+        MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.", "group", "Layout", "Containers")
+        MG_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.",      "group", "Layout", "Items")
+        MG_PROP(position,      "position",       "Position",       "Position options.",        "group", "Layout", "Positioning")
+        MG_PROP(margin,        "margin",         "Margin",         "Margin options.",          "group", "Layout", "Spacing")
+        MG_PROP(padding,       "padding",        "Padding",        "Padding options.",         "group", "Layout", "Spacing")
+        MG_PROP(gap,           "gap",            "Gap",            "Gap options.",             "group", "Layout", "Spacing")
+
+        MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", "select", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              "select", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(width,       "width",        "Width",        "Width of the element.",         "layout-size", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(height,      "height",       "Height",       "Height of the element.",        "layout-size", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(minWidth,    "min-width",    "Min Width",    "Width of the element.",         "layout-size", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(minHeight,   "min-height",   "Min Height",   "Height of the element.",        "layout-size", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(maxWidth,    "max-width",    "Max Width",    "Width of the element.",         "layout-size", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(maxHeight,   "max-height",   "Max Height",   "Height of the element.",        "layout-size", "Layout", "Sizing", &Layout::update)
+        MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.",  "number", "Layout", "Sizing", &Layout::update)
     MG_PROPS_END()
 };
 

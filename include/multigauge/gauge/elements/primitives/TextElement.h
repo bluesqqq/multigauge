@@ -18,10 +18,10 @@ class TextElement : public Element {
         // PropertyObject props list
         MG_PROPS_PARENT(Element)
         MG_PROPS_BEGIN()
-            MG_PROP(text, "text", "Text", "Text to display.")
-            MG_PROP(paint, "paint", "Paint", "Paint options for the text.")
-            MG_PROP(useEllipses, "ellipses", "Ellipses", "Use ellipses for overflowing text.")
-            MG_PROP(useHyphens, "hyphens", "Hyphens", "Use hyphens for text justification.")
+            MG_PROP(text, "text", "Text", "Text to display.", "string", "Content", "Text")
+            MG_PROP(paint, "paint", "Paint", "Paint options for the text.", "group", "Appearance", "Typography")
+            MG_PROP(useEllipses, "ellipses", "Ellipses", "Use ellipses for overflowing text.", "boolean", "Content", "Wrapping")
+            MG_PROP(useHyphens, "hyphens", "Hyphens", "Use hyphens for text justification.", "boolean", "Content", "Wrapping")
         MG_PROPS_END()
 
     public:
