@@ -5,7 +5,7 @@
 #include <multigauge/geometry/Point.h>
 #include <multigauge/geometry/alignment.h>
 #include <multigauge/geometry/Line.h>
-#include <multigauge/geometry/path.h>
+#include <multigauge/geometry/Path.h>
 #include <multigauge/utils.h>
 
 #include <vector>

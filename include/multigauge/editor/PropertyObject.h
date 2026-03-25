@@ -18,6 +18,11 @@
 
 struct rgba;
 
+template <typename T>
+struct MgPropNullableTraits {
+    static constexpr bool value = false;
+};
+
 
 //----------[ ENCODE + DECODE ]----------//
 
@@ -281,11 +286,6 @@ struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list
 
 template <typename T, typename = void>
 struct MgPropWidgetTraits { static constexpr const char* value = "json"; };
-
-template <typename T>
-struct MgPropNullableTraits {
-    static constexpr bool value = false;
-};
 
 template <typename T>
 struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>>> {

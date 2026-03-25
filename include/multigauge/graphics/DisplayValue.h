@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/values/value.h>
+#include <multigauge/values/Value.h>
 #include <multigauge/utils.h>
 #include <multigauge/editor/PropertyObject.h>
 
