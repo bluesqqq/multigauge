@@ -212,7 +212,6 @@ struct EnumTraits<YGOverflow> {
     static constexpr EnumOption<YGOverflow> options[] = {
         { YGOverflowVisible, "visible", "Visible" },
         { YGOverflowHidden,  "hidden",  "Hidden" },
-        { YGOverflowScroll,  "scroll",  "Scroll" },
     };
 };
 
