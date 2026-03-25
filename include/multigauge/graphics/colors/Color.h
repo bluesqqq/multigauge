@@ -78,9 +78,9 @@ struct Paint : public PropertyObject {
     float thickness = 1.0f;
 
     MG_PROPS_BEGIN()
-        MG_PROP(fill, "fill", "Fill", "Fill color.", "color", "Appearance", "Fill & Stroke")
-        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.", "color", "Appearance", "Fill & Stroke")
-        MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.", "number", "Appearance", "Fill & Stroke")
+        MG_PROP(fill, "fill", "Fill", "Fill color.", "Appearance", "Fill & Stroke")
+        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.", "Appearance", "Fill & Stroke")
+        MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.", "Appearance", "Fill & Stroke")
     MG_PROPS_END()
 
     Paint();

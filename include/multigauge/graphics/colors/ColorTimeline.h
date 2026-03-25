@@ -13,8 +13,8 @@ struct ColorKeyframe : public PropertyObject {
     OwnedColor color = nullptr;
 
     MG_PROPS_BEGIN()
-        MG_PROP(position, "pos", "Position", "Position of the keyframe", "number", "Timeline", "Keyframes")
-        MG_PROP(color, "color", "Color", "Color of the keyframe.", "color", "Timeline", "Keyframes")
+        MG_PROP(position, "pos", "Position", "Position of the keyframe", "Timeline", "Keyframes")
+        MG_PROP(color, "color", "Color", "Color of the keyframe.", "Timeline", "Keyframes")
     MG_PROPS_END()
 
     ColorKeyframe();
@@ -40,7 +40,7 @@ class ColorTimeline : public PropertyObject {
         std::vector<ColorKeyframe> keyframes;
 
         MG_PROPS_BEGIN()
-            MG_PROP_WIDGET(keyframes, "keyframes", "Keyframes", "Timeline of keyframes.", "array", "Timeline", "Keyframes")
+            MG_PROP(keyframes, "keyframes", "Keyframes", "Timeline of keyframes.", "Timeline", "Keyframes")
         MG_PROPS_END()
 
         /// @brief Finds the index of the keyframe at or before the given position.
@@ -169,9 +169,9 @@ struct PaintTimeline : public PropertyObject {
     float thickness = 1.0f;
 
     MG_PROPS_BEGIN()
-        MG_PROP(fill, "fill", "Fill", "Fill color.", "group", "Appearance", "Fill & Stroke")
-        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.", "group", "Appearance", "Fill & Stroke")
-        MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.", "number", "Appearance", "Fill & Stroke")
+        MG_PROP(fill, "fill", "Fill", "Fill color.", "Appearance", "Fill & Stroke")
+        MG_PROP(stroke, "stroke", "Stroke", "Stroke color.", "Appearance", "Fill & Stroke")
+        MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.", "Appearance", "Fill & Stroke")
     MG_PROPS_END()
 
     PaintTimeline() = default;

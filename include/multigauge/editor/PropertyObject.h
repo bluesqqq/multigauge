@@ -223,7 +223,6 @@ protected:
         const char* key,
         const char* name,
         const char* description,
-        const char* widget,
         const char* category,
         const char* group) {
         using T = MemberType<MemberPtr>;
@@ -236,7 +235,7 @@ protected:
         PropertyMetadata meta{};
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
-        meta.widget = widget ? widget : "json";
+        meta.widget = MgPropWidgetTraits<T>::value;
         meta.category = category ? category : "General";
         meta.group = group ? group : "General";
         meta.nullable = MgPropNullableTraits<T>::value;
@@ -256,7 +255,6 @@ protected:
         const char* key,
         const char* name,
         const char* description,
-        const char* widget,
         const char* category,
         const char* group,
         Property::Setter set,
@@ -264,7 +262,7 @@ protected:
         PropertyMetadata meta{};
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
-        meta.widget = widget ? widget : "json";
+        meta.widget = "json";
         meta.category = category ? category : "General";
         meta.group = group ? group : "General";
 
@@ -312,6 +310,11 @@ struct MgPropWidgetTraits<std::optional<T>> {
 };
 
 template <typename T>
+struct MgPropWidgetTraits<std::vector<T>> {
+    static constexpr const char* value = "array";
+};
+
+template <typename T>
 struct MgPropNullableTraits<std::optional<T>> {
     static constexpr bool value = true;
 };
@@ -344,52 +347,29 @@ public: \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
         static const ::Property props[] = {
 
-#define MG_PROP(member, key, display_name, description, widget_name, category_name, group_name) \
+#define MG_PROP(member, key, display_name, description, category_name, group_name) \
     ::PropertyObject::makeProperty<&Self::member, nullptr>( \
         key, \
         display_name, \
         description, \
-        widget_name, \
         category_name, \
         group_name \
     ),
 
-#define MG_PROP_WIDGET(member, key, display_name, description, widget_name, category_name, group_name) \
-    ::PropertyObject::makeProperty<&Self::member, nullptr>( \
-        key, \
-        display_name, \
-        description, \
-        widget_name, \
-        category_name, \
-        group_name \
-    ),
-
-#define MG_PROP_CALLBACK(member, key, display_name, description, widget_name, category_name, group_name, callback) \
+#define MG_PROP_CALLBACK(member, key, display_name, description, category_name, group_name, callback) \
     ::PropertyObject::makeProperty<&Self::member, callback>( \
         key, \
         display_name, \
         description, \
-        widget_name, \
         category_name, \
         group_name \
     ),
 
-#define MG_PROP_CALLBACK_WIDGET(member, key, display_name, description, widget_name, category_name, group_name, callback) \
-    ::PropertyObject::makeProperty<&Self::member, callback>( \
-        key, \
-        display_name, \
-        description, \
-        widget_name, \
-        category_name, \
-        group_name \
-    ),
-
-#define MG_PROP_CUSTOM(key, display_name, description, widget_name, category_name, group_name, set_fn, get_fn) \
+#define MG_PROP_CUSTOM(key, display_name, description, category_name, group_name, set_fn, get_fn) \
     ::PropertyObject::makeCustomProperty( \
         key, \
         display_name, \
         description, \
-        widget_name, \
         category_name, \
         group_name, \
         set_fn, \

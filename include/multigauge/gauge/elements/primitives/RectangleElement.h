@@ -13,8 +13,8 @@ class RectangleElement : public Element {
         // PropertyObject props list
         MG_PROPS_PARENT(Element)
         MG_PROPS_BEGIN()
-            MG_PROP(paint, "paint", "Paint", "Paint options for the circle.", "group", "Appearance", "Fill & Stroke")
-            MG_PROP(radius, "radius", "Radius", "Radius of the rectangle's corners.", "number", "Geometry", "Corners")
+            MG_PROP(paint, "paint", "Paint", "Paint options for the circle.", "Appearance", "Fill & Stroke")
+            MG_PROP(radius, "radius", "Radius", "Radius of the rectangle's corners.", "Geometry", "Corners")
         MG_PROPS_END()
 
     public:

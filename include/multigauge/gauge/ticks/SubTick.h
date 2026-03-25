@@ -19,10 +19,10 @@ struct SubTick : public PropertyObject {
     std::optional<TickValueStyle> valueStyle;
 
     MG_PROPS_BEGIN()
-        MG_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks. Make null to inherit from parent.", "number", "Ticks", "Spacing")
-        MG_PROP(length, "length", "Length", "Length in pixels. Make null to inherit from parent.", "number", "Ticks", "Geometry")
-        MG_PROP(thickness, "thickness", "Thickness", "Thickness in pixels. Make null to inherit from parent.", "number", "Ticks", "Geometry")
-        MG_PROP(paint, "paint", "Paint", "Paint options for this tick. Make null to inherit from parent.", "group", "Appearance", "Tick Paint")
+        MG_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks. Make null to inherit from parent.", "Ticks", "Spacing")
+        MG_PROP(length, "length", "Length", "Length in pixels. Make null to inherit from parent.", "Ticks", "Geometry")
+        MG_PROP(thickness, "thickness", "Thickness", "Thickness in pixels. Make null to inherit from parent.", "Ticks", "Geometry")
+        MG_PROP(paint, "paint", "Paint", "Paint options for this tick. Make null to inherit from parent.", "Appearance", "Tick Paint")
     MG_PROPS_END()
 
     SubTick() = default;
