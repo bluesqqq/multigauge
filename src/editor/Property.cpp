@@ -9,6 +9,7 @@ rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) co
     metaJson.AddMember("widget", rapidjson::Value(meta.widget ? meta.widget : "json", a), a);
     metaJson.AddMember("category", rapidjson::Value(meta.category ? meta.category : "General", a), a);
     metaJson.AddMember("group", rapidjson::Value(meta.group ? meta.group : "General", a), a);
+    metaJson.AddMember("nullable", meta.nullable, a);
     if (meta.getOptions) metaJson.AddMember("options", meta.getOptions(a), a);
 
     return metaJson;
