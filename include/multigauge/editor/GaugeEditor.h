@@ -83,5 +83,5 @@ class GaugeEditor {
         //----------[ VALUES ]----------//
 
         /// @brief Returns a list of all values.
-        std::string listValues();
+        std::string listValues() const;
 };

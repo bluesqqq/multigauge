@@ -317,7 +317,3 @@ std::string GaugeEditor::setPropertyJson(Id id, const std::string& path, const s
 
     return R"({"ok":true})";
 }
-
-std::string GaugeEditor::listValues() {
-    return std::string();
-}
