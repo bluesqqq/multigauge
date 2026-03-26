@@ -13,8 +13,8 @@ class CircularNeedle : public CircularElement {
         MG_PROPS_PARENT(CircularElement)
 
         MG_PROPS_BEGIN()
-            MG_PROP(paint, "paint", "Paint", "Paint options for the needle.", "Appearance", "Stroke")
-            MG_PROP(radius, "radius", "Radius", "Radius of the needle.", "Geometry", "Dimensions")
+    MG_PROP(paint, "paint", "Paint", "Paint options for the needle.")
+    MG_PROP(radius, "radius", "Radius", "Radius of the needle.")
         MG_PROPS_END()
         
     public:

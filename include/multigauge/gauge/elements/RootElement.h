@@ -17,9 +17,9 @@ class RootElement : public Element {
         MG_PROPS_PARENT(Element)
 
         MG_PROPS_BEGIN()
-            MG_PROP(title, "title", "Title", "Title to display.", "Content", "Text")
-            MG_PROP(description, "description", "Description", "Description to display.", "Content", "Text")
-            MG_PROP(backgroundColor, "bgColor", "Background Color", "Color to fill the background with.", "Appearance", "Background")
+    MG_PROP(title, "title", "Title", "Title to display.")
+    MG_PROP(description, "description", "Description", "Description to display.")
+    MG_PROP(backgroundColor, "bgColor", "Background Color", "Color to fill the background with.")
         MG_PROPS_END()
 
     public:

@@ -23,12 +23,12 @@ struct RootTick : public PropertyObject {
     std::optional<TickValueStyle> valueStyle;
 
     MG_PROPS_BEGIN()
-        MG_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks.", "Ticks", "Spacing")
-        MG_PROP(interval, "interval", "Interval", "Gap between ticks as a value.", "Ticks", "Spacing")
-        MG_PROP(useDivisions, "useDivisions", "Use Divisions", "Whether to use division or interval spacing.", "Ticks", "Spacing")
-        MG_PROP(length, "length", "Length", "Length in pixels.", "Ticks", "Geometry")
-        MG_PROP(thickness, "thickness", "Thickness", "Thickness in pixels.", "Ticks", "Geometry")
-        MG_PROP(paint, "paint", "Paint", "Paint options for this tick.", "Appearance", "Tick Paint")
+    MG_PROP(divisions, "divisions", "Divisions", "Number of times to divide ticks.")
+    MG_PROP(interval, "interval", "Interval", "Gap between ticks as a value.")
+    MG_PROP(useDivisions, "useDivisions", "Use Divisions", "Whether to use division or interval spacing.")
+    MG_PROP(length, "length", "Length", "Length in pixels.")
+    MG_PROP(thickness, "thickness", "Thickness", "Thickness in pixels.")
+    MG_PROP(paint, "paint", "Paint", "Paint options for this tick.")
         // TODO: need to do valueStyle
     MG_PROPS_END()
 

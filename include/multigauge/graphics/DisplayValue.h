@@ -58,10 +58,10 @@ class DisplayValue : public PropertyObject {
         const char* getName() const;
 
         MG_PROPS_BEGIN()
-            MG_PROP(value, "id", "ID", "Value ID.", "Data", "Source")
-            MG_PROP(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.", "Data", "Range")
-            MG_PROP(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.", "Data", "Range")
-            MG_PROP(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.", "Data", "Formatting")
+    MG_PROP(value, "id", "ID", "Value ID.")
+    MG_PROP(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.")
+    MG_PROP(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.")
+    MG_PROP(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.")
         MG_PROPS_END()
 };
 

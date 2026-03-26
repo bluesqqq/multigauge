@@ -50,8 +50,8 @@ class ValueColor : public Color {
         MG_PROPS_PARENT(Color)
 
         MG_PROPS_BEGIN()
-            MG_PROP(timeline, "timeline", "Gradient", "Value-driven color gradient.", "Gradient", "Animation")
-            MG_PROP(value, "id", "ID", "Value ID.", "Data", "Source")
+    MG_PROP(timeline, "timeline", "Gradient", "Value-driven color gradient.")
+    MG_PROP(value, "id", "ID", "Value ID.")
         MG_PROPS_END()
 };
 

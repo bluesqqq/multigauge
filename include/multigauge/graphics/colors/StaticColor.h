@@ -12,7 +12,7 @@ class StaticColor : public Color {
         MG_PROPS_PARENT(Color)
 
         MG_PROPS_BEGIN()
-            MG_PROP(color, "color", "Color", "RGBA color value.", "Appearance", "Color")
+    MG_PROP(color, "color", "Color", "RGBA color value.")
         MG_PROPS_END()
     
     public:
