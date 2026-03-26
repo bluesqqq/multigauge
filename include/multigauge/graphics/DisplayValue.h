@@ -1,8 +1,8 @@
 #pragma once
 
-#include <multigauge/values/Value.h>
 #include <multigauge/utils.h>
 #include <multigauge/editor/PropertyObject.h>
+#include <multigauge/values/ValueRef.h>
 
 /// @brief A class that wraps around a `Value` object, allowing the use of custom minimum and maximum limits & units
 /// @note This class does not have setter functions for setting the value of the `Value` reference, as it is meant to supply context to the `Value` object.
@@ -17,10 +17,8 @@ class DisplayValue : public PropertyObject {
     */
 
     private:
-        std::string id;
-
         /// @brief The base `Value` object being wrapped
-        Value* value = nullptr;
+        ValueRef value;
 
         /// @brief Optional custom minimum value pointer. 
         std::optional<float> minimum = std::nullopt;
@@ -32,8 +30,6 @@ class DisplayValue : public PropertyObject {
         std::optional<int> unitIndex = std::nullopt;
 
         int getUnitIndex() const;
-
-        void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
 
     public: 
         DisplayValue();
@@ -62,7 +58,7 @@ class DisplayValue : public PropertyObject {
         const char* getName() const;
 
         MG_PROPS_BEGIN()
-            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", "Data", "Source", &DisplayValue::updateValueId)
+            MG_PROP(value, "id", "ID", "Value ID.", "Data", "Source")
             MG_PROP(minimum, "min", "Minimum", "Minimum value. Make null to use default minimum.", "Data", "Range")
             MG_PROP(maximum, "max", "Maximum", "Maximum value. Make null to use default maximum.", "Data", "Range")
             MG_PROP(unitIndex, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.", "Data", "Formatting")
@@ -72,7 +68,6 @@ class DisplayValue : public PropertyObject {
 CODEC_BEGIN(DisplayValue)
     DECODE() {
         if (v.IsString()) {
-            // TODO: change this to test Value::find
             out = DisplayValue(v.GetString());
             return true;
         }
@@ -84,7 +79,7 @@ CODEC_BEGIN(DisplayValue)
         if (v.minimum.has_value() || v.maximum.has_value() || v.unitIndex.has_value()) return false;
         
         if (v.value) {
-            out.SetString(v.value->getId(), a);
+            out.SetString(v.value.getId().c_str(), static_cast<rapidjson::SizeType>(v.value.getId().size()), a);
             return true;
         } else {
             out.SetNull();

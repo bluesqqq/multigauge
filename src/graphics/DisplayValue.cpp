@@ -4,7 +4,7 @@ int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitInde
 
 DisplayValue::DisplayValue() {}
 
-DisplayValue::DisplayValue(const char *newId) : id(newId ? newId : "") { updateValueId(); }
+DisplayValue::DisplayValue(const char *newId) : value(newId) {}
 
 float DisplayValue::getValueBase() const {
     if (!value) return 0.0f;

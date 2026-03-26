@@ -2,6 +2,7 @@
 
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/graphics/colors/ColorTimeline.h>
+#include <multigauge/values/ValueRef.h>
 
 class ValueColor : public Color {
     MG_EDITOR_NAME("Value Color")
@@ -9,8 +10,7 @@ class ValueColor : public Color {
 
     private:
         ColorTimeline timeline;
-        Value* value = nullptr;
-        std::string id; ///< reference string used during JSON serialization
+        ValueRef value;
 
     public:
         ValueColor() = default;
@@ -47,14 +47,11 @@ class ValueColor : public Color {
         /// @return A new Color object with the blended result (will always be a ValueColor)
         OwnedColor blended(const Color& color, float alpha) const override;
 
-        // internal helper called after deserialization to resolve `id` -> pointer
-        void updateValueId() { value = id.empty() ? nullptr : Value::find(id.c_str()); }
-
         MG_PROPS_PARENT(Color)
 
         MG_PROPS_BEGIN()
             MG_PROP(timeline, "timeline", "Timeline", "Color timeline.", "Timeline", "Animation")
-            MG_PROP_CALLBACK(id, "id", "ID", "Value ID.", "Data", "Source", &ValueColor::updateValueId)
+            MG_PROP(value, "id", "ID", "Value ID.", "Data", "Source")
         MG_PROPS_END()
 };
 
