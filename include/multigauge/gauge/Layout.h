@@ -234,11 +234,17 @@ struct FlexContainer : public PropertyObject {
         YGNodeStyleSetFlexWrap(node, wrap);
     }
 
+    static rapidjson::Value alignContentVisibleWhen(rapidjson::Document::AllocatorType& a) {
+        return MG_UI_RULES(
+            MG_UI_RULE("wrap", "!=", "no-wrap")
+        );
+    }
+
     MG_PROPS_BEGIN()
     MG_PROP_CALLBACK(direction,    "direction",     "Direction",     "Direction of flex content.",        &FlexContainer::update)
     MG_PROP_CALLBACK(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  &FlexContainer::update)
     MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", &FlexContainer::update)
-    MG_PROP_CALLBACK(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::update)
+    MG_PROP_CALLBACK_UI(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::update, &FlexContainer::alignContentVisibleWhen, nullptr)
     MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        &FlexContainer::update)
     MG_PROPS_END()
 };
@@ -358,9 +364,27 @@ struct Gap : public PropertyObject {
         YGNodeStyleSetGap(node, YGGutterColumn, column);
     }
 
+    static rapidjson::Value rowInteractableWhen(rapidjson::Document::AllocatorType& a) {
+        return MG_UI_RULES(
+            MG_UI_RULE_ANY(
+                MG_UI_RULE("../flex-container.wrap", "!=", "no-wrap"),
+                MG_UI_RULE_IN("../flex-container.direction", "column", "column-reverse")
+            )
+        );
+    }
+
+    static rapidjson::Value columnInteractableWhen(rapidjson::Document::AllocatorType& a) {
+        return MG_UI_RULES(
+            MG_UI_RULE_ANY(
+                MG_UI_RULE("../flex-container.wrap", "!=", "no-wrap"),
+                MG_UI_RULE_IN("../flex-container.direction", "row", "row-reverse")
+            )
+        );
+    }
+
     MG_PROPS_BEGIN()
-    MG_PROP_CALLBACK(row,     "row",     "Row",     "Row gap.",    &Gap::update)
-    MG_PROP_CALLBACK(column,  "column",  "Column",  "Column gap.", &Gap::update)
+    MG_PROP_CALLBACK_UI(row,     "row",     "Row",     "Row gap.",    &Gap::update, nullptr, &Gap::rowInteractableWhen)
+    MG_PROP_CALLBACK_UI(column,  "column",  "Column",  "Column gap.", &Gap::update, nullptr, &Gap::columnInteractableWhen)
     MG_PROPS_END()
 };
 

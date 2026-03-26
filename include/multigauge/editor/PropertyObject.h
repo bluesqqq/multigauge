@@ -109,6 +109,25 @@ public:
 
     rapidjson::Value getPropertiesMeta(rapidjson::Document::AllocatorType& a) const;
     rapidjson::Value getPropertyMeta(const Property& prop, rapidjson::Document::AllocatorType& a) const;
+    static rapidjson::Value makeRule(
+        rapidjson::Document::AllocatorType& a,
+        const char* path,
+        const char* op,
+        const char* value);
+    static rapidjson::Value makeRule(
+        rapidjson::Document::AllocatorType& a,
+        const char* path,
+        const char* op,
+        std::initializer_list<const char*> values);
+    static rapidjson::Value makeAllRule(
+        rapidjson::Document::AllocatorType& a,
+        std::initializer_list<rapidjson::Value> rules);
+    static rapidjson::Value makeAnyRule(
+        rapidjson::Document::AllocatorType& a,
+        std::initializer_list<rapidjson::Value> rules);
+    static rapidjson::Value makeRuleList(
+        rapidjson::Document::AllocatorType& a,
+        std::initializer_list<rapidjson::Value> rules);
 
     bool resolvePath(const std::string& path, PropertyObject*& owner, const Property*& prop);
     bool resolvePath(const std::string& path, const PropertyObject*& owner, const Property*& prop) const;
@@ -231,7 +250,9 @@ protected:
     static Property makeProperty(
         const char* key,
         const char* name,
-        const char* description) {
+        const char* description,
+        PropertyMetadata::RuleListGetter visibleWhen = nullptr,
+        PropertyMetadata::RuleListGetter interactableWhen = nullptr) {
         using T = MemberType<MemberPtr>;
 
         Property p{};
@@ -244,6 +265,8 @@ protected:
         meta.description = description ? description : "No description.";
         meta.widget = MgPropWidgetTraits<T>::value;
         meta.nullable = MgPropNullableTraits<T>::value;
+        meta.getVisibleWhen = visibleWhen;
+        meta.getInteractableWhen = interactableWhen;
         if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) {
             meta.getOptions = &PropertyObject::getEnumOptions<T>;
         }
@@ -263,12 +286,16 @@ protected:
         const char* key,
         const char* name,
         const char* description,
+        PropertyMetadata::RuleListGetter visibleWhen,
+        PropertyMetadata::RuleListGetter interactableWhen,
         Property::Setter set,
         Property::Getter get) {
         PropertyMetadata meta{};
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
         meta.widget = "json";
+        meta.getVisibleWhen = visibleWhen;
+        meta.getInteractableWhen = interactableWhen;
 
         return {key, set, get, nullptr, nullptr, meta};
     }
@@ -341,6 +368,24 @@ struct MgPropWidgetTraits<std::unique_ptr<T>> {
     public: static constexpr const char* staticTypeId() { return (str_literal); } \
     public: const char* typeId() const override { return staticTypeId(); }
 
+#define MG_UI_RULE(path_literal, op_literal, value_literal) \
+    ::PropertyObject::makeRule(a, path_literal, op_literal, value_literal)
+
+#define MG_UI_RULE_IN(path_literal, ...) \
+    ::PropertyObject::makeRule(a, path_literal, "in", { __VA_ARGS__ })
+
+#define MG_UI_RULE_NOT_IN(path_literal, ...) \
+    ::PropertyObject::makeRule(a, path_literal, "notIn", { __VA_ARGS__ })
+
+#define MG_UI_RULE_ALL(...) \
+    ::PropertyObject::makeAllRule(a, { __VA_ARGS__ })
+
+#define MG_UI_RULE_ANY(...) \
+    ::PropertyObject::makeAnyRule(a, { __VA_ARGS__ })
+
+#define MG_UI_RULES(...) \
+    ::PropertyObject::makeRuleList(a, { __VA_ARGS__ })
+
 #define MG_PROPS_PARENT(parent_type) \
     public: \
     static ::PropertyObject::PropertyList __mg_parent_property_list(const ::PropertyObject* __mg_obj) { \
@@ -357,14 +402,36 @@ public: \
     ::PropertyObject::makeProperty<&Self::member, nullptr>( \
         key, \
         display_name, \
-        description \
+        description, \
+        nullptr, \
+        nullptr \
     ),
 
 #define MG_PROP_CALLBACK(member, key, display_name, description, callback) \
     ::PropertyObject::makeProperty<&Self::member, callback>( \
         key, \
         display_name, \
-        description \
+        description, \
+        nullptr, \
+        nullptr \
+    ),
+
+#define MG_PROP_UI(member, key, display_name, description, visible_when, interactable_when) \
+    ::PropertyObject::makeProperty<&Self::member, nullptr>( \
+        key, \
+        display_name, \
+        description, \
+        visible_when, \
+        interactable_when \
+    ),
+
+#define MG_PROP_CALLBACK_UI(member, key, display_name, description, callback, visible_when, interactable_when) \
+    ::PropertyObject::makeProperty<&Self::member, callback>( \
+        key, \
+        display_name, \
+        description, \
+        visible_when, \
+        interactable_when \
     ),
 
 #define MG_PROP_CUSTOM(key, display_name, description, set_fn, get_fn) \
@@ -372,6 +439,19 @@ public: \
         key, \
         display_name, \
         description, \
+        nullptr, \
+        nullptr, \
+        set_fn, \
+        get_fn \
+    ),
+
+#define MG_PROP_CUSTOM_UI(key, display_name, description, visible_when, interactable_when, set_fn, get_fn) \
+    ::PropertyObject::makeCustomProperty( \
+        key, \
+        display_name, \
+        description, \
+        visible_when, \
+        interactable_when, \
         set_fn, \
         get_fn \
     ),

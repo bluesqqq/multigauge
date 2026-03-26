@@ -8,6 +8,7 @@ class PropertyObject;
 struct PropertyMetadata {
     using OptionsGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
     using TypeListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
+    using RuleListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
 
     /// @brief Display name used in editor
     const char* name = nullptr;
@@ -17,6 +18,10 @@ struct PropertyMetadata {
     const char* widget = nullptr;
     /// @brief Whether the editor should treat this property as nullable.
     bool nullable = false;
+    /// @brief Declarative visibility rules for the editor UI.
+    RuleListGetter getVisibleWhen = nullptr;
+    /// @brief Declarative interactability rules for the editor UI.
+    RuleListGetter getInteractableWhen = nullptr;
     /// @brief Returns dropdown/select options metadata when available.
     OptionsGetter getOptions = nullptr;
     /// @brief Returns available polymorphic types metadata when available.
