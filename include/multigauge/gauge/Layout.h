@@ -215,6 +215,43 @@ struct EnumTraits<YGOverflow> {
     };
 };
 
+struct Gap : public PropertyObject {
+    YGNodeRef node = nullptr;
+
+    float row = 0;
+    float column = 0;
+
+    void update() {
+        if (!node) return;
+
+        YGNodeStyleSetGap(node, YGGutterRow, row);
+        YGNodeStyleSetGap(node, YGGutterColumn, column);
+    }
+
+    static rapidjson::Value rowInteractableWhen(rapidjson::Document::AllocatorType& a) {
+        return MG_UI_RULES(
+            MG_UI_RULE_ANY(
+                MG_UI_RULE("../wrap", "!=", "no-wrap"),
+                MG_UI_RULE_IN("../direction", "column", "column-reverse")
+            )
+        );
+    }
+
+    static rapidjson::Value columnInteractableWhen(rapidjson::Document::AllocatorType& a) {
+        return MG_UI_RULES(
+            MG_UI_RULE_ANY(
+                MG_UI_RULE("../wrap", "!=", "no-wrap"),
+                MG_UI_RULE_IN("../direction", "row", "row-reverse")
+            )
+        );
+    }
+
+    MG_PROPS_BEGIN()
+    MG_PROP_CALLBACK_UI(row,     "row",     "Row",     "Row gap.",    &Gap::update, nullptr, &Gap::rowInteractableWhen)
+    MG_PROP_CALLBACK_UI(column,  "column",  "Column",  "Column gap.", &Gap::update, nullptr, &Gap::columnInteractableWhen)
+    MG_PROPS_END()
+};
+
 struct FlexContainer : public PropertyObject {
     YGNodeRef node = nullptr;
 
@@ -223,6 +260,7 @@ struct FlexContainer : public PropertyObject {
     YGAlign alignItems = YGAlignStretch;
     YGAlign alignContent = YGAlignStretch;
     YGWrap wrap = YGWrapNoWrap;
+    Gap gap;
 
     void update() {
         if (!node) return;
@@ -232,6 +270,7 @@ struct FlexContainer : public PropertyObject {
         YGNodeStyleSetAlignItems(node, alignItems);
         YGNodeStyleSetAlignContent(node, alignContent);
         YGNodeStyleSetFlexWrap(node, wrap);
+        gap.update();
     }
 
     static rapidjson::Value alignContentVisibleWhen(rapidjson::Document::AllocatorType& a) {
@@ -246,6 +285,7 @@ struct FlexContainer : public PropertyObject {
     MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", &FlexContainer::update)
     MG_PROP_CALLBACK_UI(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::update, &FlexContainer::alignContentVisibleWhen, nullptr)
     MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        &FlexContainer::update)
+    MG_PROP(gap,                   "gap",           "Gap",           "Gap options.")
     MG_PROPS_END()
 };
 
@@ -351,43 +391,6 @@ struct Padding : public LayoutBox {
     }
 };
 
-struct Gap : public PropertyObject {
-    YGNodeRef node = nullptr;
-
-    float row = 0;
-    float column = 0;
-
-    void update() {
-        if (!node) return;
-
-        YGNodeStyleSetGap(node, YGGutterRow, row);
-        YGNodeStyleSetGap(node, YGGutterColumn, column);
-    }
-
-    static rapidjson::Value rowInteractableWhen(rapidjson::Document::AllocatorType& a) {
-        return MG_UI_RULES(
-            MG_UI_RULE_ANY(
-                MG_UI_RULE("../flex-container.wrap", "!=", "no-wrap"),
-                MG_UI_RULE_IN("../flex-container.direction", "column", "column-reverse")
-            )
-        );
-    }
-
-    static rapidjson::Value columnInteractableWhen(rapidjson::Document::AllocatorType& a) {
-        return MG_UI_RULES(
-            MG_UI_RULE_ANY(
-                MG_UI_RULE("../flex-container.wrap", "!=", "no-wrap"),
-                MG_UI_RULE_IN("../flex-container.direction", "row", "row-reverse")
-            )
-        );
-    }
-
-    MG_PROPS_BEGIN()
-    MG_PROP_CALLBACK_UI(row,     "row",     "Row",     "Row gap.",    &Gap::update, nullptr, &Gap::rowInteractableWhen)
-    MG_PROP_CALLBACK_UI(column,  "column",  "Column",  "Column gap.", &Gap::update, nullptr, &Gap::columnInteractableWhen)
-    MG_PROPS_END()
-};
-
 struct Layout : public PropertyObject {
     YGNodeRef node = nullptr;
 
@@ -396,7 +399,6 @@ struct Layout : public PropertyObject {
     Position position;
     Margin margin;
     Padding padding;
-    Gap gap;
 
     YGDisplay display = YGDisplayFlex;
     YGOverflow overflow = YGOverflowVisible;
@@ -416,11 +418,11 @@ struct Layout : public PropertyObject {
         node = n;
 
         flexContainer.node = n;
+        flexContainer.gap.node = n;
         flexItem.node = n;
         position.node = n;
         margin.node = n;
         padding.node = n;
-        gap.node = n;
     }
 
     void update() {
@@ -431,7 +433,6 @@ struct Layout : public PropertyObject {
         position.update();
         margin.update();
         padding.update();
-        gap.update();
 
         YGNodeStyleSetDisplay(node, display);
         YGNodeStyleSetOverflow(node, overflow);
@@ -453,7 +454,6 @@ struct Layout : public PropertyObject {
     MG_PROP(position,      "position",       "Position",       "Position options.")
     MG_PROP(margin,        "margin",         "Margin",         "Margin options.")
     MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
-    MG_PROP(gap,           "gap",            "Gap",            "Gap options.")
 
     MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", &Layout::update)
     MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              &Layout::update)
