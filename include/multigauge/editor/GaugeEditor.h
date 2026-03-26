@@ -79,9 +79,4 @@ class GaugeEditor {
 
         /// @brief Sets a property by path using a JSON value string.
         std::string setPropertyJson(Id id, const std::string& path, const std::string& jsonValueText);
-
-        //----------[ VALUES ]----------//
-
-        /// @brief Returns a list of all values.
-        std::string listValues() const;
 };
