@@ -4,6 +4,7 @@
 #include <multigauge/graphics/colors/ColorTimeline.h>
 
 class ValueColor : public Color {
+    MG_EDITOR_NAME("Value Color")
     MG_TYPE_ID("value")
 
     private:

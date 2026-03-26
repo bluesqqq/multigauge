@@ -3,6 +3,7 @@
 #include <multigauge/graphics/colors/Color.h>
 
 class UserColor : public Color {
+    MG_EDITOR_NAME("User Color")
     MG_TYPE_ID("user")
 
     public:

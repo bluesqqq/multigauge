@@ -3,6 +3,7 @@
 #include <multigauge/graphics/colors/Color.h>
 
 class StaticColor : public Color {
+    MG_EDITOR_NAME("Static Color")
     MG_TYPE_ID("static")
 
     private:

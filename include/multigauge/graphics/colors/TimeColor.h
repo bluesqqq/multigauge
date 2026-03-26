@@ -4,6 +4,7 @@
 #include <multigauge/graphics/colors/ColorTimeline.h>
 
 class TimeColor : public Color {
+    MG_EDITOR_NAME("Time Color")
     MG_TYPE_ID("time")
     
     public:
