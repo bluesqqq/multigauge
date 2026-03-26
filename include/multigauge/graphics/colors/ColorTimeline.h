@@ -5,7 +5,7 @@
 //----------[ KEYFRAME ]----------//
 
 struct ColorKeyframe : public PropertyObject {
-    MG_EDITOR_NAME("Keyframe")
+    MG_EDITOR_NAME("Gradient Stop")
 
     /// @brief Position in the timeline
     float position = 0;
@@ -13,8 +13,8 @@ struct ColorKeyframe : public PropertyObject {
     OwnedColor color = nullptr;
 
     MG_PROPS_BEGIN()
-        MG_PROP(position, "pos", "Position", "Position of the keyframe", "Timeline", "Keyframes")
-        MG_PROP(color, "color", "Color", "Color of the keyframe.", "Timeline", "Keyframes")
+        MG_PROP(position, "pos", "Position", "Position of the gradient stop", "Gradient", "Stops")
+        MG_PROP(color, "color", "Color", "Color of the gradient stop.", "Gradient", "Stops")
     MG_PROPS_END()
 
     ColorKeyframe();
@@ -33,14 +33,14 @@ struct ColorKeyframe : public PropertyObject {
 //----------[ TIMELINE ]----------//
 
 class ColorTimeline : public PropertyObject {
-    MG_EDITOR_NAME("Timeline")
+    MG_EDITOR_NAME("Gradient")
     CODEC_FRIEND(ColorTimeline)
     
     private:
         std::vector<ColorKeyframe> keyframes;
 
         MG_PROPS_BEGIN()
-            MG_PROP(keyframes, "keyframes", "Keyframes", "Timeline of keyframes.", "Timeline", "Keyframes")
+            MG_PROP(keyframes, "keyframes", "Stops", "Gradient color stops.", "Gradient", "Stops")
         MG_PROPS_END()
 
         /// @brief Finds the index of the keyframe at or before the given position.
@@ -160,6 +160,11 @@ CODEC_BEGIN(ColorTimeline)
         return false;
     }
 CODEC_END()
+
+template <>
+struct MgPropWidgetTraits<ColorTimeline> {
+    static constexpr const char* value = "gradient";
+};
 
 //----------[ FILL STROKE TIMELINE ]----------//
 

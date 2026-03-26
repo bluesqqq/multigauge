@@ -25,8 +25,8 @@ class TimeColor : public Color {
         MG_PROPS_PARENT(Color)
 
         MG_PROPS_BEGIN()
-            MG_PROP(timeline, "timeline", "Timeline", "Color timeline.", "Timeline", "Animation")
-            MG_PROP(loopType, "loop", "Loop", "Type of looping to use.", "Timeline", "Animation")
+            MG_PROP(timeline, "timeline", "Gradient", "Animated color gradient.", "Gradient", "Animation")
+            MG_PROP(loopType, "loop", "Loop", "Type of looping to use.", "Gradient", "Animation")
         MG_PROPS_END()
 
         /// @brief Retrieves the current time value.
