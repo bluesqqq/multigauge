@@ -2,6 +2,8 @@
 
 #include <algorithm>
 
+#include <multigauge/values/Value.h>
+
 namespace {
     std::string makeResult(bool ok, const char* error = nullptr, std::uint32_t id = 0, std::uint32_t parentId = 0) {
         rapidjson::Document d;
@@ -162,6 +164,19 @@ std::string GaugeEditor::listElements() const {
     return toString(d);
 }
 
+std::string GaugeEditor::listValues() const {
+    rapidjson::Document d;
+    d.SetArray();
+    auto& a = d.GetAllocator();
+
+    for (const Value* value : Value::list()) {
+        if (!value) continue;
+        d.PushBack(rapidjson::Value(value->getId(), a), a);
+    }
+
+    return toString(d);
+}
+
 std::string GaugeEditor::addElement(Id parentId, const std::string& type) {
     return insertElement(parentId, type, -1);
 }
@@ -301,4 +316,8 @@ std::string GaugeEditor::setPropertyJson(Id id, const std::string& path, const s
     }
 
     return R"({"ok":true})";
+}
+
+std::string GaugeEditor::listValues() {
+    return std::string();
 }

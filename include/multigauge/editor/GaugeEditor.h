@@ -62,6 +62,7 @@ class GaugeEditor {
         std::string listTreeJson() const;
 
         std::string listElements() const;
+        std::string listValues() const;
 
         std::string addElement(Id parentId, const std::string& type);
         std::string insertElement(Id parentId, const std::string& type, int index);
@@ -78,4 +79,9 @@ class GaugeEditor {
 
         /// @brief Sets a property by path using a JSON value string.
         std::string setPropertyJson(Id id, const std::string& path, const std::string& jsonValueText);
+
+        //----------[ VALUES ]----------//
+
+        /// @brief Returns a list of all values.
+        std::string listValues();
 };

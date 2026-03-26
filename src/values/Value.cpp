@@ -20,6 +20,24 @@ Value *Value::find(const std::string& id) {
     return nullptr;
 }
 
+std::vector<const Value*> Value::list() {
+    std::vector<const Value*> values;
+    values.reserve(registry.size());
+
+    for (const auto& entry : registry) {
+        if (entry.second) {
+            values.push_back(entry.second);
+        }
+    }
+
+    std::sort(values.begin(), values.end(), [](const Value* lhs, const Value* rhs) {
+        if (!lhs || !rhs) return lhs < rhs;
+        return std::string(lhs->getId()) < std::string(rhs->getId());
+    });
+
+    return values;
+}
+
 Value::operator float() const { return getValueBase(); }
 
 Value &Value::operator=(float newValue) {

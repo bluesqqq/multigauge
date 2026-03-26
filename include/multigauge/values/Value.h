@@ -2,6 +2,7 @@
 
 #include <string>
 #include <functional>
+#include <vector>
 #include <multigauge/values/UnitType.h>
 #include <unordered_map>
 
@@ -22,6 +23,7 @@ class Value {
         Value(const char* id, const char* name, const UnitType& unitType, float minimumValue, float maximumValue);
         
         static Value* find(const std::string& id);
+        static std::vector<const Value*> list();
 
         std::function<void(float)> onChange;
 
