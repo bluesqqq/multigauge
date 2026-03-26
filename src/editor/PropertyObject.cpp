@@ -71,6 +71,20 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
     rapidjson::Value meta = prop.getBaseMeta(a);
 
     if (prop.getChild) {
+        if (prop.meta.getTypes) {
+            rapidjson::Value types(rapidjson::kObjectType);
+            const PropertyObject* child = prop.getChild(this);
+
+            if (child && child->typeId()) {
+                types.AddMember("current", rapidjson::Value(child->typeId(), a), a);
+            } else {
+                types.AddMember("current", rapidjson::Value(rapidjson::kNullType), a);
+            }
+
+            types.AddMember("all", prop.meta.getTypes(a), a);
+            meta.AddMember("types", std::move(types), a);
+        }
+
         rapidjson::Value props(rapidjson::kArrayType);
         const PropertyObject* child = prop.getChild(this);
         if (child) {
@@ -83,7 +97,7 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
 
     rapidjson::Value value;
     if (prop.get && prop.get(this, value, a)) {
-        meta.AddMember("value", value, a);
+        meta.AddMember("value", std::move(value), a);
     } else {
         meta.AddMember("value", rapidjson::Value(rapidjson::kNullType), a);
     }

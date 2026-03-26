@@ -7,6 +7,7 @@ class PropertyObject;
 
 struct PropertyMetadata {
     using OptionsGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
+    using TypeListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
 
     /// @brief Display name used in editor
     const char* name = nullptr;
@@ -22,6 +23,8 @@ struct PropertyMetadata {
     bool nullable = false;
     /// @brief Returns dropdown/select options metadata when available.
     OptionsGetter getOptions = nullptr;
+    /// @brief Returns available polymorphic types metadata when available.
+    TypeListGetter getTypes = nullptr;
 };
 
 struct Property {

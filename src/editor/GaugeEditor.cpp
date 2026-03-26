@@ -155,7 +155,7 @@ std::string GaugeEditor::listElements() const {
     for (const auto& descriptor : Element::registry()) {
         rapidjson::Value desc(rapidjson::kObjectType);
         desc.AddMember("name", rapidjson::Value(descriptor.name, a), a);
-        desc.AddMember("type", rapidjson::Value(descriptor.type, a), a);
+        desc.AddMember("type", rapidjson::Value(descriptor.id, a), a);
         d.PushBack(desc, a);
     }
 
@@ -172,13 +172,13 @@ std::string GaugeEditor::insertElement(Id parentId, const std::string& type, int
     Element* parent = asElement(find(parentId));
     if (!parent) return makeResult(false, "ParentNotFound");
 
-    const ElementDescriptor* descriptor = Element::findDescriptor(type.c_str());
+    const auto* descriptor = Element::registry().find(type.c_str());
     if (!descriptor) return makeResult(false, "UnknownType");
 
     rapidjson::Document d;
     d.SetObject();
     auto& a = d.GetAllocator();
-    d.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(descriptor->type, a), a);
+    d.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(descriptor->id, a), a);
 
     const std::size_t insertIndex = normalizeInsertIndex(index, parent->childCount());
     const rapidjson::Document& constDoc = d;

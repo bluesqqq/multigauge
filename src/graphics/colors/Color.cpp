@@ -5,6 +5,35 @@
 #include <multigauge/graphics/colors/TimeColor.h>
 #include <multigauge/graphics/colors/UserColor.h>
 
+namespace {
+    template <typename T>
+    OwnedColor createColor() {
+        return std::make_unique<T>();
+    }
+
+    OwnedColor createDefaultColor() {
+        return std::make_unique<StaticColor>();
+    }
+
+    using ColorDescriptor = MgPolymorphicTypeDescriptor<OwnedColor>;
+
+    static const ColorDescriptor COLOR_TYPES[] = {
+        makePolymorphicTypeDescriptor<StaticColor, OwnedColor>(&createColor<StaticColor>),
+        makePolymorphicTypeDescriptor<ValueColor, OwnedColor>(&createColor<ValueColor>),
+        makePolymorphicTypeDescriptor<TimeColor, OwnedColor>(&createColor<TimeColor>),
+        makePolymorphicTypeDescriptor<UserColor, OwnedColor>(&createColor<UserColor>),
+    };
+}
+
+const Color::Registry& Color::registry() {
+    static const Registry registry(COLOR_TYPES, sizeof(COLOR_TYPES) / sizeof(COLOR_TYPES[0]), &createDefaultColor);
+    return registry;
+}
+
+OwnedColor Color::createByType(const char* type) {
+    return registry().create(type);
+}
+
 const ColorTimeline* Color::getTimeline() const { return nullptr; }
 
 DECODE_IMPL(OwnedColor) {
@@ -20,11 +49,7 @@ DECODE_IMPL(OwnedColor) {
     const char* type = nullptr;
     if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) type = it->value.GetString();
 
-    if (!type) out = std::make_unique<StaticColor>();
-    else if (std::strcmp(type, "value") == 0) out = std::make_unique<ValueColor>();
-    else if (std::strcmp(type, "time") == 0) out = std::make_unique<TimeColor>();
-    else if (std::strcmp(type, "user") == 0) out = std::make_unique<UserColor>();
-    else out = std::make_unique<StaticColor>();
+    out = Color::createByType(type);
 
     out->loadProperties(obj);
 

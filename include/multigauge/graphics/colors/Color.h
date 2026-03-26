@@ -27,6 +27,9 @@ class Color : public PropertyObject {
     MG_EDITOR_NAME("Color")
     public:
         virtual ~Color() = default;
+
+        MG_POLYMORPHIC_REGISTRY(OwnedColor)
+        static OwnedColor createByType(const char* type);
         
         /// @brief Creates a clone of this Color object
         /// @return A unique pointer to the created Color object
@@ -60,6 +63,15 @@ class Color : public PropertyObject {
         /// @param alpha The blend amount (0.0 = this color, 1.0 = other color)
         /// @return A new Color object with the blended result
         virtual OwnedColor blended(const Color& color, float alpha) const = 0;
+};
+
+template <>
+struct MgPolymorphicRegistryTraits<OwnedColor> {
+    static constexpr bool supported = true;
+
+    static rapidjson::Value getTypesMeta(rapidjson::Document::AllocatorType& a) {
+        return Color::registry().getTypesMeta(a);
+    }
 };
 
 CODEC_BEGIN(OwnedColor)

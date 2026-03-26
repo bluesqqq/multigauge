@@ -19,34 +19,29 @@ namespace {
     OwnedElement createElement(Element* parent) {
         return std::make_unique<T>(parent);
     }
-}
 
-const std::vector<ElementDescriptor>& Element::registry() {
-    static const std::vector<ElementDescriptor> descriptors = {
-        {"Rectangle", "rectangle", &createElement<RectangleElement>},
-        {"Circle", "circle", &createElement<CircleElement>},
-        {"Image", "image", &createElement<ImageElement>},
-        {"Text", "text", &createElement<TextElement>},
-        {"Horizon", "horizon", &createElement<Horizon>},
-        {"Graph", "graph", &createElement<Graph>},
-        {"Circular Element", "circular-element", &createElement<CircularElement>},
-        {"Circular Needle", "circular-needle", &createElement<CircularNeedle>},
-        {"Circular Scale", "circular-scale", &createElement<CircularScale>},
-    };
-
-    return descriptors;
-}
-
-const ElementDescriptor * Element::findDescriptor(const char * type) {
-    if (!type) return nullptr;
-
-    for (const auto& descriptor : registry()) {
-        if (std::strcmp(descriptor.type, type) == 0) {
-            return &descriptor;
-        }
+    OwnedElement createDefaultElement(Element* parent) {
+        return std::make_unique<Element>(parent);
     }
 
-    return nullptr;
+    using ElementTypeDescriptor = MgPolymorphicTypeDescriptor<OwnedElement, Element*>;
+
+    static const ElementTypeDescriptor ELEMENT_TYPES[] = {
+        makePolymorphicTypeDescriptor<RectangleElement, OwnedElement, Element*>(&createElement<RectangleElement>),
+        makePolymorphicTypeDescriptor<CircleElement, OwnedElement, Element*>(&createElement<CircleElement>),
+        makePolymorphicTypeDescriptor<ImageElement, OwnedElement, Element*>(&createElement<ImageElement>),
+        makePolymorphicTypeDescriptor<TextElement, OwnedElement, Element*>(&createElement<TextElement>),
+        makePolymorphicTypeDescriptor<Horizon, OwnedElement, Element*>(&createElement<Horizon>),
+        makePolymorphicTypeDescriptor<Graph, OwnedElement, Element*>(&createElement<Graph>),
+        makePolymorphicTypeDescriptor<CircularElement, OwnedElement, Element*>(&createElement<CircularElement>),
+        makePolymorphicTypeDescriptor<CircularNeedle, OwnedElement, Element*>(&createElement<CircularNeedle>),
+        makePolymorphicTypeDescriptor<CircularScale, OwnedElement, Element*>(&createElement<CircularScale>),
+    };
+}
+
+const Element::Registry& Element::registry() {
+    static const Registry registry(ELEMENT_TYPES, sizeof(ELEMENT_TYPES) / sizeof(ELEMENT_TYPES[0]), &createDefaultElement);
+    return registry;
 }
 
 void Element::clearLayoutDirtyRecursive() {
@@ -347,12 +342,10 @@ OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObj
         LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
         out = std::make_unique<Element>(parent);
     } else {
-        const ElementDescriptor* descriptor = findDescriptor(type);
-        if (descriptor && descriptor->create) {
-            out = descriptor->create(parent);
-        } else {
+        const auto* descriptor = registry().find(type);
+        out = registry().create(type, parent);
+        if (!descriptor) {
             LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
-            out = std::make_unique<Element>(parent);
         }
     }
 

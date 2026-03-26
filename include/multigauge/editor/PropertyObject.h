@@ -11,6 +11,7 @@
 
 #include <rapidjson/document.h>
 #include <multigauge/editor/Codec.h>
+#include <multigauge/editor/PolymorphicRegistry.h>
 
 #include <multigauge/editor/Property.h>
 
@@ -21,7 +22,6 @@ class PropertyObject;
 
 template <typename T, typename = void>
 struct MgPropWidgetTraits;
-
 template <typename T>
 struct MgPropNullableTraits {
     static constexpr bool value = false;
@@ -221,6 +221,11 @@ protected:
         return enumOptionsMeta<EnumTraitsTypeT<T>>(a);
     }
 
+    template <typename T>
+    static rapidjson::Value getPolymorphicTypes(rapidjson::Document::AllocatorType& a) {
+        return MgPolymorphicRegistryTraits<T>::getTypesMeta(a);
+    }
+
 
     template <auto MemberPtr, auto CallbackPtr = nullptr>
     static Property makeProperty(
@@ -245,6 +250,9 @@ protected:
         meta.nullable = MgPropNullableTraits<T>::value;
         if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) {
             meta.getOptions = &PropertyObject::getEnumOptions<T>;
+        }
+        if constexpr (MgPolymorphicRegistryTraits<T>::supported) {
+            meta.getTypes = &PropertyObject::getPolymorphicTypes<T>;
         }
 
         if constexpr (ChildObjectTraits<T>::supported) {
@@ -334,10 +342,12 @@ struct MgPropWidgetTraits<std::unique_ptr<T>> {
 };
 
 #define MG_EDITOR_NAME(name_literal) \
-    public: const char* typeName() const override { return name_literal; }
+    public: static constexpr const char* staticTypeName() { return name_literal; } \
+    public: const char* typeName() const override { return staticTypeName(); }
 
 #define MG_TYPE_ID(str_literal) \
-    public: const char* typeId() const override { return (str_literal); }
+    public: static constexpr const char* staticTypeId() { return (str_literal); } \
+    public: const char* typeId() const override { return staticTypeId(); }
 
 #define MG_PROPS_PARENT(parent_type) \
     public: \
