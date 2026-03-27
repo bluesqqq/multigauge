@@ -324,6 +324,12 @@ struct Position : public PropertyObject {
     LayoutSize top;
     LayoutSize bottom;
 
+    static rapidjson::Value insetVisibleWhen(rapidjson::Document::AllocatorType& a) {
+        return MG_UI_RULES(
+            MG_UI_RULE("type", "!=", "static")
+        );
+    }
+
     void update() {
         if (!node) return;
         
@@ -349,10 +355,10 @@ struct Position : public PropertyObject {
     MG_PROPS_BEGIN()
     MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", &Position::update)
 
-    MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &Position::update)
-    MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &Position::update)
-    MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &Position::update)
-    MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &Position::update)
+    MG_PROP_CALLBACK_UI(left,   "left",   "Left",   "Left edge position.",   &Position::update, &Position::insetVisibleWhen, nullptr)
+    MG_PROP_CALLBACK_UI(right,  "right",  "Right",  "Right edge position.",  &Position::update, &Position::insetVisibleWhen, nullptr)
+    MG_PROP_CALLBACK_UI(top,    "top",    "Top",    "Top edge position.",    &Position::update, &Position::insetVisibleWhen, nullptr)
+    MG_PROP_CALLBACK_UI(bottom, "bottom", "Bottom", "Bottom edge position.", &Position::update, &Position::insetVisibleWhen, nullptr)
     MG_PROPS_END()
 };
 
