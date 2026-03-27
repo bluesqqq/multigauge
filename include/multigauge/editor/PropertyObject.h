@@ -155,9 +155,13 @@ protected:
         using T = MemberType<MemberPtr>;
         C* self = static_cast<C*>(obj);
 
+        if constexpr (std::is_base_of_v<PropertyObject, T>) {
+            if (!decodeAny<T>(v, self->*MemberPtr)) return false;
+        } else {
         T decoded{};
         if (!decodeAny<T>(v, decoded)) return false;
         self->*MemberPtr = std::move(decoded);
+        }
 
         if constexpr (!std::is_same_v<decltype(CallbackPtr), std::nullptr_t>) {
             using CbClass = MemberClass<CallbackPtr>;
