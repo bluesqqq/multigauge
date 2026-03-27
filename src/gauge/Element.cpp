@@ -2,8 +2,6 @@
 
 #include <algorithm>
 
-#include <multigauge/layout.h>
-
 #include <multigauge/gauge/elements/primitives/TextElement.h>
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
 #include <multigauge/gauge/elements/primitives/CircleElement.h>
@@ -146,7 +144,12 @@ void Element::detachFromYogaTree(Element* yogaParent) {
 void Element::loadLayout(const rapidjson::Value::ConstObject &json) {
     setInherited(parent ? isInheritString(json) : false);
 
-    if (!inherited) loadYogaLayout(node, json);
+    if (!inherited) {
+        auto it = json.FindMember("style");
+        if (it != json.MemberEnd() && it->value.IsObject()) {
+            style.loadProperties(it->value.GetObject());
+        }
+    }
 }
 
 void Element::loadProps(const rapidjson::Value::ConstObject &json) {
