@@ -134,7 +134,7 @@ CODEC_BEGIN(LayoutSize)
 
             case LayoutSize::Unit::Percent: {
                 char buf[32];
-                std::snprintf(buf, sizeof(buf), "%%%g", v.value);
+                std::snprintf(buf, sizeof(buf), "%g%%", v.value);
                 out.SetString(buf, a);
                 break;
             }
