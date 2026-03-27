@@ -328,7 +328,18 @@ struct Position : public PropertyObject {
         if (!node) return;
         
         YGNodeStyleSetPositionType(node, type);
-        
+
+        if (type == YGPositionTypeStatic) {
+            // Yoga should ignore inset edges for static positioning, but this
+            // vendored version doesn't (assuming its a bug) so I'm just handling it
+            // here instead of modifying yoga. 
+            YGNodeStyleSetPosition(node, YGEdgeLeft, YGUndefined);
+            YGNodeStyleSetPosition(node, YGEdgeRight, YGUndefined);
+            YGNodeStyleSetPosition(node, YGEdgeTop, YGUndefined);
+            YGNodeStyleSetPosition(node, YGEdgeBottom, YGUndefined);
+            return;
+        }
+
         left.setPosition(node, YGEdgeLeft);
         right.setPosition(node, YGEdgeRight);
         top.setPosition(node, YGEdgeTop);
