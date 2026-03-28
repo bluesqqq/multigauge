@@ -118,7 +118,7 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "color": {
+                "paint": {
                   "$ref": "#/$defs/Paint"
                 }
               }
@@ -164,7 +164,7 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "color": {
+                "paint": {
                   "$ref": "#/$defs/Paint"
                 },
                 "radius": {
@@ -233,7 +233,7 @@
                 "text": {
                   "type": "string"
                 },
-                "textPaint": {
+                "paint": {
                   "$ref": "#/$defs/textPaint"
                 },
                 "ellipses": {
@@ -265,51 +265,83 @@
       "additionalProperties": false,
       "properties": {
         "width": {
-          "$ref": "#/$defs/dimension"
+          "$ref": "#/$defs/layoutSize"
         },
         "height": {
-          "$ref": "#/$defs/dimension"
+          "$ref": "#/$defs/layoutSize"
+        },
+        "min-width": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "min-height": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "max-width": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "max-height": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "aspect-ratio": {
+          "type": "number"
         },
         "padding": {
-          "$ref": "#/$defs/padding"
+          "$ref": "#/$defs/layoutBox"
         },
-        "gap": {
-          "$ref": "#/$defs/gap"
+        "margin": {
+          "$ref": "#/$defs/layoutBox"
         },
-        "flex": {
-          "$ref": "#/$defs/flex"
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "display": {
+          "type": "string",
+          "enum": [
+            "flex",
+            "none"
+          ]
+        },
+        "overflow": {
+          "type": "string",
+          "enum": [
+            "visible",
+            "hidden"
+          ]
+        },
+        "flex-container": {
+          "$ref": "#/$defs/flexContainer"
+        },
+        "flex-item": {
+          "$ref": "#/$defs/flexItem"
         }
       }
     },
-    "dimension": {
+    "layoutSize": {
       "oneOf": [
         {
           "type": "number"
         },
         {
           "type": "string",
-          "pattern": "^[0-9]+%$"
+          "pattern": "^(auto|-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)%?|-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)px)$"
         }
       ]
     },
-    "padding": {
+    "layoutBox": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "all": {
-          "type": "number"
-        },
         "left": {
-          "type": "number"
+          "$ref": "#/$defs/layoutSize"
         },
         "right": {
-          "type": "number"
+          "$ref": "#/$defs/layoutSize"
         },
         "top": {
-          "type": "number"
+          "$ref": "#/$defs/layoutSize"
         },
         "bottom": {
-          "type": "number"
+          "$ref": "#/$defs/layoutSize"
         }
       }
     },
@@ -325,7 +357,7 @@
         }
       }
     },
-    "flex": {
+    "flexContainer": {
       "type": "object",
       "additionalProperties": false,
       "properties": {
@@ -333,34 +365,101 @@
           "type": "string",
           "enum": [
             "row",
-            "column"
+            "column",
+            "row-reverse",
+            "column-reverse"
           ]
         },
         "justify": {
           "type": "string",
           "enum": [
-            "start",
+            "flex-start",
             "center",
-            "end",
+            "flex-end",
             "space-between",
             "space-around",
             "space-evenly"
           ]
         },
-        "align": {
+        "align-items": {
           "type": "string",
           "enum": [
-            "start",
+            "flex-start",
             "center",
-            "end",
+            "flex-end",
             "stretch"
           ]
         },
+        "align-content": {
+          "type": "string",
+          "enum": [
+            "flex-start",
+            "center",
+            "flex-end",
+            "stretch"
+          ]
+        },
+        "wrap": {
+          "type": "string",
+          "enum": [
+            "no-wrap",
+            "wrap",
+            "wrap-reverse"
+          ]
+        },
+        "gap": {
+          "$ref": "#/$defs/gap"
+        }
+      }
+    },
+    "flexItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
         "grow": {
           "type": "number"
         },
         "shrink": {
           "type": "number"
+        },
+        "basis": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "align-self": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "flex-start",
+            "center",
+            "flex-end",
+            "stretch"
+          ]
+        }
+      }
+    },
+    "position": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "static",
+            "relative",
+            "absolute"
+          ]
+        },
+        "left": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "right": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "top": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "bottom": {
+          "$ref": "#/$defs/layoutSize"
         }
       }
     },
@@ -434,10 +533,20 @@
 
     "colorObject": {
       "oneOf": [
+        { "$ref": "#/$defs/staticColor" },
         { "$ref": "#/$defs/valueColor" },
         { "$ref": "#/$defs/timeColor" },
         { "$ref": "#/$defs/userColor" }
       ]
+    },
+    "staticColor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "color"],
+      "properties": {
+        "type": { "const": "static" },
+        "color": { "$ref": "#/$defs/rgba" }
+      }
     },
 
     "valueColor": {
@@ -458,7 +567,7 @@
       "properties": {
         "type": { "const": "time" },
         "timeline": { "$ref": "#/$defs/colorTimeline" },
-        "loopType": {
+        "loop": {
           "enum": ["forward", "reverse", "pingpong"]
         }
       }
@@ -479,6 +588,18 @@
           "$ref": "#/$defs/color"
         },
         {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "keyframes": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/colorKeyframe"
+              }
+            }
+          }
+        },
+        {
           "type": "array",
           "items": {
             "$ref": "#/$defs/colorKeyframe"
@@ -490,7 +611,7 @@
       "type": "object",
       "additionalProperties": false,
       "properties": {
-        "position": {
+        "pos": {
           "type": "number"
         },
         "color": {
@@ -542,7 +663,7 @@
         "color": {
           "$ref": "#/$defs/colorTimeline"
         },
-        "textPaint": {
+        "paint": {
           "$ref": "#/$defs/textPaint"
         },
         "spacing": {
@@ -572,7 +693,7 @@
         "thickness": {
           "type": "number"
         },
-        "color": {
+        "paint": {
           "$ref": "#/$defs/PaintTimeline"
         },
         "valueStyle": {
@@ -593,7 +714,7 @@
         "thickness": {
           "type": "number"
         },
-        "color": {
+        "paint": {
           "$ref": "#/$defs/PaintTimeline"
         },
         "valueStyle": {
@@ -620,19 +741,32 @@
       }
     },
     "displayValue": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "id": {
+      "oneOf": [
+        {
           "$ref": "#/$defs/valueId"
         },
-        "min": {
-          "type": "number"
-        },
-        "max": {
-          "type": "number"
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "$ref": "#/$defs/valueId"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "unitIndex": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            }
+          }
         }
-      }
+      ]
     },
     "circularProps": {
       "type": "object",
@@ -664,7 +798,7 @@
               "additionalProperties": false,
               "properties": {
                 "value": { "$ref": "#/$defs/displayValue" },
-                "backgroundColor": { "$ref": "#/$defs/color"},
+                "bgColor": { "$ref": "#/$defs/color"},
                 "secondsColor": {"$ref": "#/$defs/color"},
                 "graphColor": { "$ref": "#/$defs/color"},
                 "borderColor": {"$ref": "#/$defs/color"},
@@ -689,7 +823,7 @@
               "type": "object",
               "additionalProperties": false,
               "properties": {
-                "backgroundColor": {
+                "bgColor": {
                   "$ref": "#/$defs/color"
                 },
                 "groundColor": {
@@ -733,7 +867,7 @@
                 "radius": {
                   "type": "number"
                 },
-                "color": {
+                "paint": {
                   "$ref": "#/$defs/Paint"
                 }
               }
