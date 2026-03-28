@@ -256,7 +256,8 @@ protected:
         const char* name,
         const char* description,
         PropertyMetadata::RuleListGetter visibleWhen = nullptr,
-        PropertyMetadata::RuleListGetter interactableWhen = nullptr) {
+        PropertyMetadata::RuleListGetter interactableWhen = nullptr,
+        bool inspectorVisible = true) {
         using T = MemberType<MemberPtr>;
 
         Property p{};
@@ -269,6 +270,7 @@ protected:
         meta.description = description ? description : "No description.";
         meta.widget = MgPropWidgetTraits<T>::value;
         meta.nullable = MgPropNullableTraits<T>::value;
+        meta.inspectorVisible = inspectorVisible;
         meta.getVisibleWhen = visibleWhen;
         meta.getInteractableWhen = interactableWhen;
         if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) {
@@ -292,12 +294,14 @@ protected:
         const char* description,
         PropertyMetadata::RuleListGetter visibleWhen,
         PropertyMetadata::RuleListGetter interactableWhen,
+        bool inspectorVisible,
         Property::Setter set,
         Property::Getter get) {
         PropertyMetadata meta{};
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
         meta.widget = "json";
+        meta.inspectorVisible = inspectorVisible;
         meta.getVisibleWhen = visibleWhen;
         meta.getInteractableWhen = interactableWhen;
 
@@ -408,7 +412,8 @@ public: \
         display_name, \
         description, \
         nullptr, \
-        nullptr \
+        nullptr, \
+        true \
     ),
 
 #define MG_PROP_CALLBACK(member, key, display_name, description, callback) \
@@ -417,7 +422,8 @@ public: \
         display_name, \
         description, \
         nullptr, \
-        nullptr \
+        nullptr, \
+        true \
     ),
 
 #define MG_PROP_UI(member, key, display_name, description, visible_when, interactable_when) \
@@ -426,7 +432,8 @@ public: \
         display_name, \
         description, \
         visible_when, \
-        interactable_when \
+        interactable_when, \
+        true \
     ),
 
 #define MG_PROP_CALLBACK_UI(member, key, display_name, description, callback, visible_when, interactable_when) \
@@ -435,7 +442,48 @@ public: \
         display_name, \
         description, \
         visible_when, \
-        interactable_when \
+        interactable_when, \
+        true \
+    ),
+
+#define MG_PROP_HIDDEN(member, key, display_name, description) \
+    ::PropertyObject::makeProperty<&Self::member, nullptr>( \
+        key, \
+        display_name, \
+        description, \
+        nullptr, \
+        nullptr, \
+        false \
+    ),
+
+#define MG_PROP_CALLBACK_HIDDEN(member, key, display_name, description, callback) \
+    ::PropertyObject::makeProperty<&Self::member, callback>( \
+        key, \
+        display_name, \
+        description, \
+        nullptr, \
+        nullptr, \
+        false \
+    ),
+
+#define MG_PROP_UI_HIDDEN(member, key, display_name, description, visible_when, interactable_when) \
+    ::PropertyObject::makeProperty<&Self::member, nullptr>( \
+        key, \
+        display_name, \
+        description, \
+        visible_when, \
+        interactable_when, \
+        false \
+    ),
+
+#define MG_PROP_CALLBACK_UI_HIDDEN(member, key, display_name, description, callback, visible_when, interactable_when) \
+    ::PropertyObject::makeProperty<&Self::member, callback>( \
+        key, \
+        display_name, \
+        description, \
+        visible_when, \
+        interactable_when, \
+        false \
     ),
 
 #define MG_PROP_CUSTOM(key, display_name, description, set_fn, get_fn) \
@@ -445,6 +493,7 @@ public: \
         description, \
         nullptr, \
         nullptr, \
+        true, \
         set_fn, \
         get_fn \
     ),
@@ -456,6 +505,7 @@ public: \
         description, \
         visible_when, \
         interactable_when, \
+        true, \
         set_fn, \
         get_fn \
     ),

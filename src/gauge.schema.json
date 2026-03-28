@@ -297,8 +297,8 @@
         "display": {
           "type": "string",
           "enum": [
-            "flex",
-            "none"
+            "on",
+            "off"
           ]
         },
         "overflow": {

@@ -202,8 +202,8 @@ struct EnumTraits<YGPositionType> {
 template<>
 struct EnumTraits<YGDisplay> {
     static constexpr EnumOption<YGDisplay> options[] = {
-        { YGDisplayNone, "none", "None" },
-        { YGDisplayFlex, "flex", "Flex" },
+        { YGDisplayNone, "off", "Off" },
+        { YGDisplayFlex, "on", "On" },
     };
 };
 
@@ -473,7 +473,7 @@ struct Layout : public PropertyObject {
     MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
 
     MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", &Layout::update)
-    MG_PROP_CALLBACK(display,     "display",      "Display",      "Display setting.",              &Layout::update)
+    MG_PROP_CALLBACK_HIDDEN(display, "display",   "Display",      "Whether this element participates in layout.", &Layout::update)
     MG_PROP_CALLBACK(width,       "width",        "Width",        "Width of the element.",         &Layout::update)
     MG_PROP_CALLBACK(height,      "height",       "Height",       "Height of the element.",        &Layout::update)
     MG_PROP_CALLBACK(minWidth,    "min-width",    "Min Width",    "Width of the element.",         &Layout::update)

@@ -127,6 +127,7 @@ rapidjson::Value PropertyObject::getPropertiesMeta(rapidjson::Document::Allocato
     propertyList().forEach(this, [&](const Property& prop) {
         if (!prop.key) return;
         if (findProperty(prop.key) != &prop) return;
+        if (!prop.meta.inspectorVisible) return;
         metas.PushBack(getPropertyMeta(prop, a), a);
     });
 

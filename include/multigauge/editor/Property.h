@@ -18,6 +18,8 @@ struct PropertyMetadata {
     const char* widget = nullptr;
     /// @brief Whether the editor should treat this property as nullable.
     bool nullable = false;
+    /// @brief Whether this property should be listed in inspector metadata.
+    bool inspectorVisible = true;
     /// @brief Declarative visibility rules for the editor UI.
     RuleListGetter getVisibleWhen = nullptr;
     /// @brief Declarative interactability rules for the editor UI.

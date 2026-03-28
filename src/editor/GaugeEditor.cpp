@@ -340,6 +340,9 @@ std::string GaugeEditor::getPropertiesMetaJson(Id id, const std::string& path) c
     if (!obj->resolvePath(path, owner, prop) || !owner || !prop) {
         return "[]";
     }
+    if (!prop->meta.inspectorVisible) {
+        return "[]";
+    }
 
     rapidjson::Document d;
     d.SetObject();
