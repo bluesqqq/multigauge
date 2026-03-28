@@ -31,6 +31,10 @@ namespace {
         return dynamic_cast<Element*>(obj);
     }
 
+    const Element* asElement(const PropertyObject* obj) {
+        return dynamic_cast<const Element*>(obj);
+    }
+
     std::size_t normalizeInsertIndex(int index, std::size_t count) {
         if (index < 0) return count;
         return std::min<std::size_t>(static_cast<std::size_t>(index), count);
@@ -46,6 +50,24 @@ namespace {
     std::uint32_t lookupId(const std::unordered_map<PropertyObject*, std::uint32_t>& ptrToId, PropertyObject* obj) {
         auto it = ptrToId.find(obj);
         return it == ptrToId.end() ? 0u : it->second;
+    }
+
+    std::string makeBoundsResult(std::uint32_t id, const Rect<float>& bounds) {
+        rapidjson::Document d;
+        d.SetObject();
+        auto& a = d.GetAllocator();
+
+        d.AddMember("ok", true, a);
+        d.AddMember("id", id, a);
+        d.AddMember("x", bounds.x, a);
+        d.AddMember("y", bounds.y, a);
+        d.AddMember("width", bounds.width, a);
+        d.AddMember("height", bounds.height, a);
+
+        rapidjson::StringBuffer sb;
+        rapidjson::Writer<rapidjson::StringBuffer> w(sb);
+        d.Accept(w);
+        return std::string(sb.GetString(), sb.GetSize());
     }
 }
 
@@ -256,6 +278,13 @@ std::string GaugeEditor::removeElement(Id id) {
 
     rebuildIndex();
     return makeResult(true, nullptr, 0, parentId);
+}
+
+std::string GaugeEditor::getElementBoundsJson(Id id) const {
+    const Element* element = asElement(find(id));
+    if (!element) return makeResult(false, "NotFound");
+
+    return makeBoundsResult(id, element->getBounds());
 }
 
 std::string GaugeEditor::getPropertiesMetaJson(Id id) const {
