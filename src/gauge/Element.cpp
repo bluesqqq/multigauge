@@ -52,6 +52,7 @@ void Element::makeNode() {
         node = YGNodeNewWithConfig(config);
         YGNodeSetContext(node, this);
         style.setNode(node);
+        style.update();
     }
 }
 
@@ -75,7 +76,7 @@ void Element::markLayoutDirty() {
 }
 
 Element::Element(Element* p, YGConfigRef cfg) : parent(p), config(p ? p->getConfig() : cfg) {
-    applyInheritance();
+    makeNode();
 }
 
 Element::~Element() {
@@ -89,66 +90,10 @@ namespace {
     }
 }
 
-std::uint32_t Element::countTopLevelYogaChildren() const {
-    if (ownsLayout()) {
-        return node ? 1u : 0u;
-    }
-
-    std::uint32_t count = 0;
-    for (const auto& child : children) {
-        if (!child) continue;
-        count += child->countTopLevelYogaChildren();
-    }
-    return count;
-}
-
-std::uint32_t Element::attachToYogaTree(Element* yogaParent, std::uint32_t insertIndex) {
-    if (!yogaParent || !yogaParent->node) return 0;
-
-    if (ownsLayout()) {
-        if (!node) return 0;
-
-        if (YGNodeRef owner = YGNodeGetOwner(node); owner != yogaParent->node) {
-            if (owner) {
-                YGNodeRemoveChild(owner, node);
-            }
-            YGNodeInsertChild(yogaParent->node, node, insertIndex);
-        }
-        return 1;
-    }
-
-    std::uint32_t attachedCount = 0;
-    for (auto& child : children) {
-        if (!child) continue;
-        attachedCount += child->attachToYogaTree(yogaParent, insertIndex + attachedCount);
-    }
-    return attachedCount;
-}
-
-void Element::detachFromYogaTree(Element* yogaParent) {
-    if (!yogaParent || !yogaParent->node) return;
-
-    if (ownsLayout()) {
-        if (node && YGNodeGetOwner(node) == yogaParent->node) {
-            YGNodeRemoveChild(yogaParent->node, node);
-        }
-        return;
-    }
-
-    for (auto& child : children) {
-        if (!child) continue;
-        child->detachFromYogaTree(yogaParent);
-    }
-}
-
 void Element::loadLayout(const rapidjson::Value::ConstObject &json) {
-    setInherited(parent ? isInheritString(json) : false);
-
-    if (!inherited) {
-        auto it = json.FindMember("style");
-        if (it != json.MemberEnd() && it->value.IsObject()) {
-            style.loadProperties(it->value.GetObject());
-        }
+    auto it = json.FindMember("style");
+    if (it != json.MemberEnd() && it->value.IsObject()) {
+        style.loadProperties(it->value.GetObject());
     }
 }
 
@@ -196,19 +141,18 @@ bool Element::insertChild(OwnedElement child, std::size_t index) {
 
     Element* rawChild = child.get();
     const std::size_t childIndex = clampChildIndex(this, index);
-    Element* yogaParent = this->getLayoutOwner();
 
     rawChild->parent = this;
-    std::uint32_t insertIndex = 0;
-    for (std::size_t i = 0; i < childIndex; ++i) {
-        Element* sibling = children[i].get();
-        if (!sibling) continue;
-        insertIndex += sibling->countTopLevelYogaChildren();
+    if (node && rawChild->node) {
+        if (YGNodeRef owner = YGNodeGetOwner(rawChild->node); owner != node) {
+            if (owner) {
+                YGNodeRemoveChild(owner, rawChild->node);
+            }
+            YGNodeInsertChild(node, rawChild->node, static_cast<std::uint32_t>(childIndex));
+        }
     }
-    rawChild->attachToYogaTree(yogaParent, insertIndex);
 
     children.insert(children.begin() + static_cast<std::ptrdiff_t>(childIndex), std::move(child));
-    refreshInheritanceCacheRecursive();
     markLayoutDirty();
     return true;
 }
@@ -224,15 +168,14 @@ OwnedElement Element::detachChild(Element* child) {
         if (children[i].get() != child) continue;
 
         LOG_DEBUG(TAG, "Detaching child=%p from parent=%p", (void*)child, (void*)this);
-        Element* yogaParent = this->getLayoutOwner();
-        child->detachFromYogaTree(yogaParent);
+        if (node && child->node && YGNodeGetOwner(child->node) == node) {
+            YGNodeRemoveChild(node, child->node);
+        }
 
         OwnedElement detached = std::move(children[i]);
         children.erase(children.begin() + static_cast<std::ptrdiff_t>(i));
 
         detached->parent = nullptr;
-        detached->refreshInheritanceCacheRecursive();
-        refreshInheritanceCacheRecursive();
         markLayoutDirty();
         return detached;
     }
@@ -265,27 +208,22 @@ void Element::layoutRecursive(float width, float height, YGDirection direction) 
     Element* root = this;
     while (root->parent) root = root->parent;
 
-    Element* layoutRoot = root->getLayoutOwner(); // should always be root
-    if (!layoutRoot->node) return;
+    if (!root->node) return;
 
-    YGNodeCalculateLayout(layoutRoot->node, width, height, direction);
+    YGNodeCalculateLayout(root->node, width, height, direction);
    
     auto walk = [&](auto&& self, Element* e, float parentAbsX, float parentAbsY) -> void {
-        if (e->ownsLayout()) {
-            const float left   = YGNodeLayoutGetLeft(e->node);
-            const float top    = YGNodeLayoutGetTop(e->node);
-            const float w      = YGNodeLayoutGetWidth(e->node);
-            const float h      = YGNodeLayoutGetHeight(e->node);
+        const float left   = YGNodeLayoutGetLeft(e->node);
+        const float top    = YGNodeLayoutGetTop(e->node);
+        const float w      = YGNodeLayoutGetWidth(e->node);
+        const float h      = YGNodeLayoutGetHeight(e->node);
 
-            const float absX = parentAbsX + left;
-            const float absY = parentAbsY + top;
+        const float absX = parentAbsX + left;
+        const float absY = parentAbsY + top;
 
-            e->bounds = Rect<float>(absX, absY, w, h);
+        e->bounds = Rect<float>(absX, absY, w, h);
 
-            for (auto& c : e->children) self(self, c.get(), absX, absY);
-        } else {
-            for (auto& c : e->children) self(self, c.get(), parentAbsX, parentAbsY);
-        }
+        for (auto& c : e->children) self(self, c.get(), absX, absY);
     };
 
     walk(walk, root, 0, 0);
@@ -300,13 +238,9 @@ void Element::saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorTy
         out.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(type, a), a);
     }
 
-    if (inherited) {
-        out.AddMember(rapidjson::Value("style", a), rapidjson::Value("inherit", a), a);
-    } else {
-        rapidjson::Value styleValue;
-        if (saveProperty("style", styleValue, a)) {
-            out.AddMember(rapidjson::Value("style", a), std::move(styleValue), a);
-        }
+    rapidjson::Value styleValue;
+    if (saveProperty("style", styleValue, a)) {
+        out.AddMember(rapidjson::Value("style", a), std::move(styleValue), a);
     }
 
     rapidjson::Value props(rapidjson::kObjectType);

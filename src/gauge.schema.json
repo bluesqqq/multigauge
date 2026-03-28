@@ -249,16 +249,8 @@
       ]
     },
     "style": {
-      "description": "Optional. Either the string 'inherit' or an object of style fields.",
-      "oneOf": [
-        {
-          "type": "string",
-          "const": "inherit"
-        },
-        {
-          "$ref": "#/$defs/styleObject"
-        }
-      ]
+      "description": "Optional. Object of style fields.",
+      "$ref": "#/$defs/styleObject"
     },
     "styleObject": {
       "type": "object",

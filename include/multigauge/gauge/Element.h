@@ -30,9 +30,6 @@ class Element : public PropertyObject {
         /// @brief Owned child elements
         std::vector<OwnedElement> children;
 
-        bool inherited = false;
-        Element* layoutOwner = nullptr;
-
         //----------[ LAYOUT ]----------//
 
         Layout style;
@@ -46,55 +43,14 @@ class Element : public PropertyObject {
         /// @brief True when the layout needs to be recalculated at the root
         bool layoutDirty = true;
 
-        void refreshInheritanceCacheRecursive() {
-            if (!inherited) layoutOwner = this;
-            else {
-                Element* a = parent;
-                while(a && a->inherited) a = a->parent;
-                layoutOwner = a ? a : this;
-            }
-
-            for (auto& c : children) c->refreshInheritanceCacheRecursive();
-        }
-
         void clearLayoutDirtyRecursive();
-
-        std::uint32_t countTopLevelYogaChildren() const;
-        std::uint32_t attachToYogaTree(Element* yogaParent, std::uint32_t insertIndex);
-        void detachFromYogaTree(Element* yogaParent);
 
         void makeNode();
         void removeNode();
 
-        void applyInheritance() {
-            if (inherited) removeNode();
-            else makeNode();
-
-            refreshInheritanceCacheRecursive();
-            markLayoutDirty();
-        }
-
-        void setInherited(bool newInherited) {
-            if (!parent) newInherited = false; // To be inherited element MUST have parent
-            if (inherited == newInherited) return;
-            inherited = newInherited;
-            applyInheritance();
-        }
-
-        static bool isInheritString(const rapidjson::Value::ConstObject& json) {
-            auto it = json.FindMember("style");
-            if (it == json.MemberEnd())
-                return false;
-
-            const rapidjson::Value& style = it->value;
-
-            return style.IsString() && std::strcmp(style.GetString(), "inherit") == 0;
-        }
-
     protected:
         void markLayoutDirty();
         bool needsLayout() const { return layoutDirty; }
-        bool ownsLayout() const { return !inherited; }
 
         //----------[ HOOKS ]----------//
 
@@ -122,7 +78,7 @@ class Element : public PropertyObject {
         Element* getParent() const { return parent; }
         YGNodeRef getNode() const { return node; }
         YGConfigRef getConfig() const { return config; }
-        const Rect<float>& getBounds() const { return getLayoutOwner()->bounds; }
+        const Rect<float>& getBounds() const { return bounds; }
 
         bool isRoot() const { return parent == nullptr; }
 
@@ -137,11 +93,6 @@ class Element : public PropertyObject {
         bool insertChild(OwnedElement child, std::size_t index);
         OwnedElement detachChild(Element* child);
         bool removeChild(Element* child);
-
-        //----------[ INHERITANCE ]----------//
-
-        const Element* getLayoutOwner() const { return layoutOwner ? layoutOwner : this; }
-        Element* getLayoutOwner() { return layoutOwner ? layoutOwner : this; }
 
         //----------[ TRAVERSAL ]----------//
 
