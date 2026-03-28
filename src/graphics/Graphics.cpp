@@ -469,7 +469,7 @@ void Graphics::drawTextArea(const std::string& text, int x, int y, int width, in
         if (hAlign == HAlign::Center) drawX = rect.x + (rect.width - lineW) / 2;
         if (hAlign == HAlign::Right)  drawX = rect.x + rect.width - lineW;
 
-        context->drawText(line.c_str(), drawX, drawY, family, pt, weight, slant, this->textColor.value, anchor);
+        context->drawText(line.c_str(), drawX, drawY, family, pt, weight, slant, this->textColor.value, Anchor::TopLeft);
     }
 }
 
