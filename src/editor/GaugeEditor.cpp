@@ -287,6 +287,32 @@ std::string GaugeEditor::getElementBoundsJson(Id id) const {
     return makeBoundsResult(id, element->getBounds());
 }
 
+std::string GaugeEditor::listElementBoundsJson() const {
+    rapidjson::Document d;
+    d.SetArray();
+    auto& a = d.GetAllocator();
+
+    for (const auto& node : nodes) {
+        const Element* element = asElement(find(node.id));
+        if (!element) continue;
+
+        const Rect<float>& bounds = element->getBounds();
+
+        rapidjson::Value obj(rapidjson::kObjectType);
+        obj.AddMember("id", node.id, a);
+        obj.AddMember("parentId", node.parentId, a);
+        obj.AddMember("order", node.order, a);
+        obj.AddMember("type", rapidjson::Value(node.type.c_str(), a), a);
+        obj.AddMember("x", bounds.x, a);
+        obj.AddMember("y", bounds.y, a);
+        obj.AddMember("width", bounds.width, a);
+        obj.AddMember("height", bounds.height, a);
+        d.PushBack(std::move(obj), a);
+    }
+
+    return toString(d);
+}
+
 std::string GaugeEditor::getPropertiesMetaJson(Id id) const {
     const auto obj = find(id);
     if (!obj) return "[]";

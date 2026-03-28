@@ -68,7 +68,11 @@ class GaugeEditor {
         std::string insertElement(Id parentId, const std::string& type, int index);
         std::string moveElement(Id id, Id newParentId, int index);
         std::string removeElement(Id id);
+
+        //----------[ BOUNDS ]----------//
+
         std::string getElementBoundsJson(Id id) const;
+        std::string listElementBoundsJson() const;
 
         //----------[ PROPERTIES ]----------//
 
