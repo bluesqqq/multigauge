@@ -64,8 +64,15 @@ class GaugeEditor {
         std::string listElements() const;
         std::string listValues() const;
 
+        /// @brief Returns the full serialized JSON for the given element id.
+        std::string getElementJson(Id id) const;
+
         std::string addElement(Id parentId, const std::string& type);
+        std::string addElementJson(Id parentId, const std::string& elementJsonText);
+        
         std::string insertElement(Id parentId, const std::string& type, int index);
+        std::string insertElementJson(Id parentId, const std::string& elementJsonText, int index);
+
         std::string moveElement(Id id, Id newParentId, int index);
         std::string removeElement(Id id);
 

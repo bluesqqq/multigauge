@@ -199,6 +199,16 @@ std::string GaugeEditor::listValues() const {
     return toString(d);
 }
 
+std::string GaugeEditor::getElementJson(Id id) const {
+    const Element* element = asElement(find(id));
+    if (!element) return R"({"ok":false,"error":"NotFound"})";
+
+    rapidjson::Document d;
+    auto& a = d.GetAllocator();
+    element->saveToJson(d, a);
+    return toString(d);
+}
+
 std::string GaugeEditor::addElement(Id parentId, const std::string& type) {
     return insertElement(parentId, type, -1);
 }
@@ -216,6 +226,36 @@ std::string GaugeEditor::insertElement(Id parentId, const std::string& type, int
     d.SetObject();
     auto& a = d.GetAllocator();
     d.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(descriptor->id, a), a);
+
+    const std::size_t insertIndex = normalizeInsertIndex(index, parent->childCount());
+    const rapidjson::Document& constDoc = d;
+    Element* child = parent->insertChild(constDoc.GetObject(), insertIndex);
+    if (!child) return makeResult(false, "InsertFailed");
+
+    rebuildIndex();
+
+    const Id newId = lookupId(ptrToId, child);
+    const Id resolvedParentId = lookupId(ptrToId, parent);
+    return makeResult(true, nullptr, newId, resolvedParentId);
+}
+
+std::string GaugeEditor::addElementJson(Id parentId, const std::string& elementJsonText) {
+    return insertElementJson(parentId, elementJsonText, -1);
+}
+
+std::string GaugeEditor::insertElementJson(Id parentId, const std::string& elementJsonText, int index) {
+    if (!face) return makeResult(false, "NoFace");
+
+    Element* parent = asElement(find(parentId));
+    if (!parent) return makeResult(false, "ParentNotFound");
+
+    rapidjson::Document d;
+    if (d.Parse(elementJsonText.c_str()).HasParseError()) {
+        return makeResult(false, "BadJson");
+    }
+    if (!d.IsObject()) {
+        return makeResult(false, "BadJson");
+    }
 
     const std::size_t insertIndex = normalizeInsertIndex(index, parent->childCount());
     const rapidjson::Document& constDoc = d;
