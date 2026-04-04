@@ -83,6 +83,29 @@ std::string GaugeEditor::toString(const rapidjson::Value& v) {
     return std::string(sb.GetString(), sb.GetSize());
 }
 
+void GaugeEditor::clearHistory() {
+    undoHistory.clear();
+    redoHistory.clear();
+}
+
+void GaugeEditor::pushHistorySnapshot(std::vector<std::string>& stack, const std::string& snapshot) {
+    if (snapshot.empty()) return;
+    stack.push_back(snapshot);
+    if (stack.size() > kMaxHistoryEntries) {
+        stack.erase(stack.begin());
+    }
+}
+
+void GaugeEditor::commitMutationSnapshot(const std::string& previousJson) {
+    if (!face || previousJson.empty()) return;
+
+    const std::string currentJson = saveFace();
+    if (currentJson == previousJson) return;
+
+    pushHistorySnapshot(undoHistory, previousJson);
+    redoHistory.clear();
+}
+
 void GaugeEditor::indexElementRecursive(Element& e, Id parentId, std::uint32_t order) {
     const Id id = nextId++;
     idToPtr[id] = &e;
@@ -122,15 +145,23 @@ PropertyObject* GaugeEditor::find(Id id) {
 
 void GaugeEditor::setFace(GaugeFace& f) {
     face = &f;
+    clearHistory();
     rebuildIndex();
 }
 
 void GaugeEditor::loadFace(const std::string& json) {
+    loadFaceInternal(json, true);
+}
+
+void GaugeEditor::loadFaceInternal(const std::string& json, bool resetHistory) {
     if (!face) return;
 
     rapidjson::Document doc;
     doc.Parse(json.c_str());
     face->load(doc);
+    if (resetHistory) {
+        clearHistory();
+    }
     rebuildIndex();
 }
 
@@ -139,6 +170,43 @@ std::string GaugeEditor::saveFace() const {
 
     rapidjson::Document doc = face->save();
     return toString(doc);
+}
+
+EditorResult GaugeEditor::getHistoryState() const {
+    EditorResult result = OkObject();
+    auto& data = result.data;
+    auto& allocator = data.GetAllocator();
+
+    data.AddMember("canUndo", !undoHistory.empty(), allocator);
+    data.AddMember("canRedo", !redoHistory.empty(), allocator);
+    data.AddMember("undoDepth", static_cast<std::uint32_t>(undoHistory.size()), allocator);
+    data.AddMember("redoDepth", static_cast<std::uint32_t>(redoHistory.size()), allocator);
+
+    return result;
+}
+
+EditorResult GaugeEditor::undo() {
+    if (undoHistory.empty()) return Error("NothingToUndo");
+
+    const std::string currentJson = saveFace();
+    const std::string snapshot = undoHistory.back();
+    undoHistory.pop_back();
+    pushHistorySnapshot(redoHistory, currentJson);
+    loadFaceInternal(snapshot, false);
+
+    return getHistoryState();
+}
+
+EditorResult GaugeEditor::redo() {
+    if (redoHistory.empty()) return Error("NothingToRedo");
+
+    const std::string currentJson = saveFace();
+    const std::string snapshot = redoHistory.back();
+    redoHistory.pop_back();
+    pushHistorySnapshot(undoHistory, currentJson);
+    loadFaceInternal(snapshot, false);
+
+    return getHistoryState();
 }
 
 void GaugeEditor::rebuildIndex() {
@@ -233,12 +301,14 @@ EditorResult GaugeEditor::insertElementJson(Id parentId, const std::string& elem
         return Error("BadJson");
     }
 
+    const std::string beforeJson = saveFace();
     const std::size_t insertIndex = normalizeInsertIndex(index, parent->childCount());
     const rapidjson::Document& constDoc = d;
     Element* child = parent->insertChild(constDoc.GetObject(), insertIndex);
     if (!child) return Error("InsertFailed");
 
     rebuildIndex();
+    commitMutationSnapshot(beforeJson);
 
     const Id newId = lookupId(ptrToId, child);
     const Id resolvedParentId = lookupId(ptrToId, parent);
@@ -266,6 +336,7 @@ EditorResult GaugeEditor::moveElement(Id id, Id newParentId, int index) {
         --insertIndex;
     }
 
+    const std::string beforeJson = saveFace();
     OwnedElement detached = oldParent->detachChild(element);
     if (!detached) return Error("MoveFailed");
 
@@ -273,6 +344,7 @@ EditorResult GaugeEditor::moveElement(Id id, Id newParentId, int index) {
     if (!newParent->insertChild(std::move(detached), insertIndex)) return Error("MoveFailed");
 
     rebuildIndex();
+    commitMutationSnapshot(beforeJson);
 
     const Id movedId = lookupId(ptrToId, moved);
     const Id resolvedParentId = lookupId(ptrToId, newParent);
@@ -290,9 +362,11 @@ EditorResult GaugeEditor::removeElement(Id id) {
     if (!parent) return Error("ParentNotFound");
 
     const Id parentId = lookupId(ptrToId, parent);
+    const std::string beforeJson = saveFace();
     if (!parent->removeChild(element)) return Error("RemoveFailed");
 
     rebuildIndex();
+    commitMutationSnapshot(beforeJson);
     return makeMutationResult(0, parentId);
 }
 
@@ -317,6 +391,7 @@ EditorResult GaugeEditor::replaceElementJson(Id id, const std::string& json) {
     if (!replacement) return Error("ReplaceFailed");
 
     Element* replacementPtr = replacement.get();
+    const std::string beforeJson = saveFace();
     OwnedElement detached = parent->detachChild(element);
     if (!detached) return Error("ReplaceFailed");
 
@@ -326,6 +401,7 @@ EditorResult GaugeEditor::replaceElementJson(Id id, const std::string& json) {
     }
 
     rebuildIndex();
+    commitMutationSnapshot(beforeJson);
     return makeMutationResult(lookupId(ptrToId, replacementPtr), lookupId(ptrToId, parent));
 }
 
@@ -380,6 +456,7 @@ EditorResult GaugeEditor::reorderElement(Id id, int newIndex) {
         return makeMutationResult(id, lookupId(ptrToId, parent));
     }
 
+    const std::string beforeJson = saveFace();
     OwnedElement detached = parent->detachChild(element);
     if (!detached) return Error("ReorderFailed");
 
@@ -389,6 +466,7 @@ EditorResult GaugeEditor::reorderElement(Id id, int newIndex) {
     }
 
     rebuildIndex();
+    commitMutationSnapshot(beforeJson);
     return makeMutationResult(lookupId(ptrToId, moved), lookupId(ptrToId, parent));
 }
 
@@ -542,9 +620,11 @@ EditorResult GaugeEditor::setPropertyJson(Id id, const std::string& path, const 
         return Error("BadJson");
     }
 
+    const std::string beforeJson = saveFace();
     if (!prop->set(owner, v)) {
         return Error("TypeMismatch");
     }
 
+    commitMutationSnapshot(beforeJson);
     return OkObject();
 }

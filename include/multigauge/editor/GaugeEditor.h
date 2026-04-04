@@ -82,10 +82,13 @@ inline EditorResult Error(const std::string& error) {
 class GaugeEditor {
     private:
         using Id = std::uint32_t;
+        static constexpr std::size_t kMaxHistoryEntries = 100;
 
         GaugeFace* face = nullptr;
         Id nextId = 1;
         std::string clipboardJson;
+        std::vector<std::string> undoHistory;
+        std::vector<std::string> redoHistory;
 
         std::unordered_map<Id, PropertyObject*> idToPtr;
         std::unordered_map<PropertyObject*, Id> ptrToId;
@@ -99,6 +102,10 @@ class GaugeEditor {
         const PropertyObject* find(Id id) const;
         PropertyObject* find(Id id);
 
+        void clearHistory();
+        void loadFaceInternal(const std::string& json, bool resetHistory);
+        void pushHistorySnapshot(std::vector<std::string>& stack, const std::string& snapshot);
+        void commitMutationSnapshot(const std::string& previousJson);
         void rebuildIndex();
 
     public:
@@ -114,6 +121,9 @@ class GaugeEditor {
 
         /// @brief Returns the current gauge face serialized as JSON.
         std::string saveFace() const;
+        EditorResult getHistoryState() const;
+        EditorResult undo();
+        EditorResult redo();
 
         //----------[ HIERARCHY QUERIES ]----------//
 
