@@ -57,6 +57,23 @@ namespace {
         data.AddMember("height", bounds.height, a);
         return result;
     }
+
+    void collectHitIds(
+        const Element* element,
+        const std::unordered_map<PropertyObject*, std::uint32_t>& ptrToId,
+        const Point<float>& point,
+        std::vector<std::uint32_t>& hitIds) {
+        if (!element) return;
+
+        const auto it = ptrToId.find(const_cast<Element*>(element));
+        if (it != ptrToId.end() && element->getBounds().contains(point)) {
+            hitIds.push_back(it->second);
+        }
+
+        for (std::size_t i = 0; i < element->childCount(); ++i) {
+            collectHitIds(element->childAt(i), ptrToId, point, hitIds);
+        }
+    }
 }
 
 std::string GaugeEditor::toString(const rapidjson::Value& v) {
@@ -279,6 +296,102 @@ EditorResult GaugeEditor::removeElement(Id id) {
     return makeMutationResult(0, parentId);
 }
 
+EditorResult GaugeEditor::replaceElementJson(Id id, const std::string& json) {
+    if (!face) return Error("NoFace");
+
+    Element* element = asElement(find(id));
+    if (!element) return Error("NotFound");
+    if (element->isRoot()) return Error("CannotReplaceRoot");
+
+    Element* parent = element->getParent();
+    const EditorNode* node = findNode(id);
+    if (!parent || !node) return Error("ParentNotFound");
+
+    rapidjson::Document doc;
+    if (doc.Parse(json.c_str()).HasParseError() || !doc.IsObject()) {
+        return Error("BadJson");
+    }
+
+    const rapidjson::Document& constDoc = doc;
+    OwnedElement replacement = Element::fromJson(parent, constDoc.GetObject());
+    if (!replacement) return Error("ReplaceFailed");
+
+    Element* replacementPtr = replacement.get();
+    OwnedElement detached = parent->detachChild(element);
+    if (!detached) return Error("ReplaceFailed");
+
+    if (!parent->insertChild(std::move(replacement), node->order)) {
+        parent->insertChild(std::move(detached), node->order);
+        return Error("ReplaceFailed");
+    }
+
+    rebuildIndex();
+    return makeMutationResult(lookupId(ptrToId, replacementPtr), lookupId(ptrToId, parent));
+}
+
+EditorResult GaugeEditor::bringForward(Id id) {
+    const EditorNode* node = findNode(id);
+    if (!node) return Error("NotFound");
+    return reorderElement(id, static_cast<int>(node->order) + 1);
+}
+
+EditorResult GaugeEditor::bringToFront(Id id) {
+    Element* element = asElement(find(id));
+    if (!element) return Error("NotFound");
+    if (element->isRoot()) return Error("CannotReorderRoot");
+
+    Element* parent = element->getParent();
+    if (!parent) return Error("ParentNotFound");
+    return reorderElement(id, static_cast<int>(parent->childCount()) - 1);
+}
+
+EditorResult GaugeEditor::sendBackward(Id id) {
+    const EditorNode* node = findNode(id);
+    if (!node) return Error("NotFound");
+    return reorderElement(id, static_cast<int>(node->order) - 1);
+}
+
+EditorResult GaugeEditor::sendToBack(Id id) {
+    return reorderElement(id, 0);
+}
+
+EditorResult GaugeEditor::reorderElement(Id id, int newIndex) {
+    if (!face) return Error("NoFace");
+
+    Element* element = asElement(find(id));
+    if (!element) return Error("NotFound");
+    if (element->isRoot()) return Error("CannotReorderRoot");
+
+    Element* parent = element->getParent();
+    const EditorNode* node = findNode(id);
+    if (!parent || !node) return Error("ParentNotFound");
+
+    const std::size_t childCount = parent->childCount();
+    if (childCount == 0) return Error("ParentNotFound");
+
+    std::size_t targetIndex = 0;
+    if (newIndex < 0) {
+        targetIndex = childCount - 1;
+    } else {
+        targetIndex = std::min<std::size_t>(static_cast<std::size_t>(newIndex), childCount - 1);
+    }
+
+    if (targetIndex == node->order) {
+        return makeMutationResult(id, lookupId(ptrToId, parent));
+    }
+
+    OwnedElement detached = parent->detachChild(element);
+    if (!detached) return Error("ReorderFailed");
+
+    Element* moved = detached.get();
+    if (!parent->insertChild(std::move(detached), targetIndex)) {
+        return Error("ReorderFailed");
+    }
+
+    rebuildIndex();
+    return makeMutationResult(lookupId(ptrToId, moved), lookupId(ptrToId, parent));
+}
+
 EditorResult GaugeEditor::getElementBoundsJson(Id id) const {
     const Element* element = asElement(find(id));
     if (!element) return Error("NotFound");
@@ -307,6 +420,36 @@ EditorResult GaugeEditor::listElementBoundsJson() const {
         obj.AddMember("width", bounds.width, a);
         obj.AddMember("height", bounds.height, a);
         d.PushBack(std::move(obj), a);
+    }
+
+    return result;
+}
+
+GaugeEditor::Id GaugeEditor::hitTest(float x, float y, int index) const {
+    if (index < 0) return 0;
+
+    const EditorResult hits = hitTestAll(x, y);
+    if (!hits.ok || !hits.data.IsArray()) return 0;
+
+    const auto hitIndex = static_cast<rapidjson::SizeType>(index);
+    if (hitIndex >= hits.data.Size() || !hits.data[hitIndex].IsUint()) return 0;
+    return hits.data[hitIndex].GetUint();
+}
+
+EditorResult GaugeEditor::hitTestAll(float x, float y) const {
+    if (!face) return Error("NoFace");
+
+    EditorResult result = OkArray();
+    std::vector<std::uint32_t> hitIds;
+    collectHitIds(face->getRoot(), ptrToId, Point<float>(x, y), hitIds);
+
+    std::reverse(hitIds.begin(), hitIds.end());
+
+    auto& data = result.data;
+    auto& a = data.GetAllocator();
+    data.Reserve(static_cast<rapidjson::SizeType>(hitIds.size()), a);
+    for (const std::uint32_t id : hitIds) {
+        data.PushBack(id, a);
     }
 
     return result;
