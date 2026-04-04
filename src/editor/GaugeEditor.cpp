@@ -5,28 +5,6 @@
 #include <multigauge/values/Value.h>
 
 namespace {
-    std::string makeResult(bool ok, const char* error = nullptr, std::uint32_t id = 0, std::uint32_t parentId = 0) {
-        rapidjson::Document d;
-        d.SetObject();
-        auto& a = d.GetAllocator();
-
-        d.AddMember("ok", ok, a);
-        if (error) {
-            d.AddMember("error", rapidjson::Value(error, a), a);
-        }
-        if (id != 0) {
-            d.AddMember("id", id, a);
-        }
-        if (parentId != 0) {
-            d.AddMember("parentId", parentId, a);
-        }
-
-        rapidjson::StringBuffer sb;
-        rapidjson::Writer<rapidjson::StringBuffer> w(sb);
-        d.Accept(w);
-        return std::string(sb.GetString(), sb.GetSize());
-    }
-
     Element* asElement(PropertyObject* obj) {
         return dynamic_cast<Element*>(obj);
     }
@@ -52,22 +30,32 @@ namespace {
         return it == ptrToId.end() ? 0u : it->second;
     }
 
-    std::string makeBoundsResult(std::uint32_t id, const Rect<float>& bounds) {
-        rapidjson::Document d;
-        d.SetObject();
-        auto& a = d.GetAllocator();
+    EditorResult makeMutationResult(std::uint32_t id = 0, std::uint32_t parentId = 0) {
+        EditorResult result = OkObject();
+        auto& data = result.data;
+        auto& a = data.GetAllocator();
 
-        d.AddMember("ok", true, a);
-        d.AddMember("id", id, a);
-        d.AddMember("x", bounds.x, a);
-        d.AddMember("y", bounds.y, a);
-        d.AddMember("width", bounds.width, a);
-        d.AddMember("height", bounds.height, a);
+        if (id != 0) {
+            data.AddMember("id", id, a);
+        }
+        if (parentId != 0) {
+            data.AddMember("parentId", parentId, a);
+        }
 
-        rapidjson::StringBuffer sb;
-        rapidjson::Writer<rapidjson::StringBuffer> w(sb);
-        d.Accept(w);
-        return std::string(sb.GetString(), sb.GetSize());
+        return result;
+    }
+
+    EditorResult makeBoundsResult(std::uint32_t id, const Rect<float>& bounds) {
+        EditorResult result = OkObject();
+        auto& data = result.data;
+        auto& a = data.GetAllocator();
+
+        data.AddMember("id", id, a);
+        data.AddMember("x", bounds.x, a);
+        data.AddMember("y", bounds.y, a);
+        data.AddMember("width", bounds.width, a);
+        data.AddMember("height", bounds.height, a);
+        return result;
     }
 }
 
@@ -150,9 +138,9 @@ void GaugeEditor::rebuildIndex() {
     }
 }
 
-std::string GaugeEditor::listTreeJson() const {
-    rapidjson::Document d;
-    d.SetArray();
+EditorResult GaugeEditor::listTreeJson() const {
+    EditorResult result = OkArray();
+    auto& d = result.data;
     auto& a = d.GetAllocator();
 
     for (const auto& n : nodes) {
@@ -168,12 +156,12 @@ std::string GaugeEditor::listTreeJson() const {
         d.PushBack(obj, a);
     }
 
-    return toString(d);
+    return result;
 }
 
-std::string GaugeEditor::listElements() const {
-    rapidjson::Document d;
-    d.SetArray();
+EditorResult GaugeEditor::listElements() const {
+    EditorResult result = OkArray();
+    auto& d = result.data;
     auto& a = d.GetAllocator();
 
     for (const auto& descriptor : Element::registry()) {
@@ -183,12 +171,12 @@ std::string GaugeEditor::listElements() const {
         d.PushBack(desc, a);
     }
 
-    return toString(d);
+    return result;
 }
 
-std::string GaugeEditor::listValues() const {
-    rapidjson::Document d;
-    d.SetArray();
+EditorResult GaugeEditor::listValues() const {
+    EditorResult result = OkArray();
+    auto& d = result.data;
     auto& a = d.GetAllocator();
 
     for (const Value* value : Value::list()) {
@@ -196,91 +184,62 @@ std::string GaugeEditor::listValues() const {
         d.PushBack(rapidjson::Value(value->getId(), a), a);
     }
 
-    return toString(d);
+    return result;
 }
 
-std::string GaugeEditor::getElementJson(Id id) const {
+EditorResult GaugeEditor::getElementJson(Id id) const {
     const Element* element = asElement(find(id));
-    if (!element) return R"({"ok":false,"error":"NotFound"})";
+    if (!element) return Error("NotFound");
 
-    rapidjson::Document d;
-    auto& a = d.GetAllocator();
-    element->saveToJson(d, a);
-    return toString(d);
+    EditorResult result = OkObject();
+    rapidjson::Value saved(rapidjson::kObjectType);
+    element->saveToJson(saved, result.data.GetAllocator());
+    result.data.CopyFrom(saved, result.data.GetAllocator());
+    return result;
 }
 
-std::string GaugeEditor::addElement(Id parentId, const std::string& type) {
-    return insertElement(parentId, type, -1);
-}
-
-std::string GaugeEditor::insertElement(Id parentId, const std::string& type, int index) {
-    if (!face) return makeResult(false, "NoFace");
-
-    Element* parent = asElement(find(parentId));
-    if (!parent) return makeResult(false, "ParentNotFound");
-
-    const auto* descriptor = Element::registry().find(type.c_str());
-    if (!descriptor) return makeResult(false, "UnknownType");
-
-    rapidjson::Document d;
-    d.SetObject();
-    auto& a = d.GetAllocator();
-    d.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(descriptor->id, a), a);
-
-    const std::size_t insertIndex = normalizeInsertIndex(index, parent->childCount());
-    const rapidjson::Document& constDoc = d;
-    Element* child = parent->insertChild(constDoc.GetObject(), insertIndex);
-    if (!child) return makeResult(false, "InsertFailed");
-
-    rebuildIndex();
-
-    const Id newId = lookupId(ptrToId, child);
-    const Id resolvedParentId = lookupId(ptrToId, parent);
-    return makeResult(true, nullptr, newId, resolvedParentId);
-}
-
-std::string GaugeEditor::addElementJson(Id parentId, const std::string& elementJsonText) {
+EditorResult GaugeEditor::addElementJson(Id parentId, const std::string& elementJsonText) {
     return insertElementJson(parentId, elementJsonText, -1);
 }
 
-std::string GaugeEditor::insertElementJson(Id parentId, const std::string& elementJsonText, int index) {
-    if (!face) return makeResult(false, "NoFace");
+EditorResult GaugeEditor::insertElementJson(Id parentId, const std::string& elementJsonText, int index) {
+    if (!face) return Error("NoFace");
 
     Element* parent = asElement(find(parentId));
-    if (!parent) return makeResult(false, "ParentNotFound");
+    if (!parent) return Error("ParentNotFound");
 
     rapidjson::Document d;
     if (d.Parse(elementJsonText.c_str()).HasParseError()) {
-        return makeResult(false, "BadJson");
+        return Error("BadJson");
     }
     if (!d.IsObject()) {
-        return makeResult(false, "BadJson");
+        return Error("BadJson");
     }
 
     const std::size_t insertIndex = normalizeInsertIndex(index, parent->childCount());
     const rapidjson::Document& constDoc = d;
     Element* child = parent->insertChild(constDoc.GetObject(), insertIndex);
-    if (!child) return makeResult(false, "InsertFailed");
+    if (!child) return Error("InsertFailed");
 
     rebuildIndex();
 
     const Id newId = lookupId(ptrToId, child);
     const Id resolvedParentId = lookupId(ptrToId, parent);
-    return makeResult(true, nullptr, newId, resolvedParentId);
+    return makeMutationResult(newId, resolvedParentId);
 }
 
-std::string GaugeEditor::moveElement(Id id, Id newParentId, int index) {
-    if (!face) return makeResult(false, "NoFace");
+EditorResult GaugeEditor::moveElement(Id id, Id newParentId, int index) {
+    if (!face) return Error("NoFace");
 
     Element* element = asElement(find(id));
-    if (!element) return makeResult(false, "NotFound");
-    if (element->isRoot()) return makeResult(false, "CannotMoveRoot");
+    if (!element) return Error("NotFound");
+    if (element->isRoot()) return Error("CannotMoveRoot");
 
     Element* oldParent = element->getParent();
     Element* newParent = asElement(find(newParentId));
-    if (!oldParent || !newParent) return makeResult(false, "ParentNotFound");
-    if (element == newParent) return makeResult(false, "InvalidParent");
-    if (isDescendantOf(newParent, element)) return makeResult(false, "InvalidParent");
+    if (!oldParent || !newParent) return Error("ParentNotFound");
+    if (element == newParent) return Error("InvalidParent");
+    if (isDescendantOf(newParent, element)) return Error("InvalidParent");
 
     const EditorNode* node = findNode(id);
     const std::size_t oldIndex = node ? node->order : oldParent->childCount();
@@ -291,45 +250,45 @@ std::string GaugeEditor::moveElement(Id id, Id newParentId, int index) {
     }
 
     OwnedElement detached = oldParent->detachChild(element);
-    if (!detached) return makeResult(false, "MoveFailed");
+    if (!detached) return Error("MoveFailed");
 
     Element* moved = detached.get();
-    if (!newParent->insertChild(std::move(detached), insertIndex)) return makeResult(false, "MoveFailed");
+    if (!newParent->insertChild(std::move(detached), insertIndex)) return Error("MoveFailed");
 
     rebuildIndex();
 
     const Id movedId = lookupId(ptrToId, moved);
     const Id resolvedParentId = lookupId(ptrToId, newParent);
-    return makeResult(true, nullptr, movedId, resolvedParentId);
+    return makeMutationResult(movedId, resolvedParentId);
 }
 
-std::string GaugeEditor::removeElement(Id id) {
-    if (!face) return makeResult(false, "NoFace");
+EditorResult GaugeEditor::removeElement(Id id) {
+    if (!face) return Error("NoFace");
 
     Element* element = asElement(find(id));
-    if (!element) return makeResult(false, "NotFound");
-    if (element->isRoot()) return makeResult(false, "CannotRemoveRoot");
+    if (!element) return Error("NotFound");
+    if (element->isRoot()) return Error("CannotRemoveRoot");
 
     Element* parent = element->getParent();
-    if (!parent) return makeResult(false, "ParentNotFound");
+    if (!parent) return Error("ParentNotFound");
 
     const Id parentId = lookupId(ptrToId, parent);
-    if (!parent->removeChild(element)) return makeResult(false, "RemoveFailed");
+    if (!parent->removeChild(element)) return Error("RemoveFailed");
 
     rebuildIndex();
-    return makeResult(true, nullptr, 0, parentId);
+    return makeMutationResult(0, parentId);
 }
 
-std::string GaugeEditor::getElementBoundsJson(Id id) const {
+EditorResult GaugeEditor::getElementBoundsJson(Id id) const {
     const Element* element = asElement(find(id));
-    if (!element) return makeResult(false, "NotFound");
+    if (!element) return Error("NotFound");
 
     return makeBoundsResult(id, element->getBounds());
 }
 
-std::string GaugeEditor::listElementBoundsJson() const {
-    rapidjson::Document d;
-    d.SetArray();
+EditorResult GaugeEditor::listElementBoundsJson() const {
+    EditorResult result = OkArray();
+    auto& d = result.data;
     auto& a = d.GetAllocator();
 
     for (const auto& node : nodes) {
@@ -350,26 +309,22 @@ std::string GaugeEditor::listElementBoundsJson() const {
         d.PushBack(std::move(obj), a);
     }
 
-    return toString(d);
+    return result;
 }
 
-std::string GaugeEditor::getPropertiesMetaJson(Id id) const {
+EditorResult GaugeEditor::getPropertiesMetaJson(Id id) const {
     const auto obj = find(id);
-    if (!obj) return "[]";
+    if (!obj) return Error("NotFound");
 
-    rapidjson::Document d;
-    d.SetArray();
-    auto& a = d.GetAllocator();
-
-    rapidjson::Value props = obj->getPropertiesMeta(a);
-    d.CopyFrom(props, a);
-
-    return toString(d);
+    EditorResult result = OkArray();
+    rapidjson::Value props = obj->getPropertiesMeta(result.data.GetAllocator());
+    result.data.CopyFrom(props, result.data.GetAllocator());
+    return result;
 }
 
-std::string GaugeEditor::getPropertiesMetaJson(Id id, const std::string& path) const {
+EditorResult GaugeEditor::getPropertiesMetaJson(Id id, const std::string& path) const {
     const auto obj = find(id);
-    if (!obj) return "[]";
+    if (!obj) return Error("NotFound");
 
     if (path.empty()) {
         return getPropertiesMetaJson(id);
@@ -378,40 +333,36 @@ std::string GaugeEditor::getPropertiesMetaJson(Id id, const std::string& path) c
     const PropertyObject* owner = nullptr;
     const Property* prop = nullptr;
     if (!obj->resolvePath(path, owner, prop) || !owner || !prop) {
-        return "[]";
+        return Error("UnknownProperty");
     }
     if (!prop->meta.inspectorVisible) {
-        return "[]";
+        return Error("PropertyHidden");
     }
 
-    rapidjson::Document d;
-    d.SetObject();
-    auto& a = d.GetAllocator();
-
-    rapidjson::Value node = owner->getPropertyMeta(*prop, a);
-    d.CopyFrom(node, a);
-
-    return toString(d);
+    EditorResult result = OkObject();
+    rapidjson::Value node = owner->getPropertyMeta(*prop, result.data.GetAllocator());
+    result.data.CopyFrom(node, result.data.GetAllocator());
+    return result;
 }
 
-std::string GaugeEditor::setPropertyJson(Id id, const std::string& path, const std::string& jsonValueText) {
+EditorResult GaugeEditor::setPropertyJson(Id id, const std::string& path, const std::string& jsonValueText) {
     auto obj = find(id);
-    if (!obj) return R"({"ok":false,"error":"NotFound"})";
+    if (!obj) return Error("NotFound");
 
     PropertyObject* owner = nullptr;
     const Property* prop = nullptr;
     if (!obj->resolvePath(path, owner, prop) || !owner || !prop || !prop->set) {
-        return R"({"ok":false,"error":"UnknownProperty"})";
+        return Error("UnknownProperty");
     }
 
     rapidjson::Document v;
     if (v.Parse(jsonValueText.c_str()).HasParseError()) {
-        return R"({"ok":false,"error":"BadJson"})";
+        return Error("BadJson");
     }
 
     if (!prop->set(owner, v)) {
-        return R"({"ok":false,"error":"TypeMismatch"})";
+        return Error("TypeMismatch");
     }
 
-    return R"({"ok":true})";
+    return OkObject();
 }

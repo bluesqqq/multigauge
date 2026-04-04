@@ -19,6 +19,66 @@ struct EditorNode {
     std::string type;
 };
 
+struct EditorResult {
+    bool ok = false;
+    rapidjson::Document data;
+    std::string error;
+
+    std::string toJson() const {
+        rapidjson::Document d;
+        d.SetObject();
+        auto& a = d.GetAllocator();
+
+        d.AddMember("ok", ok, a);
+
+        if (ok) {
+            rapidjson::Value dataCopy;
+            dataCopy.CopyFrom(data, a);
+            d.AddMember("data", std::move(dataCopy), a);
+        } else {
+            d.AddMember("error", rapidjson::Value(error.c_str(), a), a);
+        }
+
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        d.Accept(writer);
+        return buffer.GetString();
+    }
+
+    static EditorResult OkObject() {
+        EditorResult r;
+        r.ok = true;
+        r.data.SetObject();
+        return r;
+    }
+
+    static EditorResult OkArray() {
+        EditorResult r;
+        r.ok = true;
+        r.data.SetArray();
+        return r;
+    }
+
+    static EditorResult Error(const std::string& error) {
+        EditorResult r;
+        r.ok = false;
+        r.error = error;
+        return r;
+    }
+};
+
+inline EditorResult OkObject() {
+    return EditorResult::OkObject();
+}
+
+inline EditorResult OkArray() {
+    return EditorResult::OkArray();
+}
+
+inline EditorResult Error(const std::string& error) {
+    return EditorResult::Error(error);
+}
+
 class GaugeEditor {
     private:
         using Id = std::uint32_t;
@@ -43,7 +103,7 @@ class GaugeEditor {
     public:
         explicit GaugeEditor(GaugeFace& f) { setFace(f); }
 
-        //----------[ GAUGE FACE ]----------//
+        //----------[ DOCUMENT ]----------//
 
         void setFace(GaugeFace& f);
         GaugeFace* getFace() const { return face; }
@@ -54,41 +114,71 @@ class GaugeEditor {
         /// @brief Returns the current gauge face serialized as JSON.
         std::string saveFace() const;
 
-        //----------[ HIERARCHY ]----------//
+        //----------[ HIERARCHY QUERIES ]----------//
 
         const std::vector<EditorNode>& getNodes() const { return nodes; }
 
         /// @brief Lists the indexed element hierarchy as JSON.
-        std::string listTreeJson() const;
+        EditorResult listTreeJson() const;
+        /// @brief Lists all exposed element types. 
+        EditorResult listElements() const;
+        /// @brief Lists all exposed values.
+        EditorResult listValues() const;
 
-        std::string listElements() const;
-        std::string listValues() const;
+        //----------[ HIERARCHY MUTATIONS ]----------//
 
         /// @brief Returns the full serialized JSON for the given element id.
-        std::string getElementJson(Id id) const;
+        EditorResult getElementJson(Id id) const;
 
-        std::string addElement(Id parentId, const std::string& type);
-        std::string addElementJson(Id parentId, const std::string& elementJsonText);
-        
-        std::string insertElement(Id parentId, const std::string& type, int index);
-        std::string insertElementJson(Id parentId, const std::string& elementJsonText, int index);
+        /// @brief Adds an element from JSON.
+        EditorResult addElementJson(Id parentId, const std::string& elementJsonText);
+        /// @brief Inserts an element from JSON at the specified index. 
+        EditorResult insertElementJson(Id parentId, const std::string& elementJsonText, int index);
+        /// @brief Moves an element to a different (or same) parent at the specified index. 
+        EditorResult moveElement(Id id, Id newParentId, int index);
+        /// @brief Removes an element from the gauge face. 
+        EditorResult removeElement(Id id);
+        /// @brief Replaces an element with new JSON.
+        EditorResult replaceElementJson(Id id, const std::string& json);
 
-        std::string moveElement(Id id, Id newParentId, int index);
-        std::string removeElement(Id id);
+        //----------[ ORDERING ]----------//
 
-        //----------[ BOUNDS ]----------//
+        /// @brief Moves an element one index forward.
+        EditorResult bringForward(Id id);
+        /// @brief Moves an element to the very front.
+        EditorResult bringToFront(Id id);
+        /// @brief Moves an element one index backward.
+        EditorResult sendBackward(Id id);
+        /// @brief Moves an element to the very back.
+        EditorResult sendToBack(Id id);
+        /// @brief Moves an element to the specified index. 
+        EditorResult reorderElement(Id id, int newIndex);
 
-        std::string getElementBoundsJson(Id id) const;
-        std::string listElementBoundsJson() const;
+        //----------[ COPYING ]----------//
+
+        EditorResult copyElement(Id id);
+        EditorResult pasteIntoElement(Id id);
+        EditorResult pasteToReplaceElement(Id id);
+        EditorResult duplicateElement(Id id);
+
+        //----------[ GEOMETRY ]----------//
+
+        /// @brief Returns the bounds of the specified element. 
+        EditorResult getElementBoundsJson(Id id) const;
+        /// @brief Lists the bounds of all elements in the gauge face. 
+        EditorResult listElementBoundsJson() const;
+
+        /// @brief Returns the ID of the element at the specified location.
+        Id hitTest(float x, float y, int index = 0) const;
+        /// @brief Returns a list of all elements at the specified location. 
+        EditorResult hitTestAll(float x, float y) const;
 
         //----------[ PROPERTIES ]----------//
 
         /// @brief Returns the top-level property inspector metadata for the given element id.
-        std::string getPropertiesMetaJson(Id id) const;
-
+        EditorResult getPropertiesMetaJson(Id id) const;
         /// @brief Returns the inspector node metadata for a nested property path on the given element id.
-        std::string getPropertiesMetaJson(Id id, const std::string& path) const;
-
+        EditorResult getPropertiesMetaJson(Id id, const std::string& path) const;
         /// @brief Sets a property by path using a JSON value string.
-        std::string setPropertyJson(Id id, const std::string& path, const std::string& jsonValueText);
+        EditorResult setPropertyJson(Id id, const std::string& path, const std::string& jsonValueText);
 };
