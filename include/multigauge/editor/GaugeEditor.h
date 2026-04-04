@@ -85,6 +85,7 @@ class GaugeEditor {
 
         GaugeFace* face = nullptr;
         Id nextId = 1;
+        std::string clipboardJson;
 
         std::unordered_map<Id, PropertyObject*> idToPtr;
         std::unordered_map<PropertyObject*, Id> ptrToId;

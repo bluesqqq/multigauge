@@ -392,6 +392,45 @@ EditorResult GaugeEditor::reorderElement(Id id, int newIndex) {
     return makeMutationResult(lookupId(ptrToId, moved), lookupId(ptrToId, parent));
 }
 
+EditorResult GaugeEditor::copyElement(Id id) {
+    const Element* element = asElement(find(id));
+    if (!element) return Error("NotFound");
+
+    rapidjson::Document doc;
+    auto& a = doc.GetAllocator();
+    element->saveToJson(doc, a);
+    clipboardJson = toString(doc);
+
+    EditorResult result = OkObject();
+    result.data.AddMember("id", id, result.data.GetAllocator());
+    return result;
+}
+
+EditorResult GaugeEditor::pasteIntoElement(Id id) {
+    if (clipboardJson.empty()) return Error("ClipboardEmpty");
+    return insertElementJson(id, clipboardJson, -1);
+}
+
+EditorResult GaugeEditor::pasteToReplaceElement(Id id) {
+    if (clipboardJson.empty()) return Error("ClipboardEmpty");
+    return replaceElementJson(id, clipboardJson);
+}
+
+EditorResult GaugeEditor::duplicateElement(Id id) {
+    Element* element = asElement(find(id));
+    if (!element) return Error("NotFound");
+    if (element->isRoot()) return Error("CannotDuplicateRoot");
+
+    const EditorNode* node = findNode(id);
+    Element* parent = element->getParent();
+    if (!node || !parent) return Error("ParentNotFound");
+
+    rapidjson::Document doc;
+    auto& a = doc.GetAllocator();
+    element->saveToJson(doc, a);
+    return insertElementJson(lookupId(ptrToId, parent), toString(doc), static_cast<int>(node->order) + 1);
+}
+
 EditorResult GaugeEditor::getElementBoundsJson(Id id) const {
     const Element* element = asElement(find(id));
     if (!element) return Error("NotFound");
