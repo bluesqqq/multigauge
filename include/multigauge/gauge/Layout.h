@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/editor/PropertyObject.h>
+#include <multigauge/properties/PropertyObject.h>
 #include <yoga/Yoga.h>
 
 struct LayoutSize {

@@ -3,7 +3,7 @@
 #include <multigauge/graphics/colors/rgba.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/values/Value.h>
-#include <multigauge/editor/PropertyObject.h>
+#include <multigauge/properties/PropertyObject.h>
 #include <multigauge/io/Log.h>
 
 #include <rapidjson/document.h>

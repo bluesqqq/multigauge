@@ -6,7 +6,7 @@
 
 #include <multigauge/utils.h>
 
-#include <multigauge/editor/Codec.h>
+#include <multigauge/properties/Codec.h>
 
 struct rgba {
     uint8_t r, g, b, a;

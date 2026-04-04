@@ -1,4 +1,4 @@
-#include <multigauge/editor/PropertyObject.h>
+#include <multigauge/properties/PropertyObject.h>
 
 namespace {
     rapidjson::Value moveRulesIntoArray(

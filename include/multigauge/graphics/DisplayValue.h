@@ -1,7 +1,7 @@
 #pragma once
 
 #include <multigauge/utils.h>
-#include <multigauge/editor/PropertyObject.h>
+#include <multigauge/properties/PropertyObject.h>
 #include <multigauge/values/ValueRef.h>
 
 /// @brief A class that wraps around a `Value` object, allowing the use of custom minimum and maximum limits & units

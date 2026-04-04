@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rapidjson/document.h>
-#include <multigauge/editor/EnumTraits.h>
+#include <multigauge/properties/EnumTraits.h>
 
 class PropertyObject;
 

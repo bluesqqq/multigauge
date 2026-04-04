@@ -10,10 +10,10 @@
 #include <vector>
 
 #include <rapidjson/document.h>
-#include <multigauge/editor/Codec.h>
-#include <multigauge/editor/PolymorphicRegistry.h>
+#include <multigauge/properties/Codec.h>
+#include <multigauge/properties/PolymorphicRegistry.h>
 
-#include <multigauge/editor/Property.h>
+#include <multigauge/properties/Property.h>
 
 #define TYPE_KEY "type"
 

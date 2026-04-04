@@ -10,7 +10,7 @@
 
 #include <multigauge/gauge/Element.h>
 #include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/editor/PropertyObject.h>
+#include <multigauge/properties/PropertyObject.h>
 
 struct EditorNode {
     std::uint32_t id = 0;

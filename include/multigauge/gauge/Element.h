@@ -9,7 +9,7 @@
 
 #include <multigauge/AssetManager.h>
 
-#include <multigauge/editor/PropertyObject.h>
+#include <multigauge/properties/PropertyObject.h>
 
 #include <multigauge/gauge/Layout.h>
 

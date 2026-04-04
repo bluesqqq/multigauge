@@ -1,4 +1,4 @@
-#include <multigauge/editor/Property.h>
+#include <multigauge/properties/Property.h>
 
 rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) const {
     rapidjson::Value metaJson(rapidjson::kObjectType);

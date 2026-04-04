@@ -2,7 +2,7 @@
 
 #include <string>
 
-#include <multigauge/editor/PropertyObject.h>
+#include <multigauge/properties/PropertyObject.h>
 #include <multigauge/values/Value.h>
 
 class ValueRef {
