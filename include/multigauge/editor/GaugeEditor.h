@@ -10,8 +10,6 @@
 
 #include <multigauge/gauge/Element.h>
 #include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/properties/PropertyObject.h>
-
 struct EditorNode {
     std::uint32_t id = 0;
     std::uint32_t parentId = 0;
@@ -90,8 +88,8 @@ class GaugeEditor {
         std::vector<std::string> undoHistory;
         std::vector<std::string> redoHistory;
 
-        std::unordered_map<Id, PropertyObject*> idToPtr;
-        std::unordered_map<PropertyObject*, Id> ptrToId;
+        std::unordered_map<Id, Element*> idToPtr;
+        std::unordered_map<const Element*, Id> ptrToId;
         std::vector<EditorNode> nodes;
 
         static std::string toString(const rapidjson::Value& v);
@@ -99,8 +97,8 @@ class GaugeEditor {
         void indexElementRecursive(Element& e, Id parentId, std::uint32_t order);
 
         const EditorNode* findNode(Id id) const;
-        const PropertyObject* find(Id id) const;
-        PropertyObject* find(Id id);
+        const Element* find(Id id) const;
+        Element* find(Id id);
 
         void clearHistory();
         void loadFaceInternal(const std::string& json, bool resetHistory);

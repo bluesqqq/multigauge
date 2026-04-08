@@ -5,14 +5,6 @@
 #include <multigauge/values/Value.h>
 
 namespace {
-    Element* asElement(PropertyObject* obj) {
-        return dynamic_cast<Element*>(obj);
-    }
-
-    const Element* asElement(const PropertyObject* obj) {
-        return dynamic_cast<const Element*>(obj);
-    }
-
     std::size_t normalizeInsertIndex(int index, std::size_t count) {
         if (index < 0) return count;
         return std::min<std::size_t>(static_cast<std::size_t>(index), count);
@@ -25,7 +17,7 @@ namespace {
         return false;
     }
 
-    std::uint32_t lookupId(const std::unordered_map<PropertyObject*, std::uint32_t>& ptrToId, PropertyObject* obj) {
+    std::uint32_t lookupId(const std::unordered_map<const Element*, std::uint32_t>& ptrToId, const Element* obj) {
         auto it = ptrToId.find(obj);
         return it == ptrToId.end() ? 0u : it->second;
     }
@@ -60,12 +52,12 @@ namespace {
 
     void collectHitIds(
         const Element* element,
-        const std::unordered_map<PropertyObject*, std::uint32_t>& ptrToId,
+        const std::unordered_map<const Element*, std::uint32_t>& ptrToId,
         const Point<float>& point,
         std::vector<std::uint32_t>& hitIds) {
         if (!element) return;
 
-        const auto it = ptrToId.find(const_cast<Element*>(element));
+        const auto it = ptrToId.find(element);
         if (it != ptrToId.end() && element->getBounds().contains(point)) {
             hitIds.push_back(it->second);
         }
@@ -133,12 +125,12 @@ const EditorNode* GaugeEditor::findNode(Id id) const {
     return nullptr;
 }
 
-const PropertyObject* GaugeEditor::find(Id id) const {
+const Element* GaugeEditor::find(Id id) const {
     auto it = idToPtr.find(id);
     return it == idToPtr.end() ? nullptr : it->second;
 }
 
-PropertyObject* GaugeEditor::find(Id id) {
+Element* GaugeEditor::find(Id id) {
     auto it = idToPtr.find(id);
     return it == idToPtr.end() ? nullptr : it->second;
 }
@@ -273,7 +265,7 @@ EditorResult GaugeEditor::listValues() const {
 }
 
 EditorResult GaugeEditor::getElementJson(Id id) const {
-    const Element* element = asElement(find(id));
+    const Element* element = find(id);
     if (!element) return Error("NotFound");
 
     EditorResult result = OkObject();
@@ -290,7 +282,7 @@ EditorResult GaugeEditor::addElementJson(Id parentId, const std::string& element
 EditorResult GaugeEditor::insertElementJson(Id parentId, const std::string& elementJsonText, int index) {
     if (!face) return Error("NoFace");
 
-    Element* parent = asElement(find(parentId));
+    Element* parent = find(parentId);
     if (!parent) return Error("ParentNotFound");
 
     rapidjson::Document d;
@@ -318,12 +310,12 @@ EditorResult GaugeEditor::insertElementJson(Id parentId, const std::string& elem
 EditorResult GaugeEditor::moveElement(Id id, Id newParentId, int index) {
     if (!face) return Error("NoFace");
 
-    Element* element = asElement(find(id));
+    Element* element = find(id);
     if (!element) return Error("NotFound");
     if (element->isRoot()) return Error("CannotMoveRoot");
 
     Element* oldParent = element->getParent();
-    Element* newParent = asElement(find(newParentId));
+    Element* newParent = find(newParentId);
     if (!oldParent || !newParent) return Error("ParentNotFound");
     if (element == newParent) return Error("InvalidParent");
     if (isDescendantOf(newParent, element)) return Error("InvalidParent");
@@ -354,7 +346,7 @@ EditorResult GaugeEditor::moveElement(Id id, Id newParentId, int index) {
 EditorResult GaugeEditor::removeElement(Id id) {
     if (!face) return Error("NoFace");
 
-    Element* element = asElement(find(id));
+    Element* element = find(id);
     if (!element) return Error("NotFound");
     if (element->isRoot()) return Error("CannotRemoveRoot");
 
@@ -373,7 +365,7 @@ EditorResult GaugeEditor::removeElement(Id id) {
 EditorResult GaugeEditor::replaceElementJson(Id id, const std::string& json) {
     if (!face) return Error("NoFace");
 
-    Element* element = asElement(find(id));
+    Element* element = find(id);
     if (!element) return Error("NotFound");
     if (element->isRoot()) return Error("CannotReplaceRoot");
 
@@ -412,7 +404,7 @@ EditorResult GaugeEditor::bringForward(Id id) {
 }
 
 EditorResult GaugeEditor::bringToFront(Id id) {
-    Element* element = asElement(find(id));
+    Element* element = find(id);
     if (!element) return Error("NotFound");
     if (element->isRoot()) return Error("CannotReorderRoot");
 
@@ -434,7 +426,7 @@ EditorResult GaugeEditor::sendToBack(Id id) {
 EditorResult GaugeEditor::reorderElement(Id id, int newIndex) {
     if (!face) return Error("NoFace");
 
-    Element* element = asElement(find(id));
+    Element* element = find(id);
     if (!element) return Error("NotFound");
     if (element->isRoot()) return Error("CannotReorderRoot");
 
@@ -471,7 +463,7 @@ EditorResult GaugeEditor::reorderElement(Id id, int newIndex) {
 }
 
 EditorResult GaugeEditor::copyElement(Id id) {
-    const Element* element = asElement(find(id));
+    const Element* element = find(id);
     if (!element) return Error("NotFound");
 
     rapidjson::Document doc;
@@ -495,7 +487,7 @@ EditorResult GaugeEditor::pasteToReplaceElement(Id id) {
 }
 
 EditorResult GaugeEditor::duplicateElement(Id id) {
-    Element* element = asElement(find(id));
+    Element* element = find(id);
     if (!element) return Error("NotFound");
     if (element->isRoot()) return Error("CannotDuplicateRoot");
 
@@ -510,7 +502,7 @@ EditorResult GaugeEditor::duplicateElement(Id id) {
 }
 
 EditorResult GaugeEditor::getElementBoundsJson(Id id) const {
-    const Element* element = asElement(find(id));
+    const Element* element = find(id);
     if (!element) return Error("NotFound");
 
     return makeBoundsResult(id, element->getBounds());
@@ -522,7 +514,7 @@ EditorResult GaugeEditor::listElementBoundsJson() const {
     auto& a = d.GetAllocator();
 
     for (const auto& node : nodes) {
-        const Element* element = asElement(find(node.id));
+        const Element* element = find(node.id);
         if (!element) continue;
 
         const Rect<float>& bounds = element->getBounds();
