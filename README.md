@@ -83,4 +83,9 @@ These are currently vendored in the [`lib/`](./lib) directory.
 
 ## License
 
-license here...
+This project is free to use for personal, educational, and non-commercial purposes.
+
+You may not use this code in any product or service that is sold or monetized
+without permission.
+
+If you're unsure whether your use case is allowed, feel free to reach out.
