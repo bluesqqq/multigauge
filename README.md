@@ -79,6 +79,8 @@ These are currently vendored in the [`lib/`](./lib) directory.
 
 `multigauge-core` and its targets are actively under development. The architecture is in place, but breaking changes may still occur as the project evolves.
 
+⚠️ If you plan to build on top of the project at this stage, be aware that APIs, file formats, and integration details are <b>very</b> likely to change. You should expect to update your code as the project matures.
+
 ## License
 
 license here...
