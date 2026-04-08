@@ -23,7 +23,7 @@ I should put some demos here...
 
 - JSON-defined gauge layouts
 - Platform-agnostic rendering architecture
-- Reusable gauge elements and styling
+- Various reusable gauge elements [(see the list)](./docs/elements.md) and styling options
 - Built-in editor metadata and serialization support
 - Support for embedded and web-based targets
 
@@ -62,7 +62,7 @@ At a minimum, a target implementation should provide:
 
 These services are grouped together through [`Platform`](./include/multigauge/Platform.h), which must be set before using the core API.
 
-See [Porting](./porting.md) for more information.
+See [Porting](./docs/porting.md) for more information.
 
 ## Dependencies
 

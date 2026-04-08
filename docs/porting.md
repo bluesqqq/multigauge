@@ -6,20 +6,20 @@ This guide covers the minimum pieces required to bring `multigauge-core` to a ne
 
 `multigauge-core` is designed to stay platform-agnostic. A target implementation is responsible for supplying the platform services the core runtime depends on:
 
-- [`GraphicsContext`](./include/multigauge/graphics/GraphicsContext.h)
-- [`FileSystem`](./include/multigauge/io/FileSystem.h)
-- [`Time`](./include/multigauge/io/Time.h)
-- [`Logger`](./include/multigauge/io/Logger.h) (optional)
+- [`GraphicsContext`](../include/multigauge/graphics/GraphicsContext.h)
+- [`FileSystem`](../include/multigauge/io/FileSystem.h)
+- [`Time`](../include/multigauge/io/Time.h)
+- [`Logger`](../include/multigauge/io/Logger.h) (optional)
 
-Those services are grouped together by [`Platform`](./include/multigauge/Platform.h), which must be registered before using the core API.
+Those services are grouped together by [`Platform`](../include/multigauge/Platform.h), which must be registered before using the core API.
 
 ## Porting Checklist
 
-- Implement a target-specific [`GraphicsContext`](./include/multigauge/graphics/GraphicsContext.h)
-- Implement a target-specific [`FileSystem`](./include/multigauge/io/FileSystem.h)
-- Implement a target-specific [`Time`](./include/multigauge/io/Time.h)
-- Optionally implement a [`Logger`](./include/multigauge/io/Logger.h)
-- Construct a [`Platform`](./include/multigauge/Platform.h) with those services
+- Implement a target-specific [`GraphicsContext`](../include/multigauge/graphics/GraphicsContext.h)
+- Implement a target-specific [`FileSystem`](../include/multigauge/io/FileSystem.h)
+- Implement a target-specific [`Time`](../include/multigauge/io/Time.h)
+- Optionally implement a [`Logger`](../include/multigauge/io/Logger.h)
+- Construct a [`Platform`](../include/multigauge/Platform.h) with those services
 - Call `setPlatform(...)` exactly once during startup
 - Call `initPlatform()` before using `GFX()`, `FS()`, `TIME()`, `LOG()`, or `mg::*`
 - Load a gauge definition with `mg::init(...)` or `GaugeView::load(...)`
@@ -29,7 +29,7 @@ Those services are grouped together by [`Platform`](./include/multigauge/Platfor
 
 ### GraphicsContext
 
-[`GraphicsContext`](./include/multigauge/graphics/GraphicsContext.h) is the largest part of a new port. It provides the low-level drawing primitives used by the higher-level `Graphics` wrapper.
+[`GraphicsContext`](../include/multigauge/graphics/GraphicsContext.h) is the largest part of a new port. It provides the low-level drawing primitives used by the higher-level `Graphics` wrapper.
 
 At a minimum, your implementation must support:
 
@@ -44,7 +44,7 @@ In practice, most ports map these calls onto an existing graphics backend or har
 
 ### FileSystem
 
-[`FileSystem`](./include/multigauge/io/FileSystem.h) is used to load gauge definitions and assets.
+[`FileSystem`](../include/multigauge/io/FileSystem.h) is used to load gauge definitions and assets.
 
 Current expectations:
 
@@ -58,7 +58,7 @@ Image asset loading currently prefixes paths with `/assets/images/`, so image re
 
 ### Time
 
-[`Time`](./include/multigauge/io/Time.h) is used for frame timing and animation updates.
+[`Time`](../include/multigauge/io/Time.h) is used for frame timing and animation updates.
 
 Your implementation must provide:
 
@@ -69,7 +69,7 @@ Your implementation must provide:
 
 ### Logger
 
-[`Logger`](./include/multigauge/io/Logger.h) is optional but strongly recommended while bringing up a new port.
+[`Logger`](../include/multigauge/io/Logger.h) is optional but strongly recommended while bringing up a new port.
 
 If no logger is supplied, the engine can still run, but you lose useful diagnostics during file loading, image decoding, and runtime debugging.
 
@@ -78,7 +78,7 @@ If no logger is supplied, the engine can still run, but you lose useful diagnost
 The expected startup sequence is:
 
 1. Construct your concrete platform services
-2. Construct a [`Platform`](./include/multigauge/Platform.h)
+2. Construct a [`Platform`](../include/multigauge/Platform.h)
 3. Call `setPlatform(platform)`
 4. Call `initPlatform()`
 5. Call `mg::init(pathToGaugeJson)`
@@ -144,9 +144,9 @@ Adjust the file paths and application loop to match your target environment.
 
 ## Related Files
 
-- [`Platform`](./include/multigauge/Platform.h)
-- [`App`](./include/multigauge/App.h)
-- [`GraphicsContext`](./include/multigauge/graphics/GraphicsContext.h)
-- [`FileSystem`](./include/multigauge/io/FileSystem.h)
-- [`Time`](./include/multigauge/io/Time.h)
-- [`Logger`](./include/multigauge/io/Logger.h)
+- [`Platform`](../include/multigauge/Platform.h)
+- [`App`](../include/multigauge/App.h)
+- [`GraphicsContext`](../include/multigauge/graphics/GraphicsContext.h)
+- [`FileSystem`](../include/multigauge/io/FileSystem.h)
+- [`Time`](../include/multigauge/io/Time.h)
+- [`Logger`](../include/multigauge/io/Logger.h)
