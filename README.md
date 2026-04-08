@@ -1,4 +1,10 @@
-# multigauge-core
+<p align="center">
+  <a href="https://www.multi-gauge.com/">
+    <img src="./assets/multigauge.png" alt="Multigauge" width="250" />
+  </a>
+</p>
+
+<h1 align="center">Multigauge</h1>
 
 <p align="center">
   <em> <a href="https://www.multi-gauge.com/"><b>Multigauge</b></a> is a platform-agnostic <b>automotive gauge rendering engine</b> for building highly customizable, data-driven digital dashboards. It aims to make custom instrumentation both <b>powerful</b> and <b>aesthetically pleasing.</b></em>
