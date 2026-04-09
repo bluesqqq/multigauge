@@ -20,9 +20,14 @@ GaugeView::~GaugeView() = default;
 bool GaugeView::load(const char* gaugePath) {
     if (!gaugePath || !assets) return false;
 
+    LOG_INFO("gauge", "Loading gauge: %s", gaugePath);
+
     rapidjson::Document doc;
     if (!assets->loadJson(gaugePath, doc)) return false;
-    if (!doc.IsObject()) return false;
+    if (!doc.IsObject()) {
+        LOG_ERROR("gauge", "Gauge document root is not an object: %s", gaugePath);
+        return false;
+    }
 
     assets->clearEmbeddedAssets();
 
@@ -47,9 +52,15 @@ bool GaugeView::load(const char* gaugePath) {
     }
 
     face.load(rootIt->value);
-    LOG_INFO("gauge", "Loaded gaugeface: %s", gaugePath);
+    LOG_DEBUG("gauge", "Gauge face JSON parsed; initializing assets for: %s", gaugePath);
 
-    return face.init(*assets);
+    if (!face.init(*assets)) {
+        LOG_ERROR("gauge", "Gauge face initialization failed: %s", gaugePath);
+        return false;
+    }
+
+    LOG_INFO("gauge", "Gauge ready: %s", gaugePath);
+    return true;
 }
 
 void GaugeView::frame(uint64_t deltaUs) {

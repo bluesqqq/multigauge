@@ -18,16 +18,16 @@ class AssetManager {
             std::vector<uint8_t> data;
         };
 
-        FileSystem& fs;
-        GraphicsContext& ctx;
-        std::unordered_map<std::string, EmbeddedAsset> embeddedAssets;
-
         enum class ImageType {
             Unknown,
             BMP,
             PNG,
             JPG
         };
+
+        FileSystem& fs;
+        GraphicsContext& ctx;
+        std::unordered_map<std::string, EmbeddedAsset> embeddedAssets;
 
         static ImageType detectImageType(const uint8_t* data, size_t size) {
             if (size >= 2 && data[0] == 'B' && data[1] == 'M') {
@@ -58,6 +58,15 @@ class AssetManager {
                 case ImageType::PNG: return "image/png";
                 case ImageType::JPG: return "image/jpeg";
                 default: return nullptr;
+            }
+        }
+
+        static const char* imageTypeName(ImageType type) {
+            switch (type) {
+                case ImageType::BMP: return "BMP";
+                case ImageType::PNG: return "PNG";
+                case ImageType::JPG: return "JPG";
+                default: return "Unknown";
             }
         }
 
