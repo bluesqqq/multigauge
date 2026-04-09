@@ -9,14 +9,14 @@ class ImageElement : public Element {
         MG_EDITOR_NAME("Image")
     MG_TYPE_ID("image")
     private:
-        std::string path;
+        std::string imagePath;
 
         Image image;
 
         // PropertyObject props list
         MG_PROPS_PARENT(Element)
         MG_PROPS_BEGIN()
-    MG_PROP(path, "path", "Image Path", "Filepath of image.")
+    MG_PROP(imagePath, "path", "Image Path", "Filepath of image.")
         MG_PROPS_END()
 
     public:

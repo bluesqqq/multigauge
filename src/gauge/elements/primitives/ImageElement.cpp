@@ -1,11 +1,11 @@
 #include <multigauge/gauge/elements/primitives/ImageElement.h>
 
 bool ImageElement::init(AssetManager &assetManager) {
-    if (path.empty()) {
+    if (imagePath.empty()) {
         image = Image();
         return true;
     }
-    return assetManager.loadImage(path ? path : "", image);
+    return assetManager.loadImage(imagePath, image);
 }
 
 void ImageElement::draw(Graphics &g) const {
