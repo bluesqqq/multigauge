@@ -119,6 +119,8 @@ class GaugeEditor {
 
         /// @brief Returns the current gauge face serialized as JSON.
         std::string saveFace() const;
+        /// @brief Rebuilds the editor index after the face was externally reloaded in place.
+        void syncAfterExternalLoad();
         EditorResult getHistoryState() const;
         EditorResult undo();
         EditorResult redo();

@@ -164,6 +164,10 @@ std::string GaugeEditor::saveFace() const {
     return toString(doc);
 }
 
+void GaugeEditor::syncAfterExternalLoad() {
+    rebuildIndex();
+}
+
 EditorResult GaugeEditor::getHistoryState() const {
     EditorResult result = OkObject();
     auto& data = result.data;

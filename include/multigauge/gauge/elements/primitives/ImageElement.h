@@ -3,11 +3,13 @@
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/colors/Color.h>
 
+#include <string>
+
 class ImageElement : public Element {
         MG_EDITOR_NAME("Image")
     MG_TYPE_ID("image")
     private:
-        const char* path = "";
+        std::string path;
 
         Image image;
 
