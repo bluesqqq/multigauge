@@ -8,20 +8,49 @@
       "type": "string",
       "description": "Optional. JSON Schema reference for editor tooling."
     },
-    "type": {
-      "type": "string"
+    "assets": {
+      "$ref": "#/$defs/assets"
     },
-    "style": {
-      "$ref": "#/$defs/style"
-    },
-    "props": {
-      "$ref": "#/$defs/props"
-    },
-    "children": {
-      "$ref": "#/$defs/children"
+    "root": {
+      "$ref": "#/$defs/baseElement"
     }
   },
+  "required": [
+    "assets",
+    "root"
+  ],
   "$defs": {
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "mediaType",
+        "data"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "mediaType": {
+          "type": "string",
+          "enum": [
+            "image/png",
+            "image/jpeg",
+            "image/bmp"
+          ]
+        },
+        "data": {
+          "type": "string"
+        }
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/asset"
+      }
+    },
     "element": {
       "oneOf": [
         {

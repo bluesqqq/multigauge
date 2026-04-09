@@ -20,7 +20,7 @@ class GaugeFace : public PropertyObject {
         GaugeFace();
         ~GaugeFace() = default;
 
-        void load(const rapidjson::Document& doc);
+        void load(const rapidjson::Value& json);
 
         rapidjson::Document save() const;
 

@@ -7,11 +7,20 @@
 #include <rapidjson/document.h>
 
 #include <cstddef>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 class AssetManager {
     private:
+        struct EmbeddedAsset {
+            std::string mediaType;
+            std::vector<uint8_t> data;
+        };
+
         FileSystem& fs;
         GraphicsContext& ctx;
+        std::unordered_map<std::string, EmbeddedAsset> embeddedAssets;
 
         enum class ImageType {
             Unknown,
@@ -43,10 +52,21 @@ class AssetManager {
             return ImageType::Unknown;
         }
 
+        static const char* imageTypeMediaType(ImageType type) {
+            switch (type) {
+                case ImageType::BMP: return "image/bmp";
+                case ImageType::PNG: return "image/png";
+                case ImageType::JPG: return "image/jpeg";
+                default: return nullptr;
+            }
+        }
+
     public:
         AssetManager(FileSystem& fs, GraphicsContext& ctx) : fs(fs), ctx(ctx) {}
 
         bool loadJson(const std::string& path, rapidjson::Document& out);
+        void clearEmbeddedAssets();
+        bool loadDocumentAssets(const rapidjson::Value::ConstArray& assets);
 
         bool loadImage(const std::string& path, Image& out);
 };

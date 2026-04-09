@@ -10,9 +10,9 @@ namespace {
 
 GaugeFace::GaugeFace() : config(createGaugeConfig(), &YGConfigFree), root(nullptr, config.get()) {}
 
-void GaugeFace::load(const rapidjson::Document& doc) {
-    if (!doc.IsObject()) return;
-    root.loadFromJson(doc.GetObject());
+void GaugeFace::load(const rapidjson::Value& json) {
+    if (!json.IsObject()) return;
+    root.loadFromJson(json.GetObject());
 }
 
 rapidjson::Document GaugeFace::save() const {
