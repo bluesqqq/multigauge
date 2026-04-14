@@ -12,6 +12,7 @@
 #include <rapidjson/document.h>
 #include <multigauge/properties/Codec.h>
 #include <multigauge/properties/PolymorphicRegistry.h>
+#include <multigauge/properties/WidgetTraits.h>
 
 #include <multigauge/properties/Property.h>
 
@@ -19,13 +20,6 @@
 
 struct rgba;
 class PropertyObject;
-
-template <typename T, typename = void>
-struct MgPropWidgetTraits;
-template <typename T>
-struct MgPropNullableTraits {
-    static constexpr bool value = false;
-};
 
 
 //----------[ ENCODE + DECODE ]----------//
@@ -282,53 +276,6 @@ struct MgPropsParentGetter {
 template <typename T>
 struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list)>> {
     static constexpr PropertyObject::PropertyList::ParentGetter value = &T::__mg_parent_property_list;
-};
-
-template <typename T, typename>
-struct MgPropWidgetTraits { static constexpr const char* value = "json"; };
-
-template <typename T>
-struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>>> {
-    static constexpr const char* value = "select";
-};
-
-#define MG_EDITOR_WIDGET(type, widget_literal) \
-template <> \
-struct MgPropWidgetTraits<type> { static constexpr const char* value = widget_literal; };
-
-MG_EDITOR_WIDGET(bool, "boolean")
-MG_EDITOR_WIDGET(rgba, "color-selector")
-
-template <typename T>
-struct MgPropWidgetTraits<T, std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<T, bool>>> {
-    static constexpr const char* value = "number";
-};
-
-MG_EDITOR_WIDGET(std::string, "string")
-
-template <typename T>
-struct MgPropWidgetTraits<std::optional<T>> {
-    static constexpr const char* value = MgPropWidgetTraits<T>::value;
-};
-
-template <typename T>
-struct MgPropWidgetTraits<std::vector<T>> {
-    static constexpr const char* value = "array";
-};
-
-template <typename T>
-struct MgPropNullableTraits<std::optional<T>> {
-    static constexpr bool value = true;
-};
-
-template <typename T>
-struct MgPropWidgetTraits<T, std::enable_if_t<std::is_base_of_v<PropertyObject, T>>> {
-    static constexpr const char* value = "group";
-};
-
-template <typename T>
-struct MgPropWidgetTraits<std::unique_ptr<T>> {
-    static constexpr const char* value = MgPropWidgetTraits<T>::value;
 };
 
 #include <multigauge/properties/PropertyMacros.h>

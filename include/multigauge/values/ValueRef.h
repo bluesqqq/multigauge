@@ -2,7 +2,8 @@
 
 #include <string>
 
-#include <multigauge/properties/PropertyObject.h>
+#include <multigauge/properties/Codec.h>
+#include <multigauge/properties/WidgetTraits.h>
 #include <multigauge/values/Value.h>
 
 class ValueRef {
