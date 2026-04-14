@@ -1,4 +1,4 @@
-#include <multigauge/properties/rules/Rules.h>
+#include <multigauge/properties/meta/rules/Rules.h>
 
 static rapidjson::Value moveRulesIntoArray(rapidjson::Document::AllocatorType& a, std::initializer_list<rapidjson::Value> rules) {
     rapidjson::Value array(rapidjson::kArrayType);

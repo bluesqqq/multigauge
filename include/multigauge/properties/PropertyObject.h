@@ -232,7 +232,7 @@ protected:
 
 
     template <auto MemberPtr, auto CallbackPtr = nullptr>
-    static Property makeProperty(const char* key, const char* name, const char* description, PropertyMetadata::RuleListGetter visibleWhen = nullptr, PropertyMetadata::RuleListGetter interactableWhen = nullptr, bool inspectorVisible = true) {
+    static Property makeProperty(const char* key, const char* name, const char* description, mg::PropertyMetadata::RuleListGetter visibleWhen = nullptr, mg::PropertyMetadata::RuleListGetter interactableWhen = nullptr, bool inspectorVisible = true) {
         using T = MemberType<MemberPtr>;
 
         Property p{};
@@ -240,7 +240,7 @@ protected:
         p.set = &PropertyObject::setMember<MemberPtr, CallbackPtr>;
         p.get = &PropertyObject::getMember<MemberPtr>;
 
-        PropertyMetadata meta{};
+        mg::PropertyMetadata meta{};
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
         meta.widget = MgPropWidgetTraits<T>::value;
@@ -259,8 +259,8 @@ protected:
         return {p.key, p.set, p.get, p.getChild, p.getChildMutable, meta};
     }
 
-    static Property makeCustomProperty(const char* key, const char* name, const char* description, PropertyMetadata::RuleListGetter visibleWhen, PropertyMetadata::RuleListGetter interactableWhen, bool inspectorVisible, Property::Setter set, Property::Getter get) {
-        PropertyMetadata meta{};
+    static Property makeCustomProperty(const char* key, const char* name, const char* description, mg::PropertyMetadata::RuleListGetter visibleWhen, mg::PropertyMetadata::RuleListGetter interactableWhen, bool inspectorVisible, Property::Setter set, Property::Getter get) {
+        mg::PropertyMetadata meta{};
         meta.name = name ? name : key;
         meta.description = description ? description : "No description.";
         meta.widget = "json";

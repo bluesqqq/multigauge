@@ -1,43 +1,11 @@
 #pragma once
 
 #include <rapidjson/document.h>
+
 #include <multigauge/properties/EnumTraits.h>
-#include <multigauge/properties/rules/Rules.h>
+#include <multigauge/properties/meta/PropertyMetadata.h>
 
 class PropertyObject;
-
-struct PropertyMetadata {
-    using OptionsGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
-    using TypeListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
-    using RuleListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
-
-    //----------[ GENERIC ]----------//
-
-    /// Display name used in editor
-    const char* name = nullptr;
-    ///  Brief description used in editor
-    const char* description = nullptr;
-    /// Widget type to display for UI in editor
-    const char* widget = nullptr;
-
-    //----------[ INTERACTION ]----------//
-
-    /// Whether the editor should treat this property as nullable.
-    bool nullable = false;
-    /// Whether this property should be listed in inspector metadata.
-    bool inspectorVisible = true;
-    /// Declarative visibility rules for the editor UI.
-    RuleListGetter getVisibleWhen = nullptr;
-    /// Declarative interactability rules for the editor UI.
-    RuleListGetter getInteractableWhen = nullptr;
-
-    //----------[  ]----------//
-
-    /// Returns dropdown/select options metadata when available.
-    OptionsGetter getOptions = nullptr;
-    /// Returns available polymorphic types metadata when available.
-    TypeListGetter getTypes = nullptr;
-};
 
 struct Property {
     using Setter = bool (*)(PropertyObject*, const rapidjson::Value&);
@@ -55,7 +23,7 @@ struct Property {
     ChildGetter getChild = nullptr;
     ///  Returns mutable nested PropertyObject for group-like properties, or nullptr.
     ChildGetterMutable getChildMutable = nullptr;
-    const PropertyMetadata meta;
+    const mg::PropertyMetadata meta;
 
     rapidjson::Value getBaseMeta(rapidjson::Document::AllocatorType& a) const;
 };

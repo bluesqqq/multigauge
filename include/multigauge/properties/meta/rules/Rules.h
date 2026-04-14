@@ -1,9 +1,5 @@
 #pragma once
 
-#include <initializer_list>
-
-#include <rapidjson/document.h>
-
 /* Rules.h
  *
  * This header is purely for PropertyMetadata's optional visibleWhen and interactableWhen.
@@ -15,6 +11,10 @@
  * evaluate conditions. It is entirely up to the target editor to resolve. See 
  * docs/schemas/rules.schema.json for returned json schema.
  */
+
+#include <initializer_list>
+
+#include <rapidjson/document.h>
 
 namespace mg::rules {
 
