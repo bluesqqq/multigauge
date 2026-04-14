@@ -192,3 +192,5 @@ inline bool set(const rapidjson::Value::ConstObject& o, const char* key, T& out)
     if (it == o.MemberEnd()) return false;
     return decodeAny(it->value, out);
 }
+
+#include <multigauge/properties/PropertyCodec.h>
