@@ -71,10 +71,10 @@ rapidjson::Value PropertyObject::getPropertiesMeta(rapidjson::Document::Allocato
 rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson::Document::AllocatorType& a) const {
     rapidjson::Value meta = prop.getBaseMeta(a);
 
-    if (prop.getChild) {
+    if (prop.getChildConst) {
         if (prop.meta.getTypesMeta) {
             rapidjson::Value types(rapidjson::kObjectType);
-            const PropertyObject* child = prop.getChild(this);
+            const PropertyObject* child = prop.getChildConst(this);
 
             if (child && child->typeId()) {
                 types.AddMember("current", rapidjson::Value(child->typeId(), a), a);
@@ -87,7 +87,7 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
         }
 
         rapidjson::Value props(rapidjson::kArrayType);
-        const PropertyObject* child = prop.getChild(this);
+        const PropertyObject* child = prop.getChildConst(this);
         if (child) {
             props = child->getPropertiesMeta(a);
         }
@@ -149,9 +149,9 @@ bool PropertyObject::resolvePath(const std::string& path, PropertyObject*& owner
             return true;
         }
 
-        if (!p->getChildMutable) return false;
+        if (!p->getChild) return false;
 
-        current = p->getChildMutable(current);
+        current = p->getChild(current);
         if (!current) return false;
     }
 
@@ -179,9 +179,9 @@ bool PropertyObject::resolvePath(const std::string& path, const PropertyObject*&
             return true;
         }
 
-        if (!p->getChild) return false;
+        if (!p->getChildConst) return false;
 
-        current = p->getChild(current);
+        current = p->getChildConst(current);
         if (!current) return false;
     }
 

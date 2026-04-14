@@ -121,9 +121,7 @@ template <typename T>
 struct ChildObjectTraits<std::optional<T>, std::enable_if_t<std::is_base_of_v<::PropertyObject, T>>> {
     static constexpr bool supported = true;
 
-    static const ::PropertyObject* getConst(const std::optional<T>& value) {
-        return value ? &(*value) : nullptr;
-    }
+    static const ::PropertyObject* getConst(const std::optional<T>& value) { return value ? &(*value) : nullptr; }
 
     static ::PropertyObject* getMutable(std::optional<T>& value) {
         return value ? &(*value) : nullptr;
@@ -132,7 +130,7 @@ struct ChildObjectTraits<std::optional<T>, std::enable_if_t<std::is_base_of_v<::
 
 /// Returns the const child object exposed by a member pointer.
 template <auto MemberPtr>
-const ::PropertyObject* getChildObject(const ::PropertyObject* obj) {
+const ::PropertyObject* getChildObjectConst(const ::PropertyObject* obj) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
@@ -142,7 +140,7 @@ const ::PropertyObject* getChildObject(const ::PropertyObject* obj) {
 
 /// Returns the mutable child object exposed by a member pointer.
 template <auto MemberPtr>
-::PropertyObject* getChildObjectMutable(::PropertyObject* obj) {
+::PropertyObject* getChildObject(::PropertyObject* obj) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
@@ -185,10 +183,10 @@ Property makeProperty(const char* key, const char* name, const char* description
 
     if constexpr (detail::ChildObjectTraits<T>::supported) {
         p.getChild = &detail::getChildObject<MemberPtr>;
-        p.getChildMutable = &detail::getChildObjectMutable<MemberPtr>;
+        p.getChildConst = &detail::getChildObjectConst<MemberPtr>;
     }
 
-    return {p.key, p.set, p.get, p.getChild, p.getChildMutable, meta};
+    return {p.key, p.set, p.get, p.getChild, p.getChildConst, meta};
 }
 
 /// Builds a `Property` descriptor from custom setter and getter functions.
