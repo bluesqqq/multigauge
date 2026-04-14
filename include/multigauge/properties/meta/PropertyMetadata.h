@@ -1,7 +1,7 @@
 #pragma once
 
 #include <rapidjson/document.h>
-#include <multigauge/properties/meta/rules/Rules.h>
+#include <multigauge/properties/meta/Rules.h>
 
 namespace mg {
 
