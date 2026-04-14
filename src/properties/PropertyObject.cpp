@@ -17,13 +17,13 @@ const Property* PropertyObject::findProperty(const char* key) const {
     return found;
 }
 
-bool PropertyObject::loadProperty(const char* key, const rapidjson::Value& v) {
+bool PropertyObject::setProperty(const char* key, const rapidjson::Value& v) {
     const Property* property = findProperty(key);
     if (!property || !property->set) return false;
     return property->set(this, v);
 }
 
-bool PropertyObject::saveProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
+bool PropertyObject::getProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
     const Property* property = findProperty(key);
     if (!property || !property->get) return false;
     return property->get(this, out, a);
@@ -32,7 +32,7 @@ bool PropertyObject::saveProperty(const char* key, rapidjson::Value& out, rapidj
 void PropertyObject::loadProperties(rapidjson::Value::ConstObject json) {
     for (auto it = json.MemberBegin(); it != json.MemberEnd(); ++it) {
         const char* key = it->name.GetString();
-        loadProperty(key, it->value);
+        setProperty(key, it->value);
     }
 }
 
@@ -72,7 +72,7 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
     rapidjson::Value meta = prop.getBaseMeta(a);
 
     if (prop.getChild) {
-        if (prop.meta.getTypes) {
+        if (prop.meta.getTypesMeta) {
             rapidjson::Value types(rapidjson::kObjectType);
             const PropertyObject* child = prop.getChild(this);
 
@@ -82,7 +82,7 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
                 types.AddMember("current", rapidjson::Value(rapidjson::kNullType), a);
             }
 
-            types.AddMember("all", prop.meta.getTypes(a), a);
+            types.AddMember("all", prop.meta.getTypesMeta(a), a);
             meta.AddMember("types", std::move(types), a);
         }
 

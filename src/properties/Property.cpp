@@ -11,7 +11,7 @@ rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) co
     metaJson.AddMember("inspectorVisible", meta.inspectorVisible, a);
     if (meta.getVisibleWhen) metaJson.AddMember("visibleWhen", meta.getVisibleWhen(a), a);
     if (meta.getInteractableWhen) metaJson.AddMember("interactableWhen", meta.getInteractableWhen(a), a);
-    if (meta.getOptions) metaJson.AddMember("options", meta.getOptions(a), a);
+    if (meta.getOptionsMeta) metaJson.AddMember("options", meta.getOptionsMeta(a), a);
 
     return metaJson;
 }

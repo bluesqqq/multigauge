@@ -239,7 +239,7 @@ void Element::saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorTy
     }
 
     rapidjson::Value styleValue;
-    if (saveProperty("style", styleValue, a)) {
+    if (getProperty("style", styleValue, a)) {
         out.AddMember(rapidjson::Value("style", a), std::move(styleValue), a);
     }
 

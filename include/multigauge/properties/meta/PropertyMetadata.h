@@ -42,9 +42,9 @@ struct PropertyMetadata {
     //----------[  ]----------//
 
     /// Returns dropdown/select options metadata when available.
-    OptionsGetter getOptions = nullptr;
+    OptionsGetter getOptionsMeta = nullptr;
     /// Returns available polymorphic types metadata when available.
-    TypeListGetter getTypes = nullptr;
+    TypeListGetter getTypesMeta = nullptr;
 };
 
 }

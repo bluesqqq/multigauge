@@ -20,11 +20,12 @@ Not every public member needs a comment. Document public members only when they 
 
 ## Required Function Documentation
 
-Every public function or method in a header should include:
+Every documented public function or method in a header should include:
 
 - a brief
-- `@param` for every parameter
-- `@return` for every non-`void` function
+- `@param` only when a parameter needs explanation beyond the signature
+- `@tparam` only when a template parameter needs explanation beyond the signature
+- `@return` only when the return value needs explanation beyond the signature
 
 ## Brief Rules
 
@@ -69,10 +70,24 @@ This rule is for functions and methods.
 
 Type and member comments do not need to follow it if a noun phrase reads better.
 
+## Identifier Formatting
+
+Wrap C++ identifiers in prose with backticks.
+
+This includes:
+
+- type names such as `Property` and `rapidjson::Value`
+- function and method names such as `setProperty`
+- macros such as `MG_PROP`
+- enum values and symbolic constants such as `Type::Static` and `nullptr`
+
+Do not use backticks for ordinary English words that are not acting as code identifiers.
+
 ## Parameter Rules
 
-Every parameter must have an `@param`.
+Use `@param` only when it adds useful caller-facing information.
 
+- Skip `@param` when the name, type, and brief already make the parameter obvious.
 - Short descriptions are fine.
 - Do not write filler text.
 - Document caller-facing details when they matter.
@@ -93,15 +108,24 @@ Good:
 /// @param index Desired zero-based sibling index, or a negative value to append.
 ```
 
+## Template Parameter Rules
+
+Use `@tparam` only when it adds useful information for template users.
+
+- Skip `@tparam` when the template parameter meaning is obvious from the declaration.
+- Prefer `@tparam` when constraints, interpretation, or role are not obvious.
+
 ## Return Rules
 
-Every non-`void` function must have an `@return`.
+Use `@return` only when it adds useful information.
 
-`@return` should explain how to read the return value.
+`@return` should explain how to read the return value when that is not already obvious from the signature and brief.
 
 - If the meaning is simple, keep it short.
 - If the return value is structured, document the payload shape.
 - If machine-readable error codes matter to callers, document them.
+
+Skip `@return` when the return value is conventional and self-explanatory.
 
 If the function returns structured data, always document its shape.
 
@@ -246,8 +270,9 @@ Use this order for function documentation:
 
 1. brief
 2. `@note` if needed
-3. `@param`
-4. `@return`
+3. `@param` if needed
+4. `@tparam` if needed
+5. `@return` if needed
 5. anything else
 
 ## Header Vs Source Comments
