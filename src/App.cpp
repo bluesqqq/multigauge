@@ -79,9 +79,6 @@ void frame() {
     for (const auto& view : views) {
         view->frame(deltaUs);
     }
-
-    engineRPM.setValueBase(std::sin((float)nowUs / 1000000.0f) * 3000 + 4000);
-    engineCoolantTemp.setValueBase(std::sin((float)nowUs / 5000000.0f) * 10 + 0);
 }
 
 GaugeFace& getGaugeFace() {
