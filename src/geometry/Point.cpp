@@ -55,46 +55,46 @@ Point<T> Point<T>::getAnchored(const Rect<T>& rectangle, Anchor anchor) {
 }
 
 template <typename T>
-inline bool Point<T>::operator==(const Point<T>& other) const { return x == other.x && y == other.y; }
+bool Point<T>::operator==(const Point<T>& other) const { return x == other.x && y == other.y; }
 
 template <typename T>
-inline bool Point<T>::operator!=(const Point<T>& other) const { return !(*this == other); }
+bool Point<T>::operator!=(const Point<T>& other) const { return !(*this == other); }
 
 template <typename T>
-inline Point<T> Point<T>::operator-() const { return Point<T>(-x, -y); }
+Point<T> Point<T>::operator-() const { return Point<T>(-x, -y); }
 
 template <typename T>
-inline Point<T>& Point<T>::operator=(const Point<T>& other) { x = other.x; y = other.y; return *this; }
+Point<T>& Point<T>::operator=(const Point<T>& other) { x = other.x; y = other.y; return *this; }
 template <typename T>
-inline Point<T>& Point<T>::operator+=(const Point<T>& other) { x += other.x; y += other.y; return *this; }
+Point<T>& Point<T>::operator+=(const Point<T>& other) { x += other.x; y += other.y; return *this; }
 template <typename T>
-inline Point<T>& Point<T>::operator-=(const Point<T>& other) { x -= other.x; y -= other.y; return *this; }
+Point<T>& Point<T>::operator-=(const Point<T>& other) { x -= other.x; y -= other.y; return *this; }
 template <typename T>
-inline Point<T>& Point<T>::operator*=(const Point<T>& other) { x *= other.x; y *= other.y; return *this; }
+Point<T>& Point<T>::operator*=(const Point<T>& other) { x *= other.x; y *= other.y; return *this; }
 template <typename T>
-inline Point<T>& Point<T>::operator/=(const Point<T>& other) { x /= other.x; y /= other.y; return *this; }
+Point<T>& Point<T>::operator/=(const Point<T>& other) { x /= other.x; y /= other.y; return *this; }
 
 template <typename T>
-inline Point<T>& Point<T>::operator*=(float scalar) { x *= scalar; y *= scalar; return *this; }
+Point<T>& Point<T>::operator*=(float scalar) { x *= scalar; y *= scalar; return *this; }
 template <typename T>
-inline Point<T>& Point<T>::operator/=(float scalar) { x /= scalar; y /= scalar; return *this; }
+Point<T>& Point<T>::operator/=(float scalar) { x /= scalar; y /= scalar; return *this; }
 
 template <typename T>
-inline Point<T> Point<T>::operator-(const Point<T>& other) const { return Point<T>(x - other.x, y - other.y); }
+Point<T> Point<T>::operator-(const Point<T>& other) const { return Point<T>(x - other.x, y - other.y); }
 template <typename T>
-inline Point<T> Point<T>::operator+(const Point<T>& other) const { return Point<T>(x + other.x, y + other.y); }
+Point<T> Point<T>::operator+(const Point<T>& other) const { return Point<T>(x + other.x, y + other.y); }
 template <typename T>
-inline Point<T> Point<T>::operator*(const Point<T>& other) const { return Point<T>(x * other.x, y * other.y); }
+Point<T> Point<T>::operator*(const Point<T>& other) const { return Point<T>(x * other.x, y * other.y); }
 template <typename T>
-inline Point<T> Point<T>::operator/(const Point<T>& other) const { return Point<T>(x / other.x, y / other.y); }
+Point<T> Point<T>::operator/(const Point<T>& other) const { return Point<T>(x / other.x, y / other.y); }
 
 template <typename T>
-inline Point<T> Point<T>::operator*(float scalar) const { return Point<T>(x * scalar, y * scalar); }
+Point<T> Point<T>::operator*(float scalar) const { return Point<T>(x * scalar, y * scalar); }
 template <typename T>
-inline Point<T> Point<T>::operator/(float scalar) const { return Point<T>(x / scalar, y / scalar); }
+Point<T> Point<T>::operator/(float scalar) const { return Point<T>(x / scalar, y / scalar); }
 
 template <typename T>
-inline Point<T> Point<T>::operator^(float exponent) const { return Point<T>(powf(x, exponent), powf(y, exponent)); }
+Point<T> Point<T>::operator^(float exponent) const { return Point<T>(powf(x, exponent), powf(y, exponent)); }
 
 template <typename T>
 float Point<T>::magnitude() const { return std::sqrt(x * x + y * y); }

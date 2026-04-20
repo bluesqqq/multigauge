@@ -30,29 +30,29 @@ struct Point {
     static Point<T> getAnchored(const Point<T>& point, T width, T height, Anchor anchor);
     static Point<T> getAnchored(const Rect<T>& rectangle, Anchor anchor);
 
-    inline bool operator==(const Point<T>& other) const;
-    inline bool operator!=(const Point<T>& other) const;
+    bool operator==(const Point<T>& other) const;
+    bool operator!=(const Point<T>& other) const;
 
-    inline Point<T> operator-() const;
+    Point<T> operator-() const;
 
-    inline Point<T>& operator=(const Point<T>& other);
-    inline Point<T>& operator+=(const Point<T>& other);
-    inline Point<T>& operator-=(const Point<T>& other);
-    inline Point<T>& operator*=(const Point<T>& other);
-    inline Point<T>& operator/=(const Point<T>& other);
+    Point<T>& operator=(const Point<T>& other);
+    Point<T>& operator+=(const Point<T>& other);
+    Point<T>& operator-=(const Point<T>& other);
+    Point<T>& operator*=(const Point<T>& other);
+    Point<T>& operator/=(const Point<T>& other);
 
-    inline Point<T>& operator*=(float scalar);
-    inline Point<T>& operator/=(float scalar);
+    Point<T>& operator*=(float scalar);
+    Point<T>& operator/=(float scalar);
 
-    inline Point<T> operator-(const Point<T>& other) const;
-    inline Point<T> operator+(const Point<T>& other) const;
-    inline Point<T> operator*(const Point<T>& other) const;
-    inline Point<T> operator/(const Point<T>& other) const;
+    Point<T> operator-(const Point<T>& other) const;
+    Point<T> operator+(const Point<T>& other) const;
+    Point<T> operator*(const Point<T>& other) const;
+    Point<T> operator/(const Point<T>& other) const;
 
-    inline Point<T> operator*(float scalar) const;
-    inline Point<T> operator/(float scalar) const;
+    Point<T> operator*(float scalar) const;
+    Point<T> operator/(float scalar) const;
 
-    inline Point<T> operator^(float exponent) const;
+    Point<T> operator^(float exponent) const;
 
     float magnitude() const;
 
