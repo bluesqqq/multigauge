@@ -19,6 +19,7 @@ OwnedColor ValueColor::blended(rgba color, float alpha) const { return std::make
 OwnedColor ValueColor::blended(const Color &other, float alpha) const{
     switch(other.getType()) {
         case (Type::Static):
+        case (Type::User):
             return blended(other.getColor(), alpha);
 
         case (Type::Time):
