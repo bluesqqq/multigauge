@@ -8,6 +8,23 @@ UnitType::UnitType(const char* baseName, const char* baseAbbreviation, uint8_t b
     setDefaultUnit(defaultUnitIndex);
 }
 
+const UnitType& UnitType::find(const char* name) {
+    if (!name) return percentage;
+
+    if (strcmp(name, "temperature") == 0) return temperature;
+    if (strcmp(name, "distance") == 0) return distance;
+    if (strcmp(name, "pressure") == 0) return pressure;
+    if (strcmp(name, "velocity") == 0) return velocity;
+    if (strcmp(name, "acceleration") == 0) return acceleration;
+    if (strcmp(name, "volume") == 0) return volume;
+    if (strcmp(name, "volumePerTime") == 0) return volumePerTime;
+    if (strcmp(name, "revolutions") == 0) return revolutions;
+    if (strcmp(name, "angle") == 0) return angle;
+    if (strcmp(name, "percentage") == 0) return percentage;
+
+    return percentage;
+}
+
 void UnitType::setDefaultUnit(uint8_t index) { defaultUnitIndex = (index >= 0 && index < units.size()) ? index : 0; }
 
 float UnitType::convert(float value, int fromIndex, int toIndex) const {

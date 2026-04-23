@@ -13,6 +13,8 @@ class UnitType {
     public:
         UnitType(const char* baseName, const char* baseAbbreviation, uint8_t baseDecimalPlaces, const std::vector<Unit>& conversionUnits = {}, uint8_t defaultUnitIndex = 0);
 
+        static const UnitType& find(const char* name);
+
         void setDefaultUnit(uint8_t index);
 
         /// @brief Converts a value from one unit to another.
