@@ -1,88 +1,88 @@
 #include <multigauge/App.h>
-#include <multigauge/GaugeView.h>
 
+#include <multigauge/HandlePool.h>
 #include <multigauge/Platform.h>
+#include <multigauge/screens/GaugeScreen.h>
 #include <multigauge/io/Time.h>
-
-#include <algorithm>
-#include <cmath>
-#include <memory>
-#include <vector>
-
-namespace {
-    std::vector<std::unique_ptr<GaugeView>> views;
-    GaugeView* primaryView = nullptr;
-    GaugeFace fallbackFace;
-
-    uint64_t lastUs = 0;
-}
 
 namespace mg {
 
-GaugeView& createView(GraphicsContext& context, const char* gaugePath) {
-    auto view = std::make_unique<GaugeView>(context);
-    if (gaugePath) {
-        view->load(gaugePath);
-    }
-
-    GaugeView* rawView = view.get();
-    views.push_back(std::move(view));
-
-    if (!primaryView) {
-        primaryView = rawView;
-    }
-
-    return *rawView;
+namespace {
+    HandlePool<RuntimeContext> contexts;
+    bool initialized = false;
+    uint64_t lastUs = 0;
 }
 
-bool removeView(GaugeView& view) {
-    auto it = std::find_if(views.begin(), views.end(), [&](const std::unique_ptr<GaugeView>& candidate) {
-        return candidate.get() == &view;
-    });
+bool init(Platform& platform) {
+    if (initialized) {
+        return true;
+    }
 
-    if (it == views.end()) {
+    setPlatform(platform);
+    if (!initPlatform()) {
         return false;
     }
 
-    const bool removedPrimary = (primaryView == it->get());
-    views.erase(it);
-
-    if (removedPrimary) {
-        primaryView = views.empty() ? nullptr : views.front().get();
-    }
-
-    return true;
-}
-
-void clearViews() {
-    views.clear();
-    primaryView = nullptr;
-}
-
-GaugeView* getPrimaryView() { return primaryView; }
-
-bool init(const char* gaugePath) {
-    clearViews();
-    primaryView = &createView(GFX(), gaugePath);
-
+    contexts.clear();
+    initialized = true;
     lastUs = TIME().getMicros();
     return true;
 }
 
+void shutdown() {
+    contexts.clear();
+    initialized = false;
+    lastUs = 0;
+}
+
 void frame() {
-    if (views.empty()) return;
+    if (!initialized) return;
 
     const uint64_t nowUs = TIME().getMicros();
     const uint64_t deltaUs = nowUs - lastUs;
     lastUs = nowUs;
 
-    for (const auto& view : views) {
-        view->frame(deltaUs);
+    for (auto& context : contexts) {
+        context.frame(deltaUs);
     }
 }
 
-GaugeFace& getGaugeFace() {
-    return primaryView ? primaryView->getGaugeFace() : fallbackFace;
+ContextId addContext(GraphicsContext& graphics) {
+    RuntimeContext context(graphics);
+    const ContextId id = contexts.add(std::move(context));
+
+    if (auto* created = contexts.get(id)) {
+        created->setId(id);
+    }
+
+    return id;
+}
+
+bool removeContext(ContextId id) {
+    return contexts.remove(id);
+}
+
+RuntimeContext* getContext(ContextId id) {
+    return contexts.get(id);
+}
+
+bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
+    RuntimeContext* context = getContext(id);
+    if (!context || !screen) return false;
+    return context->setScreen(std::move(screen));
+}
+
+bool clearScreen(ContextId id) {
+    RuntimeContext* context = getContext(id);
+    if (!context) return false;
+
+    context->clearScreen();
+    return true;
+}
+
+bool showGauge(ContextId id, const char* gaugePath) {
+    if (!gaugePath) return false;
+    return setScreen(id, std::make_unique<GaugeScreen>(gaugePath));
 }
 
 } // namespace mg

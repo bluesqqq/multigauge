@@ -42,7 +42,6 @@ bool initPlatform() {
     }
 
     if (!p.fs.init()) return false;
-    if (!p.gfx.init()) return false;
 
     return true;
 }
