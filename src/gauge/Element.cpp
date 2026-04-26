@@ -1,3 +1,4 @@
+#include <multigauge/App.h>
 #include <multigauge/gauge/Element.h>
 
 #include <algorithm>
@@ -42,46 +43,18 @@ const Element::Registry& Element::registry() {
     return registry;
 }
 
-void Element::clearLayoutDirtyRecursive() {
-    layoutDirty = false;
-    for (auto& child : children) child->clearLayoutDirtyRecursive();
-}
-
-void Element::makeNode() {
-    if (!node) {
-        node = YGNodeNewWithConfig(config);
-        YGNodeSetContext(node, this);
-        style.setNode(node);
-        style.update();
-    }
-}
-
-void Element::removeNode() {
-    if (!node) return;
-
-    if (YGNodeRef owner = YGNodeGetOwner(node)) {
-        YGNodeRemoveChild(owner, node);
-    }
-
-    YGNodeSetContext(node, nullptr);
-    style.setNode(nullptr);
-    YGNodeFree(node);
-    node = nullptr;
-}
-
-void Element::markLayoutDirty() {
-    Element* n = this;
-    while (n->parent) n = n->parent;
-    n->layoutDirty = true;
-}
-
-Element::Element(Element* p, YGConfigRef cfg) : parent(p), config(p ? p->getConfig() : cfg) {
-    makeNode();
+Element::Element(Element* p) : parent(p), node(YGNodeNewWithConfig(mg::getYogaConfig())) {
+    YGNodeSetContext(node, this);
 }
 
 Element::~Element() {
     children.clear();
-    removeNode();
+
+    if (node) {
+        YGNodeSetContext(node, nullptr);
+        YGNodeFree(node);
+        node = nullptr;
+    }
 }
 
 namespace {
@@ -105,31 +78,13 @@ void Element::loadProps(const rapidjson::Value::ConstObject &json) {
 void Element::loadChildren(const rapidjson::Value::ConstObject &json) {
     if (json.HasMember("children") && json["children"].IsArray()) {
         children.clear();
-        for (const auto& child : json["children"].GetArray())
-            addChild(child.GetObject());
+        for (const auto& childJson : json["children"].GetArray()) {
+            OwnedElement child = Element::fromJson(childJson.GetObject());
+            if (!child) continue;
+
+            insertChild(std::move(child), children.size());
+        }
     }
-}
-
-Element* Element::addChild(const rapidjson::Value::ConstObject json) {
-    return insertChild(json, childCount());
-}
-
-Element* Element::insertChild(const rapidjson::Value::ConstObject json, std::size_t index) {
-    constexpr const char* TAG = "Element::addChild";
-
-    OwnedElement child = fromJson(this, json);
-    if (!child) {
-        LOG_ERROR(TAG, "fromJson returned nullptr; child skipped");
-        return nullptr;
-    }
-
-    Element* rawChild = child.get();
-    if (!insertChild(std::move(child), index)) {
-        LOG_ERROR(TAG, "insertChild returned false; child skipped");
-        return nullptr;
-    }
-
-    return rawChild;
 }
 
 bool Element::insertChild(OwnedElement child, std::size_t index) {
@@ -153,12 +108,11 @@ bool Element::insertChild(OwnedElement child, std::size_t index) {
     }
 
     children.insert(children.begin() + static_cast<std::ptrdiff_t>(childIndex), std::move(child));
-    markLayoutDirty();
     return true;
 }
 
-OwnedElement Element::detachChild(Element* child) {
-    constexpr const char* TAG = "Element::detachChild";
+OwnedElement Element::removeChild(Element* child) {
+    constexpr const char* TAG = "Element::removeChild";
     if (!child) {
         LOG_WARN(TAG, "Called with null child");
         return nullptr;
@@ -167,25 +121,18 @@ OwnedElement Element::detachChild(Element* child) {
     for (size_t i = 0; i < children.size(); ++i) {
         if (children[i].get() != child) continue;
 
-        LOG_DEBUG(TAG, "Detaching child=%p from parent=%p", (void*)child, (void*)this);
-        if (node && child->node && YGNodeGetOwner(child->node) == node) {
+        if (node && child->node && YGNodeGetOwner(child->node) == node)
             YGNodeRemoveChild(node, child->node);
-        }
 
         OwnedElement detached = std::move(children[i]);
         children.erase(children.begin() + static_cast<std::ptrdiff_t>(i));
 
         detached->parent = nullptr;
-        markLayoutDirty();
         return detached;
     }
 
     LOG_WARN(TAG, "Child=%p not found under parent=%p", (void*)child, (void*)this);
     return nullptr;
-}
-
-bool Element::removeChild(Element *child) {
-    return static_cast<bool>(detachChild(child));
 }
 
 bool Element::initRecursive(AssetManager &assetManager) {
@@ -204,31 +151,20 @@ void Element::updateRecursive(int deltaTime) {
     for (auto& c : children) c->updateRecursive(deltaTime);
 }
 
-void Element::layoutRecursive(float width, float height, YGDirection direction) {
-    Element* root = this;
-    while (root->parent) root = root->parent;
+void Element::layoutRecursive(float parentAbsX, float parentAbsY) {
+    style.apply(node);
+    
+    const float left = YGNodeLayoutGetLeft(node);
+    const float top  = YGNodeLayoutGetTop(node);
+    const float w    = YGNodeLayoutGetWidth(node);
+    const float h    = YGNodeLayoutGetHeight(node);
 
-    if (!root->node) return;
+    const float absX = parentAbsX + left;
+    const float absY = parentAbsY + top;
 
-    YGNodeCalculateLayout(root->node, width, height, direction);
-   
-    auto walk = [&](auto&& self, Element* e, float parentAbsX, float parentAbsY) -> void {
-        const float left   = YGNodeLayoutGetLeft(e->node);
-        const float top    = YGNodeLayoutGetTop(e->node);
-        const float w      = YGNodeLayoutGetWidth(e->node);
-        const float h      = YGNodeLayoutGetHeight(e->node);
+    bounds = Rect<float>(absX, absY, w, h);
 
-        const float absX = parentAbsX + left;
-        const float absY = parentAbsY + top;
-
-        e->bounds = Rect<float>(absX, absY, w, h);
-
-        for (auto& c : e->children) self(self, c.get(), absX, absY);
-    };
-
-    walk(walk, root, 0, 0);
-
-    root->clearLayoutDirtyRecursive();
+    for (auto& c : children)c->layoutRecursive(absX, absY);
 }
 
 void Element::saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
@@ -266,7 +202,8 @@ void Element::saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorTy
     }
     out.AddMember(rapidjson::Value("children", a), std::move(childArray), a);
 }
-OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObject json) {
+
+OwnedElement Element::fromJson(const rapidjson::Value::ConstObject json) {
     constexpr const char* TAG = "Element::fromJson";
 
     const char* type = nullptr;
@@ -277,13 +214,13 @@ OwnedElement Element::fromJson(Element *parent, const rapidjson::Value::ConstObj
 
     if (!type) {
         LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
-        out = std::make_unique<Element>(parent);
+        out = std::make_unique<Element>(nullptr);
     } else {
         const auto* descriptor = registry().find(type);
-        out = registry().create(type, parent);
-        if (!descriptor) {
-            LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
-        }
+
+        out = registry().create(type, nullptr);
+
+        if (!descriptor) LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
     }
 
     out->loadFromJson(json);

@@ -2,36 +2,43 @@
 
 #include <memory>
 #include <type_traits>
-#include <multigauge/gauge/elements/RootElement.h>
 #include <multigauge/graphics/colors/Color.h>
+#include <multigauge/gauge/Element.h>
 
 class GaugeFace : public PropertyObject {
     MG_EDITOR_NAME("Gauge Face")
 
     private:
-        using YogaConfigOwner = std::unique_ptr<std::remove_pointer_t<YGConfigRef>, decltype(&YGConfigFree)>;
+        YGNodeRef node = nullptr;
 
-        YogaConfigOwner config;
-        RootElement root;
+        std::vector<OwnedElement> children;
 
-        unsigned long lastUpdateTime = 0;
+        RootLayout style;
 
     public:
         GaugeFace();
-        ~GaugeFace() = default;
+        ~GaugeFace();
 
         void load(const rapidjson::Value& json);
-
         rapidjson::Document save() const;
 
-        void layout(Graphics& g);
-
-        void draw(Graphics& g) const;
-
-        void update(int deltaTime);
+        //----------[ LIFETIME ]----------//
 
         bool init(AssetManager& assetManager);
+        void update(int deltaTime);
+        void draw(Graphics& g) const;
 
-        Element* getRoot() { return &root; }
-        const Element* getRoot() const { return &root; }
+        //----------[ CHILDREN ]----------//
+
+        std::size_t childCount() const { return children.size(); }
+        Element* childAt(std::size_t i) { return children[i].get(); }
+        const Element* childAt(std::size_t i) const { return children[i].get(); }
+
+        bool insertChild(OwnedElement child, std::size_t index);
+        OwnedElement removeChild(Element* child);
+
+        //----------[ LAYOUT ]----------//
+
+        void layout(Graphics& g);
+        YGNodeRef getNode() const { return node; }
 };

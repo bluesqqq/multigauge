@@ -7,7 +7,7 @@ struct LayoutSize {
     enum class Unit { Px, Percent, Auto } unit = Unit::Auto;
 	float value = 0.0f;
 
-    void setPosition(YGNodeRef node, YGEdge edge) {
+    void setPosition(YGNodeRef node, YGEdge edge) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetPosition(node, edge, value); break;
             case Unit::Percent: YGNodeStyleSetPositionPercent(node, edge, value); break;
@@ -15,7 +15,7 @@ struct LayoutSize {
         }
     }
 
-    void setMargin(YGNodeRef node, YGEdge edge) {
+    void setMargin(YGNodeRef node, YGEdge edge) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetMargin(node, edge, value); break;
             case Unit::Percent: YGNodeStyleSetMarginPercent(node, edge, value); break;
@@ -23,7 +23,7 @@ struct LayoutSize {
         }
     }
 
-    void setPadding(YGNodeRef node, YGEdge edge) {
+    void setPadding(YGNodeRef node, YGEdge edge) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetPadding(node, edge, value); break;
             case Unit::Percent: YGNodeStyleSetPaddingPercent(node, edge, value); break;
@@ -31,7 +31,7 @@ struct LayoutSize {
         }
     }
 
-    void setWidth(YGNodeRef node) {
+    void setWidth(YGNodeRef node) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetWidth(node, value); break;
             case Unit::Percent: YGNodeStyleSetWidthPercent(node, value); break;
@@ -39,7 +39,7 @@ struct LayoutSize {
         }
     }
 
-    void setHeight(YGNodeRef node) {
+    void setHeight(YGNodeRef node) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetHeight(node, value); break;
             case Unit::Percent: YGNodeStyleSetHeightPercent(node, value); break;
@@ -47,7 +47,7 @@ struct LayoutSize {
         }
     }
 
-    void setMinWidth(YGNodeRef node) {
+    void setMinWidth(YGNodeRef node) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetMinWidth(node, value); break;
             case Unit::Percent: YGNodeStyleSetMinWidthPercent(node, value); break;
@@ -55,7 +55,7 @@ struct LayoutSize {
         }
     }
 
-    void setMinHeight(YGNodeRef node) {
+    void setMinHeight(YGNodeRef node) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetMinHeight(node, value); break;
             case Unit::Percent: YGNodeStyleSetMinHeightPercent(node, value); break;
@@ -63,7 +63,7 @@ struct LayoutSize {
         }
     }
 
-    void setMaxWidth(YGNodeRef node) {
+    void setMaxWidth(YGNodeRef node) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetMaxWidth(node, value); break;
             case Unit::Percent: YGNodeStyleSetMaxWidthPercent(node, value); break;
@@ -71,7 +71,7 @@ struct LayoutSize {
         }
     }
 
-    void setMaxHeight(YGNodeRef node) {
+    void setMaxHeight(YGNodeRef node) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetMaxHeight(node, value); break;
             case Unit::Percent: YGNodeStyleSetMaxHeightPercent(node, value); break;
@@ -79,7 +79,7 @@ struct LayoutSize {
         }
     }
 
-    void setBasis(YGNodeRef node) {
+    void setBasis(YGNodeRef node) const {
         switch (unit) {
             case Unit::Px: YGNodeStyleSetFlexBasis(node, value); break;
             case Unit::Percent: YGNodeStyleSetFlexBasisPercent(node, value); break;
@@ -216,14 +216,10 @@ struct EnumTraits<YGOverflow> {
 };
 
 struct Gap : public PropertyObject {
-    YGNodeRef node = nullptr;
-
     float row = 0;
     float column = 0;
 
-    void update() {
-        if (!node) return;
-
+    void apply(YGNodeRef node) const {
         YGNodeStyleSetGap(node, YGGutterRow, row);
         YGNodeStyleSetGap(node, YGGutterColumn, column);
     }
@@ -247,14 +243,12 @@ struct Gap : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-    MG_PROP_CALLBACK_UI(row,     "row",     "Row",     "Row gap.",    &Gap::update, nullptr, &Gap::rowInteractableWhen)
-    MG_PROP_CALLBACK_UI(column,  "column",  "Column",  "Column gap.", &Gap::update, nullptr, &Gap::columnInteractableWhen)
+    MG_PROP_UI(row,     "row",     "Row",     "Row gap.",    nullptr, &Gap::rowInteractableWhen)
+    MG_PROP_UI(column,  "column",  "Column",  "Column gap.", nullptr, &Gap::columnInteractableWhen)
     MG_PROPS_END()
 };
 
 struct FlexContainer : public PropertyObject {
-    YGNodeRef node = nullptr;
-
     YGFlexDirection direction = YGFlexDirectionRow;
     YGJustify justify = YGJustifyFlexStart;
     YGAlign alignItems = YGAlignStretch;
@@ -262,15 +256,13 @@ struct FlexContainer : public PropertyObject {
     YGWrap wrap = YGWrapNoWrap;
     Gap gap;
 
-    void update() {
-        if (!node) return;
-
+    void apply(YGNodeRef node) const {
         YGNodeStyleSetFlexDirection(node, direction);
         YGNodeStyleSetJustifyContent(node, justify);
         YGNodeStyleSetAlignItems(node, alignItems);
         YGNodeStyleSetAlignContent(node, alignContent);
         YGNodeStyleSetFlexWrap(node, wrap);
-        gap.update();
+        gap.apply(node);
     }
 
     static rapidjson::Value alignContentVisibleWhen(rapidjson::Document::AllocatorType& a) {
@@ -280,26 +272,22 @@ struct FlexContainer : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-    MG_PROP_CALLBACK(direction,    "direction",     "Direction",     "Direction of flex content.",        &FlexContainer::update)
-    MG_PROP_CALLBACK(justify,      "justify",       "Justify",       "Main-axis alignment of children.",  &FlexContainer::update)
-    MG_PROP_CALLBACK(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.", &FlexContainer::update)
-    MG_PROP_CALLBACK_UI(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::update, &FlexContainer::alignContentVisibleWhen, nullptr)
-    MG_PROP_CALLBACK(wrap,         "wrap",          "Wrap",          "Wrap setting for children.",        &FlexContainer::update)
+    MG_PROP(direction,    "direction",     "Direction",     "Direction of flex content.")
+    MG_PROP(justify,      "justify",       "Justify",       "Main-axis alignment of children.")
+    MG_PROP(alignItems,   "align-items",   "Align Items",   "Cross-axis alignment of children.")
+    MG_PROP_UI(alignContent, "align-content", "Align Content", "Cross-axis alignment of children.", &FlexContainer::alignContentVisibleWhen, nullptr)
+    MG_PROP(wrap,         "wrap",          "Wrap",          "Wrap setting for children.")
     MG_PROP(gap,                   "gap",           "Gap",           "Gap options.")
     MG_PROPS_END()
 };
 
 struct FlexItem : public PropertyObject {
-    YGNodeRef node = nullptr; 
-
     float grow = 0;
     float shrink = 1;
     LayoutSize basis;
     YGAlign alignSelf = YGAlignAuto;
 
-    void update() {
-        if (!node) return;
-
+    void apply(YGNodeRef node) const {
         YGNodeStyleSetFlexGrow(node, grow);
         YGNodeStyleSetFlexShrink(node, shrink);
         basis.setBasis(node);
@@ -307,16 +295,14 @@ struct FlexItem : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-    MG_PROP_CALLBACK(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.", &FlexItem::update)
-    MG_PROP_CALLBACK(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.",    &FlexItem::update)
-    MG_PROP_CALLBACK(basis,     "basis",      "Basis",      "Flex basis.",                                   &FlexItem::update)
-    MG_PROP_CALLBACK(alignSelf, "align-self", "Align Self", "Align self.",                                   &FlexItem::update)
+    MG_PROP(grow,      "grow",       "Grow",       "Rate element expands to fill avaiable space.")
+    MG_PROP(shrink,    "shrink",     "Shrink",     "Rate element contracts to avoid overflow.")
+    MG_PROP(basis,     "basis",      "Basis",      "Flex basis.")
+    MG_PROP(alignSelf, "align-self", "Align Self", "Align self.")
     MG_PROPS_END()
 };
 
 struct Position : public PropertyObject {
-    YGNodeRef node = nullptr;
-    
     YGPositionType type = YGPositionTypeStatic;
 
     LayoutSize left;
@@ -330,15 +316,10 @@ struct Position : public PropertyObject {
         );
     }
 
-    void update() {
-        if (!node) return;
-        
+    void apply(YGNodeRef node) const {
         YGNodeStyleSetPositionType(node, type);
 
         if (type == YGPositionTypeStatic) {
-            // Yoga should ignore inset edges for static positioning, but this
-            // vendored version doesn't (assuming its a bug) so I'm just handling it
-            // here instead of modifying yoga. 
             YGNodeStyleSetPosition(node, YGEdgeLeft, YGUndefined);
             YGNodeStyleSetPosition(node, YGEdgeRight, YGUndefined);
             YGNodeStyleSetPosition(node, YGEdgeTop, YGUndefined);
@@ -353,12 +334,12 @@ struct Position : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-    MG_PROP_CALLBACK(type, "type", "Type", "Positioning type.", &Position::update)
+        MG_PROP(type, "type", "Type", "Positioning type.")
 
-    MG_PROP_CALLBACK_UI(left,   "left",   "Left",   "Left edge position.",   &Position::update, &Position::insetVisibleWhen, nullptr)
-    MG_PROP_CALLBACK_UI(right,  "right",  "Right",  "Right edge position.",  &Position::update, &Position::insetVisibleWhen, nullptr)
-    MG_PROP_CALLBACK_UI(top,    "top",    "Top",    "Top edge position.",    &Position::update, &Position::insetVisibleWhen, nullptr)
-    MG_PROP_CALLBACK_UI(bottom, "bottom", "Bottom", "Bottom edge position.", &Position::update, &Position::insetVisibleWhen, nullptr)
+        MG_PROP_UI(left,   "left",   "Left",   "Left edge position.",   &Position::insetVisibleWhen, nullptr)
+        MG_PROP_UI(right,  "right",  "Right",  "Right edge position.",  &Position::insetVisibleWhen, nullptr)
+        MG_PROP_UI(top,    "top",    "Top",    "Top edge position.",    &Position::insetVisibleWhen, nullptr)
+        MG_PROP_UI(bottom, "bottom", "Bottom", "Bottom edge position.", &Position::insetVisibleWhen, nullptr)
     MG_PROPS_END()
 };
 
@@ -368,24 +349,20 @@ struct LayoutBox : public PropertyObject {
     LayoutSize top{LayoutSize::Unit::Px, 0.0f};
     LayoutSize bottom{LayoutSize::Unit::Px, 0.0f};
 
-    virtual void update() {}
+    virtual void apply(YGNodeRef node) const = 0;
 
     MG_PROPS_BEGIN()
-    MG_PROP_CALLBACK(left,   "left",   "Left",   "Left edge position.",   &LayoutBox::update)
-    MG_PROP_CALLBACK(right,  "right",  "Right",  "Right edge position.",  &LayoutBox::update)
-    MG_PROP_CALLBACK(top,    "top",    "Top",    "Top edge position.",    &LayoutBox::update)
-    MG_PROP_CALLBACK(bottom, "bottom", "Bottom", "Bottom edge position.", &LayoutBox::update)
+        MG_PROP(left,   "left",   "Left",   "Left edge position.")
+        MG_PROP(right,  "right",  "Right",  "Right edge position.")
+        MG_PROP(top,    "top",    "Top",    "Top edge position.")
+        MG_PROP(bottom, "bottom", "Bottom", "Bottom edge position.")
     MG_PROPS_END()
 };
 
 struct Margin : public LayoutBox {
     MG_PROPS_PARENT(LayoutBox)
 
-    YGNodeRef node = nullptr;
-
-    void update() {
-        if (!node) return;
-
+    void apply(YGNodeRef node) const {
         left.setMargin(node, YGEdgeLeft);
         right.setMargin(node, YGEdgeRight);
         top.setMargin(node, YGEdgeTop);
@@ -396,11 +373,7 @@ struct Margin : public LayoutBox {
 struct Padding : public LayoutBox {
     MG_PROPS_PARENT(LayoutBox)
 
-    YGNodeRef node = nullptr;
-
-    void update() {
-        if (!node) return;
-
+    void apply(YGNodeRef node) const {
         left.setPadding(node, YGEdgeLeft);
         right.setPadding(node, YGEdgeRight);
         top.setPadding(node, YGEdgeTop);
@@ -409,8 +382,6 @@ struct Padding : public LayoutBox {
 };
 
 struct Layout : public PropertyObject {
-    YGNodeRef node = nullptr;
-
     FlexContainer flexContainer;
     FlexItem flexItem;
     Position position;
@@ -429,27 +400,14 @@ struct Layout : public PropertyObject {
     
     float aspectRatio = 0.0f;
 
-    Layout(YGNodeRef node = nullptr) { if (node) setNode(node); }
+    Layout() = default;
 
-    void setNode(YGNodeRef n) {
-        node = n;
-
-        flexContainer.node = n;
-        flexContainer.gap.node = n;
-        flexItem.node = n;
-        position.node = n;
-        margin.node = n;
-        padding.node = n;
-    }
-
-    void update() {
-        if (!node) return;
-
-        flexContainer.update();
-        flexItem.update();
-        position.update();
-        margin.update();
-        padding.update();
+    void apply(YGNodeRef node) const {
+        flexContainer.apply(node);
+        flexItem.apply(node);
+        position.apply(node);
+        margin.apply(node);
+        padding.apply(node);
 
         YGNodeStyleSetDisplay(node, display);
         YGNodeStyleSetOverflow(node, overflow);
@@ -466,21 +424,38 @@ struct Layout : public PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-    MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.")
-    MG_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.")
-    MG_PROP(position,      "position",       "Position",       "Position options.")
-    MG_PROP(margin,        "margin",         "Margin",         "Margin options.")
-    MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
+        MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.")
+        MG_PROP(flexItem,      "flex-item",      "Flex Item",      "Flex item options.")
+        MG_PROP(position,      "position",       "Position",       "Position options.")
+        MG_PROP(margin,        "margin",         "Margin",         "Margin options.")
+        MG_PROP(padding,       "padding",        "Padding",        "Padding options.")
 
-    MG_PROP_CALLBACK(overflow,    "overflow",     "Overflow",     "Overflow setting for content.", &Layout::update)
-    MG_PROP_CALLBACK_HIDDEN(display, "display",   "Display",      "Whether this element participates in layout.", &Layout::update)
-    MG_PROP_CALLBACK(width,       "width",        "Width",        "Width of the element.",         &Layout::update)
-    MG_PROP_CALLBACK(height,      "height",       "Height",       "Height of the element.",        &Layout::update)
-    MG_PROP_CALLBACK(minWidth,    "min-width",    "Min Width",    "Width of the element.",         &Layout::update)
-    MG_PROP_CALLBACK(minHeight,   "min-height",   "Min Height",   "Height of the element.",        &Layout::update)
-    MG_PROP_CALLBACK(maxWidth,    "max-width",    "Max Width",    "Width of the element.",         &Layout::update)
-    MG_PROP_CALLBACK(maxHeight,   "max-height",   "Max Height",   "Height of the element.",        &Layout::update)
-    MG_PROP_CALLBACK(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.",  &Layout::update)
+        MG_PROP(overflow,    "overflow",     "Overflow",     "Overflow setting for content.")
+        MG_PROP_HIDDEN(display, "display",   "Display",      "Whether this element participates in layout.")
+        MG_PROP(width,       "width",        "Width",        "Width of the element.")
+        MG_PROP(height,      "height",       "Height",       "Height of the element.")
+        MG_PROP(minWidth,    "min-width",    "Min Width",    "Width of the element.")
+        MG_PROP(minHeight,   "min-height",   "Min Height",   "Height of the element.")
+        MG_PROP(maxWidth,    "max-width",    "Max Width",    "Width of the element.")
+        MG_PROP(maxHeight,   "max-height",   "Max Height",   "Height of the element.")
+        MG_PROP(aspectRatio, "aspect-ratio", "Aspect Ratio", "Aspect ratio of the element.")
+    MG_PROPS_END()
+};
+
+struct RootLayout : public PropertyObject {
+    FlexContainer flexContainer;
+    Padding padding;
+
+    RootLayout() = default;
+
+    void apply(YGNodeRef node) const {
+        flexContainer.apply(node);
+        padding.apply(node);
+    }
+
+    MG_PROPS_BEGIN()
+        MG_PROP(flexContainer, "flex-container", "Flex Container", "Flex container options.")
+        MG_PROP(padding,       "padding",        "Padding",        "Padding inside the root.")
     MG_PROPS_END()
 };
 

@@ -2,6 +2,7 @@
 
 #include <multigauge/Platform.h>
 #include <multigauge/RuntimeContext.h>
+#include <yoga/Yoga.h>
 
 namespace mg {
 
@@ -12,6 +13,7 @@ using ContextId = uint32_t;
 bool init(Platform& platform);
 void shutdown();
 void frame();
+YGConfigRef getYogaConfig();
 
 //----------[ CONTEXT ]----------//
 

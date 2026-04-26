@@ -8,9 +8,16 @@
 namespace mg {
 
 namespace {
+    YGConfigRef createYogaConfig() {
+        YGConfigRef config = YGConfigNew();
+        YGConfigSetUseWebDefaults(config, false);
+        return config;
+    }
+
     HandlePool<RuntimeContext> contexts;
     bool initialized = false;
     uint64_t lastUs = 0;
+    YGConfigRef yogaConfig = nullptr;
 }
 
 bool init(Platform& platform) {
@@ -24,6 +31,7 @@ bool init(Platform& platform) {
     }
 
     contexts.clear();
+    yogaConfig = createYogaConfig();
     initialized = true;
     lastUs = TIME().getMicros();
     return true;
@@ -31,6 +39,10 @@ bool init(Platform& platform) {
 
 void shutdown() {
     contexts.clear();
+    if (yogaConfig) {
+        YGConfigFree(yogaConfig);
+        yogaConfig = nullptr;
+    }
     initialized = false;
     lastUs = 0;
 }
@@ -45,6 +57,10 @@ void frame() {
     for (auto& context : contexts) {
         context.frame(deltaUs);
     }
+}
+
+YGConfigRef getYogaConfig() {
+    return yogaConfig;
 }
 
 ContextId addContext(GraphicsContext& graphics) {

@@ -25,34 +25,21 @@ class Element : public PropertyObject {
     private:
         //----------[ TREE ]----------//
 
-        /// @brief Parent element in the hierarchy, or nullptr if root
+        /// Parent element in the hierarchy, or `nullptr` if root.
         Element* parent = nullptr;
-        /// @brief Owned child elements
+        /// Owned child elements.
         std::vector<OwnedElement> children;
 
         //----------[ LAYOUT ]----------//
 
         Layout style;
-
-        /// @brief Absolute bounds computer from Yoga
+        /// Absolute bounds computer from Yoga.
         Rect<float> bounds = Rect<float>(0.0f, 0.0f, 0.0f, 0.0f);
-        /// @brief Yoga node for this element
+        /// Yoga node for this element.
         YGNodeRef node = nullptr;
-        /// @brief Shared Yoga config
-        YGConfigRef config = nullptr;
-        /// @brief True when the layout needs to be recalculated at the root
-        bool layoutDirty = true;
-
-        void clearLayoutDirtyRecursive();
-
-        void makeNode();
-        void removeNode();
 
     protected:
-        void markLayoutDirty();
-        bool needsLayout() const { return layoutDirty; }
-
-        //----------[ HOOKS ]----------//
+        //----------[ LIFETIME HOOKS ]----------//
 
         virtual bool init(AssetManager& assetManager) { return true; }
         virtual void draw(Graphics& g) const {}
@@ -63,24 +50,14 @@ class Element : public PropertyObject {
 
         MG_POLYMORPHIC_REGISTRY_WITH_ARGS(OwnedElement, Element*)
 
-        explicit Element(Element* parent, YGConfigRef config = nullptr);
+        explicit Element(Element* parent);
         virtual ~Element();
 
         virtual Type getType() const { return Type::Base; }
         
         //----------[ TREE ]----------//
 
-        Element* getRoot() {
-            Element* n = this;
-            while (n->getParent()) n = n->getParent();
-            return n;
-        }
         Element* getParent() const { return parent; }
-        YGNodeRef getNode() const { return node; }
-        YGConfigRef getConfig() const { return config; }
-        const Rect<float>& getBounds() const { return bounds; }
-
-        bool isRoot() const { return parent == nullptr; }
 
         //----------[ CHILDREN ]----------//
 
@@ -88,25 +65,24 @@ class Element : public PropertyObject {
         Element* childAt(std::size_t i) { return children[i].get(); }
         const Element* childAt(std::size_t i) const { return children[i].get(); }
 
-        Element* addChild(const rapidjson::Value::ConstObject json);
-        Element* insertChild(const rapidjson::Value::ConstObject json, std::size_t index);
         bool insertChild(OwnedElement child, std::size_t index);
-        OwnedElement detachChild(Element* child);
-        bool removeChild(Element* child);
+        OwnedElement removeChild(Element* child);
 
-        //----------[ TRAVERSAL ]----------//
+        //----------[ LIFETIME ]----------//
 
         bool initRecursive(AssetManager& assetManager);
         void drawRecursive(Graphics& g) const;
         void updateRecursive(int deltaTime);
 
         //----------[ LAYOUT ]----------//
-
-        void layoutRecursive(float width, float height, YGDirection direction = YGDirectionLTR);
-
-        //----------[ LAYOUT ]----------//
         
-        static OwnedElement fromJson(Element *parent, const rapidjson::Value::ConstObject json);
+        void layoutRecursive(float parentAbsX, float parentAbsY);
+        YGNodeRef getNode() const { return node; }
+        const Rect<float>& getBounds() const { return bounds; }
+
+        //----------[ SERIALIZATION ]----------//
+
+        static OwnedElement fromJson(const rapidjson::Value::ConstObject json);
         void saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
 
         void loadFromJson(const rapidjson::Value::ConstObject& json) {
