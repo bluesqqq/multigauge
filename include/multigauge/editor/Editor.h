@@ -23,17 +23,23 @@ public:
     };
 
     struct FacePlacement {
-        std::size_t index = Append;
+        std::size_t index;
+
+        explicit FacePlacement(std::size_t i = Append) : index(i) {}
     };
 
     struct RootPlacement {
-        Id faceId = 0;
-        std::size_t index = Append;
+        Id faceId;
+        std::size_t index;
+
+        RootPlacement(Id f = 0, std::size_t i = Append) : faceId(f), index(i) {}
     };
 
     struct ChildPlacement {
-        Id parentElementId = 0;
-        std::size_t index = Append;
+        Id parentElementId;
+        std::size_t index;
+
+        ChildPlacement(Id p = 0, std::size_t i = Append) : parentElementId(p), index(i) {}
     };
 
 private:
@@ -118,7 +124,7 @@ public:
 
     //----------[ FACE LIST ]----------//
 
-    EditorResult insertFace(GaugeFace& face, FacePlacement where = {});
+    EditorResult insertFace(GaugeFace& face, FacePlacement where = FacePlacement{});
     EditorResult removeFace(Id faceId);
     EditorResult reorderFace(Id faceId, std::size_t index);
 
@@ -150,7 +156,7 @@ public:
 
     EditorResult copyFace(Id faceId);
     EditorResult cutFace(Id faceId);
-    EditorResult pasteFace(FacePlacement where = {});
+    EditorResult pasteFace(FacePlacement where = FacePlacement{});
 
     EditorResult copyElement(Id elementId);
     EditorResult cutRoot(Id elementId);
