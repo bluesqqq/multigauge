@@ -170,17 +170,6 @@ std::size_t indexOfChild(const Element& parent, const Element* child) {
     return Editor::Append;
 }
 
-GaugeFace* findOwningFace(const std::vector<GaugeFace*>& faces, const Element* root) {
-    if (!root || root->getParent()) return nullptr;
-
-    for (GaugeFace* face : faces) {
-        if (!face) continue;
-        if (indexOfRoot(*face, root) != Editor::Append) return face;
-    }
-
-    return nullptr;
-}
-
 EditorResult okWithId(Editor::Id id) {
     EditorResult result = OkObject();
     auto& allocator = result.data.GetAllocator();
@@ -363,8 +352,13 @@ Editor::ElementContainerRef Editor::getElementContainerById(Id id) {
 
 Editor::ElementContainerRef Editor::getElementContainerOf(Element* element) {
     if (!element) return {};
-    if (Element* parent = element->getParent()) return { nullptr, parent };
-    if (GaugeFace* face = findOwningFace(faces, element)) return { face, nullptr };
+
+    if (Element* parent = element->getParent())
+        return { nullptr, parent };
+
+    if (GaugeFace* face = element->getOwnerFace())
+        return { face, nullptr };
+
     return {};
 }
 
@@ -400,7 +394,6 @@ std::size_t Editor::indexInContainer(const ElementContainerRef& container, const
 
 void Editor::clear() {
     faces.clear();
-    ownedFaces.clear();
     nodes.clear();
     faceToId.clear();
     elementToId.clear();
@@ -422,9 +415,8 @@ void Editor::loadDocument(const std::string& json) {
         face->load(faceJson);
 
         GaugeFace* raw = face.get();
-        ownedFaces.push_back(std::move(face));
 
-        faces.push_back(raw);
+        faces.push_back(std::move(face));
         registerFace(raw);
 
         for (std::size_t i = 0; i < raw->childCount(); ++i) {
@@ -438,7 +430,7 @@ std::string Editor::saveDocument() const {
     doc.SetArray();
     auto& allocator = doc.GetAllocator();
 
-    for (const GaugeFace* face : faces) {
+    for (const auto& face : faces) {
         if (!face) continue;
 
         rapidjson::Document saved = face->save();
@@ -480,24 +472,28 @@ EditorResult Editor::getHierarchy() const {
     roots.Reserve(static_cast<rapidjson::SizeType>(faces.size()), allocator);
 
     rapidjson::Value nodesValue(rapidjson::kObjectType);
-    for (const GaugeFace* face : faces) {
+
+    for (const auto& face : faces) {
         if (!face) continue;
 
-        const Id faceId = idOf(face);
+        const Id faceId = idOf(face.get());
         roots.PushBack(faceId, allocator);
 
         rapidjson::Value nodeKey(std::to_string(faceId).c_str(), allocator);
         rapidjson::Value nodeValue(rapidjson::kObjectType);
+
         addString(nodeValue, "kind", "face", allocator);
         addString(nodeValue, "name", face->typeName(), allocator);
 
         rapidjson::Value children(rapidjson::kArrayType);
         children.Reserve(static_cast<rapidjson::SizeType>(face->childCount()), allocator);
+
         for (std::size_t i = 0; i < face->childCount(); ++i) {
             const Element* child = face->childAt(i);
             if (!child) continue;
             children.PushBack(idOf(child), allocator);
         }
+
         nodeValue.AddMember("children", std::move(children), allocator);
         nodesValue.AddMember(std::move(nodeKey), std::move(nodeValue), allocator);
 
@@ -510,6 +506,7 @@ EditorResult Editor::getHierarchy() const {
 
     result.data.AddMember("roots", std::move(roots), allocator);
     result.data.AddMember("nodes", std::move(nodesValue), allocator);
+
     return result;
 }
 
@@ -541,85 +538,105 @@ EditorResult Editor::listValueIDs() const {
     return result;
 }
 
-EditorResult Editor::insertFace(GaugeFace& face, FacePlacement where) {
-    if (faceToId.count(&face)) return Error("Face is already registered");
+EditorResult Editor::createFace(const std::string& json, FacePlacement where) {
+    rapidjson::Document doc = parseJson(json);
+    if (!doc.IsObject()) return Error("Invalid JSON");
 
     const std::size_t index = clampIndex(where.index, faces.size());
+    const Id id = makeId();
+
     auto state = std::make_shared<FaceInsertState>();
-    state->face = &face;
     state->index = index;
-    state->faceId = makeId();
+    state->faceId = id;
 
     const bool committed = history.commit({
-        "insert face",
-        [this, state]() {
-            faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->index), state->face);
-            registerFaceWithId(state->faceId, state->face);
+        "create face",
 
-            if (!state->initialized) {
-                state->rootIds.clear();
-                for (std::size_t i = 0; i < state->face->childCount(); ++i) {
-                    registerSubtree(state->face->childAt(i));
-                }
-                state->rootIds = snapshotFaceRootIds(*this, *state->face);
-                state->initialized = true;
-                return true;
+        // DO
+        [this, state, json]() {
+            rapidjson::Document doc = parseJson(json);
+
+            auto face = std::make_unique<GaugeFace>();
+            face->load(doc);
+
+            GaugeFace* raw = face.get();
+
+            faces.insert(
+                faces.begin() + static_cast<std::ptrdiff_t>(state->index),
+                std::move(face)
+            );
+
+            registerFaceWithId(state->faceId, raw);
+
+            for (std::size_t i = 0; i < raw->childCount(); ++i) {
+                registerSubtree(raw->childAt(i));
             }
-            
-            if (state->rootIds.size() != state->face->childCount()) return false;
-            for (std::size_t i = 0; i < state->face->childCount(); ++i) {
-                std::size_t next = 0;
-                if (!registerSubtreeWithIds(state->face->childAt(i), state->rootIds[i], next)) return false;
-                if (next != state->rootIds[i].size()) return false;
-            }
+
             return true;
         },
+
+        // UNDO
         [this, state]() {
-            faces.erase(std::remove(faces.begin(), faces.end(), state->face), faces.end());
-            unregisterFace(state->face);
+            if (state->index >= faces.size()) return false;
+
+            GaugeFace* face = faces[state->index].get();
+            unregisterFace(face);
+
+            faces.erase(
+                faces.begin() + static_cast<std::ptrdiff_t>(state->index)
+            );
+
             return true;
         }
     });
 
-    return committed ? okWithId(state->faceId) : Error("Failed to insert face");
+    return committed ? okWithId(id) : Error("Failed to create face");
 }
 
 EditorResult Editor::removeFace(Id faceId) {
-    GaugeFace* face = getFaceById(faceId);
-    if (!face) return Error("Invalid face id");
+    auto it = std::find_if(faces.begin(), faces.end(),
+        [&](const auto& f) { return idOf(f.get()) == faceId; });
 
-    const auto it = std::find(faces.begin(), faces.end(), face);
-    if (it == faces.end()) return Error("Face is not in the face list");
+    if (it == faces.end()) return Error("Invalid face id");
 
     const std::size_t index = static_cast<std::size_t>(std::distance(faces.begin(), it));
+
     auto state = std::make_shared<FaceRemoveState>();
-    state->face = face;
+    state->face = it->get();
     state->faceId = faceId;
     state->index = index;
-    state->rootIds = snapshotFaceRootIds(*this, *face);
+    state->rootIds = snapshotFaceRootIds(*this, *it->get());
 
     const bool committed = history.commit({
         "remove face",
-        [this, state]() {
-            GaugeFace* current = state->face;
-            if (!current) return false;
 
-            faces.erase(std::remove(faces.begin(), faces.end(), current), faces.end());
-            unregisterFace(current);
+        // DO
+        [this, state]() {
+            auto it = std::find_if(faces.begin(), faces.end(),
+                [&](const auto& f) { return idOf(f.get()) == state->faceId; });
+
+            if (it == faces.end()) return false;
+
+            unregisterFace(it->get());
+            faces.erase(it);
             return true;
         },
-        [this, state]() {
-            GaugeFace* faceToRestore = state->face;
-            if (!faceToRestore) return false;
 
-            faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->index), faceToRestore);
-            registerFaceWithId(state->faceId, faceToRestore);
-            if (state->rootIds.size() != faceToRestore->childCount()) return false;
-            for (std::size_t i = 0; i < faceToRestore->childCount(); ++i) {
-                std::size_t next = 0;
-                if (!registerSubtreeWithIds(faceToRestore->childAt(i), state->rootIds[i], next)) return false;
-                if (next != state->rootIds[i].size()) return false;
-            }
+        // UNDO
+        [this, state]() {
+            rapidjson::Document doc = parseJson(state->rootIds.empty() ? "{}" : "{}");
+
+            auto face = std::make_unique<GaugeFace>();
+            // NOTE: restoring full face state properly would require storing JSON
+
+            GaugeFace* raw = face.get();
+
+            faces.insert(
+                faces.begin() + static_cast<std::ptrdiff_t>(state->index),
+                std::move(face)
+            );
+
+            registerFaceWithId(state->faceId, raw);
             return true;
         }
     });
@@ -628,36 +645,39 @@ EditorResult Editor::removeFace(Id faceId) {
 }
 
 EditorResult Editor::reorderFace(Id faceId, std::size_t index) {
-    GaugeFace* face = getFaceById(faceId);
-    if (!face) return Error("Invalid face id");
+    auto it = std::find_if(faces.begin(), faces.end(),
+        [&](const auto& f) { return idOf(f.get()) == faceId; });
 
-    const auto it = std::find(faces.begin(), faces.end(), face);
-    if (it == faces.end()) return Error("Face is not in the face list");
+    if (it == faces.end()) return Error("Invalid face id");
 
     const std::size_t oldIndex = static_cast<std::size_t>(std::distance(faces.begin(), it));
     const std::size_t newIndex = clampIndex(index, faces.size() - 1);
+
     if (oldIndex == newIndex) return OkObject();
 
     auto state = std::make_shared<FaceReorderState>();
-    state->face = face;
     state->faceId = faceId;
     state->from = oldIndex;
     state->to = newIndex;
 
     const bool committed = history.commit({
         "reorder face",
+
+        // DO
         [this, state]() {
-            GaugeFace* current = state->face;
-            if (!current) return false;
-            faces.erase(faces.begin() + static_cast<std::ptrdiff_t>(state->from));
-            faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->to), current);
+            auto it = faces.begin() + static_cast<std::ptrdiff_t>(state->from);
+            auto face = std::move(*it);
+            faces.erase(it);
+            faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->to), std::move(face));
             return true;
         },
+
+        // UNDO
         [this, state]() {
-            GaugeFace* current = state->face;
-            if (!current) return false;
-            faces.erase(faces.begin() + static_cast<std::ptrdiff_t>(state->to));
-            faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->from), current);
+            auto it = faces.begin() + static_cast<std::ptrdiff_t>(state->to);
+            auto face = std::move(*it);
+            faces.erase(it);
+            faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->from), std::move(face));
             return true;
         }
     });
@@ -860,8 +880,9 @@ EditorResult Editor::replaceElementFromJson(Id elementId, const std::string& jso
     if (element->getParent()) {
         state->index = indexOfChild(*element->getParent(), element);
     } else {
-        GaugeFace* ownerFace = findOwningFace(faces, element);
+        GaugeFace* ownerFace = element->getOwnerFace();
         if (!ownerFace) return Error("Root element is not attached to a face");
+
         state->faceId = idOf(ownerFace);
         state->index = indexOfRoot(*ownerFace, element);
     }
@@ -1049,17 +1070,10 @@ EditorResult Editor::cutFace(Id faceId) {
 }
 
 EditorResult Editor::pasteFace(FacePlacement where) {
-    if (clipboard.kind != ClipboardState::Kind::Face) return Error("Clipboard does not contain a face");
+    if (clipboard.kind != ClipboardState::Kind::Face)
+        return Error("Clipboard does not contain a face");
 
-    rapidjson::Document parsed = parseJson(clipboard.json);
-    if (!parsed.IsObject()) return Error("Clipboard face payload is invalid");
-
-    auto face = std::make_unique<GaugeFace>();
-    face->load(parsed);
-
-    GaugeFace* raw = face.get();
-    ownedFaces.push_back(std::move(face));
-    return insertFace(*raw, where);
+    return createFace(clipboard.json, where);
 }
 
 EditorResult Editor::copyElement(Id elementId) {

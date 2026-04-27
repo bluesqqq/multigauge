@@ -58,8 +58,7 @@ private:
         explicit NodeRef(Element* value) : kind(NodeKind::Element), element(value) {}
     };
 
-    std::vector<GaugeFace*> faces;
-    std::vector<std::unique_ptr<GaugeFace>> ownedFaces;
+    std::vector<std::unique_ptr<GaugeFace>> faces;
 
     std::unordered_map<Id, NodeRef> nodes;
     std::unordered_map<GaugeFace*, Id> faceToId;
@@ -137,8 +136,8 @@ public:
     Id idOf(const Element* element) const;
 
     std::size_t faceCount() const { return faces.size(); }
-    GaugeFace* faceAt(std::size_t index) { return faces.at(index); }
-    const GaugeFace* faceAt(std::size_t index) const { return faces.at(index); }
+    GaugeFace* faceAt(std::size_t index) { return faces.at(index).get(); }
+    const GaugeFace* faceAt(std::size_t index) const { return faces.at(index).get(); }
 
     /// Returns the face and element tree as a flat hierarchy payload.
     /// @return `{ "roots": [uint...], "nodes": { "id": { "kind": string, "name": string, "children": [uint...] }, ... } }`
@@ -155,10 +154,10 @@ public:
 
     //----------[ GAUGE FACES ]----------//
 
-    /// Inserts `face` into the face list.
+    /// Creates a new face in the face list.
     /// @note `where.index` appends when set to `Append` or greater than the face count.
     /// @return `{ "id": uint }` for the inserted face.
-    EditorResult insertFace(GaugeFace& face, FacePlacement where = FacePlacement{});
+    EditorResult createFace(const std::string& json, FacePlacement where = FacePlacement{});
 
     /// Removes a face from the face list.
     EditorResult removeFace(Id faceId);
