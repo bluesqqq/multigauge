@@ -7,6 +7,8 @@
 #include <rapidjson/stringbuffer.h>
 #include <rapidjson/writer.h>
 
+#include <multigauge/values/Value.h>
+
 namespace {
 
 struct FaceInsertState {
@@ -36,36 +38,7 @@ struct ElementSnapshot {
     std::vector<Editor::Id> ids;
 };
 
-struct RootCreateState {
-    Editor::Id faceId = 0;
-    std::size_t index = 0;
-    std::string json;
-    ElementSnapshot created;
-    bool initialized = false;
-};
-
-struct RootRemoveState {
-    Editor::Id faceId = 0;
-    std::size_t index = 0;
-    ElementSnapshot removed;
-};
-
-struct RootReorderState {
-    Editor::Id faceId = 0;
-    Editor::Id rootId = 0;
-    std::size_t from = 0;
-    std::size_t to = 0;
-};
-
-struct RootMoveState {
-    Editor::Id rootId = 0;
-    Editor::Id fromFaceId = 0;
-    Editor::Id toFaceId = 0;
-    std::size_t fromIndex = 0;
-    std::size_t toIndex = 0;
-};
-
-struct ChildCreateState {
+struct ElementCreateState {
     Editor::Id parentId = 0;
     std::size_t index = 0;
     std::string json;
@@ -73,25 +46,25 @@ struct ChildCreateState {
     bool initialized = false;
 };
 
-struct ChildRemoveState {
+struct ElementRemoveState {
     Editor::Id parentId = 0;
     std::size_t index = 0;
     ElementSnapshot removed;
 };
 
-struct ChildReorderState {
+struct ElementReorderState {
     Editor::Id parentId = 0;
     Editor::Id elementId = 0;
     std::size_t from = 0;
     std::size_t to = 0;
 };
 
-struct ChildMoveState {
+struct ElementMoveState {
     Editor::Id elementId = 0;
     Editor::Id oldParentId = 0;
     Editor::Id newParentId = 0;
-    std::size_t oldIndex = 0;
-    std::size_t newIndex = 0;
+    std::size_t fromIndex = 0;
+    std::size_t toIndex = 0;
 };
 
 struct ReplaceState {
@@ -221,6 +194,35 @@ EditorResult okWithIds(Editor::Id id, Editor::Id parentId) {
     result.data.AddMember("id", id, allocator);
     result.data.AddMember("parentId", parentId, allocator);
     return result;
+}
+
+void appendElementHierarchyNode(const Editor& editor,
+                                const Element& element,
+                                rapidjson::Value& nodes,
+                                rapidjson::Document::AllocatorType& allocator) {
+    const Editor::Id id = editor.idOf(&element);
+    rapidjson::Value nodeKey(std::to_string(id).c_str(), allocator);
+    rapidjson::Value nodeValue(rapidjson::kObjectType);
+
+    addString(nodeValue, "kind", "element", allocator);
+    addString(nodeValue, "type", element.typeName(), allocator);
+    addString(nodeValue, "name", element.typeName(), allocator);
+
+    rapidjson::Value children(rapidjson::kArrayType);
+    children.Reserve(static_cast<rapidjson::SizeType>(element.childCount()), allocator);
+    for (std::size_t i = 0; i < element.childCount(); ++i) {
+        const Element* child = element.childAt(i);
+        if (!child) continue;
+        children.PushBack(editor.idOf(child), allocator);
+    }
+    nodeValue.AddMember("children", std::move(children), allocator);
+    nodes.AddMember(std::move(nodeKey), std::move(nodeValue), allocator);
+
+    for (std::size_t i = 0; i < element.childCount(); ++i) {
+        const Element* child = element.childAt(i);
+        if (!child) continue;
+        appendElementHierarchyNode(editor, *child, nodes, allocator);
+    }
 }
 
 } // namespace
@@ -353,6 +355,49 @@ const PropertyObject* Editor::getObjectById(Id id) const {
     return nullptr;
 }
 
+Editor::ElementContainerRef Editor::getElementContainerById(Id id) {
+    if (GaugeFace* face = getFaceById(id)) return { face, nullptr };
+    if (Element* element = getElementById(id)) return { nullptr, element };
+    return {};
+}
+
+Editor::ElementContainerRef Editor::getElementContainerOf(Element* element) {
+    if (!element) return {};
+    if (Element* parent = element->getParent()) return { nullptr, parent };
+    if (GaugeFace* face = findOwningFace(faces, element)) return { face, nullptr };
+    return {};
+}
+
+Editor::Id Editor::idOfContainer(const ElementContainerRef& container) const {
+    if (container.face) return idOf(container.face);
+    if (container.element) return idOf(container.element);
+    return 0;
+}
+
+std::size_t Editor::childCountOf(const ElementContainerRef& container) const {
+    if (container.face) return container.face->childCount();
+    if (container.element) return container.element->childCount();
+    return 0;
+}
+
+bool Editor::insertIntoContainer(const ElementContainerRef& container, OwnedElement child, std::size_t index) {
+    if (container.face) return static_cast<bool>(container.face->insertChild(std::move(child), index));
+    if (container.element) return static_cast<bool>(container.element->insertChild(std::move(child), index));
+    return false;
+}
+
+OwnedElement Editor::removeFromContainer(const ElementContainerRef& container, Element* child) {
+    if (container.face) return container.face->removeChild(child);
+    if (container.element) return container.element->removeChild(child);
+    return {};
+}
+
+std::size_t Editor::indexInContainer(const ElementContainerRef& container, const Element* child) const {
+    if (container.face) return indexOfRoot(*container.face, child);
+    if (container.element) return indexOfChild(*container.element, child);
+    return Append;
+}
+
 void Editor::clear() {
     faces.clear();
     ownedFaces.clear();
@@ -427,94 +472,70 @@ Editor::Id Editor::idOf(const Element* element) const {
     return it == elementToId.end() ? 0 : it->second;
 }
 
-EditorResult Editor::listFaces() const {
-    EditorResult result = OkArray();
-    auto& allocator = result.data.GetAllocator();
-
-    for (std::size_t i = 0; i < faces.size(); ++i) {
-        const GaugeFace* face = faces[i];
-        if (!face) continue;
-
-        rapidjson::Value item(rapidjson::kObjectType);
-        item.AddMember("id", idOf(face), allocator);
-        item.AddMember("index", static_cast<uint32_t>(i), allocator);
-        addString(item, "kind", "face", allocator);
-        item.AddMember("rootCount", static_cast<uint32_t>(face->childCount()), allocator);
-        result.data.PushBack(std::move(item), allocator);
-    }
-
-    return result;
-}
-
-EditorResult Editor::listRoots(Id faceId) const {
-    const GaugeFace* face = getFaceById(faceId);
-    if (!face) return Error("Invalid face id");
-
-    EditorResult result = OkArray();
-    auto& allocator = result.data.GetAllocator();
-
-    for (std::size_t i = 0; i < face->childCount(); ++i) {
-        const Element* element = face->childAt(i);
-        rapidjson::Value item(rapidjson::kObjectType);
-        item.AddMember("id", idOf(element), allocator);
-        item.AddMember("index", static_cast<uint32_t>(i), allocator);
-        addString(item, "kind", "element", allocator);
-        item.AddMember("faceId", faceId, allocator);
-        item.AddMember("childCount", static_cast<uint32_t>(element->childCount()), allocator);
-        result.data.PushBack(std::move(item), allocator);
-    }
-
-    return result;
-}
-
-EditorResult Editor::listChildren(Id elementId) const {
-    const Element* parent = getElementById(elementId);
-    if (!parent) return Error("Invalid element id");
-
-    EditorResult result = OkArray();
-    auto& allocator = result.data.GetAllocator();
-
-    for (std::size_t i = 0; i < parent->childCount(); ++i) {
-        const Element* child = parent->childAt(i);
-        rapidjson::Value item(rapidjson::kObjectType);
-        item.AddMember("id", idOf(child), allocator);
-        item.AddMember("index", static_cast<uint32_t>(i), allocator);
-        addString(item, "kind", "element", allocator);
-        item.AddMember("parentElementId", elementId, allocator);
-        item.AddMember("childCount", static_cast<uint32_t>(child->childCount()), allocator);
-        result.data.PushBack(std::move(item), allocator);
-    }
-
-    return result;
-}
-
-EditorResult Editor::describeNode(Id id) const {
-    const NodeRef* node = getNode(id);
-    if (!node) return Error("Invalid id");
-
+EditorResult Editor::getHierarchy() const {
     EditorResult result = OkObject();
     auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", id, allocator);
 
-    if (node->kind == NodeKind::Face) {
-        GaugeFace* face = node->face;
-        addString(result.data, "kind", "face", allocator);
-        result.data.AddMember("rootCount", static_cast<uint32_t>(face->childCount()), allocator);
-        result.data.AddMember("index", static_cast<uint32_t>(
-            std::distance(faces.begin(), std::find(faces.begin(), faces.end(), face))), allocator);
-        return result;
+    rapidjson::Value roots(rapidjson::kArrayType);
+    roots.Reserve(static_cast<rapidjson::SizeType>(faces.size()), allocator);
+
+    rapidjson::Value nodesValue(rapidjson::kObjectType);
+    for (const GaugeFace* face : faces) {
+        if (!face) continue;
+
+        const Id faceId = idOf(face);
+        roots.PushBack(faceId, allocator);
+
+        rapidjson::Value nodeKey(std::to_string(faceId).c_str(), allocator);
+        rapidjson::Value nodeValue(rapidjson::kObjectType);
+        addString(nodeValue, "kind", "face", allocator);
+        addString(nodeValue, "name", face->typeName(), allocator);
+
+        rapidjson::Value children(rapidjson::kArrayType);
+        children.Reserve(static_cast<rapidjson::SizeType>(face->childCount()), allocator);
+        for (std::size_t i = 0; i < face->childCount(); ++i) {
+            const Element* child = face->childAt(i);
+            if (!child) continue;
+            children.PushBack(idOf(child), allocator);
+        }
+        nodeValue.AddMember("children", std::move(children), allocator);
+        nodesValue.AddMember(std::move(nodeKey), std::move(nodeValue), allocator);
+
+        for (std::size_t i = 0; i < face->childCount(); ++i) {
+            const Element* child = face->childAt(i);
+            if (!child) continue;
+            appendElementHierarchyNode(*this, *child, nodesValue, allocator);
+        }
     }
 
-    Element* element = node->element;
-    addString(result.data, "kind", "element", allocator);
-    result.data.AddMember("childCount", static_cast<uint32_t>(element->childCount()), allocator);
+    result.data.AddMember("roots", std::move(roots), allocator);
+    result.data.AddMember("nodes", std::move(nodesValue), allocator);
+    return result;
+}
 
-    if (Element* parent = element->getParent()) {
-        result.data.AddMember("parentElementId", idOf(parent), allocator);
-        result.data.AddMember("index", static_cast<uint32_t>(indexOfChild(*parent, element)), allocator);
-    } else if (GaugeFace* face = findOwningFace(faces, element)) {
-        result.data.AddMember("faceId", idOf(face), allocator);
-        result.data.AddMember("index", static_cast<uint32_t>(indexOfRoot(*face, element)), allocator);
+EditorResult Editor::listElementTypes() const {
+    EditorResult result = OkArray();
+    auto& data = result.data;
+    auto& allocator = data.GetAllocator();
+
+    for (const auto& descriptor : Element::registry()) {
+        rapidjson::Value entry(rapidjson::kObjectType);
+        entry.AddMember("name", rapidjson::Value(descriptor.name ? descriptor.name : "", allocator), allocator);
+        entry.AddMember("type", rapidjson::Value(descriptor.id ? descriptor.id : "", allocator), allocator);
+        data.PushBack(std::move(entry), allocator);
+    }
+
+    return result;
+}
+
+EditorResult Editor::listValueIDs() const {
+    EditorResult result = OkArray();
+    auto& data = result.data;
+    auto& allocator = data.GetAllocator();
+
+    for (const Value* value : Value::list()) {
+        if (!value) continue;
+        data.PushBack(rapidjson::Value(value->getId(), allocator), allocator);
     }
 
     return result;
@@ -644,33 +665,31 @@ EditorResult Editor::reorderFace(Id faceId, std::size_t index) {
     return committed ? OkObject() : Error("Failed to reorder face");
 }
 
-EditorResult Editor::createRoot(const RootPlacement& where, const std::string& json) {
-    GaugeFace* face = getFaceById(where.faceId);
-    if (!face) return Error("Invalid face id");
+EditorResult Editor::createElement(const ElementPlacement& where, const std::string& json) {
+    ElementContainerRef parent = getElementContainerById(where.parentId);
+    if (!parent.isFace() && !parent.isElement()) return Error("Invalid parent id");
 
     rapidjson::Document doc = parseJson(json);
     if (!doc.IsObject()) return Error("Invalid JSON");
 
-    const std::size_t index = clampIndex(where.index, face->childCount());
-    auto state = std::make_shared<RootCreateState>();
-    state->faceId = where.faceId;
+    const std::size_t index = clampIndex(where.index, childCountOf(parent));
+    auto state = std::make_shared<ElementCreateState>();
+    state->parentId = where.parentId;
     state->index = index;
     state->json = json;
 
     const bool committed = history.commit({
-        "create root",
+        "create element",
         [this, state]() {
-            GaugeFace* currentFace = getFaceById(state->faceId);
-            if (!currentFace) return false;
+            ElementContainerRef currentParent = getElementContainerById(state->parentId);
+            if (!currentParent.isFace() && !currentParent.isElement()) return false;
 
             rapidjson::Document parsed = parseJson(state->json);
             const rapidjson::Value& parsedValue = parsed;
             OwnedElement element = Element::fromJson(parsedValue.GetObject());
             Element* raw = element.get();
-            if (!currentFace->insertChild(std::move(element), state->index)) {
-                return false;
-            }
-            
+            if (!insertIntoContainer(currentParent, std::move(element), state->index)) return false;
+
             if (!state->initialized) {
                 registerSubtree(raw);
                 state->created = snapshotElement(*this, *raw);
@@ -684,223 +703,48 @@ EditorResult Editor::createRoot(const RootPlacement& where, const std::string& j
         },
         [this, state]() {
             if (state->created.ids.empty()) return false;
-            GaugeFace* currentFace = getFaceById(state->faceId);
+            ElementContainerRef currentParent = getElementContainerById(state->parentId);
             Element* current = getElementById(state->created.ids.front());
-            if (!currentFace || !current) return false;
+            if ((!currentParent.isFace() && !currentParent.isElement()) || !current) return false;
             unregisterElementRecursive(current);
-            return static_cast<bool>(currentFace->removeChild(current));
+            return static_cast<bool>(removeFromContainer(currentParent, current));
         }
     });
 
-    return committed ? okWithIds(state->created.ids.front(), where.faceId) : Error("Failed to create root");
-}
-
-EditorResult Editor::removeRoot(Id elementId) {
-    Element* element = getElementById(elementId);
-    if (!element) return Error("Invalid element id");
-    if (element->getParent()) return Error("Element is not a root; use removeElement");
-
-    GaugeFace* face = findOwningFace(faces, element);
-    if (!face) return Error("Root element is not attached to a face");
-
-    const std::size_t index = indexOfRoot(*face, element);
-    auto state = std::make_shared<RootRemoveState>();
-    state->faceId = idOf(face);
-    state->index = index;
-    state->removed = snapshotElement(*this, *element);
-
-    const bool committed = history.commit({
-        "remove root",
-        [this, state]() {
-            GaugeFace* currentFace = getFaceById(state->faceId);
-            if (!currentFace || state->removed.ids.empty()) return false;
-            Element* current = getElementById(state->removed.ids.front());
-            if (!current) return false;
-            unregisterElementRecursive(current);
-            return static_cast<bool>(currentFace->removeChild(current));
-        },
-        [this, state]() {
-            GaugeFace* currentFace = getFaceById(state->faceId);
-            if (!currentFace) return false;
-            rapidjson::Document parsed = parseJson(state->removed.json);
-            const rapidjson::Value& parsedValue = parsed;
-            OwnedElement restored = Element::fromJson(parsedValue.GetObject());
-            Element* raw = restored.get();
-            if (!currentFace->insertChild(std::move(restored), state->index)) return false;
-            std::size_t next = 0;
-            if (!registerSubtreeWithIds(raw, state->removed.ids, next)) return false;
-            return next == state->removed.ids.size();
-        }
-    });
-
-    return committed ? OkObject() : Error("Failed to remove root");
-}
-
-EditorResult Editor::reorderRoot(Id elementId, std::size_t index) {
-    Element* element = getElementById(elementId);
-    if (!element) return Error("Invalid element id");
-    if (element->getParent()) return Error("Element is not a root; use reorderChild");
-
-    GaugeFace* face = findOwningFace(faces, element);
-    if (!face) return Error("Root element is not attached to a face");
-
-    const std::size_t oldIndex = indexOfRoot(*face, element);
-    const std::size_t newIndex = clampIndex(index, face->childCount() - 1);
-    if (oldIndex == newIndex) return OkObject();
-
-    auto state = std::make_shared<RootReorderState>();
-    state->faceId = idOf(face);
-    state->rootId = elementId;
-    state->from = oldIndex;
-    state->to = newIndex;
-
-    const bool committed = history.commit({
-        "reorder root",
-        [this, state]() {
-            GaugeFace* currentFace = getFaceById(state->faceId);
-            Element* current = getElementById(state->rootId);
-            if (!currentFace || !current) return false;
-            OwnedElement owned = currentFace->removeChild(current);
-            return owned && currentFace->insertChild(std::move(owned), state->to);
-        },
-        [this, state]() {
-            GaugeFace* currentFace = getFaceById(state->faceId);
-            Element* current = getElementById(state->rootId);
-            if (!currentFace || !current) return false;
-            OwnedElement owned = currentFace->removeChild(current);
-            return owned && currentFace->insertChild(std::move(owned), state->from);
-        }
-    });
-
-    return committed ? OkObject() : Error("Failed to reorder root");
-}
-
-EditorResult Editor::moveRootToFace(Id elementId, const RootPlacement& where) {
-    Element* element = getElementById(elementId);
-    if (!element) return Error("Invalid element id");
-    if (element->getParent()) return Error("Element is not a root; use moveElementToParent");
-
-    GaugeFace* fromFace = findOwningFace(faces, element);
-    GaugeFace* toFace = getFaceById(where.faceId);
-    if (!fromFace) return Error("Root element is not attached to a face");
-    if (!toFace) return Error("Invalid destination face id");
-    if (fromFace == toFace) return Error("Destination face matches current face; use reorderRoot");
-
-    const std::size_t fromIndex = indexOfRoot(*fromFace, element);
-    const std::size_t toIndex = clampIndex(where.index, toFace->childCount());
-
-    auto state = std::make_shared<RootMoveState>();
-    state->rootId = elementId;
-    state->fromFaceId = idOf(fromFace);
-    state->toFaceId = where.faceId;
-    state->fromIndex = fromIndex;
-    state->toIndex = toIndex;
-
-    const bool committed = history.commit({
-        "move root",
-        [this, state]() {
-            GaugeFace* from = getFaceById(state->fromFaceId);
-            GaugeFace* to = getFaceById(state->toFaceId);
-            Element* current = getElementById(state->rootId);
-            if (!from || !to || !current) return false;
-            OwnedElement owned = from->removeChild(current);
-            return owned && to->insertChild(std::move(owned), state->toIndex);
-        },
-        [this, state]() {
-            GaugeFace* from = getFaceById(state->fromFaceId);
-            GaugeFace* to = getFaceById(state->toFaceId);
-            Element* current = getElementById(state->rootId);
-            if (!from || !to || !current) return false;
-            OwnedElement owned = to->removeChild(current);
-            return owned && from->insertChild(std::move(owned), state->fromIndex);
-        }
-    });
-
-    return committed ? okWithIds(elementId, where.faceId) : Error("Failed to move root");
-}
-
-EditorResult Editor::createChild(const ChildPlacement& where, const std::string& json) {
-    Element* parent = getElementById(where.parentElementId);
-    if (!parent) return Error("Invalid parent element id");
-
-    rapidjson::Document doc = parseJson(json);
-    if (!doc.IsObject()) return Error("Invalid JSON");
-
-    const std::size_t index = clampIndex(where.index, parent->childCount());
-    auto state = std::make_shared<ChildCreateState>();
-    state->parentId = where.parentElementId;
-    state->index = index;
-    state->json = json;
-
-    const bool committed = history.commit({
-        "create child",
-        [this, state]() {
-            Element* currentParent = getElementById(state->parentId);
-            if (!currentParent) return false;
-
-            rapidjson::Document parsed = parseJson(state->json);
-            const rapidjson::Value& parsedValue = parsed;
-            OwnedElement element = Element::fromJson(parsedValue.GetObject());
-            Element* raw = element.get();
-            if (!currentParent->insertChild(std::move(element), state->index)) {
-                return false;
-            }
-            
-            if (!state->initialized) {
-                registerSubtree(raw);
-                state->created = snapshotElement(*this, *raw);
-                state->initialized = true;
-                return true;
-            }
-
-            std::size_t next = 0;
-            if (!registerSubtreeWithIds(raw, state->created.ids, next)) return false;
-            return next == state->created.ids.size();
-        },
-        [this, state]() {
-            if (state->created.ids.empty()) return false;
-            Element* currentParent = getElementById(state->parentId);
-            Element* current = getElementById(state->created.ids.front());
-            if (!currentParent || !current) return false;
-            unregisterElementRecursive(current);
-            return static_cast<bool>(currentParent->removeChild(current));
-        }
-    });
-
-    return committed ? okWithIds(state->created.ids.front(), where.parentElementId) : Error("Failed to create child");
+    return committed ? okWithIds(state->created.ids.front(), where.parentId) : Error("Failed to create element");
 }
 
 EditorResult Editor::removeElement(Id elementId) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
-    Element* parent = element->getParent();
-    if (!parent) return Error("Element is a root; use removeRoot");
+    ElementContainerRef parent = getElementContainerOf(element);
+    if (!parent.isFace() && !parent.isElement()) return Error("Element is not attached to a parent");
 
-    const std::size_t index = indexOfChild(*parent, element);
-    auto state = std::make_shared<ChildRemoveState>();
-    state->parentId = idOf(parent);
+    const std::size_t index = indexInContainer(parent, element);
+    auto state = std::make_shared<ElementRemoveState>();
+    state->parentId = idOfContainer(parent);
     state->index = index;
     state->removed = snapshotElement(*this, *element);
 
     const bool committed = history.commit({
         "remove element",
         [this, state]() {
-            Element* currentParent = getElementById(state->parentId);
-            if (!currentParent || state->removed.ids.empty()) return false;
+            ElementContainerRef currentParent = getElementContainerById(state->parentId);
+            if ((!currentParent.isFace() && !currentParent.isElement()) || state->removed.ids.empty()) return false;
             Element* current = getElementById(state->removed.ids.front());
             if (!current) return false;
             unregisterElementRecursive(current);
-            return static_cast<bool>(currentParent->removeChild(current));
+            return static_cast<bool>(removeFromContainer(currentParent, current));
         },
         [this, state]() {
-            Element* currentParent = getElementById(state->parentId);
-            if (!currentParent) return false;
+            ElementContainerRef currentParent = getElementContainerById(state->parentId);
+            if (!currentParent.isFace() && !currentParent.isElement()) return false;
             rapidjson::Document parsed = parseJson(state->removed.json);
             const rapidjson::Value& parsedValue = parsed;
             OwnedElement restored = Element::fromJson(parsedValue.GetObject());
             Element* raw = restored.get();
-            if (!currentParent->insertChild(std::move(restored), state->index)) return false;
+            if (!insertIntoContainer(currentParent, std::move(restored), state->index)) return false;
             std::size_t next = 0;
             if (!registerSubtreeWithIds(raw, state->removed.ids, next)) return false;
             return next == state->removed.ids.size();
@@ -910,86 +754,94 @@ EditorResult Editor::removeElement(Id elementId) {
     return committed ? OkObject() : Error("Failed to remove element");
 }
 
-EditorResult Editor::reorderChild(Id elementId, std::size_t index) {
+EditorResult Editor::reorderElement(Id elementId, std::size_t index) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
-    Element* parent = element->getParent();
-    if (!parent) return Error("Element is a root; use reorderRoot");
+    ElementContainerRef parent = getElementContainerOf(element);
+    if (!parent.isFace() && !parent.isElement()) return Error("Element is not attached to a parent");
 
-    const std::size_t oldIndex = indexOfChild(*parent, element);
-    const std::size_t newIndex = clampIndex(index, parent->childCount() - 1);
+    const std::size_t oldIndex = indexInContainer(parent, element);
+    const std::size_t newIndex = clampIndex(index, childCountOf(parent) - 1);
     if (oldIndex == newIndex) return OkObject();
 
-    auto state = std::make_shared<ChildReorderState>();
-    state->parentId = idOf(parent);
+    auto state = std::make_shared<ElementReorderState>();
+    state->parentId = idOfContainer(parent);
     state->elementId = elementId;
     state->from = oldIndex;
     state->to = newIndex;
 
     const bool committed = history.commit({
-        "reorder child",
+        "reorder element",
         [this, state]() {
-            Element* currentParent = getElementById(state->parentId);
+            ElementContainerRef currentParent = getElementContainerById(state->parentId);
             Element* current = getElementById(state->elementId);
-            if (!currentParent || !current) return false;
-            OwnedElement owned = currentParent->removeChild(current);
-            return owned && currentParent->insertChild(std::move(owned), state->to);
+            if ((!currentParent.isFace() && !currentParent.isElement()) || !current) return false;
+            OwnedElement owned = removeFromContainer(currentParent, current);
+            return owned && insertIntoContainer(currentParent, std::move(owned), state->to);
         },
         [this, state]() {
-            Element* currentParent = getElementById(state->parentId);
+            ElementContainerRef currentParent = getElementContainerById(state->parentId);
             Element* current = getElementById(state->elementId);
-            if (!currentParent || !current) return false;
-            OwnedElement owned = currentParent->removeChild(current);
-            return owned && currentParent->insertChild(std::move(owned), state->from);
+            if ((!currentParent.isFace() && !currentParent.isElement()) || !current) return false;
+            OwnedElement owned = removeFromContainer(currentParent, current);
+            return owned && insertIntoContainer(currentParent, std::move(owned), state->from);
         }
     });
 
-    return committed ? OkObject() : Error("Failed to reorder child");
+    return committed ? OkObject() : Error("Failed to reorder element");
 }
 
-EditorResult Editor::moveElementToParent(Id elementId, const ChildPlacement& where) {
+EditorResult Editor::moveElement(Id elementId, const ElementPlacement& where) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
-    Element* oldParent = element->getParent();
-    if (!oldParent) return Error("Element is a root; use moveRootToFace");
+    ElementContainerRef oldParent = getElementContainerOf(element);
+    ElementContainerRef newParent = getElementContainerById(where.parentId);
+    if (!oldParent.isFace() && !oldParent.isElement()) return Error("Element is not attached to a parent");
+    if (!newParent.isFace() && !newParent.isElement()) return Error("Invalid destination parent id");
+    if (idOfContainer(oldParent) == where.parentId) return Error("Destination parent matches current parent; use reorderElement");
+    if (newParent.element && elementContains(element, newParent.element)) return Error("Cannot move an element into its own subtree");
 
-    Element* newParent = getElementById(where.parentElementId);
-    if (!newParent) return Error("Invalid destination parent element id");
-    if (newParent == oldParent) return Error("Destination parent matches current parent; use reorderChild");
-    if (elementContains(element, newParent)) return Error("Cannot move an element into its own subtree");
+    const std::size_t fromIndex = indexInContainer(oldParent, element);
+    const std::size_t toIndex = clampIndex(where.index, childCountOf(newParent));
 
-    const std::size_t oldIndex = indexOfChild(*oldParent, element);
-    const std::size_t newIndex = clampIndex(where.index, newParent->childCount());
-    auto state = std::make_shared<ChildMoveState>();
+    auto state = std::make_shared<ElementMoveState>();
     state->elementId = elementId;
-    state->oldParentId = idOf(oldParent);
-    state->newParentId = where.parentElementId;
-    state->oldIndex = oldIndex;
-    state->newIndex = newIndex;
+    state->oldParentId = idOfContainer(oldParent);
+    state->newParentId = where.parentId;
+    state->fromIndex = fromIndex;
+    state->toIndex = toIndex;
 
     const bool committed = history.commit({
         "move element",
         [this, state]() {
-            Element* oldParentCurrent = getElementById(state->oldParentId);
-            Element* newParentCurrent = getElementById(state->newParentId);
+            ElementContainerRef oldParentCurrent = getElementContainerById(state->oldParentId);
+            ElementContainerRef newParentCurrent = getElementContainerById(state->newParentId);
             Element* current = getElementById(state->elementId);
-            if (!oldParentCurrent || !newParentCurrent || !current) return false;
-            OwnedElement owned = oldParentCurrent->removeChild(current);
-            return owned && newParentCurrent->insertChild(std::move(owned), state->newIndex);
+            if ((!oldParentCurrent.isFace() && !oldParentCurrent.isElement()) ||
+                (!newParentCurrent.isFace() && !newParentCurrent.isElement()) ||
+                !current) {
+                return false;
+            }
+            OwnedElement owned = removeFromContainer(oldParentCurrent, current);
+            return owned && insertIntoContainer(newParentCurrent, std::move(owned), state->toIndex);
         },
         [this, state]() {
-            Element* oldParentCurrent = getElementById(state->oldParentId);
-            Element* newParentCurrent = getElementById(state->newParentId);
+            ElementContainerRef oldParentCurrent = getElementContainerById(state->oldParentId);
+            ElementContainerRef newParentCurrent = getElementContainerById(state->newParentId);
             Element* current = getElementById(state->elementId);
-            if (!oldParentCurrent || !newParentCurrent || !current) return false;
-            OwnedElement owned = newParentCurrent->removeChild(current);
-            return owned && oldParentCurrent->insertChild(std::move(owned), state->oldIndex);
+            if ((!oldParentCurrent.isFace() && !oldParentCurrent.isElement()) ||
+                (!newParentCurrent.isFace() && !newParentCurrent.isElement()) ||
+                !current) {
+                return false;
+            }
+            OwnedElement owned = removeFromContainer(newParentCurrent, current);
+            return owned && insertIntoContainer(oldParentCurrent, std::move(owned), state->fromIndex);
         }
     });
 
-    return committed ? okWithIds(elementId, where.parentElementId) : Error("Failed to move element");
+    return committed ? okWithIds(elementId, where.parentId) : Error("Failed to move element");
 }
 
 EditorResult Editor::replaceElementFromJson(Id elementId, const std::string& json) {
@@ -1041,9 +893,7 @@ EditorResult Editor::replaceElementFromJson(Id elementId, const std::string& jso
 
             if (!state->initialized) {
                 registerElementWithId(state->targetId, raw);
-                for (std::size_t i = 0; i < raw->childCount(); ++i) {
-                    registerSubtree(raw->childAt(i));
-                }
+                for (std::size_t i = 0; i < raw->childCount(); ++i) registerSubtree(raw->childAt(i));
                 state->after = snapshotElement(*this, *raw);
                 state->initialized = true;
                 return true;
@@ -1118,9 +968,7 @@ EditorResult Editor::setProperty(Id id, const std::string& path, const std::stri
             if (!currentObject) return false;
             PropertyObject* currentOwner = nullptr;
             const Property* currentProperty = nullptr;
-            if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) {
-                return false;
-            }
+            if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             rapidjson::Document parsed = parseJson(state->afterJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
         },
@@ -1129,9 +977,7 @@ EditorResult Editor::setProperty(Id id, const std::string& path, const std::stri
             if (!currentObject) return false;
             PropertyObject* currentOwner = nullptr;
             const Property* currentProperty = nullptr;
-            if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) {
-                return false;
-            }
+            if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             rapidjson::Document parsed = parseJson(state->beforeJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
         }
@@ -1145,21 +991,15 @@ EditorResult Editor::getProperty(Id id, const std::string& path) const {
     if (!node) return Error("Invalid id");
     if (path.empty()) return Error("Property path is required");
 
-    const PropertyObject* object = node->kind == NodeKind::Face
-        ? static_cast<const PropertyObject*>(node->face)
-        : static_cast<const PropertyObject*>(node->element);
+    const PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const PropertyObject*>(node->face) : static_cast<const PropertyObject*>(node->element);
 
     const PropertyObject* owner = nullptr;
     const Property* property = nullptr;
-    if (!object->resolvePath(path, owner, property) || !owner || !property) {
-        return Error("Invalid property path");
-    }
+    if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
     EditorResult result = OkObject();
     rapidjson::Value value;
-    if (!owner->getProperty(property->key, value, result.data.GetAllocator())) {
-        return Error("Failed to read property");
-    }
+    if (!owner->getProperty(property->key, value, result.data.GetAllocator())) return Error("Failed to read property");
 
     result.data.AddMember("id", id, result.data.GetAllocator());
     result.data.AddMember("path", rapidjson::Value(path.c_str(), result.data.GetAllocator()), result.data.GetAllocator());
@@ -1171,9 +1011,7 @@ EditorResult Editor::getPropertiesMeta(Id id, const std::string& path) const {
     const NodeRef* node = getNode(id);
     if (!node) return Error("Invalid id");
 
-    const PropertyObject* object = node->kind == NodeKind::Face
-        ? static_cast<const PropertyObject*>(node->face)
-        : static_cast<const PropertyObject*>(node->element);
+    const PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const PropertyObject*>(node->face) : static_cast<const PropertyObject*>(node->element);
 
     EditorResult result = OkObject();
     auto& allocator = result.data.GetAllocator();
@@ -1187,9 +1025,7 @@ EditorResult Editor::getPropertiesMeta(Id id, const std::string& path) const {
 
     const PropertyObject* owner = nullptr;
     const Property* property = nullptr;
-    if (!object->resolvePath(path, owner, property) || !owner || !property) {
-        return Error("Invalid property path");
-    }
+    if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
     rapidjson::Value meta = owner->getPropertyMeta(*property, allocator);
     result.data.AddMember("path", rapidjson::Value(path.c_str(), allocator), allocator);
@@ -1235,26 +1071,15 @@ EditorResult Editor::copyElement(Id elementId) {
     return OkObject();
 }
 
-EditorResult Editor::cutRoot(Id elementId) {
-    EditorResult copied = copyElement(elementId);
-    if (!copied.ok) return copied;
-    return removeRoot(elementId);
-}
-
 EditorResult Editor::cutElement(Id elementId) {
     EditorResult copied = copyElement(elementId);
     if (!copied.ok) return copied;
     return removeElement(elementId);
 }
 
-EditorResult Editor::pasteRoot(const RootPlacement& where) {
+EditorResult Editor::pasteElement(const ElementPlacement& where) {
     if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
-    return createRoot(where, clipboard.json);
-}
-
-EditorResult Editor::pasteChild(const ChildPlacement& where) {
-    if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
-    return createChild(where, clipboard.json);
+    return createElement(where, clipboard.json);
 }
 
 EditorResult Editor::pasteToReplaceElement(Id elementId) {
