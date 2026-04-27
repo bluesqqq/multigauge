@@ -76,6 +76,8 @@ bool GaugeFace::insertChild(OwnedElement child, std::size_t index) {
     Element* raw = child.get();
     const size_t i = std::min(index, children.size());
 
+    raw->face = this;
+
     if (node && raw->getNode()) {
         if (YGNodeRef owner = YGNodeGetOwner(raw->getNode()); owner != node) {
             if (owner) YGNodeRemoveChild(owner, raw->getNode());
@@ -99,6 +101,8 @@ OwnedElement GaugeFace::removeChild(Element *child) {
 
         OwnedElement out = std::move(children[i]);
         children.erase(children.begin() + i);
+
+        out->face = nullptr;
 
         return out;
     }

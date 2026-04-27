@@ -19,6 +19,8 @@
 class Element;
 using OwnedElement = std::unique_ptr<Element>;
 
+class GaugeFace;
+
 class Element : public PropertyObject {
     MG_EDITOR_NAME("Element")
 
@@ -39,6 +41,10 @@ class Element : public PropertyObject {
         YGNodeRef node = nullptr;
 
     protected:
+        GaugeFace* face = nullptr;
+
+        friend class GaugeFace;
+
         //----------[ LIFETIME HOOKS ]----------//
 
         virtual bool init(AssetManager& assetManager) { return true; }
@@ -57,6 +63,11 @@ class Element : public PropertyObject {
         
         //----------[ TREE ]----------//
 
+        GaugeFace* getOwnerFace() const {
+            const Element* current = this;
+            while (current->parent) current = current->parent;
+            return current->face;
+        }
         Element* getParent() const { return parent; }
 
         //----------[ CHILDREN ]----------//

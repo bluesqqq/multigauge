@@ -128,6 +128,8 @@ OwnedElement Element::removeChild(Element* child) {
         children.erase(children.begin() + static_cast<std::ptrdiff_t>(i));
 
         detached->parent = nullptr;
+        detached->face = nullptr;
+        
         return detached;
     }
 
