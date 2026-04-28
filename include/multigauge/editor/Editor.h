@@ -8,249 +8,253 @@
 #include <vector>
 
 #include <multigauge/editor/Clipboard.h>
-#include <multigauge/editor/EditorResult.h>
+#include <multigauge/editor/Result.h>
 #include <multigauge/editor/History.h>
 #include <multigauge/gauge/GaugeFace.h>
 
+namespace mg::editor {
+
 class Editor {
-public:
-    /// Identifies a face or element within the editor.
-    using Id = uint32_t;
-    /// Appends at the end of a sibling list when used as an index.
-    static constexpr std::size_t Append = static_cast<std::size_t>(-1);
+    public:
+        /// Identifies a face or element within the editor.
+        using Id = uint32_t;
+        /// Appends at the end of a sibling list when used as an index.
+        static constexpr std::size_t Append = static_cast<std::size_t>(-1);
 
-    enum class NodeKind {
-        Face,
-        Element
-    };
-
-    struct FacePlacement {
-        std::size_t index;
-
-        explicit FacePlacement(std::size_t i = Append) : index(i) {}
-    };
-
-    struct ElementPlacement {
-        Id parentId;
-        std::size_t index;
-
-        ElementPlacement(Id p = 0, std::size_t i = Append) : parentId(p), index(i) {}
-    };
-
-private:
-    struct ElementContainerRef {
-        GaugeFace* face = nullptr;
-        Element* element = nullptr;
-
-        bool isFace() const { return face != nullptr; }
-        bool isElement() const { return element != nullptr; }
-    };
-
-    struct NodeRef {
-        NodeKind kind = NodeKind::Face;
-        union {
-            GaugeFace* face;
-            Element* element;
+        enum class NodeKind {
+            Face,
+            Element
         };
 
-        NodeRef() : face(nullptr) {}
-        explicit NodeRef(GaugeFace* value) : kind(NodeKind::Face), face(value) {}
-        explicit NodeRef(Element* value) : kind(NodeKind::Element), element(value) {}
-    };
+        struct FacePlacement {
+            std::size_t index;
 
-    std::vector<std::unique_ptr<GaugeFace>> faces;
+            explicit FacePlacement(std::size_t i = Append) : index(i) {}
+        };
 
-    std::unordered_map<Id, NodeRef> nodes;
-    std::unordered_map<GaugeFace*, Id> faceToId;
-    std::unordered_map<Element*, Id> elementToId;
+        struct ElementPlacement {
+            Id parentId;
+            std::size_t index;
 
-    Id nextId = 1;
-    History history;
-    ClipboardState clipboard;
+            ElementPlacement(Id p = 0, std::size_t i = Append) : parentId(p), index(i) {}
+        };
 
-private:
-    //----------[ INTERNAL HELPERS ]----------//
+    private:
+        struct ElementContainerRef {
+            GaugeFace* face = nullptr;
+            Element* element = nullptr;
 
-    Id makeId() { return nextId++; }
+            bool isFace() const { return face != nullptr; }
+            bool isElement() const { return element != nullptr; }
+        };
 
-    NodeRef* getNode(Id id);
-    const NodeRef* getNode(Id id) const;
+        struct NodeRef {
+            NodeKind kind = NodeKind::Face;
+            union {
+                GaugeFace* face;
+                Element* element;
+            };
 
-    Id registerFace(GaugeFace* face);
-    Id registerFaceWithId(Id id, GaugeFace* face);
-    Id registerElement(Element* element);
-    Id registerElementWithId(Id id, Element* element);
-    void registerSubtree(Element* element);
-    bool registerSubtreeWithIds(Element* element, const std::vector<Id>& ids, std::size_t& nextIndex);
-    void unregisterFace(GaugeFace* face);
-    void unregisterElementRecursive(Element* element);
+            NodeRef() : face(nullptr) {}
+            explicit NodeRef(GaugeFace* value) : kind(NodeKind::Face), face(value) {}
+            explicit NodeRef(Element* value) : kind(NodeKind::Element), element(value) {}
+        };
 
-    GaugeFace* getFaceById(Id id);
-    const GaugeFace* getFaceById(Id id) const;
+        std::vector<std::unique_ptr<GaugeFace>> faces;
 
-    Element* getElementById(Id id);
-    const Element* getElementById(Id id) const;
-    PropertyObject* getObjectById(Id id);
-    const PropertyObject* getObjectById(Id id) const;
-    ElementContainerRef getElementContainerById(Id id);
-    ElementContainerRef getElementContainerOf(Element* element);
-    Id idOfContainer(const ElementContainerRef& container) const;
-    std::size_t childCountOf(const ElementContainerRef& container) const;
-    bool insertIntoContainer(const ElementContainerRef& container, OwnedElement child, std::size_t index);
-    OwnedElement removeFromContainer(const ElementContainerRef& container, Element* child);
-    std::size_t indexInContainer(const ElementContainerRef& container, const Element* child) const;
+        std::unordered_map<Id, NodeRef> nodes;
+        std::unordered_map<GaugeFace*, Id> faceToId;
+        std::unordered_map<Element*, Id> elementToId;
 
-    static std::size_t clampIndex(std::size_t index, std::size_t size) {
-        return (index == Append || index > size) ? size : index;
-    }
+        Id nextId = 1;
+        History history;
+        ClipboardState clipboard;
 
-public:
-    Editor() = default;
+    private:
+        //----------[ INTERNAL HELPERS ]----------//
 
-    //----------[ DOCUMENT ]----------//
+        Id makeId() { return nextId++; }
 
-    /// Clears the loaded document, history, node IDs, and clipboard state.
-    void clear();
-    /// Loads faces and elements from a document JSON array.
-    void loadDocument(const std::string& json);
-    /// Saves the current document as a JSON array.
-    std::string saveDocument() const;
+        NodeRef* getNode(Id id);
+        const NodeRef* getNode(Id id) const;
 
-    //----------[ QUERIES ]----------//
+        Id registerFace(GaugeFace* face);
+        Id registerFaceWithId(Id id, GaugeFace* face);
+        Id registerElement(Element* element);
+        Id registerElementWithId(Id id, Element* element);
+        void registerSubtree(Element* element);
+        bool registerSubtreeWithIds(Element* element, const std::vector<Id>& ids, std::size_t& nextIndex);
+        void unregisterFace(GaugeFace* face);
+        void unregisterElementRecursive(Element* element);
 
-    /// Returns whether a face or element with `id` exists.
-    bool hasNode(Id id) const;
+        GaugeFace* getFaceById(Id id);
+        const GaugeFace* getFaceById(Id id) const;
 
-    /// Returns whether `id` refers to a face.
-    bool isFace(Id id) const;
+        Element* getElementById(Id id);
+        const Element* getElementById(Id id) const;
+        ::PropertyObject* getObjectById(Id id);
+        const ::PropertyObject* getObjectById(Id id) const;
+        ElementContainerRef getElementContainerById(Id id);
+        ElementContainerRef getElementContainerOf(Element* element);
+        Id idOfContainer(const ElementContainerRef& container) const;
+        std::size_t childCountOf(const ElementContainerRef& container) const;
+        bool insertIntoContainer(const ElementContainerRef& container, OwnedElement child, std::size_t index);
+        OwnedElement removeFromContainer(const ElementContainerRef& container, Element* child);
+        std::size_t indexInContainer(const ElementContainerRef& container, const Element* child) const;
 
-    /// Returns whether `id` refers to an element.
-    bool isElement(Id id) const;
+        static std::size_t clampIndex(std::size_t index, std::size_t size) {
+            return (index == Append || index > size) ? size : index;
+        }
 
-    /// Returns the editor ID for `face`.
-    /// @return Face ID, or `0` if `face` is not registered.
-    Id idOf(const GaugeFace* face) const;
+    public:
+        Editor() = default;
 
-    /// Returns the editor ID for `element`.
-    /// @return Element ID, or `0` if `element` is not registered.
-    Id idOf(const Element* element) const;
+        //----------[ DOCUMENT ]----------//
 
-    std::size_t faceCount() const { return faces.size(); }
-    GaugeFace* faceAt(std::size_t index) { return faces.at(index).get(); }
-    const GaugeFace* faceAt(std::size_t index) const { return faces.at(index).get(); }
+        /// Clears the loaded document, history, node IDs, and clipboard state.
+        void clear();
+        /// Loads faces and elements from a document JSON array.
+        void loadDocument(const std::string& json);
+        /// Saves the current document as a JSON array.
+        std::string saveDocument() const;
 
-    /// Returns the face and element tree as a flat hierarchy payload.
-    /// @return `{ "roots": [uint...], "nodes": { "id": { "kind": string, "name": string, "children": [uint...] }, ... } }`
-    /// where element nodes also include `"type": string`.
-    EditorResult getHierarchy() const;
+        //----------[ QUERIES ]----------//
 
-    /// Lists registered element types for editor UI creation menus.
-    /// @return `[ { "name": string, "type": string }, ... ]`.
-    EditorResult listElementTypes() const;
+        /// Returns whether a face or element with `id` exists.
+        bool hasNode(Id id) const;
 
-    /// Lists known value IDs for editor UI binding menus.
-    /// @return `[ string, ... ]`.
-    EditorResult listValueIDs() const;
+        /// Returns whether `id` refers to a face.
+        bool isFace(Id id) const;
 
-    //----------[ GAUGE FACES ]----------//
+        /// Returns whether `id` refers to an element.
+        bool isElement(Id id) const;
 
-    /// Creates a new face in the face list.
-    /// @note `where.index` appends when set to `Append` or greater than the face count.
-    /// @return `{ "id": uint }` for the inserted face.
-    EditorResult createFace(const std::string& json, FacePlacement where = FacePlacement{});
+        /// Returns the editor ID for `face`.
+        /// @return Face ID, or `0` if `face` is not registered.
+        Id idOf(const GaugeFace* face) const;
 
-    /// Removes a face from the face list.
-    EditorResult removeFace(Id faceId);
+        /// Returns the editor ID for `element`.
+        /// @return Element ID, or `0` if `element` is not registered.
+        Id idOf(const Element* element) const;
 
-    /// Reorders a face within the face list.
-    /// @note `index` is zero-based and clamps to the valid face range.
-    EditorResult reorderFace(Id faceId, std::size_t index);
+        std::size_t faceCount() const { return faces.size(); }
+        GaugeFace* faceAt(std::size_t index) { return faces.at(index).get(); }
+        const GaugeFace* faceAt(std::size_t index) const { return faces.at(index).get(); }
 
-    //----------[ ELEMENTS ]----------//
+        /// Returns the face and element tree as a flat hierarchy payload.
+        /// @return `{ "roots": [uint...], "nodes": { "id": { "kind": string, "name": string, "children": [uint...] }, ... } }`
+        /// where element nodes also include `"type": string`.
+        Result getHierarchy() const;
 
-    /// Creates an element under a face or element parent from JSON.
-    /// @note `where.parentId` may refer to either a face or an element.
-    /// @note `where.index` appends when set to `Append` or greater than the parent child count.
-    /// @return `{ "id": uint, "parentId": uint }` for the inserted element.
-    EditorResult createElement(const ElementPlacement& where, const std::string& json);
+        /// Lists registered element types for editor UI creation menus.
+        /// @return `[ { "name": string, "type": string }, ... ]`.
+        Result listElementTypes() const;
 
-    /// Removes an element from its current parent.
-    EditorResult removeElement(Id elementId);
+        /// Lists known value IDs for editor UI binding menus.
+        /// @return `[ string, ... ]`.
+        Result listValueIDs() const;
 
-    /// Reorders an element within its current parent.
-    /// @note `index` is zero-based and clamps to the valid sibling range.
-    EditorResult reorderElement(Id elementId, std::size_t index);
+        //----------[ GAUGE FACES ]----------//
 
-    /// Moves an element to a new face or element parent.
-    /// @note `where.parentId` may refer to either a face or an element.
-    /// @note `where.index` appends when set to `Append` or greater than the destination child count.
-    /// @return `{ "id": uint, "parentId": uint }` for the moved element.
-    EditorResult moveElement(Id elementId, const ElementPlacement& where);
+        /// Creates a new face in the face list.
+        /// @note `where.index` appends when set to `Append` or greater than the face count.
+        /// @return `{ "id": uint }` for the inserted face.
+        Result createFace(const std::string& json, FacePlacement where = FacePlacement{});
 
-    /// Replaces an element with a new element loaded from JSON.
-    /// @return `{ "id": uint }` for the replaced element.
-    EditorResult replaceElementFromJson(Id elementId, const std::string& json);
+        /// Removes a face from the face list.
+        Result removeFace(Id faceId);
 
-    //----------[ PROPERTIES ]----------//
+        /// Reorders a face within the face list.
+        /// @note `index` is zero-based and clamps to the valid face range.
+        Result reorderFace(Id faceId, std::size_t index);
 
-    /// Sets a property on a face or element from JSON.
-    /// @param path Dotted property path such as `"style.margin.left"`.
-    EditorResult setProperty(Id id, const std::string& path, const std::string& json);
+        //----------[ ELEMENTS ]----------//
 
-    /// Gets a property from a face or element.
-    /// @param path Dotted property path such as `"style.margin.left"`.
-    /// @return `{ "id": uint, "path": string, "value": any }`.
-    EditorResult getProperty(Id id, const std::string& path) const;
+        /// Creates an element under a face or element parent from JSON.
+        /// @note `where.parentId` may refer to either a face or an element.
+        /// @note `where.index` appends when set to `Append` or greater than the parent child count.
+        /// @return `{ "id": uint, "parentId": uint }` for the inserted element.
+        Result createElement(const ElementPlacement& where, const std::string& json);
 
-    /// Gets property metadata from a face or element.
-    /// @param path Dotted property path, or empty to describe the whole object.
-    /// @return `{ "id": uint, "meta": object }` for an empty `path`, or
-    /// `{ "id": uint, "path": string, "meta": object }` for a resolved property.
-    EditorResult getPropertiesMeta(Id id, const std::string& path = "") const;
+        /// Removes an element from its current parent.
+        Result removeElement(Id elementId);
 
-    //----------[ CLIPBOARD ]----------//
+        /// Reorders an element within its current parent.
+        /// @note `index` is zero-based and clamps to the valid sibling range.
+        Result reorderElement(Id elementId, std::size_t index);
 
-    ClipboardSummary getClipboardSummary() const { return { clipboard.kind }; }
-    void clearClipboard() { clipboard.clear(); }
+        /// Moves an element to a new face or element parent.
+        /// @note `where.parentId` may refer to either a face or an element.
+        /// @note `where.index` appends when set to `Append` or greater than the destination child count.
+        /// @return `{ "id": uint, "parentId": uint }` for the moved element.
+        Result moveElement(Id elementId, const ElementPlacement& where);
 
-    /// Copies a face into the editor clipboard.
-    EditorResult copyFace(Id faceId);
+        /// Replaces an element with a new element loaded from JSON.
+        /// @return `{ "id": uint }` for the replaced element.
+        Result replaceElementFromJson(Id elementId, const std::string& json);
 
-    /// Copies a face into the editor clipboard and removes it.
-    EditorResult cutFace(Id faceId);
+        //----------[ PROPERTIES ]----------//
 
-    /// Pastes a face from the editor clipboard.
-    /// @note `where.index` appends when set to `Append` or greater than the face count.
-    /// @return `{ "id": uint }` for the inserted face.
-    EditorResult pasteFace(FacePlacement where = FacePlacement{});
+        /// Sets a property on a face or element from JSON.
+        /// @param path Dotted property path such as `"style.margin.left"`.
+        Result setProperty(Id id, const std::string& path, const std::string& json);
 
-    /// Copies an element into the editor clipboard.
-    EditorResult copyElement(Id elementId);
+        /// Gets a property from a face or element.
+        /// @param path Dotted property path such as `"style.margin.left"`.
+        /// @return `{ "id": uint, "path": string, "value": any }`.
+        Result getProperty(Id id, const std::string& path) const;
 
-    /// Copies an element into the editor clipboard and removes it.
-    EditorResult cutElement(Id elementId);
+        /// Gets property metadata from a face or element.
+        /// @param path Dotted property path, or empty to describe the whole object.
+        /// @return `{ "id": uint, "meta": object }` for an empty `path`, or
+        /// `{ "id": uint, "path": string, "meta": object }` for a resolved property.
+        Result getPropertiesMeta(Id id, const std::string& path = "") const;
 
-    /// Pastes an element from the editor clipboard under a face or element parent.
-    /// @note `where.parentId` may refer to either a face or an element.
-    /// @return `{ "id": uint, "parentId": uint }` for the inserted element.
-    EditorResult pasteElement(const ElementPlacement& where);
+        //----------[ CLIPBOARD ]----------//
 
-    /// Replaces an element with the current clipboard element payload.
-    /// @return `{ "id": uint }` for the replaced element.
-    EditorResult pasteToReplaceElement(Id elementId);
+        ClipboardSummary getClipboardSummary() const { return { clipboard.kind }; }
+        void clearClipboard() { clipboard.clear(); }
 
-    //----------[ HISTORY ]----------//
+        /// Copies a face into the editor clipboard.
+        Result copyFace(Id faceId);
 
-    bool canUndo() const { return history.canUndo(); }
-    bool canRedo() const { return history.canRedo(); }
+        /// Copies a face into the editor clipboard and removes it.
+        Result cutFace(Id faceId);
 
-    /// Undoes the most recent committed edit.
-    bool undo() { return history.undo(); }
+        /// Pastes a face from the editor clipboard.
+        /// @note `where.index` appends when set to `Append` or greater than the face count.
+        /// @return `{ "id": uint }` for the inserted face.
+        Result pasteFace(FacePlacement where = FacePlacement{});
 
-    /// Redoes the next committed edit.
-    bool redo() { return history.redo(); }
+        /// Copies an element into the editor clipboard.
+        Result copyElement(Id elementId);
 
-    /// Returns undo and redo availability for editor UI state.
-    /// @return `{ "canUndo": bool, "canRedo": bool }`.
-    EditorResult getHistory() const;
+        /// Copies an element into the editor clipboard and removes it.
+        Result cutElement(Id elementId);
+
+        /// Pastes an element from the editor clipboard under a face or element parent.
+        /// @note `where.parentId` may refer to either a face or an element.
+        /// @return `{ "id": uint, "parentId": uint }` for the inserted element.
+        Result pasteElement(const ElementPlacement& where);
+
+        /// Replaces an element with the current clipboard element payload.
+        /// @return `{ "id": uint }` for the replaced element.
+        Result pasteToReplaceElement(Id elementId);
+
+        //----------[ HISTORY ]----------//
+
+        bool canUndo() const { return history.canUndo(); }
+        bool canRedo() const { return history.canRedo(); }
+
+        /// Undoes the most recent committed edit.
+        bool undo() { return history.undo(); }
+
+        /// Redoes the next committed edit.
+        bool redo() { return history.redo(); }
+
+        /// Returns undo and redo availability for editor UI state.
+        /// @return `{ "canUndo": bool, "canRedo": bool }`.
+        Result getHistory() const;
 };
+
+}

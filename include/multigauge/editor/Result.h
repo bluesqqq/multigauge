@@ -5,7 +5,9 @@
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 
-struct EditorResult {
+namespace mg::editor {
+
+struct Result {
     bool ok = false;
     rapidjson::Document data;
     std::string error;
@@ -31,36 +33,38 @@ struct EditorResult {
         return buffer.GetString();
     }
 
-    static EditorResult OkObject() {
-        EditorResult r;
+    static Result OkObject() {
+        Result r;
         r.ok = true;
         r.data.SetObject();
         return r;
     }
 
-    static EditorResult OkArray() {
-        EditorResult r;
+    static Result OkArray() {
+        Result r;
         r.ok = true;
         r.data.SetArray();
         return r;
     }
 
-    static EditorResult Error(const std::string& error) {
-        EditorResult r;
+    static Result Error(const std::string& error) {
+        Result r;
         r.ok = false;
         r.error = error;
         return r;
     }
 };
 
-inline EditorResult OkObject() {
-    return EditorResult::OkObject();
+inline Result OkObject() {
+    return Result::OkObject();
 }
 
-inline EditorResult OkArray() {
-    return EditorResult::OkArray();
+inline Result OkArray() {
+    return Result::OkArray();
 }
 
-inline EditorResult Error(const std::string& error) {
-    return EditorResult::Error(error);
+inline Result Error(const std::string& error) {
+    return Result::Error(error);
+}
+
 }

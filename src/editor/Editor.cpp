@@ -9,6 +9,8 @@
 
 #include <multigauge/values/Value.h>
 
+namespace mg::editor {
+
 namespace {
 
 struct FaceInsertState {
@@ -170,15 +172,15 @@ std::size_t indexOfChild(const Element& parent, const Element* child) {
     return Editor::Append;
 }
 
-EditorResult okWithId(Editor::Id id) {
-    EditorResult result = OkObject();
+Result okWithId(Editor::Id id) {
+    Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
     result.data.AddMember("id", id, allocator);
     return result;
 }
 
-EditorResult okWithIds(Editor::Id id, Editor::Id parentId) {
-    EditorResult result = OkObject();
+Result okWithIds(Editor::Id id, Editor::Id parentId) {
+    Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
     result.data.AddMember("id", id, allocator);
     result.data.AddMember("parentId", parentId, allocator);
@@ -332,13 +334,13 @@ const Element* Editor::getElementById(Id id) const {
     return (node && node->kind == NodeKind::Element) ? node->element : nullptr;
 }
 
-PropertyObject* Editor::getObjectById(Id id) {
+::PropertyObject* Editor::getObjectById(Id id) {
     if (GaugeFace* face = getFaceById(id)) return face;
     if (Element* element = getElementById(id)) return element;
     return nullptr;
 }
 
-const PropertyObject* Editor::getObjectById(Id id) const {
+const ::PropertyObject* Editor::getObjectById(Id id) const {
     if (const GaugeFace* face = getFaceById(id)) return face;
     if (const Element* element = getElementById(id)) return element;
     return nullptr;
@@ -464,8 +466,8 @@ Editor::Id Editor::idOf(const Element* element) const {
     return it == elementToId.end() ? 0 : it->second;
 }
 
-EditorResult Editor::getHierarchy() const {
-    EditorResult result = OkObject();
+Result Editor::getHierarchy() const {
+    Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
 
     rapidjson::Value roots(rapidjson::kArrayType);
@@ -510,8 +512,8 @@ EditorResult Editor::getHierarchy() const {
     return result;
 }
 
-EditorResult Editor::listElementTypes() const {
-    EditorResult result = OkArray();
+Result Editor::listElementTypes() const {
+    Result result = OkArray();
     auto& data = result.data;
     auto& allocator = data.GetAllocator();
 
@@ -525,8 +527,8 @@ EditorResult Editor::listElementTypes() const {
     return result;
 }
 
-EditorResult Editor::listValueIDs() const {
-    EditorResult result = OkArray();
+Result Editor::listValueIDs() const {
+    Result result = OkArray();
     auto& data = result.data;
     auto& allocator = data.GetAllocator();
 
@@ -538,7 +540,7 @@ EditorResult Editor::listValueIDs() const {
     return result;
 }
 
-EditorResult Editor::createFace(const std::string& json, FacePlacement where) {
+Result Editor::createFace(const std::string& json, FacePlacement where) {
     rapidjson::Document doc = parseJson(json);
     if (!doc.IsObject()) return Error("Invalid JSON");
 
@@ -593,7 +595,7 @@ EditorResult Editor::createFace(const std::string& json, FacePlacement where) {
     return committed ? okWithId(id) : Error("Failed to create face");
 }
 
-EditorResult Editor::removeFace(Id faceId) {
+Result Editor::removeFace(Id faceId) {
     auto it = std::find_if(faces.begin(), faces.end(),
         [&](const auto& f) { return idOf(f.get()) == faceId; });
 
@@ -644,7 +646,7 @@ EditorResult Editor::removeFace(Id faceId) {
     return committed ? OkObject() : Error("Failed to remove face");
 }
 
-EditorResult Editor::reorderFace(Id faceId, std::size_t index) {
+Result Editor::reorderFace(Id faceId, std::size_t index) {
     auto it = std::find_if(faces.begin(), faces.end(),
         [&](const auto& f) { return idOf(f.get()) == faceId; });
 
@@ -685,7 +687,7 @@ EditorResult Editor::reorderFace(Id faceId, std::size_t index) {
     return committed ? OkObject() : Error("Failed to reorder face");
 }
 
-EditorResult Editor::createElement(const ElementPlacement& where, const std::string& json) {
+Result Editor::createElement(const ElementPlacement& where, const std::string& json) {
     ElementContainerRef parent = getElementContainerById(where.parentId);
     if (!parent.isFace() && !parent.isElement()) return Error("Invalid parent id");
 
@@ -734,7 +736,7 @@ EditorResult Editor::createElement(const ElementPlacement& where, const std::str
     return committed ? okWithIds(state->created.ids.front(), where.parentId) : Error("Failed to create element");
 }
 
-EditorResult Editor::removeElement(Id elementId) {
+Result Editor::removeElement(Id elementId) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -774,7 +776,7 @@ EditorResult Editor::removeElement(Id elementId) {
     return committed ? OkObject() : Error("Failed to remove element");
 }
 
-EditorResult Editor::reorderElement(Id elementId, std::size_t index) {
+Result Editor::reorderElement(Id elementId, std::size_t index) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -812,7 +814,7 @@ EditorResult Editor::reorderElement(Id elementId, std::size_t index) {
     return committed ? OkObject() : Error("Failed to reorder element");
 }
 
-EditorResult Editor::moveElement(Id elementId, const ElementPlacement& where) {
+Result Editor::moveElement(Id elementId, const ElementPlacement& where) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -864,7 +866,7 @@ EditorResult Editor::moveElement(Id elementId, const ElementPlacement& where) {
     return committed ? okWithIds(elementId, where.parentId) : Error("Failed to move element");
 }
 
-EditorResult Editor::replaceElementFromJson(Id elementId, const std::string& json) {
+Result Editor::replaceElementFromJson(Id elementId, const std::string& json) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -956,15 +958,15 @@ EditorResult Editor::replaceElementFromJson(Id elementId, const std::string& jso
     return committed ? okWithId(state->targetId) : Error("Failed to replace element");
 }
 
-EditorResult Editor::setProperty(Id id, const std::string& path, const std::string& json) {
-    PropertyObject* object = getObjectById(id);
+Result Editor::setProperty(Id id, const std::string& path, const std::string& json) {
+    ::PropertyObject* object = getObjectById(id);
     if (!object) return Error("Invalid id");
 
     rapidjson::Document value = parseJson(json);
     if (value.HasParseError()) return Error("Invalid JSON");
 
-    PropertyObject* owner = nullptr;
-    const Property* property = nullptr;
+    ::PropertyObject* owner = nullptr;
+    const ::Property* property = nullptr;
     if (!object->resolvePath(path, owner, property) || !owner || !property) {
         return Error("Invalid property path");
     }
@@ -985,19 +987,19 @@ EditorResult Editor::setProperty(Id id, const std::string& path, const std::stri
     const bool committed = history.commit({
         "set property",
         [this, state]() {
-            PropertyObject* currentObject = getObjectById(state->nodeId);
+            ::PropertyObject* currentObject = getObjectById(state->nodeId);
             if (!currentObject) return false;
-            PropertyObject* currentOwner = nullptr;
-            const Property* currentProperty = nullptr;
+            ::PropertyObject* currentOwner = nullptr;
+            const ::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             rapidjson::Document parsed = parseJson(state->afterJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
         },
         [this, state]() {
-            PropertyObject* currentObject = getObjectById(state->nodeId);
+            ::PropertyObject* currentObject = getObjectById(state->nodeId);
             if (!currentObject) return false;
-            PropertyObject* currentOwner = nullptr;
-            const Property* currentProperty = nullptr;
+            ::PropertyObject* currentOwner = nullptr;
+            const ::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             rapidjson::Document parsed = parseJson(state->beforeJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
@@ -1007,18 +1009,18 @@ EditorResult Editor::setProperty(Id id, const std::string& path, const std::stri
     return committed ? OkObject() : Error("Failed to set property");
 }
 
-EditorResult Editor::getProperty(Id id, const std::string& path) const {
+Result Editor::getProperty(Id id, const std::string& path) const {
     const NodeRef* node = getNode(id);
     if (!node) return Error("Invalid id");
     if (path.empty()) return Error("Property path is required");
 
-    const PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const PropertyObject*>(node->face) : static_cast<const PropertyObject*>(node->element);
+    const ::PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const ::PropertyObject*>(node->face) : static_cast<const ::PropertyObject*>(node->element);
 
-    const PropertyObject* owner = nullptr;
-    const Property* property = nullptr;
+    const ::PropertyObject* owner = nullptr;
+    const ::Property* property = nullptr;
     if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
-    EditorResult result = OkObject();
+    Result result = OkObject();
     rapidjson::Value value;
     if (!owner->getProperty(property->key, value, result.data.GetAllocator())) return Error("Failed to read property");
 
@@ -1028,13 +1030,13 @@ EditorResult Editor::getProperty(Id id, const std::string& path) const {
     return result;
 }
 
-EditorResult Editor::getPropertiesMeta(Id id, const std::string& path) const {
+Result Editor::getPropertiesMeta(Id id, const std::string& path) const {
     const NodeRef* node = getNode(id);
     if (!node) return Error("Invalid id");
 
-    const PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const PropertyObject*>(node->face) : static_cast<const PropertyObject*>(node->element);
+    const ::PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const ::PropertyObject*>(node->face) : static_cast<const ::PropertyObject*>(node->element);
 
-    EditorResult result = OkObject();
+    Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
     result.data.AddMember("id", id, allocator);
 
@@ -1044,8 +1046,8 @@ EditorResult Editor::getPropertiesMeta(Id id, const std::string& path) const {
         return result;
     }
 
-    const PropertyObject* owner = nullptr;
-    const Property* property = nullptr;
+    const ::PropertyObject* owner = nullptr;
+    const ::Property* property = nullptr;
     if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
     rapidjson::Value meta = owner->getPropertyMeta(*property, allocator);
@@ -1054,7 +1056,7 @@ EditorResult Editor::getPropertiesMeta(Id id, const std::string& path) const {
     return result;
 }
 
-EditorResult Editor::copyFace(Id faceId) {
+Result Editor::copyFace(Id faceId) {
     const GaugeFace* face = getFaceById(faceId);
     if (!face) return Error("Invalid face id");
 
@@ -1063,20 +1065,20 @@ EditorResult Editor::copyFace(Id faceId) {
     return OkObject();
 }
 
-EditorResult Editor::cutFace(Id faceId) {
-    EditorResult copied = copyFace(faceId);
+Result Editor::cutFace(Id faceId) {
+    Result copied = copyFace(faceId);
     if (!copied.ok) return copied;
     return removeFace(faceId);
 }
 
-EditorResult Editor::pasteFace(FacePlacement where) {
+Result Editor::pasteFace(FacePlacement where) {
     if (clipboard.kind != ClipboardState::Kind::Face)
         return Error("Clipboard does not contain a face");
 
     return createFace(clipboard.json, where);
 }
 
-EditorResult Editor::copyElement(Id elementId) {
+Result Editor::copyElement(Id elementId) {
     const Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -1085,26 +1087,28 @@ EditorResult Editor::copyElement(Id elementId) {
     return OkObject();
 }
 
-EditorResult Editor::cutElement(Id elementId) {
-    EditorResult copied = copyElement(elementId);
+Result Editor::cutElement(Id elementId) {
+    Result copied = copyElement(elementId);
     if (!copied.ok) return copied;
     return removeElement(elementId);
 }
 
-EditorResult Editor::pasteElement(const ElementPlacement& where) {
+Result Editor::pasteElement(const ElementPlacement& where) {
     if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
     return createElement(where, clipboard.json);
 }
 
-EditorResult Editor::pasteToReplaceElement(Id elementId) {
+Result Editor::pasteToReplaceElement(Id elementId) {
     if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
     return replaceElementFromJson(elementId, clipboard.json);
 }
 
-EditorResult Editor::getHistory() const {
-    EditorResult result = OkObject();
+Result Editor::getHistory() const {
+    Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
     result.data.AddMember("canUndo", history.canUndo(), allocator);
     result.data.AddMember("canRedo", history.canRedo(), allocator);
     return result;
+}
+
 }

@@ -4,6 +4,8 @@
 #include <functional>
 #include <vector>
 
+namespace mg::editor {
+
 struct Command {
     std::string name;
     std::function<bool()> execute;
@@ -41,3 +43,5 @@ class History {
             return true;
         }
 };
+
+}

@@ -2,6 +2,8 @@
 
 #include <string>
 
+namespace mg::editor {
+
 struct ClipboardState {
     enum class Kind {
         Empty,
@@ -25,3 +27,5 @@ struct ClipboardSummary {
         return kind != ClipboardState::Kind::Empty;
     }
 };
+
+}
