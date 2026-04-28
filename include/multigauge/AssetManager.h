@@ -12,6 +12,8 @@
 #include <unordered_map>
 #include <vector>
 
+namespace mg {
+
 class AssetManager {
     private:
         enum class ImageType {
@@ -35,3 +37,7 @@ class AssetManager {
         bool loadDocumentAssets(const rapidjson::Value::ConstArray& assets);
         bool loadImage(GraphicsContext& ctx, const std::string& path, Image& out);
 };
+
+}
+
+using mg::AssetManager;

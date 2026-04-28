@@ -3,6 +3,8 @@
 #include <multigauge/io/Base64.h>
 #include <multigauge/io/Log.h>
 
+namespace mg {
+
 AssetManager::ImageType AssetManager::detectImageType(const uint8_t* data, size_t size) {
     if (size >= 2 && data[0] == 'B' && data[1] == 'M') return ImageType::BMP;
 
@@ -175,4 +177,6 @@ bool AssetManager::loadImage(GraphicsContext& ctx, const std::string &p, Image &
     LOG_INFO(TAG, "Image ready: %s (%d x %d)", path.c_str(), out.width, out.height);
 
     return true;
+}
+
 }

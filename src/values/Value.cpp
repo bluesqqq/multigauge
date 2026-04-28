@@ -4,6 +4,8 @@
 
 #include <algorithm>
 
+namespace mg {
+
 std::unordered_map<std::string, Value*> Value::registry;
 
 Value::Value(const char* id, const char* name, const UnitType& unitType, float minimumValue, float maximumValue) 
@@ -103,3 +105,5 @@ Value throttlePosition("throttlePosition", "Throttle Position", percentage, 0.0f
 Value engineFuelRate("engineFuelRate", "Engine Fuel Rate", volumePerTime, 0.0f, 3212.75f);
 
 //Value engineRunTimeSinceStart("Run Time Since Start", time, 0.0f, 65535.0f); // 65535 is max defined by OBD2 protocol
+
+}

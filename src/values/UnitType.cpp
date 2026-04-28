@@ -2,6 +2,8 @@
 
 #include <multigauge/utils.h>
 
+namespace mg {
+
 UnitType::UnitType(const char* baseName, const char* baseAbbreviation, uint8_t baseDecimalPlaces, const std::vector<Unit>& conversionUnits, uint8_t defaultUnitIndex) {
     units.push_back({baseName, baseAbbreviation, 1.0, 0.0, baseDecimalPlaces}); // Base unit
     units.insert(units.end(), conversionUnits.begin(), conversionUnits.end());  // All other units
@@ -147,3 +149,5 @@ UnitType volumePerTime(
         {"GPH", "GPH", 0.264172, 0.0, 1}
     }
 );
+
+}

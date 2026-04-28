@@ -3,6 +3,8 @@
 #include <vector>
 #include <cstdint>
 
+namespace mg {
+
 template<typename T>
 class HandlePool {
     public:
@@ -147,3 +149,8 @@ class HandlePool {
             return &values[s.index];
         }
 };
+
+}
+
+template<typename T>
+using HandlePool = mg::HandlePool<T>;

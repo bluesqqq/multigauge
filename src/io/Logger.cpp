@@ -1,5 +1,7 @@
 #include <multigauge/io/Logger.h>
 
+namespace mg {
+
 bool Logger::init() { return true; }
 
 void Logger::log(LogLevel level, const char *tag, const char *fmt, ...) {
@@ -13,7 +15,4 @@ void Logger::log(LogLevel level, const char *tag, const char *fmt, ...) {
 
 void Logger::setMinLevel(LogLevel l) { minLevel = l; }
 
-
-static Logger* g_logger = nullptr;
-Logger* getLogger() { return g_logger; }
-void setLogger(Logger& logger) { g_logger = &logger; }
+}
