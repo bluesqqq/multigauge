@@ -11,8 +11,8 @@
 
 namespace mg::values::embed {
 
-using ::mg::parseUnsignedInt;
-using ::mg::splitOnce;
+using ::mg::utils::parseUnsignedInt;
+using ::mg::utils::splitOnce;
 
 // --------------------[ Flags + Spec ]--------------------
 
@@ -157,7 +157,7 @@ using ::mg::DEFAULT_UNIT;
 using ::mg::Unit;
 using ::mg::UnitType;
 using ::mg::Value;
-using ::mg::fastFloatToString;
+using ::mg::utils::fastFloatToString;
 
 // --------------------[ render helpers ]--------------------
 

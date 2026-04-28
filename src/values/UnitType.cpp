@@ -55,7 +55,7 @@ const Unit &UnitType::getDefaultUnit() const { return (defaultUnitIndex >= 0 && 
 
 std::string UnitType::getValueString(float value, int index, bool abbreviation) const {
     const Unit& unit = getUnit(index);
-    return floatToString(value, unit.decimalPlaces) + (abbreviation ? unit.abbreviation : "");
+    return ::mg::utils::floatToString(value, unit.decimalPlaces) + (abbreviation ? unit.abbreviation : "");
 }
 
 std::vector<const char*> UnitType::listUnitStrings(bool abbreviations) const {

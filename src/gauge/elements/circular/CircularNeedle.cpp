@@ -1,9 +1,12 @@
 #include <multigauge/gauge/elements/circular/CircularNeedle.h>
 
 #include <multigauge/constants.h>
+#include <multigauge/utils.h>
 #include <cmath>
 
 namespace mg::gauge {
+
+using ::mg::utils::mapf;
 
 void CircularNeedle::draw(Graphics &g) const {
     const auto& b = getBounds();

@@ -7,9 +7,9 @@
 
 namespace mg {
 
-GaugeScreen::GaugeScreen(GaugeFace* face) : face(face) {}
+GaugeScreen::GaugeScreen(::mg::gauge::GaugeFace* face) : face(face) {}
 
-void GaugeScreen::setFace(GaugeFace* f) { face = f;}
+void GaugeScreen::setFace(::mg::gauge::GaugeFace* f) { face = f;}
 
 void GaugeScreen::onShow(RuntimeContext& ctx) {
     context = &ctx;

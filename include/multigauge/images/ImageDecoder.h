@@ -14,10 +14,10 @@
 
 namespace mg::images {
 
-using ::mg::extract_and_scale;
-using ::mg::read_i32;
-using ::mg::read_u16;
-using ::mg::read_u32;
+using ::mg::utils::extract_and_scale;
+using ::mg::utils::read_i32;
+using ::mg::utils::read_u16;
+using ::mg::utils::read_u32;
 using ::mg::graphics::rgba;
 
 // BMP compression types (from BMP spec)

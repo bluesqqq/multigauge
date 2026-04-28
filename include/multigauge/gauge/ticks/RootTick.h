@@ -10,6 +10,9 @@
 namespace mg::gauge {
 
 using ::mg::graphics::PaintTimeline;
+using ::mg::utils::ceilDivisible;
+using ::mg::utils::floorDivisible;
+using ::mg::utils::mapf;
 
 struct RootTick : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Tick")

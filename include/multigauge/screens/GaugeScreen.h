@@ -9,17 +9,15 @@
 
 namespace mg {
 
-using ::mg::gauge::GaugeFace;
-
 class GaugeScreen : public Screen {
     private:
-        GaugeFace* face = nullptr;
+        ::mg::gauge::GaugeFace* face = nullptr;
         RuntimeContext* context = nullptr;
 
     public:
-        explicit GaugeScreen(GaugeFace* face = nullptr);
+        explicit GaugeScreen(::mg::gauge::GaugeFace* face = nullptr);
 
-        void setFace(GaugeFace* face = nullptr);
+        void setFace(::mg::gauge::GaugeFace* face = nullptr);
 
         void onShow(RuntimeContext& ctx) override;
         void onHide(RuntimeContext& ctx) override;

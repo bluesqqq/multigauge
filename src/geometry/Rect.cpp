@@ -1,4 +1,5 @@
 #include <multigauge/geometry/Rect.h>
+#include <multigauge/utils.h>
 #include <algorithm>
 #include <cmath>
 #include <array>
@@ -269,14 +270,14 @@ Rect<T> Rect<T>::translated(Point<T> delta) const { return Rect<T>(x + delta.x, 
 
 template<typename T>
 void Rect<T>::interpolate(const Rect<T>& other, float t) {
-    x = lerp(x, other.x, t);
-    y = lerp(y, other.y, t);
-    width = lerp(width, other.width, t);
-    height = lerp(height, other.height, t);
+    x = ::mg::utils::lerp(x, other.x, t);
+    y = ::mg::utils::lerp(y, other.y, t);
+    width = ::mg::utils::lerp(width, other.width, t);
+    height = ::mg::utils::lerp(height, other.height, t);
 }
 template<typename T>
 Rect<T> Rect<T>::interpolated(const Rect<T>& other, float t) const {
-    return Rect<T>(lerp(x, other.x, t), lerp(y, other.y, t), lerp(width, other.width, t), lerp(height, other.height, t));
+    return Rect<T>(::mg::utils::lerp(x, other.x, t), ::mg::utils::lerp(y, other.y, t), ::mg::utils::lerp(width, other.width, t), ::mg::utils::lerp(height, other.height, t));
 }
 
 // SCALING

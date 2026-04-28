@@ -4,6 +4,7 @@
 #include <multigauge/gauge/ticks/SubTick.h>
 #include <multigauge/gauge/ticks/TickStyle.h>
 #include <multigauge/graphics/colors/ColorTimeline.h>
+#include <multigauge/utils.h>
 
 #include <multigauge/graphics/Graphics.h>
 
@@ -22,6 +23,8 @@ using ::mg::Point;
 using ::mg::graphics::Graphics;
 using ::mg::graphics::Paint;
 using ::mg::graphics::PaintTimeline;
+using ::mg::utils::lerp;
+using ::mg::utils::inRange;
 
 class TickList : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Tick List")

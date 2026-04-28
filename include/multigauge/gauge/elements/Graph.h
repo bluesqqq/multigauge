@@ -2,12 +2,15 @@
 
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/DisplayValue.h>
+#include <multigauge/utils.h>
 
 namespace mg::gauge {
 
 using ::mg::graphics::DisplayValue;
 using ::mg::graphics::OwnedColor;
 using ::mg::graphics::rgb;
+using ::mg::utils::lerp;
+using ::mg::utils::mapf;
 
 struct TimeValue {
     float value;

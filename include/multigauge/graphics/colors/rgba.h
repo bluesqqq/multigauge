@@ -1,15 +1,33 @@
 #pragma once
 
+#include <cctype>
+#include <cstdlib>
+#include <cstring>
 #include <stdint.h>
 #include <algorithm>
 #include <cmath>
+#include <string_view>
 #include <utility>
-
-#include <multigauge/utils.h>
 
 #include <multigauge/properties/Codec.h>
 
 namespace mg::graphics {
+
+namespace detail {
+
+static inline std::string_view trimWhitespaceView(const char* s) {
+    if (!s) return {};
+
+    const char* begin = s;
+    while (*begin && std::isspace(static_cast<unsigned char>(*begin))) ++begin;
+
+    const char* end = begin + std::strlen(begin);
+    while (end > begin && std::isspace(static_cast<unsigned char>(end[-1]))) --end;
+
+    return {begin, static_cast<size_t>(end - begin)};
+}
+
+} // namespace detail
 
 struct rgba {
     uint8_t r, g, b, a;
@@ -32,7 +50,8 @@ struct rgba {
 	inline bool parse_hex(const char* s, rgba& out) {
     if (!s) return false;
 
-    ::mg::trimWhitespace(s);
+    const std::string_view trimmed = detail::trimWhitespaceView(s);
+    s = trimmed.data();
 
     // Optional prefixes: # or 0x / 0X
     if (s[0] == '#') {
@@ -41,7 +60,8 @@ struct rgba {
         s += 2;
     }
 
-    size_t len = std::strlen(s);
+    size_t len = trimmed.size();
+    if (s != trimmed.data()) len -= static_cast<size_t>(s - trimmed.data());
     if (len == 0) return false;
 
     auto hexval = [](char c) -> int {
@@ -101,7 +121,8 @@ struct rgba {
 inline bool parse_rgb(const char* s, rgba& out) {
     if (!s) return false;
 
-    ::mg::trimWhitespace(s);
+    const std::string_view trimmed = detail::trimWhitespaceView(s);
+    s = trimmed.data();
 
     // 2. Check for "rgb(" or "rgba("
     bool hasAlpha = false;
@@ -118,11 +139,9 @@ inline bool parse_rgb(const char* s, rgba& out) {
     // 3. Parse three/four numbers (r, g, b, [a])
     char* endptr;
     int32_t channels[4] = {0, 0, 0, 255}; // Default alpha 255
-    int count = 0;
-
     for (int i = 0; i < (hasAlpha ? 4 : 3); ++i) {
         // Skip whitespace before number
-        while (isspace(*s)) s++;
+        while (std::isspace(static_cast<unsigned char>(*s))) s++;
         
         // Parse integer
         channels[i] = strtol(s, &endptr, 10);
@@ -130,7 +149,7 @@ inline bool parse_rgb(const char* s, rgba& out) {
         s = endptr;
 
         // Skip whitespace after number
-        while (isspace(*s)) s++;
+        while (std::isspace(static_cast<unsigned char>(*s))) s++;
 
         // Expect delimiter (comma or closing parenthesis)
         if (i < (hasAlpha ? 3 : 2)) {

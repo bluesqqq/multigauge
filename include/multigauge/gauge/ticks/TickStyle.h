@@ -3,8 +3,6 @@
 #include <multigauge/graphics/colors/ColorTimeline.h>
 #include <multigauge/graphics/TextPaint.h>
 
-#include <multigauge/utils.h>
-
 namespace mg::gauge {
 
 using ::mg::graphics::ColorTimeline;

@@ -3,7 +3,7 @@
 #include <cstdio>
 #include <cmath>
 
-namespace mg {
+namespace mg::utils {
 
 // ----------[ FLOAT / STRING ]---------- //
 
@@ -110,13 +110,4 @@ bool read_i32(const uint8_t* data, size_t size, size_t off, int32_t& out) {
     return true;
 }
 
-// ----------[ COLOR ]---------- //
-
-uint16_t rgb888_to_565(uint8_t r, uint8_t g, uint8_t b) {
-    // 5-6-5
-    return (uint16_t)(((r & 0xF8) << 8) |
-                      ((g & 0xFC) << 3) |
-                      ((b & 0xF8) >> 3));
-}
-
-} // namespace mg
+} // namespace mg::utils

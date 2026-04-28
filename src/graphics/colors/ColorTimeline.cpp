@@ -9,6 +9,8 @@
 
 namespace mg::graphics {
 
+using ::mg::utils::mapf;
+
 ColorKeyframe::ColorKeyframe() { }
 
 ColorKeyframe::ColorKeyframe(OwnedColor color, float position) : color(std::move(color)), position(position) { }
@@ -144,7 +146,7 @@ std::vector<float> ColorTimeline::getPositionsMapped(float start, float end) con
     float startPosition = getStartPosition();
     float endPosition = getEndPosition();
 
-    for (const auto& keyframe : keyframes) positions.push_back(::mg::mapf(keyframe.position, startPosition, endPosition, start, end));
+    for (const auto& keyframe : keyframes) positions.push_back(mapf(keyframe.position, startPosition, endPosition, start, end));
 
     return positions;
 }

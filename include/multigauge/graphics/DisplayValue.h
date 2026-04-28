@@ -1,6 +1,5 @@
 #pragma once
 
-#include <multigauge/utils.h>
 #include <multigauge/properties/PropertyObject.h>
 #include <multigauge/values/ValueRef.h>
 

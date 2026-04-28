@@ -3,7 +3,6 @@
 #include <optional>
 
 #include <multigauge/gauge/ticks/TickStyle.h>
-#include <multigauge/utils.h>
 
 namespace mg::gauge {
 
