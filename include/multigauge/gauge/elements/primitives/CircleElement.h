@@ -1,6 +1,11 @@
 #pragma once
 
 #include <multigauge/gauge/Element.h>
+#include <multigauge/graphics/colors/Color.h>
+
+namespace mg::gauge {
+
+using ::mg::graphics::Paint;
 
 class CircleElement : public Element {
         MG_EDITOR_NAME("Circle")
@@ -20,5 +25,4 @@ class CircleElement : public Element {
         void draw(Graphics& g) const override;
 };
 
-
-
+} // namespace mg::gauge

@@ -5,6 +5,8 @@
 #include <rapidjson/document.h>
 #include <type_traits>
 
+namespace mg {
+
 template <typename T>
 struct EnumOption {
     T value;
@@ -76,3 +78,5 @@ rapidjson::Value enumOptionsMeta(rapidjson::Document::AllocatorType& a) {
 
     return options;
 }
+
+} // namespace mg

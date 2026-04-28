@@ -1,5 +1,7 @@
 #include <multigauge/io/Base64.h>
 
+namespace mg::io {
+
 size_t base64EncodedSize(size_t n) { return ((n + 2) / 3) * 4; }
 
 size_t base64DecodedMaxSize(std::string_view input) { return (input.length() / 4) * 3; }
@@ -96,3 +98,5 @@ bool base64Decode(std::string_view input, uint8_t *output, size_t outputCap, siz
     outputLen = k;
     return true;
 }
+
+} // namespace mg::io

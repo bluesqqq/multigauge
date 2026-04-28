@@ -1,5 +1,10 @@
 #include <multigauge/graphics/colors/TimeColor.h>
 
+#include <cmath>
+#include <utility>
+
+namespace mg::graphics {
+
 float TimeColor::getTime() const {
     float duration = timeline.getEndPosition();
 
@@ -65,3 +70,5 @@ OwnedColor TimeColor::clone() const { return std::make_unique<TimeColor>(*this);
 rgba TimeColor::getColor() const { return timeline.getColor(getTime()); }
 
 Color::Type TimeColor::getType() const { return Type::Time; }
+
+} // namespace mg::graphics

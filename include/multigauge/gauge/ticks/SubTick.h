@@ -7,7 +7,9 @@
 
 namespace mg::gauge {
 
-struct SubTick : public ::PropertyObject {
+using ::mg::graphics::PaintTimeline;
+
+struct SubTick : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Tick")
     
     int divisions = 1;
@@ -49,5 +51,3 @@ struct SubTick : public ::PropertyObject {
 };
 
 } // namespace mg::gauge
-
-using SubTick = mg::gauge::SubTick;

@@ -1,6 +1,6 @@
 #include <multigauge/io/Logger.h>
 
-namespace mg {
+namespace mg::io {
 
 bool Logger::init() { return true; }
 
@@ -11,7 +11,7 @@ void Logger::log(LogLevel level, const char *tag, const char *fmt, ...) {
     va_start(args, fmt);
     _log(level, tag, fmt, args);
     va_end(args);
-}
+} // namespace mg::io
 
 void Logger::setMinLevel(LogLevel l) { minLevel = l; }
 

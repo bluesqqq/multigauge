@@ -10,6 +10,8 @@
 
 #include <vector>
 
+namespace mg {
+
 template <typename T>
 struct Rect {
     T x, y;
@@ -169,3 +171,5 @@ struct Rect {
 
 extern template struct Rect<int>;
 extern template struct Rect<float>;
+
+} // namespace mg

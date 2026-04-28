@@ -13,14 +13,14 @@ using ContextId = uint32_t;
 
 //----------[ LIFETIME ]----------//
 
-bool init(FileSystem& fs, Time& time, Logger* logger = nullptr);
+bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger = nullptr);
 void shutdown();
 void frame();
 YGConfigRef getYogaConfig();
 
 //----------[ CONTEXT ]----------//
 
-ContextId addContext(GraphicsContext& graphics);
+ContextId addContext(graphics::GraphicsContext& graphics);
 bool removeContext(ContextId id);
 
 //----------[ SCREEN ]----------//

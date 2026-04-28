@@ -23,21 +23,19 @@ class AssetManager {
             JPG
         };
 
-        FileSystem* fs;
+        io::FileSystem* fs;
 
         static ImageType detectImageType(const uint8_t* data, size_t size);
         static const char* imageTypeName(ImageType type);
         static bool decodeBase64(const std::string_view& encoded, std::vector<uint8_t>& out);
-        static bool decodeImageData(ImageType type, const std::vector<uint8_t>& data, ImageInfo& info);
+        static bool decodeImageData(ImageType type, const std::vector<uint8_t>& data, images::ImageInfo& info);
 
     public:
-        AssetManager(FileSystem& fs) : fs(&fs) {}
+        AssetManager(io::FileSystem& fs) : fs(&fs) {}
 
         bool loadJson(const std::string& path, rapidjson::Document& out);
         bool loadDocumentAssets(const rapidjson::Value::ConstArray& assets);
-        bool loadImage(GraphicsContext& ctx, const std::string& path, Image& out);
+        bool loadImage(graphics::GraphicsContext& ctx, const std::string& path, images::Image& out);
 };
 
 }
-
-using mg::AssetManager;

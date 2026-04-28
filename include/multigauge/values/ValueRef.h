@@ -6,6 +6,8 @@
 #include <multigauge/properties/WidgetTraits.h>
 #include <multigauge/values/Value.h>
 
+namespace mg {
+
 class ValueRef {
     CODEC_FRIEND(ValueRef)
 
@@ -63,3 +65,5 @@ CODEC_BEGIN(ValueRef)
         return true;
     }
 CODEC_END()
+
+} // namespace mg

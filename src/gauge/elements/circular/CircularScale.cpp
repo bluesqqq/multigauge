@@ -1,5 +1,7 @@
 #include <multigauge/gauge/elements/circular/CircularScale.h>
 
+namespace mg::gauge {
+
 void CircularScale::draw(Graphics &g) const {
     const auto& b = getBounds();
 
@@ -23,3 +25,5 @@ void CircularScale::update(int deltaTime) {
 
     ticks.setDisplayValue(value.getValueBase());
 }
+
+} // namespace mg::gauge

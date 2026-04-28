@@ -2,23 +2,25 @@
 
 #include <multigauge/screens/Screen.h>
 
+#include <utility>
+
 namespace mg {
 
-RuntimeContext::RuntimeContext(GraphicsContext& context, FileSystem& fs) : context(&context), graphics(context), assets(fs) {}
+RuntimeContext::RuntimeContext(graphics::GraphicsContext& context, io::FileSystem& fs) : context(&context), graphics(context), assets(fs) {}
 
 RuntimeContext::~RuntimeContext() = default;
 
-GraphicsContext& RuntimeContext::getGraphicsContext() { return *context; }
+graphics::GraphicsContext& RuntimeContext::getGraphicsContext() { return *context; }
 
-const GraphicsContext& RuntimeContext::getGraphicsContext() const { return *context; }
+const graphics::GraphicsContext& RuntimeContext::getGraphicsContext() const { return *context; }
 
-Graphics& RuntimeContext::getGraphics() { return graphics; }
+graphics::Graphics& RuntimeContext::getGraphics() { return graphics; }
 
-const Graphics& RuntimeContext::getGraphics() const { return graphics; }
+const graphics::Graphics& RuntimeContext::getGraphics() const { return graphics; }
 
-void RuntimeContext::setBackgroundColor(rgba color) { backgroundColor = color; }
+void RuntimeContext::setBackgroundColor(graphics::rgba color) { backgroundColor = color; }
 
-rgba RuntimeContext::getBackgroundColor() const { return backgroundColor; }
+graphics::rgba RuntimeContext::getBackgroundColor() const { return backgroundColor; }
 
 void RuntimeContext::clearScreen() {
     if (screen) {
@@ -27,12 +29,12 @@ void RuntimeContext::clearScreen() {
     }
 }
 
-bool RuntimeContext::setScreen(OwnedScreen screen) {
-    if (!screen) return false;
+bool RuntimeContext::setScreen(OwnedScreen newScreen) {
+    if (!newScreen) return false;
 
     if (screen) screen->onHide(*this);
 
-    screen = std::move(screen);
+    screen = std::move(newScreen);
     screen->onShow(*this);
     return true;
 }

@@ -334,13 +334,13 @@ const Element* Editor::getElementById(Id id) const {
     return (node && node->kind == NodeKind::Element) ? node->element : nullptr;
 }
 
-::PropertyObject* Editor::getObjectById(Id id) {
+::mg::PropertyObject* Editor::getObjectById(Id id) {
     if (GaugeFace* face = getFaceById(id)) return face;
     if (Element* element = getElementById(id)) return element;
     return nullptr;
 }
 
-const ::PropertyObject* Editor::getObjectById(Id id) const {
+const ::mg::PropertyObject* Editor::getObjectById(Id id) const {
     if (const GaugeFace* face = getFaceById(id)) return face;
     if (const Element* element = getElementById(id)) return element;
     return nullptr;
@@ -959,14 +959,14 @@ Result Editor::replaceElementFromJson(Id elementId, const std::string& json) {
 }
 
 Result Editor::setProperty(Id id, const std::string& path, const std::string& json) {
-    ::PropertyObject* object = getObjectById(id);
+    ::mg::PropertyObject* object = getObjectById(id);
     if (!object) return Error("Invalid id");
 
     rapidjson::Document value = parseJson(json);
     if (value.HasParseError()) return Error("Invalid JSON");
 
-    ::PropertyObject* owner = nullptr;
-    const ::Property* property = nullptr;
+    ::mg::PropertyObject* owner = nullptr;
+    const ::mg::Property* property = nullptr;
     if (!object->resolvePath(path, owner, property) || !owner || !property) {
         return Error("Invalid property path");
     }
@@ -987,19 +987,19 @@ Result Editor::setProperty(Id id, const std::string& path, const std::string& js
     const bool committed = history.commit({
         "set property",
         [this, state]() {
-            ::PropertyObject* currentObject = getObjectById(state->nodeId);
+    ::mg::PropertyObject* currentObject = getObjectById(state->nodeId);
             if (!currentObject) return false;
-            ::PropertyObject* currentOwner = nullptr;
-            const ::Property* currentProperty = nullptr;
+    ::mg::PropertyObject* currentOwner = nullptr;
+            const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             rapidjson::Document parsed = parseJson(state->afterJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
         },
         [this, state]() {
-            ::PropertyObject* currentObject = getObjectById(state->nodeId);
+    ::mg::PropertyObject* currentObject = getObjectById(state->nodeId);
             if (!currentObject) return false;
-            ::PropertyObject* currentOwner = nullptr;
-            const ::Property* currentProperty = nullptr;
+    ::mg::PropertyObject* currentOwner = nullptr;
+            const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             rapidjson::Document parsed = parseJson(state->beforeJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
@@ -1014,10 +1014,10 @@ Result Editor::getProperty(Id id, const std::string& path) const {
     if (!node) return Error("Invalid id");
     if (path.empty()) return Error("Property path is required");
 
-    const ::PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const ::PropertyObject*>(node->face) : static_cast<const ::PropertyObject*>(node->element);
+    const ::mg::PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const ::mg::PropertyObject*>(node->face) : static_cast<const ::mg::PropertyObject*>(node->element);
 
-    const ::PropertyObject* owner = nullptr;
-    const ::Property* property = nullptr;
+    const ::mg::PropertyObject* owner = nullptr;
+    const ::mg::Property* property = nullptr;
     if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
     Result result = OkObject();
@@ -1034,7 +1034,7 @@ Result Editor::getPropertiesMeta(Id id, const std::string& path) const {
     const NodeRef* node = getNode(id);
     if (!node) return Error("Invalid id");
 
-    const ::PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const ::PropertyObject*>(node->face) : static_cast<const ::PropertyObject*>(node->element);
+    const ::mg::PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const ::mg::PropertyObject*>(node->face) : static_cast<const ::mg::PropertyObject*>(node->element);
 
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
@@ -1046,8 +1046,8 @@ Result Editor::getPropertiesMeta(Id id, const std::string& path) const {
         return result;
     }
 
-    const ::PropertyObject* owner = nullptr;
-    const ::Property* property = nullptr;
+    const ::mg::PropertyObject* owner = nullptr;
+    const ::mg::Property* property = nullptr;
     if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
     rapidjson::Value meta = owner->getPropertyMeta(*property, allocator);

@@ -2,6 +2,8 @@
 
 #include <utility>
 
+namespace mg {
+
 enum class Direction {
     Right,
     Down,
@@ -28,3 +30,5 @@ enum LengthAlignment {
 };
 
 std::pair<float, float> alignLength(float start, float length, LengthAlignment alignment);
+
+} // namespace mg

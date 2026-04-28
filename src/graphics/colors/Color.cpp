@@ -5,6 +5,10 @@
 #include <multigauge/graphics/colors/TimeColor.h>
 #include <multigauge/graphics/colors/UserColor.h>
 
+#include <utility>
+
+namespace mg::graphics {
+
 namespace {
     template <typename T>
     OwnedColor createColor() {
@@ -36,7 +40,11 @@ OwnedColor Color::createByType(const char* type) {
 
 const ColorTimeline* Color::getTimeline() const { return nullptr; }
 
-DECODE_IMPL(OwnedColor) {
+} // namespace mg::graphics
+
+namespace mg {
+
+DECODE_IMPL(graphics::OwnedColor) {
     if (v.IsNull()) {
         out = nullptr;
         return true;
@@ -49,14 +57,14 @@ DECODE_IMPL(OwnedColor) {
     const char* type = nullptr;
     if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) type = it->value.GetString();
 
-    out = Color::createByType(type);
+    out = graphics::Color::createByType(type);
 
     out->loadProperties(obj);
 
     return true;
 }
 
-ENCODE_IMPL(OwnedColor) {
+ENCODE_IMPL(graphics::OwnedColor) {
     if (!v) { 
         out.SetNull(); 
         return true; 
@@ -66,6 +74,10 @@ ENCODE_IMPL(OwnedColor) {
 
     return true;
 }
+
+} // namespace mg
+
+namespace mg::graphics {
 
 //----------[ FILL STROKE ]----------//
 
@@ -91,3 +103,5 @@ Paint Paint::blended(const Paint &other, float alpha) const {
 
     return Paint(std::move(outFill), std::move(outStroke), thickness);
 }
+
+} // namespace mg::graphics

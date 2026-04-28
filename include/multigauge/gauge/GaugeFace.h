@@ -4,10 +4,11 @@
 #include <type_traits>
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/gauge/Element.h>
+#include <vector>
 
 namespace mg::gauge {
 
-class GaugeFace : public ::PropertyObject {
+class GaugeFace : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Gauge Face")
 
     private:
@@ -15,7 +16,7 @@ class GaugeFace : public ::PropertyObject {
 
         std::vector<OwnedElement> children;
 
-        ::RootLayout style;
+        RootLayout style;
 
     public:
         GaugeFace();
@@ -46,5 +47,3 @@ class GaugeFace : public ::PropertyObject {
 };
 
 } // namespace mg::gauge
-
-using GaugeFace = mg::gauge::GaugeFace;

@@ -9,6 +9,8 @@
 
 #define TYPE_KEY "type"
 
+namespace mg {
+
 class PropertyObject {
     public:
         /// Default destructor.
@@ -93,6 +95,8 @@ class PropertyObject {
         /// Splits a dotted property path into path segments.
         static std::vector<std::string> splitPath(const std::string& path);
 };
+
+} // namespace mg
 
 //----------[ MACROS ]----------//
 

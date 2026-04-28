@@ -1,6 +1,9 @@
 #include <multigauge/graphics/Graphics.h>
 
+#include <algorithm>
 #include <cmath>
+
+namespace mg::graphics {
 
 rgba Graphics::getCachedColor(const Color& color) {
     auto it = colorCache.find(&color);
@@ -171,9 +174,9 @@ void Graphics::drawTri(const Point<int> &p1, const Point<int> &p2, const Point<i
 
 void Graphics::setFontFamily(const std::string &family) { this->family = family; }
 
-void Graphics::setFontWeight(FontWeight weight) { weight = weight; }
+void Graphics::setFontWeight(FontWeight weight) { this->weight = weight; }
 
-void Graphics::setFontSlant(FontSlant slant) { slant = slant; }
+void Graphics::setFontSlant(FontSlant slant) { this->slant = slant; }
 
 void Graphics::setFontPoint(float pt) { this->pt = pt; }
 
@@ -571,3 +574,5 @@ void Graphics::setClip(int x, int y, int w, int h) { context->clip(x, y, w, h); 
 void Graphics::setClip(const Rect<int> &rect) { context->clip(rect.x, rect.y, rect.width, rect.height); }
 
 void Graphics::clearClip() { context->clearClip(); }
+
+} // namespace mg::graphics

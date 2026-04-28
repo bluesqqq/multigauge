@@ -3,6 +3,12 @@
 #include <multigauge/gauge/Element.h>
 #include <multigauge/gauge/elements/circular/CircularElement.h>
 
+namespace mg::gauge {
+
+using ::mg::Line;
+using ::mg::graphics::DisplayValue;
+using ::mg::graphics::Paint;
+
 class CircularNeedle : public CircularElement {
         MG_EDITOR_NAME("Circular Needle")
     MG_TYPE_ID("circular-needle")
@@ -23,5 +29,4 @@ class CircularNeedle : public CircularElement {
         void draw(Graphics& g) const override;
 };
 
-
-
+} // namespace mg::gauge

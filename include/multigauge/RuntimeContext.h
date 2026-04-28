@@ -15,16 +15,16 @@ using OwnedScreen = std::unique_ptr<Screen>;
 
 class RuntimeContext {
     private:
-        GraphicsContext* context;
-        Graphics graphics;
+        graphics::GraphicsContext* context;
+        graphics::Graphics graphics;
 
         AssetManager assets;
 
         OwnedScreen screen;
-        rgba backgroundColor = rgba(0, 0, 0, 255);
+        graphics::rgba backgroundColor = graphics::rgba(0, 0, 0, 255);
 
     public:
-        explicit RuntimeContext(GraphicsContext& graphicsContext, FileSystem& fs);
+        explicit RuntimeContext(graphics::GraphicsContext& graphicsContext, io::FileSystem& fs);
         ~RuntimeContext();
 
         RuntimeContext(const RuntimeContext&) = delete;
@@ -32,14 +32,14 @@ class RuntimeContext {
         RuntimeContext(RuntimeContext&&) noexcept = default;
         RuntimeContext& operator=(RuntimeContext&&) noexcept = default;
 
-        GraphicsContext& getGraphicsContext();
-        const GraphicsContext& getGraphicsContext() const;
+        graphics::GraphicsContext& getGraphicsContext();
+        const graphics::GraphicsContext& getGraphicsContext() const;
 
-        Graphics& getGraphics();
-        const Graphics& getGraphics() const;
+        graphics::Graphics& getGraphics();
+        const graphics::Graphics& getGraphics() const;
 
-        void setBackgroundColor(rgba color);
-        rgba getBackgroundColor() const;
+        void setBackgroundColor(graphics::rgba color);
+        graphics::rgba getBackgroundColor() const;
 
         void clearScreen();
         bool setScreen(OwnedScreen screen);

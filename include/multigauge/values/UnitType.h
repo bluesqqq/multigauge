@@ -76,15 +76,3 @@ extern UnitType percentage;
 //extern UnitType time;
 
 }
-
-using mg::UnitType;
-using mg::acceleration;
-using mg::angle;
-using mg::distance;
-using mg::percentage;
-using mg::pressure;
-using mg::revolutions;
-using mg::temperature;
-using mg::velocity;
-using mg::volume;
-using mg::volumePerTime;

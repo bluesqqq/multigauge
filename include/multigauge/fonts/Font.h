@@ -2,7 +2,7 @@
 
 #include <string>
 
-namespace mg {
+namespace mg::graphics {
 
 enum class FontWeight { Normal, Bold };
 enum class FontSlant { Normal, Italic };
@@ -15,7 +15,3 @@ struct FontSpec {
 };
 
 }
-
-using mg::FontSlant;
-using mg::FontSpec;
-using mg::FontWeight;

@@ -1,5 +1,7 @@
 #include <multigauge/properties/PropertyObject.h>
 
+namespace mg {
+
 const Property* PropertyObject::findProperty(const char* key) const {
     if (!key) return nullptr;
 
@@ -187,3 +189,5 @@ bool PropertyObject::resolvePath(const std::string& path, const PropertyObject*&
 
     return false;
 }
+
+} // namespace mg

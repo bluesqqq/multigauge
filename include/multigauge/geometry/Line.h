@@ -5,6 +5,8 @@
 #include <optional>
 #include <vector>
 
+namespace mg {
+
 template <typename T>
 class Rect;
 
@@ -116,3 +118,5 @@ struct Line {
 
 extern template struct Line<int>;
 extern template struct Line<float>;
+
+} // namespace mg

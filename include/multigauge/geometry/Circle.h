@@ -3,6 +3,8 @@
 #include <multigauge/geometry/Point.h>
 #include <multigauge/geometry/Rect.h>
 
+namespace mg {
+
 template <typename T>
 struct Circle {
     Point<T> position;
@@ -42,3 +44,5 @@ struct Circle {
     bool contains(const Circle<T>& other) const;
 
 };
+
+} // namespace mg

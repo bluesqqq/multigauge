@@ -2,9 +2,15 @@
 
 #include <multigauge/graphics/colors/Color.h>
 
+#include <cstddef>
+#include <vector>
+#include <utility>
+
+namespace mg::graphics {
+
 //----------[ KEYFRAME ]----------//
 
-struct ColorKeyframe : public PropertyObject {
+struct ColorKeyframe : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Gradient Stop")
 
     /// @brief Position in the timeline
@@ -32,7 +38,7 @@ struct ColorKeyframe : public PropertyObject {
 
 //----------[ TIMELINE ]----------//
 
-class ColorTimeline : public PropertyObject {
+class ColorTimeline : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Gradient")
     CODEC_FRIEND(ColorTimeline)
     
@@ -145,30 +151,9 @@ class ColorTimeline : public PropertyObject {
         std::vector<float> getPositionsMapped(float start = 0.0f, float end = 1.0f) const;
 };
 
-CODEC_BEGIN(ColorTimeline)
-    DECODE() {
-        OwnedColor color;
-        if (Codec<OwnedColor>::decode(v, color)) {
-            out = ColorTimeline(std::move(color));
-            return true;
-        }
-        return false;
-    }
-
-    ENCODE() {
-        if (v.size() == 1) return Codec<OwnedColor>::encode(out, a, v.keyframes[0].color);
-        return false;
-    }
-CODEC_END()
-
-template <>
-struct MgPropWidgetTraits<ColorTimeline> {
-    static constexpr const char* value = "gradient";
-};
-
 //----------[ FILL STROKE TIMELINE ]----------//
 
-struct PaintTimeline : public PropertyObject {
+struct PaintTimeline : public ::mg::PropertyObject {
     ColorTimeline fill;
     ColorTimeline stroke;
     float thickness = 1.0f;
@@ -192,3 +177,30 @@ struct PaintTimeline : public PropertyObject {
 
     Paint getPaintAtPosition(float position) const;
 };
+
+} // namespace mg::graphics
+
+namespace mg {
+
+CODEC_BEGIN(graphics::ColorTimeline)
+    DECODE() {
+        graphics::OwnedColor color;
+        if (Codec<graphics::OwnedColor>::decode(v, color)) {
+            out = graphics::ColorTimeline(std::move(color));
+            return true;
+        }
+        return false;
+    }
+
+    ENCODE() {
+        if (v.size() == 1) return Codec<graphics::OwnedColor>::encode(out, a, v.keyframes[0].color);
+        return false;
+    }
+CODEC_END()
+
+template <>
+struct MgPropWidgetTraits<graphics::ColorTimeline> {
+    static constexpr const char* value = "gradient";
+};
+
+} // namespace mg

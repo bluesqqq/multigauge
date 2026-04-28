@@ -4,18 +4,20 @@
 #include <multigauge/graphics/colors/ColorTimeline.h>
 #include <multigauge/values/ValueRef.h>
 
+namespace mg::graphics {
+
 class ValueColor : public Color {
     MG_EDITOR_NAME("Value Color")
     MG_TYPE_ID("value")
 
     private:
         ColorTimeline timeline;
-        ValueRef value;
+        ::mg::ValueRef value;
 
     public:
         ValueColor() = default;
 
-        ValueColor(Value* value, ColorTimeline timeline);
+        ValueColor(::mg::Value* value, ColorTimeline timeline);
 
         ValueColor(const ValueColor& other);
         
@@ -54,4 +56,6 @@ class ValueColor : public Color {
     MG_PROP(value, "id", "ID", "Value ID.")
         MG_PROPS_END()
 };
+
+} // namespace mg::graphics
 

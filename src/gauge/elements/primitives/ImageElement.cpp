@@ -1,5 +1,7 @@
 #include <multigauge/gauge/elements/primitives/ImageElement.h>
 
+namespace mg::gauge {
+
 bool ImageElement::init(AssetManager &assetManager, GraphicsContext& context) {
     if (imagePath.empty()) {
         image = Image();
@@ -15,3 +17,5 @@ void ImageElement::draw(Graphics &g) const {
 
     g.drawImageArea(image, b);
 }
+
+} // namespace mg::gauge

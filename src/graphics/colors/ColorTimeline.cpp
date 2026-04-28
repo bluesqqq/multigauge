@@ -5,6 +5,9 @@
 #include <multigauge/utils.h>
 #include <set>
 #include <algorithm>
+#include <utility>
+
+namespace mg::graphics {
 
 ColorKeyframe::ColorKeyframe() { }
 
@@ -71,8 +74,6 @@ ColorTimeline ColorTimeline::blended(rgba color, float alpha) const {
 }
 
 ColorTimeline ColorTimeline::blended(const Color &other, float alpha) const {
-    const ColorTimeline* tl = other.getTimeline();
-
     if (const ColorTimeline* tl = other.getTimeline()) return blended(*tl, alpha);
 
     return blended(other.getColor(), alpha);
@@ -143,7 +144,7 @@ std::vector<float> ColorTimeline::getPositionsMapped(float start, float end) con
     float startPosition = getStartPosition();
     float endPosition = getEndPosition();
 
-    for (const auto& keyframe : keyframes) positions.push_back(mapf(keyframe.position, startPosition, endPosition, start, end));
+    for (const auto& keyframe : keyframes) positions.push_back(::mg::mapf(keyframe.position, startPosition, endPosition, start, end));
 
     return positions;
 }
@@ -211,3 +212,5 @@ Paint PaintTimeline::getPaintAtPosition(float position) const {
         thickness
     );
 }
+
+} // namespace mg::graphics

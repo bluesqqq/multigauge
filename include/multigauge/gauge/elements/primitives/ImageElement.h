@@ -5,6 +5,10 @@
 
 #include <string>
 
+namespace mg::gauge {
+
+using ::mg::images::Image;
+
 class ImageElement : public Element {
         MG_EDITOR_NAME("Image")
     MG_TYPE_ID("image")
@@ -26,5 +30,4 @@ class ImageElement : public Element {
         void draw(Graphics& g) const override;
 };
 
-
-
+} // namespace mg::gauge

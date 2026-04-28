@@ -24,7 +24,7 @@ void GaugeScreen::update(RuntimeContext& ctx, uint64_t deltaUs) {
     face->update(static_cast<int>(deltaUs));
 }
 
-void GaugeScreen::draw(RuntimeContext& ctx, Graphics& g) {
+void GaugeScreen::draw(RuntimeContext& ctx, graphics::Graphics& g) {
     if (!face || &ctx != context) return;
     face->layout(g);
     face->draw(g);

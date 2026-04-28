@@ -9,6 +9,8 @@
 #include <multigauge/geometry/Rect.h>
 #include <multigauge/geometry/Circle.h>
 
+namespace mg {
+
 template<typename T>
 inline Line<T>::Line(T x1, T y1, T x2, T y2) : p1(x1, y1), p2(x2, y2) {}
 
@@ -237,3 +239,5 @@ Line<float> Line<T>::toFloat() const { return Line<float>(p1.toFloat(), p2.toFlo
 
 template struct Line<int>;
 template struct Line<float>;
+
+} // namespace mg

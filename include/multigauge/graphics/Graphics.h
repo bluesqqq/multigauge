@@ -1,6 +1,5 @@
 #pragma once
 
-#include <multigauge/graphics/colors/Color.h>
 #include <multigauge/geometry/alignment.h>
 #include <multigauge/geometry/Rect.h>
 #include <multigauge/geometry/Point.h>
@@ -12,7 +11,20 @@
 #include <multigauge/images/NineSlice.h>
 #include <multigauge/graphics/TextPaint.h>
 
+#include <string>
+#include <unordered_map>
+
 #define MIN_HYPHEN_PREFIX 3 // Prefix must be this number of chars or higher to be hyphenated in text wrap
+
+namespace mg::graphics {
+
+using ::mg::Anchor;
+using ::mg::Line;
+using ::mg::Path;
+using ::mg::Point;
+using ::mg::Rect;
+using ::mg::images::Image;
+using ::mg::images::NineSlice;
 
 struct PaintState {
     bool enabled = false;
@@ -218,3 +230,5 @@ class Graphics final {
         /// @brief Resets the clipping region, allowing all drawing operations to be visible again.
         void clearClip();
 };
+
+} // namespace mg::graphics

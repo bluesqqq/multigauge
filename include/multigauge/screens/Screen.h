@@ -12,7 +12,7 @@ class Screen {
         virtual void onHide(RuntimeContext& context) {};
 
         virtual void update(RuntimeContext& context, uint64_t deltaUs) = 0;
-        virtual void draw(RuntimeContext& context, Graphics& g) = 0;
+        virtual void draw(RuntimeContext& context, graphics::Graphics& g) = 0;
 };
 
 }

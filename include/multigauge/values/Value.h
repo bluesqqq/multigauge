@@ -100,23 +100,3 @@ extern Value longitudinalAcceleration;
 extern Value lateralAcceleration;
 
 }
-
-using mg::Value;
-using mg::boostPressure;
-using mg::calculatedEngineLoad;
-using mg::distanceDriven;
-using mg::dummy;
-using mg::engineCoolantTemp;
-using mg::engineFuelRate;
-using mg::engineOilPressure;
-using mg::engineOilTemp;
-using mg::engineRPM;
-using mg::fuelLevel;
-using mg::fuelPressure;
-using mg::lateralAcceleration;
-using mg::longitudinalAcceleration;
-using mg::speed;
-using mg::throttlePosition;
-using mg::transmissionFluidPressure;
-using mg::transmissionTemp;
-using mg::verticalAcceleration;

@@ -1,7 +1,13 @@
 #pragma once
 
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
+
 #include <multigauge/properties/PropertyObject.h>
 #include <yoga/Yoga.h>
+
+namespace mg::gauge {
 
 struct LayoutSize {
     enum class Unit { Px, Percent, Auto } unit = Unit::Auto;
@@ -88,38 +94,44 @@ struct LayoutSize {
     }
 };
 
-MG_EDITOR_WIDGET(LayoutSize, "layout-size")
+} // namespace mg::gauge
 
+namespace mg {
+
+MG_EDITOR_WIDGET(gauge::LayoutSize, "layout-size")
+
+namespace gauge {
 struct Margin;
 struct Padding;
+}
 
-MG_EDITOR_WIDGET(Margin, "box")
-MG_EDITOR_WIDGET(Padding, "box")
+MG_EDITOR_WIDGET(gauge::Margin, "box")
+MG_EDITOR_WIDGET(gauge::Padding, "box")
 
-CODEC_BEGIN(LayoutSize)
+CODEC_BEGIN(gauge::LayoutSize)
     DECODE() {
-        if (v.IsNumber()) { out = {LayoutSize::Unit::Px, v.GetFloat()}; return true; }
+        if (v.IsNumber()) { out = {gauge::LayoutSize::Unit::Px, v.GetFloat()}; return true; }
 
         if (!v.IsString()) return false;
 
         const auto s = v.GetString();
         if (!s) return false;
 
-        if (strcmp(s, "auto") == 0) { out = {LayoutSize::Unit::Auto, 0}; return true; }
+        if (strcmp(s, "auto") == 0) { out = {gauge::LayoutSize::Unit::Auto, 0}; return true; }
 
         char* end = nullptr;
         float num = std::strtof(s, &end);
         if (end == s) return false;
 
-        if (*end == '\0') { out = {LayoutSize::Unit::Px, num}; return true; } 
+        if (*end == '\0') { out = {gauge::LayoutSize::Unit::Px, num}; return true; } 
 
-        if (*end == '%') { out = {LayoutSize::Unit::Percent, num}; return true; }
+        if (*end == '%') { out = {gauge::LayoutSize::Unit::Percent, num}; return true; }
 
         if ((end[0] == 'p' || end[0] == 'P') && (end[1] == 'x' || end[1] == 'X')) {
             end = const_cast<char*>(end + 2);
             if (*end != '\0') return false;
 
-            out = {LayoutSize::Unit::Px, num};
+            out = {gauge::LayoutSize::Unit::Px, num};
             return true;
         }
 
@@ -128,18 +140,18 @@ CODEC_BEGIN(LayoutSize)
 
     ENCODE() {
         switch (v.unit) {
-            case LayoutSize::Unit::Auto:
+            case gauge::LayoutSize::Unit::Auto:
                 out.SetString("auto", a);
                 break;
 
-            case LayoutSize::Unit::Percent: {
+            case gauge::LayoutSize::Unit::Percent: {
                 char buf[32];
                 std::snprintf(buf, sizeof(buf), "%g%%", v.value);
                 out.SetString(buf, a);
                 break;
             }
 
-            case LayoutSize::Unit::Px: default: out.SetFloat(v.value); break;
+            case gauge::LayoutSize::Unit::Px: default: out.SetFloat(v.value); break;
         }
 
         return true;
@@ -215,7 +227,11 @@ struct EnumTraits<YGOverflow> {
     };
 };
 
-struct Gap : public PropertyObject {
+} // namespace mg
+
+namespace mg::gauge {
+
+struct Gap : public ::mg::PropertyObject {
     float row = 0;
     float column = 0;
 
@@ -248,7 +264,7 @@ struct Gap : public PropertyObject {
     MG_PROPS_END()
 };
 
-struct FlexContainer : public PropertyObject {
+struct FlexContainer : public ::mg::PropertyObject {
     YGFlexDirection direction = YGFlexDirectionRow;
     YGJustify justify = YGJustifyFlexStart;
     YGAlign alignItems = YGAlignStretch;
@@ -281,7 +297,7 @@ struct FlexContainer : public PropertyObject {
     MG_PROPS_END()
 };
 
-struct FlexItem : public PropertyObject {
+struct FlexItem : public ::mg::PropertyObject {
     float grow = 0;
     float shrink = 1;
     LayoutSize basis;
@@ -302,7 +318,7 @@ struct FlexItem : public PropertyObject {
     MG_PROPS_END()
 };
 
-struct Position : public PropertyObject {
+struct Position : public ::mg::PropertyObject {
     YGPositionType type = YGPositionTypeStatic;
 
     LayoutSize left;
@@ -343,7 +359,7 @@ struct Position : public PropertyObject {
     MG_PROPS_END()
 };
 
-struct LayoutBox : public PropertyObject {
+struct LayoutBox : public ::mg::PropertyObject {
     LayoutSize left{LayoutSize::Unit::Px, 0.0f};
     LayoutSize right{LayoutSize::Unit::Px, 0.0f};
     LayoutSize top{LayoutSize::Unit::Px, 0.0f};
@@ -381,7 +397,7 @@ struct Padding : public LayoutBox {
     }
 };
 
-struct Layout : public PropertyObject {
+struct Layout : public ::mg::PropertyObject {
     FlexContainer flexContainer;
     FlexItem flexItem;
     Position position;
@@ -442,7 +458,7 @@ struct Layout : public PropertyObject {
     MG_PROPS_END()
 };
 
-struct RootLayout : public PropertyObject {
+struct RootLayout : public ::mg::PropertyObject {
     FlexContainer flexContainer;
     Padding padding;
 
@@ -458,6 +474,10 @@ struct RootLayout : public PropertyObject {
         MG_PROP(padding,       "padding",        "Padding",        "Padding inside the root.")
     MG_PROPS_END()
 };
+
+} // namespace mg::gauge
+
+namespace mg {
 
 CODEC_BEGIN(YGFlexDirection)
     DECODE() {
@@ -533,3 +553,5 @@ CODEC_BEGIN(YGOverflow)
         return encodeEnum(out, a, v);
     }
 CODEC_END()
+
+} // namespace mg

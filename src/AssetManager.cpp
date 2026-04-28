@@ -32,10 +32,10 @@ const char* AssetManager::imageTypeName(ImageType type) {
 
 
 bool AssetManager::decodeBase64(const std::string_view& encoded, std::vector<uint8_t>& out) {
-    out.resize(base64DecodedMaxSize(encoded));
+    out.resize(io::base64DecodedMaxSize(encoded));
 
     size_t decodedLen = 0;
-    if (!base64Decode(encoded, out.data(), out.size(), decodedLen)) {
+    if (!io::base64Decode(encoded, out.data(), out.size(), decodedLen)) {
         return false;
     }
 
@@ -43,11 +43,11 @@ bool AssetManager::decodeBase64(const std::string_view& encoded, std::vector<uin
     return true;
 }
 
-bool AssetManager::decodeImageData(ImageType type, const std::vector<uint8_t>& data, ImageInfo& info) {
+bool AssetManager::decodeImageData(ImageType type, const std::vector<uint8_t>& data, images::ImageInfo& info) {
     switch (type) {
-        case ImageType::BMP: return decodeBMP(data.data(), data.size(), info);
-        case ImageType::PNG: return decodePNG(data.data(), data.size(), info);
-        case ImageType::JPG: return decodeJPG(data.data(), data.size(), info);
+        case ImageType::BMP: return images::decodeBMP(data.data(), data.size(), info);
+        case ImageType::PNG: return images::decodePNG(data.data(), data.size(), info);
+        case ImageType::JPG: return images::decodeJPG(data.data(), data.size(), info);
         default: return false;
     }
 }
@@ -143,7 +143,7 @@ bool AssetManager::loadDocumentAssets(const rapidjson::Value::ConstArray &assets
 }
 
 
-bool AssetManager::loadImage(GraphicsContext& ctx, const std::string &p, Image &out) {
+bool AssetManager::loadImage(graphics::GraphicsContext& ctx, const std::string &p, images::Image &out) {
     constexpr const char* TAG = "AssetManager::loadImage";
 
     const std::string path = "/assets/images/" + p;
@@ -161,7 +161,7 @@ bool AssetManager::loadImage(GraphicsContext& ctx, const std::string &p, Image &
 
     ImageType type = detectImageType(data.data(), data.size());
 
-    ImageInfo info;
+    images::ImageInfo info;
     if (!decodeImageData(type, data, info)) {
         LOG_ERROR(TAG, "Failed to decode image: %s", path.c_str());
         return false;

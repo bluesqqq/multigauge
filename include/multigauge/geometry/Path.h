@@ -2,6 +2,8 @@
 
 #include <multigauge/geometry/Rect.h>
 
+namespace mg {
+
 template <typename T>
 class Path {
     public:
@@ -70,3 +72,5 @@ template <typename T>
 inline Path<T>::Path(const Rect<T> &rectangle) {
     addRect(rectangle);
 }
+
+} // namespace mg

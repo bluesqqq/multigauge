@@ -2,13 +2,16 @@
 
 #include <cstdint>     // uint8_t, uint16_t, uint32_t, int32_t
 #include <cstddef>     // size_t
+#include <cctype>
+#include <cstring>
 #include <string>      // std::string
+#include <string_view>
 #include <algorithm>   // std::min
 #include <rapidjson/document.h>
 #include <optional>
 #include <vector>
 
-#include <multigauge/io/Logger.h>
+namespace mg {
 
 // ----------[ FLOAT / MATH ]---------- //
 
@@ -128,3 +131,5 @@ inline void trimWhitespace(const char* s) {
     trimLeadingWhitespace(s);
     trimTrailingWhitespace(s);
 }
+
+} // namespace mg

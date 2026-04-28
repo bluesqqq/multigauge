@@ -1,5 +1,7 @@
 #include <multigauge/graphics/DisplayValue.h>
 
+namespace mg::graphics {
+
 int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : DEFAULT_UNIT; }
 
 DisplayValue::DisplayValue() {}
@@ -50,7 +52,7 @@ float DisplayValue::getMaximum() const {
     return unitType.convertFromBase(getMaximumBase(), getUnitIndex());
 }
 
-const Unit *DisplayValue::getUnit() const {
+const ::mg::Unit *DisplayValue::getUnit() const {
     if (!value) return nullptr;
 
     auto& unitType = value->getUnitType();
@@ -65,3 +67,5 @@ std::string DisplayValue::getValueString(bool abbreviation) const {
 const char *DisplayValue::getName() const {
     return value ? value->getName() : "n/a";
 }
+
+} // namespace mg::graphics

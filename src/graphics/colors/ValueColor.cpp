@@ -1,8 +1,12 @@
 #include <multigauge/graphics/colors/ValueColor.h>
 
+#include <utility>
+
+namespace mg::graphics {
+
 const ColorTimeline *ValueColor::getTimeline() const { return &timeline; }
 
-ValueColor::ValueColor(Value *value, ColorTimeline timeline) : timeline(std::move(timeline)), value(value) { }
+ValueColor::ValueColor(::mg::Value *value, ColorTimeline timeline) : timeline(std::move(timeline)), value(value) { }
 
 ValueColor::ValueColor(const ValueColor &other) : timeline(other.timeline), value(other.value) {}
 
@@ -39,3 +43,5 @@ rgba ValueColor::getColor() const { return value ? timeline.getColor(value->getV
 Color::Type ValueColor::getType() const { return Type::Value; }
 
 // ----------[ JSON helpers ]----------
+
+} // namespace mg::graphics

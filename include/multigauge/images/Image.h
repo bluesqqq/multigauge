@@ -1,5 +1,9 @@
 #pragma once
 
+#include <utility>
+
+namespace mg::images {
+
 struct Image {
     int width = 0;
     int height = 0;
@@ -31,3 +35,5 @@ struct Image {
 
     bool empty() const { return native == nullptr || width == 0 || height == 0; }
 };
+
+} // namespace mg::images

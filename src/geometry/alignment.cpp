@@ -1,5 +1,7 @@
 #include <multigauge/geometry/alignment.h>
 
+namespace mg {
+
 std::pair<float, float> alignLength(float start, float length, LengthAlignment alignment) {
     switch (alignment) {
         case OUTER:
@@ -17,3 +19,5 @@ std::pair<float, float> alignLength(float start, float length, LengthAlignment a
             return std::pair<float, float>(start, start);
     }
 }
+
+} // namespace mg

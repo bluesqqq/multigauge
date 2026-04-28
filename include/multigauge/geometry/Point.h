@@ -2,6 +2,8 @@
 
 #include <multigauge/geometry/alignment.h>
 
+namespace mg {
+
 template <typename T>
 struct Line;
 
@@ -118,3 +120,5 @@ struct Point {
 
 extern template struct Point<int>;
 extern template struct Point<float>;
+
+} // namespace mg

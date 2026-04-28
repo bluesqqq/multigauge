@@ -4,6 +4,10 @@
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/values/ValueEmbed.h>
 
+namespace mg::gauge {
+
+using ::mg::graphics::TextPaint;
+
 class TextElement : public Element {
         MG_EDITOR_NAME("Text")
     MG_TYPE_ID("text")
@@ -30,5 +34,4 @@ class TextElement : public Element {
         void draw(Graphics& g) const override;
 };
 
-
-
+} // namespace mg::gauge

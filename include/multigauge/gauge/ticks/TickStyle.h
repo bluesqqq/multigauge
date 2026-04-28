@@ -7,6 +7,9 @@
 
 namespace mg::gauge {
 
+using ::mg::graphics::ColorTimeline;
+using ::mg::graphics::TextPaint;
+
 enum TickStyle { LINE, TRIANGLE, CIRCLE };
 
 struct TickValueStyle {
@@ -17,6 +20,3 @@ struct TickValueStyle {
 };
 
 } // namespace mg::gauge
-
-using TickStyle = mg::gauge::TickStyle;
-using TickValueStyle = mg::gauge::TickValueStyle;

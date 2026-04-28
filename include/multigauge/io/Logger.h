@@ -3,7 +3,7 @@
 #include <cstdarg>
 #include <cstdint>
 
-namespace mg {
+namespace mg::io {
 
 enum class LogLevel : uint8_t {
     Debug,
@@ -29,7 +29,4 @@ class Logger {
         void setMinLevel(LogLevel l);
 };
 
-}
-
-using mg::LogLevel;
-using mg::Logger;
+} // namespace mg::io

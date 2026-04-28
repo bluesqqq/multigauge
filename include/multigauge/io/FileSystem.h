@@ -4,6 +4,8 @@
 #include <vector>
 #include <cstdint>
 
+namespace mg::io {
+
 class FileSystem {
     public:
         virtual ~FileSystem() = default;
@@ -22,3 +24,5 @@ class FileSystem {
 
         virtual bool listDirectories(const std::string& path, std::vector<std::string>& outNames) = 0;
 };
+
+} // namespace mg::io

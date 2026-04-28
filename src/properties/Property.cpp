@@ -1,5 +1,7 @@
 #include <multigauge/properties/Property.h>
 
+namespace mg {
+
 rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) const {
     rapidjson::Value metaJson(rapidjson::kObjectType);
 
@@ -15,3 +17,5 @@ rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) co
 
     return metaJson;
 }
+
+} // namespace mg

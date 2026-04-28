@@ -14,17 +14,21 @@
 
 //----------[ PARENT CHAIN ]----------//
 
+namespace mg {
+
 /// Resolves the parent property-list getter exposed by `MG_PROPS_PARENT`.
 template <typename T, typename = void>
 struct MgPropsParentGetter {
-    static constexpr ::PropertyObject::PropertyList::ParentGetter value = nullptr;
+    static constexpr ::mg::PropertyObject::PropertyList::ParentGetter value = nullptr;
 };
 
 /// Specialization for types that expose `__mg_parent_property_list`.
 template <typename T>
 struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list)>> {
-    static constexpr ::PropertyObject::PropertyList::ParentGetter value = &T::__mg_parent_property_list;
+    static constexpr ::mg::PropertyObject::PropertyList::ParentGetter value = &T::__mg_parent_property_list;
 };
+
+} // namespace mg
 
 //----------[ BUILDERS ]----------//
 
@@ -57,12 +61,12 @@ using MemberType = typename MemberPtrTraits<decltype(MemberPtr)>::Type;
 /// @tparam MemberPtr Pointer to the member being assigned.
 /// @tparam CallbackPtr Optional callback invoked after assignment.
 template <auto MemberPtr, auto CallbackPtr>
-bool setMember(::PropertyObject* obj, const rapidjson::Value& v) {
+bool setMember(::mg::PropertyObject* obj, const rapidjson::Value& v) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     C* self = static_cast<C*>(obj);
 
-    if constexpr (std::is_base_of_v<::PropertyObject, T>) {
+    if constexpr (std::is_base_of_v<::mg::PropertyObject, T>) {
         if (!decodeAny<T>(v, self->*MemberPtr)) return false;
     } else {
         T decoded{};
@@ -81,7 +85,7 @@ bool setMember(::PropertyObject* obj, const rapidjson::Value& v) {
 /// Property getter adapter for a concrete member pointer.
 /// @tparam MemberPtr Pointer to the member being serialized.
 template <auto MemberPtr>
-bool getMember(const ::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+bool getMember(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
     using C = MemberClass<MemberPtr>;
     const C* self = static_cast<const C*>(obj);
     return encodeAny(out, a, self->*MemberPtr);
@@ -94,43 +98,43 @@ template <typename T, typename = void>
 struct ChildObjectTraits {
     static constexpr bool supported = false;
 
-    static const ::PropertyObject* getConst(const T&) { return nullptr; }
-    static ::PropertyObject* getMutable(T&) { return nullptr; }
+    static const ::mg::PropertyObject* getConst(const T&) { return nullptr; }
+    static ::mg::PropertyObject* getMutable(T&) { return nullptr; }
 };
 
 /// Nested-child support for direct `PropertyObject` members.
 template <typename T>
-struct ChildObjectTraits<T, std::enable_if_t<std::is_base_of_v<::PropertyObject, T>>> {
+struct ChildObjectTraits<T, std::enable_if_t<std::is_base_of_v<::mg::PropertyObject, T>>> {
     static constexpr bool supported = true;
 
-    static const ::PropertyObject* getConst(const T& value) { return &value; }
-    static ::PropertyObject* getMutable(T& value) { return &value; }
+    static const ::mg::PropertyObject* getConst(const T& value) { return &value; }
+    static ::mg::PropertyObject* getMutable(T& value) { return &value; }
 };
 
 /// Nested-child support for owned `PropertyObject` pointers.
 template <typename T>
-struct ChildObjectTraits<std::unique_ptr<T>, std::enable_if_t<std::is_base_of_v<::PropertyObject, T>>> {
+struct ChildObjectTraits<std::unique_ptr<T>, std::enable_if_t<std::is_base_of_v<::mg::PropertyObject, T>>> {
     static constexpr bool supported = true;
 
-    static const ::PropertyObject* getConst(const std::unique_ptr<T>& value) { return value.get(); }
-    static ::PropertyObject* getMutable(std::unique_ptr<T>& value) { return value.get(); }
+    static const ::mg::PropertyObject* getConst(const std::unique_ptr<T>& value) { return value.get(); }
+    static ::mg::PropertyObject* getMutable(std::unique_ptr<T>& value) { return value.get(); }
 };
 
 /// Nested-child support for optional `PropertyObject` members.
 template <typename T>
-struct ChildObjectTraits<std::optional<T>, std::enable_if_t<std::is_base_of_v<::PropertyObject, T>>> {
+struct ChildObjectTraits<std::optional<T>, std::enable_if_t<std::is_base_of_v<::mg::PropertyObject, T>>> {
     static constexpr bool supported = true;
 
-    static const ::PropertyObject* getConst(const std::optional<T>& value) { return value ? &(*value) : nullptr; }
+    static const ::mg::PropertyObject* getConst(const std::optional<T>& value) { return value ? &(*value) : nullptr; }
 
-    static ::PropertyObject* getMutable(std::optional<T>& value) {
+    static ::mg::PropertyObject* getMutable(std::optional<T>& value) {
         return value ? &(*value) : nullptr;
     }
 };
 
 /// Returns the const child object exposed by a member pointer.
 template <auto MemberPtr>
-const ::PropertyObject* getChildObjectConst(const ::PropertyObject* obj) {
+const ::mg::PropertyObject* getChildObjectConst(const ::mg::PropertyObject* obj) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
@@ -140,7 +144,7 @@ const ::PropertyObject* getChildObjectConst(const ::PropertyObject* obj) {
 
 /// Returns the mutable child object exposed by a member pointer.
 template <auto MemberPtr>
-::PropertyObject* getChildObject(::PropertyObject* obj) {
+::mg::PropertyObject* getChildObject(::mg::PropertyObject* obj) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
@@ -162,15 +166,15 @@ template <auto MemberPtr>
 /// @param interactableWhen Optional interactability-rule provider for tooling.
 /// @param inspectorVisible Whether the property should appear in inspector metadata.
 template <auto MemberPtr, auto CallbackPtr = nullptr>
-Property makeProperty(const char* key, const char* name, const char* description, PropertyMetadata::RuleListGetter visibleWhen = nullptr, PropertyMetadata::RuleListGetter interactableWhen = nullptr, bool inspectorVisible = true) {
+::mg::Property makeProperty(const char* key, const char* name, const char* description, ::mg::PropertyMetadata::RuleListGetter visibleWhen = nullptr, ::mg::PropertyMetadata::RuleListGetter interactableWhen = nullptr, bool inspectorVisible = true) {
     using T = detail::MemberType<MemberPtr>;
 
-    Property p{};
+    ::mg::Property p{};
     p.key = key;
     p.set = &detail::setMember<MemberPtr, CallbackPtr>;
     p.get = &detail::getMember<MemberPtr>;
 
-    PropertyMetadata meta{};
+    ::mg::PropertyMetadata meta{};
     meta.name = name ? name : key;
     meta.description = description ? description : "No description.";
     meta.widget = MgPropWidgetTraits<T>::value;
@@ -178,8 +182,8 @@ Property makeProperty(const char* key, const char* name, const char* description
     meta.inspectorVisible = inspectorVisible;
     meta.getVisibleWhen = visibleWhen;
     meta.getInteractableWhen = interactableWhen;
-    if constexpr (HasEnumTraitsV<EnumTraitsTypeT<T>>) meta.getOptionsMeta = &enumOptionsMeta<EnumTraitsTypeT<T>>;
-    if constexpr (MgPolymorphicRegistryTraits<T>::supported) meta.getTypesMeta = &MgPolymorphicRegistryTraits<T>::getTypesMeta;
+    if constexpr (::mg::HasEnumTraitsV<::mg::EnumTraitsTypeT<T>>) meta.getOptionsMeta = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
+    if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypesMeta = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
 
     if constexpr (detail::ChildObjectTraits<T>::supported) {
         p.getChild = &detail::getChildObject<MemberPtr>;
@@ -198,8 +202,8 @@ Property makeProperty(const char* key, const char* name, const char* description
 /// @param inspectorVisible Whether the property should appear in inspector metadata.
 /// @param set Custom setter function.
 /// @param get Custom getter function.
-inline Property makeCustomProperty(const char* key, const char* name, const char* description, PropertyMetadata::RuleListGetter visibleWhen, PropertyMetadata::RuleListGetter interactableWhen, bool inspectorVisible, Property::Setter set, Property::Getter get) {
-    PropertyMetadata meta{};
+inline ::mg::Property makeCustomProperty(const char* key, const char* name, const char* description, ::mg::PropertyMetadata::RuleListGetter visibleWhen, ::mg::PropertyMetadata::RuleListGetter interactableWhen, bool inspectorVisible, ::mg::Property::Setter set, ::mg::Property::Getter get) {
+    ::mg::PropertyMetadata meta{};
     meta.name = name ? name : key;
     meta.description = description ? description : "No description.";
     meta.widget = "json";
@@ -217,16 +221,16 @@ inline Property makeCustomProperty(const char* key, const char* name, const char
 /** Declares the parent property list for an inherited property hierarchy. */
 #define MG_PROPS_PARENT(parent_type) \
     public: \
-    static ::PropertyObject::PropertyList __mg_parent_property_list(const ::PropertyObject* __mg_obj) { \
+    static ::mg::PropertyObject::PropertyList __mg_parent_property_list(const ::mg::PropertyObject* __mg_obj) { \
         return static_cast<const parent_type*>(__mg_obj)->parent_type::propertyList(); \
     }
 
 /** Begins a `propertyList()` override backed by a static `Property` array. */
 #define MG_PROPS_BEGIN() \
 public: \
-    ::PropertyObject::PropertyList propertyList() const override { \
+    ::mg::PropertyObject::PropertyList propertyList() const override { \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
-        static const ::Property props[] = {
+        static const ::mg::Property props[] = {
 
 /** Declares a standard member-backed property. */
 #define MG_PROP(member, key, display_name, description) \
@@ -345,6 +349,6 @@ public: \
 /** Ends a `propertyList()` override and returns the static property list. */
 #define MG_PROPS_END() \
         }; \
-        const auto parentGetter = ::MgPropsParentGetter<Self>::value; \
+        const auto parentGetter = ::mg::MgPropsParentGetter<Self>::value; \
         return { props, sizeof(props) / sizeof(props[0]), parentGetter }; \
     }

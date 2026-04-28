@@ -1,5 +1,6 @@
 #pragma once
 
+#include <multigauge/graphics/colors/rgba.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/utils.h>
 
@@ -10,6 +11,14 @@
 #include <cstddef>
 #include <vector>
 #include <algorithm>
+
+namespace mg::images {
+
+using ::mg::extract_and_scale;
+using ::mg::read_i32;
+using ::mg::read_u16;
+using ::mg::read_u32;
+using ::mg::graphics::rgba;
 
 // BMP compression types (from BMP spec)
 constexpr uint32_t BI_RGB            = 0; // no compression
@@ -371,6 +380,13 @@ struct TjpgdMemSrc {
     ImageInfo* out = nullptr;
 };
 
+static inline rgba rgb565_to_rgba(uint16_t value) {
+    const uint8_t r = (uint8_t)(((value >> 11) & 0x1F) * 255 / 31);
+    const uint8_t g = (uint8_t)(((value >> 5) & 0x3F) * 255 / 63);
+    const uint8_t b = (uint8_t)((value & 0x1F) * 255 / 31);
+    return rgba{r, g, b, 255};
+}
+
 // Input callback: read "nbyte" bytes into "buf". If buf==nullptr, skip bytes.
 static size_t tjpgd_in_cb(JDEC* jd, uint8_t* buf, size_t nbyte) {
     auto* src = static_cast<TjpgdMemSrc*>(jd->device);
@@ -506,3 +522,5 @@ static inline bool decodeJPG(const uint8_t* data, size_t size, ImageInfo& out) {
 
     return true;
 }
+
+} // namespace mg::images

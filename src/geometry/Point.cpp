@@ -7,6 +7,8 @@
 #include <multigauge/geometry/Rect.h>
 #include <multigauge/geometry/Circle.h>
 
+namespace mg {
+
 template <typename T>
 Point<T>::Point() : x(0), y(0) {}
 
@@ -241,3 +243,5 @@ Point<float> Point<T>::toFloat() const { return Point<float>(static_cast<float>(
 
 template struct Point<int>;
 template struct Point<float>;
+
+} // namespace mg

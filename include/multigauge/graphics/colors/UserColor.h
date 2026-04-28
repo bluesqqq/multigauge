@@ -2,6 +2,8 @@
 
 #include <multigauge/graphics/colors/Color.h>
 
+namespace mg::graphics {
+
 class UserColor : public Color {
     MG_EDITOR_NAME("User Color")
     MG_TYPE_ID("user")
@@ -43,3 +45,5 @@ class UserColor : public Color {
         /// @return A new Color object of the same derived type as the input (e.g., blending with a TimeColor returns a TimeColor)
         OwnedColor blended(const Color& other, float alpha) const override;
 };
+
+} // namespace mg::graphics

@@ -3,6 +3,10 @@
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/colors/StaticColor.h>
 
+namespace mg::gauge {
+
+using ::mg::graphics::OwnedColor;
+
 class Horizon : public Element {
         MG_EDITOR_NAME("Horizon")
     MG_TYPE_ID("horizon")
@@ -115,5 +119,4 @@ class Horizon : public Element {
         }
 };
 
-
-
+} // namespace mg::gauge

@@ -8,7 +8,12 @@
 
 #include <multigauge/properties/EnumTraits.h>
 
-struct rgba;
+namespace mg {
+
+namespace graphics {
+    struct rgba;
+}
+
 class PropertyObject;
 
 template <typename T, typename = void>
@@ -28,10 +33,10 @@ struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>
 
 #define MG_EDITOR_WIDGET(type, widget_literal) \
 template <> \
-struct MgPropWidgetTraits<type> { static constexpr const char* value = widget_literal; };
+struct ::mg::MgPropWidgetTraits<type> { static constexpr const char* value = widget_literal; };
 
 MG_EDITOR_WIDGET(bool, "boolean")
-MG_EDITOR_WIDGET(rgba, "color-selector")
+MG_EDITOR_WIDGET(graphics::rgba, "color-selector")
 
 template <typename T>
 struct MgPropWidgetTraits<T, std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<T, bool>>> {
@@ -64,3 +69,5 @@ template <typename T>
 struct MgPropWidgetTraits<std::unique_ptr<T>> {
     static constexpr const char* value = MgPropWidgetTraits<T>::value;
 };
+
+} // namespace mg

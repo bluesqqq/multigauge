@@ -1,5 +1,7 @@
 #include <multigauge/graphics/colors/StaticColor.h>
 
+namespace mg::graphics {
+
 StaticColor::StaticColor() : color(DEFAULT_COLOR) { }
 
 StaticColor::StaticColor(rgba color) : color(color) {}
@@ -13,3 +15,5 @@ OwnedColor StaticColor::clone() const { return std::make_unique<StaticColor>(*th
 rgba StaticColor::getColor() const { return color; }
 
 Color::Type StaticColor::getType() const { return Type::Static; }
+
+} // namespace mg::graphics

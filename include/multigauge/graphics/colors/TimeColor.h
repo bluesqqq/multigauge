@@ -3,6 +3,8 @@
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/graphics/colors/ColorTimeline.h>
 
+namespace mg::graphics {
+
 class TimeColor : public Color {
     MG_EDITOR_NAME("Time Color")
     MG_TYPE_ID("time")
@@ -73,16 +75,20 @@ class TimeColor : public Color {
         OwnedColor blended(const Color& other, float alpha) const override;
 };
 
+} // namespace mg::graphics
+
+namespace mg {
+
 template<>
-struct EnumTraits<TimeColor::LoopType> {
-    static constexpr EnumOption<TimeColor::LoopType> options[] = {
-        { TimeColor::LoopType::Forward,  "forward",  "Forward" },
-        { TimeColor::LoopType::Reverse,  "reverse",  "Reverse" },
-        { TimeColor::LoopType::PingPong, "pingpong", "Ping Pong" },
+struct EnumTraits<graphics::TimeColor::LoopType> {
+    static constexpr EnumOption<graphics::TimeColor::LoopType> options[] = {
+        { graphics::TimeColor::LoopType::Forward,  "forward",  "Forward" },
+        { graphics::TimeColor::LoopType::Reverse,  "reverse",  "Reverse" },
+        { graphics::TimeColor::LoopType::PingPong, "pingpong", "Ping Pong" },
     };
 };
 
-CODEC_BEGIN(TimeColor::LoopType)
+CODEC_BEGIN(graphics::TimeColor::LoopType)
     DECODE() {
         return decodeEnum(v, out);
     }
@@ -91,4 +97,6 @@ CODEC_BEGIN(TimeColor::LoopType)
         return encodeEnum(out, a, v);
     }
 CODEC_END()
+
+} // namespace mg
 

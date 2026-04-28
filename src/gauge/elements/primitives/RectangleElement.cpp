@@ -1,5 +1,7 @@
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
 
+namespace mg::gauge {
+
 void RectangleElement::draw(Graphics &g) const {
     const auto& b = getBounds().toInt();
 
@@ -8,3 +10,5 @@ void RectangleElement::draw(Graphics &g) const {
     if (radius > 0.0f) g.drawRoundedRect(b, radius);
     else g.drawRect(b);
 }
+
+} // namespace mg::gauge

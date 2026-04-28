@@ -14,6 +14,10 @@
 
 namespace mg::editor {
 
+using ::mg::gauge::Element;
+using ::mg::gauge::GaugeFace;
+using ::mg::gauge::OwnedElement;
+
 class Editor {
     public:
         /// Identifies a face or element within the editor.
@@ -92,8 +96,8 @@ class Editor {
 
         Element* getElementById(Id id);
         const Element* getElementById(Id id) const;
-        ::PropertyObject* getObjectById(Id id);
-        const ::PropertyObject* getObjectById(Id id) const;
+        ::mg::PropertyObject* getObjectById(Id id);
+        const ::mg::PropertyObject* getObjectById(Id id) const;
         ElementContainerRef getElementContainerById(Id id);
         ElementContainerRef getElementContainerOf(Element* element);
         Id idOfContainer(const ElementContainerRef& container) const;

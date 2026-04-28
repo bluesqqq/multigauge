@@ -2,6 +2,9 @@
 
 #include <multigauge/HandlePool.h>
 #include <multigauge/screens/GaugeScreen.h>
+#include <multigauge/io/Log.h>
+
+#include <utility>
 
 namespace mg {
 
@@ -17,17 +20,17 @@ namespace {
     uint64_t lastUs = 0;
     YGConfigRef yogaConfig = nullptr;
 
-    FileSystem* g_fs = nullptr;
-    Time* g_time = nullptr;
+    io::FileSystem* g_fs = nullptr;
+    io::Time* g_time = nullptr;
 }
 
-bool init(FileSystem& fs, Time& time, Logger* logger) {
+bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger) {
     if (initialized) return true;
 
     g_fs = &fs;
     g_time = &time;
 
-    mg::setLogger(logger);
+    io::setLogger(logger);
 
     if (logger) {
         if (!logger->init()) return false;
@@ -66,7 +69,7 @@ void frame() {
 
 YGConfigRef getYogaConfig() { return yogaConfig; }
 
-ContextId addContext(GraphicsContext& graphics) { return contexts.emplace(graphics, *g_fs); }
+ContextId addContext(graphics::GraphicsContext& graphics) { return contexts.emplace(graphics, *g_fs); }
 
 bool removeContext(ContextId id) { return contexts.remove(id); }
 

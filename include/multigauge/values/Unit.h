@@ -12,8 +12,6 @@ struct Unit {
     uint8_t decimalPlaces;
 };
 
+inline constexpr int DEFAULT_UNIT = -1;
+
 }
-
-using mg::Unit;
-
-#define DEFAULT_UNIT -1

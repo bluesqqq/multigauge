@@ -1,29 +1,22 @@
 #pragma once
 
-#include <multigauge/graphics/colors/rgba.h>
-#include <multigauge/io/Log.h>
-#include <multigauge/values/Value.h>
-#include <multigauge/properties/PropertyObject.h>
-#include <multigauge/io/Log.h>
+#include <memory>
 
 #include <rapidjson/document.h>
 
-#include <memory>
+#include <multigauge/graphics/colors/rgba.h>
+#include <multigauge/properties/PropertyObject.h>
 
 #define DEFAULT_COLOR { 0, 0, 0, 255}
+
+namespace mg::graphics {
 
 class Color;              // forward declare
 class ColorTimeline;      // forward declare
 
 using OwnedColor = std::unique_ptr<Color>;
 
-template <>
-struct MgPropWidgetTraits<OwnedColor> { static constexpr const char* value = "color"; };
-
-template <>
-struct MgPropNullableTraits<OwnedColor> { static constexpr bool value = true; };
-
-class Color : public PropertyObject {
+class Color : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Color")
     public:
         virtual ~Color() = default;
@@ -65,24 +58,9 @@ class Color : public PropertyObject {
         virtual OwnedColor blended(const Color& color, float alpha) const = 0;
 };
 
-template <>
-struct MgPolymorphicRegistryTraits<OwnedColor> {
-    static constexpr bool supported = true;
-
-    static rapidjson::Value getTypesMeta(rapidjson::Document::AllocatorType& a) {
-        return Color::registry().getTypesMeta(a);
-    }
-};
-
-CODEC_BEGIN(OwnedColor)
-    DECODE();
-
-    ENCODE();
-CODEC_END()
-
 //----------[ FILL STROKE ]----------//
 
-struct Paint : public PropertyObject {
+struct Paint : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Paint")
     
     OwnedColor fill;
@@ -103,3 +81,30 @@ struct Paint : public PropertyObject {
     Paint blended(const Color& color, float alpha) const;
     Paint blended(const Paint& other, float alpha) const;
 };
+
+} // namespace mg::graphics
+
+namespace mg {
+
+template <>
+struct MgPropWidgetTraits<graphics::OwnedColor> { static constexpr const char* value = "color"; };
+
+template <>
+struct MgPropNullableTraits<graphics::OwnedColor> { static constexpr bool value = true; };
+
+template <>
+struct MgPolymorphicRegistryTraits<graphics::OwnedColor> {
+    static constexpr bool supported = true;
+
+    static rapidjson::Value getTypesMeta(rapidjson::Document::AllocatorType& a) {
+        return graphics::Color::registry().getTypesMeta(a);
+    }
+};
+
+CODEC_BEGIN(graphics::OwnedColor)
+    DECODE();
+
+    ENCODE();
+CODEC_END()
+
+} // namespace mg

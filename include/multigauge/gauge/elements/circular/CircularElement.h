@@ -1,8 +1,13 @@
 #pragma once
 
 #include <optional>
-#include <multigauge/graphics/DisplayValue.h>
+
 #include <multigauge/gauge/Element.h>
+#include <multigauge/graphics/DisplayValue.h>
+
+namespace mg::gauge {
+
+using ::mg::graphics::DisplayValue;
 
 class CircularElement : public Element {
         MG_EDITOR_NAME("Circular Element")
@@ -51,5 +56,4 @@ class CircularElement : public Element {
         Type getType() const override { return Type::Circular; }
 };
 
-
-
+} // namespace mg::gauge

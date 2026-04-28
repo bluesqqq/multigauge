@@ -3,10 +3,13 @@
 #include <stdint.h>
 #include <algorithm>
 #include <cmath>
+#include <utility>
 
 #include <multigauge/utils.h>
 
 #include <multigauge/properties/Codec.h>
+
+namespace mg::graphics {
 
 struct rgba {
     uint8_t r, g, b, a;
@@ -26,23 +29,10 @@ struct rgba {
     rgba blended(const rgba& other, float t) const;
 };
 
-CODEC_BEGIN(rgba)
-    DECODE() {
-        if (v.IsString()) return rgba::fromString(v.GetString(), out);
-
-        return false;
-    }
-
-    ENCODE() {
-        out.SetString(v.toHex(), 9, a);
-        return true;
-    }
-CODEC_END()
-
-inline bool parse_hex(const char* s, rgba& out) {
+	inline bool parse_hex(const char* s, rgba& out) {
     if (!s) return false;
 
-    trimWhitespace(s);
+    ::mg::trimWhitespace(s);
 
     // Optional prefixes: # or 0x / 0X
     if (s[0] == '#') {
@@ -111,7 +101,7 @@ inline bool parse_hex(const char* s, rgba& out) {
 inline bool parse_rgb(const char* s, rgba& out) {
     if (!s) return false;
 
-    trimWhitespace(s);
+    ::mg::trimWhitespace(s);
 
     // 2. Check for "rgb(" or "rgba("
     bool hasAlpha = false;
@@ -187,12 +177,31 @@ static std::pair<const char*, rgba> colorTable[] = {
     {"purple", rgb(128, 0, 128)}
 };
 
-inline bool parse_keyword(const char* s, rgba& out) {
+	inline bool parse_keyword(const char* s, rgba& out) {
     for (const auto& [keyword, color] : colorTable) {
         if (strcmp(s, keyword) == 0) {
             out = color;
             return true;
         }
+	    }
+	    return false;
+	}
+
+} // namespace mg::graphics
+
+namespace mg {
+
+CODEC_BEGIN(graphics::rgba)
+    DECODE() {
+        if (v.IsString()) return CodecType::fromString(v.GetString(), out);
+
+        return false;
     }
-    return false;
-}
+
+    ENCODE() {
+        out.SetString(v.toHex(), 9, a);
+        return true;
+    }
+CODEC_END()
+
+} // namespace mg

@@ -1,11 +1,17 @@
 #pragma once
 
-#include <multigauge/graphics/colors/Color.h>
 #include <multigauge/geometry/alignment.h>
-
+#include <multigauge/graphics/TextPaint.h>
+#include <multigauge/graphics/colors/Color.h>
 #include <multigauge/images/Image.h>
 
-#include <multigauge/graphics/TextPaint.h>
+#include <string>
+#include <string_view>
+
+namespace mg::graphics {
+
+using ::mg::Anchor;
+using ::mg::images::Image;
 
 class GraphicsContext {
     protected:
@@ -89,3 +95,5 @@ class GraphicsContext {
         virtual void clip(int x, int y, int width, int height) = 0;
         virtual void clearClip() = 0;
 };
+
+} // namespace mg::graphics

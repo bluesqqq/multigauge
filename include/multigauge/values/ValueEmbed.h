@@ -9,7 +9,10 @@
 #include <multigauge/values/UnitType.h>
 #include <multigauge/utils.h>
 
-namespace embed {
+namespace mg::values::embed {
+
+using ::mg::parseUnsignedInt;
+using ::mg::splitOnce;
 
 // --------------------[ Flags + Spec ]--------------------
 
@@ -146,9 +149,15 @@ static inline EmbedSpec parseEmbedInnerTight(std::string_view s) {
     return spec;
 }
 
-} // namespace embed
+} // namespace mg::values::embed
 
-namespace embed_render {
+namespace mg::values::embed_render {
+
+using ::mg::DEFAULT_UNIT;
+using ::mg::Unit;
+using ::mg::UnitType;
+using ::mg::Value;
+using ::mg::fastFloatToString;
 
 // --------------------[ render helpers ]--------------------
 
@@ -177,18 +186,18 @@ static inline std::string getUnitString(const UnitType& ut, int unitIndex, bool 
 static inline bool renderOne(std::string_view inner, std::string& out) {
     out.clear();
 
-    embed::EmbedSpec spec = embed::parseEmbedInnerTight(inner);
+    ::mg::values::embed::EmbedSpec spec = ::mg::values::embed::parseEmbedInnerTight(inner);
     if (!spec.ok()) return false;
 
     // NOTE: replace with Value::find(spec.valueName) once you have a string_view overload.
     Value* v = Value::find(std::string(spec.valueName));
     if (!v) return false;
 
-    const bool flagNA  = (spec.flags & embed::FLAG_NA)  != 0;
-    const bool flagU   = (spec.flags & embed::FLAG_U)   != 0;
-    const bool flagMIN = (spec.flags & embed::FLAG_MIN) != 0;
-    const bool flagMAX = (spec.flags & embed::FLAG_MAX) != 0;
-    const bool flagPCT = (spec.flags & embed::FLAG_PCT) != 0;
+    const bool flagNA  = (spec.flags & ::mg::values::embed::FLAG_NA)  != 0;
+    const bool flagU   = (spec.flags & ::mg::values::embed::FLAG_U)   != 0;
+    const bool flagMIN = (spec.flags & ::mg::values::embed::FLAG_MIN) != 0;
+    const bool flagMAX = (spec.flags & ::mg::values::embed::FLAG_MAX) != 0;
+    const bool flagPCT = (spec.flags & ::mg::values::embed::FLAG_PCT) != 0;
 
     const bool useAbbrev = !flagNA;
 
@@ -282,4 +291,4 @@ static inline std::string replaceEmbeds(const std::string& input) {
     return out;
 }
 
-} // namespace embed_render
+} // namespace mg::values::embed_render

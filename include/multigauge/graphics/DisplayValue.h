@@ -4,9 +4,11 @@
 #include <multigauge/properties/PropertyObject.h>
 #include <multigauge/values/ValueRef.h>
 
+namespace mg::graphics {
+
 /// @brief A class that wraps around a `Value` object, allowing the use of custom minimum and maximum limits & units
 /// @note This class does not have setter functions for setting the value of the `Value` reference, as it is meant to supply context to the `Value` object.
-class DisplayValue : public PropertyObject {
+class DisplayValue : public ::mg::PropertyObject {
     CODEC_FRIEND(DisplayValue)
     MG_EDITOR_NAME("Value")
 
@@ -18,7 +20,7 @@ class DisplayValue : public PropertyObject {
 
     private:
         /// @brief The base `Value` object being wrapped
-        ValueRef value;
+        ::mg::ValueRef value;
 
         /// @brief Optional custom minimum value pointer. 
         std::optional<float> minimum = std::nullopt;
@@ -51,7 +53,7 @@ class DisplayValue : public PropertyObject {
         float getMinimum() const;
         float getMaximum() const;
 
-        const Unit* getUnit() const;
+        const ::mg::Unit* getUnit() const;
 
         std::string getValueString(bool abbreviation = false) const;
 
@@ -65,10 +67,14 @@ class DisplayValue : public PropertyObject {
         MG_PROPS_END()
 };
 
-CODEC_BEGIN(DisplayValue)
+} // namespace mg::graphics
+
+namespace mg {
+
+CODEC_BEGIN(graphics::DisplayValue)
     DECODE() {
         if (v.IsString()) {
-            out = DisplayValue(v.GetString());
+            out = CodecType(v.GetString());
             return true;
         }
         return false;
@@ -87,3 +93,5 @@ CODEC_BEGIN(DisplayValue)
         }
     }
 CODEC_END()
+
+} // namespace mg

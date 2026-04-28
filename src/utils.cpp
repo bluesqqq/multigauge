@@ -3,6 +3,8 @@
 #include <cstdio>
 #include <cmath>
 
+namespace mg {
+
 // ----------[ FLOAT / STRING ]---------- //
 
 size_t fastFloatToString(float value, uint8_t decimalPlaces, char* buf, size_t bufSize) {
@@ -116,3 +118,5 @@ uint16_t rgb888_to_565(uint8_t r, uint8_t g, uint8_t b) {
                       ((g & 0xFC) << 3) |
                       ((b & 0xF8) >> 3));
 }
+
+} // namespace mg

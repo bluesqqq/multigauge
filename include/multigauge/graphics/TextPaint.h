@@ -1,5 +1,6 @@
 #pragma once
 
+#include <multigauge/fonts/Font.h>
 #include <multigauge/graphics/colors/Color.h>
 
 #include <rapidjson/document.h>
@@ -7,10 +8,9 @@
 #include <stdint.h>
 #include <string>
 
-enum class FontWeight : uint16_t { Normal = 400, Bold = 700 };
-enum class FontSlant  : uint8_t { Normal, Italic };
+namespace mg::graphics {
 
-struct TextPaint : public PropertyObject {
+struct TextPaint : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Text Paint")
 
     std::string family = "default";
@@ -28,3 +28,5 @@ struct TextPaint : public PropertyObject {
 
     TextPaint() = default;
 };
+
+} // namespace mg::graphics

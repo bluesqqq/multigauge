@@ -3,6 +3,10 @@
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/colors/Color.h>
 
+namespace mg::gauge {
+
+using ::mg::graphics::Paint;
+
 class RectangleElement : public Element {
         MG_EDITOR_NAME("Rectangle")
     MG_TYPE_ID("rectangle")
@@ -23,5 +27,4 @@ class RectangleElement : public Element {
         void draw(Graphics& g) const override;
 };
 
-
-
+} // namespace mg::gauge

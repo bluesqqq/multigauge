@@ -3,6 +3,12 @@
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/DisplayValue.h>
 
+namespace mg::gauge {
+
+using ::mg::graphics::DisplayValue;
+using ::mg::graphics::OwnedColor;
+using ::mg::graphics::rgb;
+
 struct TimeValue {
     float value;
     unsigned long time;
@@ -206,5 +212,4 @@ class Graph : public Element {
         }
 };
 
-
-
+} // namespace mg::gauge

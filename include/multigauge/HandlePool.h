@@ -151,6 +151,3 @@ class HandlePool {
 };
 
 }
-
-template<typename T>
-using HandlePool = mg::HandlePool<T>;

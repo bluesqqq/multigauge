@@ -9,7 +9,9 @@
 
 namespace mg::gauge {
 
-struct RootTick : public ::PropertyObject {
+using ::mg::graphics::PaintTimeline;
+
+struct RootTick : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Tick")
     
     int divisions = 2;
@@ -77,5 +79,3 @@ struct RootTick : public ::PropertyObject {
 };
 
 } // namespace mg::gauge
-
-using RootTick = mg::gauge::RootTick;

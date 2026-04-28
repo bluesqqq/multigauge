@@ -5,6 +5,8 @@
 
 #include <rapidjson/document.h>
 
+namespace mg {
+
 template <typename Owned, typename... Args>
 struct MgPolymorphicTypeDescriptor {
     const char* id;
@@ -81,9 +83,11 @@ struct MgPolymorphicRegistryTraits {
 };
 
 #define MG_POLYMORPHIC_REGISTRY(owned_type) \
-    using Registry = ::MgPolymorphicRegistry<owned_type>; \
+    using Registry = ::mg::MgPolymorphicRegistry<owned_type>; \
     static const Registry& registry();
 
 #define MG_POLYMORPHIC_REGISTRY_WITH_ARGS(owned_type, ...) \
-    using Registry = ::MgPolymorphicRegistry<owned_type, __VA_ARGS__>; \
+    using Registry = ::mg::MgPolymorphicRegistry<owned_type, __VA_ARGS__>; \
     static const Registry& registry();
+
+} // namespace mg

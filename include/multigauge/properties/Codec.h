@@ -8,6 +8,8 @@
 #include <utility>
 #include <vector>
 
+namespace mg {
+
 class PropertyObject;
 
 template<typename T>
@@ -39,15 +41,15 @@ struct mg_remove_cvref {
     using type = std::remove_cv_t<std::remove_reference_t<T>>;
 };
 
-#define CODEC_FRIEND(T) friend struct Codec<T>;
+#define CODEC_FRIEND(T) friend struct ::mg::Codec<T>;
 
 // Declaration
 
 #define CODEC_BEGIN(CODEC_T) \
-    template<> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+    template<> struct ::mg::Codec<CODEC_T> { using CodecType = CODEC_T;
 
 #define CODEC_BEGIN_TPARAMS(TPARAMS, CODEC_T) \
-    template<TPARAMS> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+    template<TPARAMS> struct ::mg::Codec<CODEC_T> { using CodecType = CODEC_T;
 
 #define DECODE() \
     static bool decode(const rapidjson::Value& v, CodecType& out)
@@ -61,10 +63,10 @@ struct mg_remove_cvref {
 // Implementation
 
 #define DECODE_IMPL(CODEC_T) \
-    bool Codec<CODEC_T>::decode(const rapidjson::Value& v, CodecType& out)
+    bool ::mg::Codec<CODEC_T>::decode(const rapidjson::Value& v, CodecType& out)
 
 #define ENCODE_IMPL(CODEC_T) \
-    bool Codec<CODEC_T>::encode(rapidjson::Value& out, rapidjson::Document::AllocatorType& a, const CodecType& v)
+    bool ::mg::Codec<CODEC_T>::encode(rapidjson::Value& out, rapidjson::Document::AllocatorType& a, const CodecType& v)
 
 //----------[ PRIMITIVE TYPES ]----------//
 
@@ -192,5 +194,7 @@ inline bool set(const rapidjson::Value::ConstObject& o, const char* key, T& out)
     if (it == o.MemberEnd()) return false;
     return decodeAny(it->value, out);
 }
+
+} // namespace mg
 
 #include <multigauge/properties/PropertyCodec.h>

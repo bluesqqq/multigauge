@@ -1,9 +1,10 @@
 #pragma once
 
 #include <multigauge/gauge/Element.h>
-#include <multigauge/graphics/DisplayValue.h>
 #include <multigauge/gauge/ticks/TickList.h>
 #include <multigauge/gauge/elements/circular/CircularElement.h>
+
+namespace mg::gauge {
 
 class CircularScale : public CircularElement {
         MG_EDITOR_NAME("Circular Scale")
@@ -28,5 +29,4 @@ class CircularScale : public CircularElement {
         void update(int deltaTime) override;
 };
 
-
-
+} // namespace mg::gauge

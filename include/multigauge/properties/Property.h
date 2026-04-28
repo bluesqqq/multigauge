@@ -5,6 +5,8 @@
 #include <multigauge/properties/EnumTraits.h>
 #include <multigauge/properties/meta/PropertyMetadata.h>
 
+namespace mg {
+
 class PropertyObject;
 
 struct Property {
@@ -23,7 +25,9 @@ struct Property {
     ChildGetter getChild = nullptr;
     /// Returns const nested PropertyObject for group-like properties, or nullptr.
     ChildGetterConst getChildConst = nullptr;
-    const mg::PropertyMetadata meta;
+    const PropertyMetadata meta;
 
     rapidjson::Value getBaseMeta(rapidjson::Document::AllocatorType& a) const;
 };
+
+} // namespace mg

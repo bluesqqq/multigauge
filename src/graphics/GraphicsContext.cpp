@@ -1,5 +1,7 @@
 #include <multigauge/graphics/GraphicsContext.h>
 
+namespace mg::graphics {
+
 int GraphicsContext::width() const { return w; }
 
 int GraphicsContext::height() const { return h; }
@@ -12,3 +14,5 @@ float GraphicsContext::getTextWidth(std::string_view text, std::string family, f
     std::string tmp(text);
     return getTextWidth(tmp.c_str(), family, pt, weight, slant);
 }
+
+} // namespace mg::graphics

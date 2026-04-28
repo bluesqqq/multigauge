@@ -4,6 +4,8 @@
 #include <multigauge/AssetManager.h>
 #include "rapidjson/document.h"
 
+namespace mg::images {
+
 struct NineSlice {
     const char* path = "";
 
@@ -16,5 +18,7 @@ struct NineSlice {
     NineSlice() = default;
     NineSlice(const char* p, int l, int t, int r, int b) : path(p), left(l), top(t), right(r), bottom(b) {}
 
-    bool init(AssetManager& assetManager, GraphicsContext& context) { return assetManager.loadImage(context, path, image); }
+    bool init(::mg::AssetManager& assetManager, ::mg::graphics::GraphicsContext& context) { return assetManager.loadImage(context, path, image); }
 };
+
+} // namespace mg::images

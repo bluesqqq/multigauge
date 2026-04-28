@@ -3,6 +3,8 @@
 #include <cmath>
 #include <array>
 
+namespace mg {
+
 template<typename T>
 Rect<T>::Rect(T x, T y, T w, T h) : Rect(Point<T>(x, y), w, h) {}
 
@@ -430,3 +432,5 @@ Path<T> Rect<T>::asPath() const { return Path<T>(*this); }
 
 template struct Rect<int>;
 template struct Rect<float>;
+
+} // namespace mg

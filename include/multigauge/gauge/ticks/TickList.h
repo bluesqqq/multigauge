@@ -17,12 +17,18 @@
 
 namespace mg::gauge {
 
-class TickList : public ::PropertyObject {
+using ::mg::Line;
+using ::mg::Point;
+using ::mg::graphics::Graphics;
+using ::mg::graphics::Paint;
+using ::mg::graphics::PaintTimeline;
+
+class TickList : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Tick List")
     
     private:
-        ::RootTick root;
-        std::vector<::SubTick> subs;
+        RootTick root;
+        std::vector<SubTick> subs;
 
         LengthAlignment align = LengthAlignment::OUTER;
 
@@ -50,9 +56,9 @@ class TickList : public ::PropertyObject {
 
         float getLength(uint8_t index) const;
         float getThickness(uint8_t index) const;
-        const ::TickStyle& getStyle(uint8_t index) const;
-        const ::PaintTimeline& getColor(uint8_t index) const;
-        const std::optional<::TickValueStyle>& getValueStyle(uint8_t index) const;
+        const TickStyle& getStyle(uint8_t index) const;
+        const PaintTimeline& getColor(uint8_t index) const;
+        const std::optional<TickValueStyle>& getValueStyle(uint8_t index) const;
 
         std::vector<std::vector<float>> getTickPositions(float startValue, float endValue) const {
             auto allPositions = std::vector<std::vector<float>>(subs.size() + 1);
@@ -85,20 +91,20 @@ class TickList : public ::PropertyObject {
             }
         }
 
-        void drawLineTick(Graphics& g, ::Line<float> line, float thickness, ::Paint& paint) const {
+        void drawLineTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
             g.setPaint(paint);
             g.drawLine(line.toInt(), thickness);
         }
 
-        void drawCircleTick(Graphics& g, ::Line<float> line, float thickness, ::Paint& paint) const {
+        void drawCircleTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
             
         }
 
-        void drawTriangleTick(Graphics& g, ::Line<float> line, float thickness, ::Paint& paint) const {
+        void drawTriangleTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
             
         }
 
-        void drawCircularTick(Graphics& g, uint8_t index, ::Point<float> pos, float radius, float position, float angle, float value) const;
+        void drawCircularTick(Graphics& g, uint8_t index, Point<float> pos, float radius, float position, float angle, float value) const;
 
         float getHighlightFactor(float value) const {
             const float delta = (value - displayValue);
@@ -139,5 +145,3 @@ class TickList : public ::PropertyObject {
 };
 
 } // namespace mg::gauge
-
-using TickList = mg::gauge::TickList;

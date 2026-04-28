@@ -2,6 +2,8 @@
 
 #include <multigauge/properties/Codec.h>
 
+namespace mg {
+
 class PropertyObject;
 
 template <typename T>
@@ -38,3 +40,5 @@ inline bool encodeAny(rapidjson::Value& out, rapidjson::Document::AllocatorType&
     static_assert(HasCodecV<T> || std::is_base_of_v<PropertyObject, T>, "Type must have Codec<T> with encode/decode or derive from PropertyObject.");
     return false;
 }
+
+} // namespace mg

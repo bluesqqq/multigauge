@@ -2,6 +2,8 @@
 
 #include <multigauge/graphics/colors/Color.h>
 
+namespace mg::graphics {
+
 class StaticColor : public Color {
     MG_EDITOR_NAME("Static Color")
     MG_TYPE_ID("static")
@@ -44,4 +46,6 @@ class StaticColor : public Color {
         OwnedColor blended(const Color& other, float alpha) const override;
 
 };
+
+} // namespace mg::graphics
 
