@@ -47,7 +47,7 @@ class Element : public PropertyObject {
 
         //----------[ LIFETIME HOOKS ]----------//
 
-        virtual bool init(AssetManager& assetManager) { return true; }
+        virtual bool init(AssetManager& assetManager, GraphicsContext& context) { return true; }
         virtual void draw(Graphics& g) const {}
         virtual void update(int deltaTime) {}
 
@@ -81,7 +81,7 @@ class Element : public PropertyObject {
 
         //----------[ LIFETIME ]----------//
 
-        bool initRecursive(AssetManager& assetManager);
+        bool initRecursive(AssetManager& assetManager, GraphicsContext& context);
         void drawRecursive(Graphics& g) const;
         void updateRecursive(int deltaTime);
 

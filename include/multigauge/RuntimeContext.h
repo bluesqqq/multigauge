@@ -4,6 +4,7 @@
 #include <memory>
 
 #include <multigauge/graphics/Graphics.h>
+#include <multigauge/AssetManager.h>
 
 namespace mg {
 
@@ -14,23 +15,22 @@ using OwnedScreen = std::unique_ptr<Screen>;
 
 class RuntimeContext {
     private:
-        GraphicsContext* native = nullptr;
+        GraphicsContext* context;
         Graphics graphics;
-        OwnedScreen activeScreen;
-        ContextId id = 0;
+
+        AssetManager assets;
+
+        OwnedScreen screen;
         rgba backgroundColor = rgba(0, 0, 0, 255);
 
     public:
-        explicit RuntimeContext(GraphicsContext& graphicsContext);
+        explicit RuntimeContext(GraphicsContext& graphicsContext, FileSystem& fs);
         ~RuntimeContext();
 
         RuntimeContext(const RuntimeContext&) = delete;
         RuntimeContext& operator=(const RuntimeContext&) = delete;
         RuntimeContext(RuntimeContext&&) noexcept = default;
         RuntimeContext& operator=(RuntimeContext&&) noexcept = default;
-
-        void setId(ContextId contextId);
-        ContextId getId() const;
 
         GraphicsContext& getGraphicsContext();
         const GraphicsContext& getGraphicsContext() const;

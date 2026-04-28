@@ -1,9 +1,7 @@
 #include <multigauge/App.h>
 
 #include <multigauge/HandlePool.h>
-#include <multigauge/Platform.h>
 #include <multigauge/screens/GaugeScreen.h>
-#include <multigauge/io/Time.h>
 
 namespace mg {
 
@@ -18,22 +16,31 @@ namespace {
     bool initialized = false;
     uint64_t lastUs = 0;
     YGConfigRef yogaConfig = nullptr;
+
+    FileSystem* g_fs = nullptr;
+    Time* g_time = nullptr;
 }
 
-bool init(Platform& platform) {
-    if (initialized) {
-        return true;
+bool init(FileSystem& fs, Time& time, Logger* logger) {
+    if (initialized) return true;
+
+    g_fs = &fs;
+    g_time = &time;
+
+    mg::setLogger(logger);
+
+    if (logger) {
+        if (!logger->init()) return false;
     }
 
-    setPlatform(platform);
-    if (!initPlatform()) {
-        return false;
-    }
+    if (!g_fs->init()) return false;
 
     contexts.clear();
     yogaConfig = createYogaConfig();
     initialized = true;
-    lastUs = TIME().getMicros();
+
+    lastUs = g_time->getMicros();
+
     return true;
 }
 
@@ -50,37 +57,20 @@ void shutdown() {
 void frame() {
     if (!initialized) return;
 
-    const uint64_t nowUs = TIME().getMicros();
+    const uint64_t nowUs = g_time->getMicros();
     const uint64_t deltaUs = nowUs - lastUs;
     lastUs = nowUs;
 
-    for (auto& context : contexts) {
-        context.frame(deltaUs);
-    }
+    for (auto& context : contexts) context.frame(deltaUs);
 }
 
-YGConfigRef getYogaConfig() {
-    return yogaConfig;
-}
+YGConfigRef getYogaConfig() { return yogaConfig; }
 
-ContextId addContext(GraphicsContext& graphics) {
-    RuntimeContext context(graphics);
-    const ContextId id = contexts.add(std::move(context));
+ContextId addContext(GraphicsContext& graphics) { return contexts.emplace(graphics, *g_fs); }
 
-    if (auto* created = contexts.get(id)) {
-        created->setId(id);
-    }
+bool removeContext(ContextId id) { return contexts.remove(id); }
 
-    return id;
-}
-
-bool removeContext(ContextId id) {
-    return contexts.remove(id);
-}
-
-RuntimeContext* getContext(ContextId id) {
-    return contexts.get(id);
-}
+RuntimeContext* getContext(ContextId id) { return contexts.get(id); }
 
 bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
     RuntimeContext* context = getContext(id);
@@ -94,11 +84,6 @@ bool clearScreen(ContextId id) {
 
     context->clearScreen();
     return true;
-}
-
-bool showGauge(ContextId id, const char* gaugePath) {
-    if (!gaugePath) return false;
-    return setScreen(id, std::make_unique<GaugeScreen>(gaugePath));
 }
 
 } // namespace mg

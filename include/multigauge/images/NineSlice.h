@@ -16,5 +16,5 @@ struct NineSlice {
     NineSlice() = default;
     NineSlice(const char* p, int l, int t, int r, int b) : path(p), left(l), top(t), right(r), bottom(b) {}
 
-    bool init(AssetManager& assetManager) { return assetManager.loadImage(path, image); }
+    bool init(AssetManager& assetManager, GraphicsContext& context) { return assetManager.loadImage(context, path, image); }
 };

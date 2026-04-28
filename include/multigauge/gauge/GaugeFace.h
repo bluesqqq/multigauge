@@ -24,7 +24,7 @@ class GaugeFace : public PropertyObject {
 
         //----------[ LIFETIME ]----------//
 
-        bool init(AssetManager& assetManager);
+        bool init(AssetManager& assetManager, GraphicsContext& context);
         void update(int deltaTime);
         void draw(Graphics& g) const;
 

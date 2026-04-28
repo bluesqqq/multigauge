@@ -54,10 +54,10 @@ rapidjson::Document GaugeFace::save() const {
     return doc;
 }
 
-bool GaugeFace::init(AssetManager& assetManager) {
+bool GaugeFace::init(AssetManager& assetManager, GraphicsContext& context) {
     bool ok = true;
 
-    for (auto& c : children) if (!c->initRecursive(assetManager)) ok = false;
+    for (auto& c : children) if (!c->initRecursive(assetManager, context)) ok = false;
 
     return ok;
 }

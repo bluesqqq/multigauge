@@ -137,9 +137,9 @@ OwnedElement Element::removeChild(Element* child) {
     return nullptr;
 }
 
-bool Element::initRecursive(AssetManager &assetManager) {
-    bool success = init(assetManager);
-    for (auto const& c : children) if (!c->initRecursive(assetManager)) success = false;
+bool Element::initRecursive(AssetManager &assetManager, GraphicsContext& context) {
+    bool success = init(assetManager, context);
+    for (auto const& c : children) if (!c->initRecursive(assetManager, context)) success = false;
     return success;
 }
 

@@ -82,6 +82,28 @@ class HandlePool {
             return makeId(slotIndex, slots[slotIndex].generation);
         }
 
+        template<typename... Args>
+        Id emplace(Args&&... args) {
+            uint32_t slotIndex;
+
+            if (!freeSlots.empty()) {
+                slotIndex = freeSlots.back();
+                freeSlots.pop_back();
+            } else {
+                slotIndex = slots.size();
+                slots.push_back({0, 0});
+            }
+
+            uint32_t valueIndex = values.size();
+
+            values.emplace_back(std::forward<Args>(args)...);
+            valueToSlot.push_back(slotIndex);
+
+            slots[slotIndex].index = valueIndex;
+
+            return makeId(slotIndex, slots[slotIndex].generation);
+        }
+
         bool remove(Id id) {
             uint32_t slot = getSlot(id);
             uint32_t gen  = getGeneration(id);
@@ -95,7 +117,7 @@ class HandlePool {
             uint32_t lastIndex   = values.size() - 1;
 
             if (removeIndex != lastIndex) {
-                values[removeIndex] = std::move(values[lastIndex]);
+                std::swap(values[removeIndex], values[lastIndex]);
 
                 uint32_t movedSlot = valueToSlot[lastIndex];
                 valueToSlot[removeIndex] = movedSlot;

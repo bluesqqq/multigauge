@@ -12,7 +12,7 @@ rgba Graphics::getCachedColor(const Color& color) {
     return c;
 }
 
-Graphics::Graphics(GraphicsContext *context) : context(context) { }
+Graphics::Graphics(GraphicsContext& context) : context(&context) { }
 
 Rect<int> Graphics::getScreenBounds() { return Rect<int>(0, 0, context->width(), context->height()); }
 

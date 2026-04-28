@@ -22,7 +22,7 @@ class ImageElement : public Element {
     public:
         using Element::Element;
         
-        bool init(AssetManager& assetManager) override;
+        bool init(AssetManager& assetManager, GraphicsContext& context) override;
         void draw(Graphics& g) const override;
 };
 

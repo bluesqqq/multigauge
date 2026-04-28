@@ -11,19 +11,13 @@ namespace mg {
 
 class GaugeScreen : public Screen {
     private:
-        std::unique_ptr<AssetManager> assets;
-        std::unique_ptr<GaugeFace> face;
-        std::string gaugePath;
+        GaugeFace* face = nullptr;
         RuntimeContext* context = nullptr;
-        bool loaded = false;
-
-        bool reload();
 
     public:
-        explicit GaugeScreen(const char* gaugePath = nullptr);
+        explicit GaugeScreen(GaugeFace* face = nullptr);
 
-        bool load(const char* gaugePath);
-        void unload();
+        void setFace(GaugeFace* face = nullptr);
 
         void onShow(RuntimeContext& ctx) override;
         void onHide(RuntimeContext& ctx) override;

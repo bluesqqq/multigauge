@@ -47,7 +47,7 @@ class Graphics final {
 
 
     public:
-        Graphics(GraphicsContext* context);
+        Graphics(GraphicsContext& context);
 
         /// @brief Returns the full rawable bounds of the current target (in pixels).
         Rect<int> getScreenBounds();
