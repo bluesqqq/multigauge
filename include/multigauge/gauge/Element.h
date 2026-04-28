@@ -16,12 +16,14 @@
 #include <cstdint>
 #include <memory>
 
+namespace mg::gauge {
+
 class Element;
 using OwnedElement = std::unique_ptr<Element>;
 
 class GaugeFace;
 
-class Element : public PropertyObject {
+class Element : public ::PropertyObject {
     MG_EDITOR_NAME("Element")
 
     private:
@@ -34,7 +36,7 @@ class Element : public PropertyObject {
 
         //----------[ LAYOUT ]----------//
 
-        Layout style;
+        ::Layout style;
         /// Absolute bounds computer from Yoga.
         Rect<float> bounds = Rect<float>(0.0f, 0.0f, 0.0f, 0.0f);
         /// Yoga node for this element.
@@ -112,3 +114,8 @@ class Element : public PropertyObject {
             MG_PROP(style, "style", "Style", "Layout options.")
         MG_PROPS_END()
 };
+
+} // namespace mg::gauge
+
+using Element = mg::gauge::Element;
+using OwnedElement = mg::gauge::OwnedElement;

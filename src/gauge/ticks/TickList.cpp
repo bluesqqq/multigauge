@@ -1,5 +1,7 @@
 #include <multigauge/gauge/ticks/TickList.h>
 
+namespace mg::gauge {
+
 float TickList::getLength(uint8_t index) const {
     while (index > 0) {
         if (subs[index - 1].length.has_value()) return subs[index - 1].length.value();
@@ -138,3 +140,5 @@ void TickList::drawCircularTick(Graphics &g, uint8_t index, Point<float> pos, fl
     }
     */
 }
+
+} // namespace mg::gauge

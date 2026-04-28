@@ -7,7 +7,9 @@
 #include <vector>
 #include <optional>
 
-struct RootTick : public PropertyObject {
+namespace mg::gauge {
+
+struct RootTick : public ::PropertyObject {
     MG_EDITOR_NAME("Tick")
     
     int divisions = 2;
@@ -73,3 +75,7 @@ struct RootTick : public PropertyObject {
         return positions;
     }
 };
+
+} // namespace mg::gauge
+
+using RootTick = mg::gauge::RootTick;

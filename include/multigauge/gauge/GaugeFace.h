@@ -5,7 +5,9 @@
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/gauge/Element.h>
 
-class GaugeFace : public PropertyObject {
+namespace mg::gauge {
+
+class GaugeFace : public ::PropertyObject {
     MG_EDITOR_NAME("Gauge Face")
 
     private:
@@ -13,7 +15,7 @@ class GaugeFace : public PropertyObject {
 
         std::vector<OwnedElement> children;
 
-        RootLayout style;
+        ::RootLayout style;
 
     public:
         GaugeFace();
@@ -42,3 +44,7 @@ class GaugeFace : public PropertyObject {
         void layout(Graphics& g);
         YGNodeRef getNode() const { return node; }
 };
+
+} // namespace mg::gauge
+
+using GaugeFace = mg::gauge::GaugeFace;

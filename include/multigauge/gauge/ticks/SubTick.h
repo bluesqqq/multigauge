@@ -5,7 +5,9 @@
 #include <multigauge/gauge/ticks/TickStyle.h>
 #include <multigauge/utils.h>
 
-struct SubTick : public PropertyObject {
+namespace mg::gauge {
+
+struct SubTick : public ::PropertyObject {
     MG_EDITOR_NAME("Tick")
     
     int divisions = 1;
@@ -45,3 +47,7 @@ struct SubTick : public PropertyObject {
         return positions;
     }
 };
+
+} // namespace mg::gauge
+
+using SubTick = mg::gauge::SubTick;

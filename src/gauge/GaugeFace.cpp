@@ -1,6 +1,8 @@
 #include <multigauge/App.h>
 #include <multigauge/gauge/GaugeFace.h>
 
+namespace mg::gauge {
+
 GaugeFace::GaugeFace() : node(YGNodeNewWithConfig(mg::getYogaConfig())) {}
 
 GaugeFace::~GaugeFace() {
@@ -124,3 +126,5 @@ void GaugeFace::layout(Graphics& g) {
 
     for (auto& c : children) c->layoutRecursive(0.0f, 0.0f);
 }
+
+} // namespace mg::gauge

@@ -5,6 +5,8 @@
 
 #include <multigauge/utils.h>
 
+namespace mg::gauge {
+
 enum TickStyle { LINE, TRIANGLE, CIRCLE };
 
 struct TickValueStyle {
@@ -13,3 +15,8 @@ struct TickValueStyle {
     int spacing = 1;
     bool flipValuesPosition = false;
 };
+
+} // namespace mg::gauge
+
+using TickStyle = mg::gauge::TickStyle;
+using TickValueStyle = mg::gauge::TickValueStyle;

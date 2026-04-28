@@ -13,6 +13,8 @@
 #include <multigauge/gauge/elements/circular/CircularNeedle.h>
 #include <multigauge/gauge/elements/circular/CircularScale.h>
 
+namespace mg::gauge {
+
 namespace {
     template <typename T>
     OwnedElement createElement(Element* parent) {
@@ -229,3 +231,5 @@ OwnedElement Element::fromJson(const rapidjson::Value::ConstObject json) {
 
     return out;
 }
+
+} // namespace mg::gauge
