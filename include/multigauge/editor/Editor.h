@@ -72,8 +72,6 @@ class Editor {
 
         Id nextId = 1;
         History history;
-        ClipboardState clipboard;
-
     private:
         //----------[ INTERNAL HELPERS ]----------//
 
@@ -112,10 +110,14 @@ class Editor {
 
     public:
         Editor() = default;
+        Editor(const Editor&) = delete;
+        Editor& operator=(const Editor&) = delete;
+        Editor(Editor&&) noexcept = default;
+        Editor& operator=(Editor&&) noexcept = default;
 
         //----------[ DOCUMENT ]----------//
 
-        /// Clears the loaded document, history, node IDs, and clipboard state.
+        /// Clears the loaded document, history, and node IDs.
         void clear();
         /// Loads faces and elements from a document JSON array.
         void loadDocument(const std::string& json);
@@ -216,8 +218,8 @@ class Editor {
 
         //----------[ CLIPBOARD ]----------//
 
-        ClipboardSummary getClipboardSummary() const { return { clipboard.kind }; }
-        void clearClipboard() { clipboard.clear(); }
+        ClipboardSummary getClipboardSummary() const;
+        void clearClipboard();
 
         /// Copies a face into the editor clipboard.
         Result copyFace(Id faceId);

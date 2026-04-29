@@ -38,6 +38,9 @@ class RuntimeContext {
         graphics::Graphics& getGraphics();
         const graphics::Graphics& getGraphics() const;
 
+        AssetManager& getAssetManager();
+        const AssetManager& getAssetManager() const;
+
         void setBackgroundColor(graphics::rgba color);
         graphics::rgba getBackgroundColor() const;
 

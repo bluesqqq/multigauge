@@ -401,7 +401,6 @@ void Editor::clear() {
     elementToId.clear();
     nextId = 1;
     history = History();
-    clipboard.clear();
 }
 
 void Editor::loadDocument(const std::string& json) {
@@ -1056,10 +1055,19 @@ Result Editor::getPropertiesMeta(Id id, const std::string& path) const {
     return result;
 }
 
+ClipboardSummary Editor::getClipboardSummary() const {
+    return sharedClipboardSummary();
+}
+
+void Editor::clearClipboard() {
+    clearSharedClipboard();
+}
+
 Result Editor::copyFace(Id faceId) {
     const GaugeFace* face = getFaceById(faceId);
     if (!face) return Error("Invalid face id");
 
+    ClipboardState& clipboard = sharedClipboard();
     clipboard.kind = ClipboardState::Kind::Face;
     clipboard.json = toString(face->save());
     return OkObject();
@@ -1072,6 +1080,7 @@ Result Editor::cutFace(Id faceId) {
 }
 
 Result Editor::pasteFace(FacePlacement where) {
+    const ClipboardState& clipboard = sharedClipboard();
     if (clipboard.kind != ClipboardState::Kind::Face)
         return Error("Clipboard does not contain a face");
 
@@ -1082,6 +1091,7 @@ Result Editor::copyElement(Id elementId) {
     const Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
+    ClipboardState& clipboard = sharedClipboard();
     clipboard.kind = ClipboardState::Kind::Element;
     clipboard.json = serializeElement(*element);
     return OkObject();
@@ -1094,11 +1104,13 @@ Result Editor::cutElement(Id elementId) {
 }
 
 Result Editor::pasteElement(const ElementPlacement& where) {
+    const ClipboardState& clipboard = sharedClipboard();
     if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
     return createElement(where, clipboard.json);
 }
 
 Result Editor::pasteToReplaceElement(Id elementId) {
+    const ClipboardState& clipboard = sharedClipboard();
     if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
     return replaceElementFromJson(elementId, clipboard.json);
 }

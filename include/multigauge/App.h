@@ -27,4 +27,5 @@ bool removeContext(ContextId id);
 
 bool setScreen(ContextId, std::unique_ptr<Screen> screen);
 bool clearScreen(ContextId id);
+
 }

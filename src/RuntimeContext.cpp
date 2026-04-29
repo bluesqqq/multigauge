@@ -18,6 +18,10 @@ graphics::Graphics& RuntimeContext::getGraphics() { return graphics; }
 
 const graphics::Graphics& RuntimeContext::getGraphics() const { return graphics; }
 
+AssetManager& RuntimeContext::getAssetManager() { return assets; }
+
+const AssetManager& RuntimeContext::getAssetManager() const { return assets; }
+
 void RuntimeContext::setBackgroundColor(graphics::rgba color) { backgroundColor = color; }
 
 graphics::rgba RuntimeContext::getBackgroundColor() const { return backgroundColor; }
