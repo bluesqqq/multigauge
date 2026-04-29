@@ -122,6 +122,9 @@ void GaugeFace::layout(Graphics& g) {
     const float width  = screenBounds.width;
     const float height = screenBounds.height;
 
+    YGNodeStyleSetWidth(node, width);
+    YGNodeStyleSetHeight(node, height);
+
     YGNodeCalculateLayout(node, width, height, YGDirectionLTR);
 
     for (auto& c : children) c->layoutRecursive(0.0f, 0.0f);
