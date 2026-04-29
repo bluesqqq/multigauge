@@ -1,290 +1,233 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Gauge Schema",
+  "$id": "https://www.multi-gauge.com/schemas/gauge.schema.json",
+  "title": "Gauge Face Schema",
+  "description": "Schema for the JSON consumed by mg::gauge::GaugeFace::load and mg::gauge::Element::fromJson. The runtime loads a face object with optional 'layout' and 'children' members, and generally ignores unknown object members instead of rejecting them.",
   "type": "object",
-  "additionalProperties": false,
   "properties": {
     "$schema": {
       "type": "string",
-      "description": "Optional. JSON Schema reference for editor tooling."
+      "description": "Optional schema reference for tooling."
     },
-    "assets": {
-      "$ref": "#/$defs/assets"
-    },
-    "root": {
-      "$ref": "#/$defs/baseElement"
-    }
-  },
-  "required": [
-    "assets",
-    "root"
-  ],
-  "$defs": {
-    "asset": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "name",
-        "mediaType",
-        "data"
-      ],
-      "properties": {
-        "name": {
-          "type": "string"
-        },
-        "mediaType": {
-          "type": "string",
-          "enum": [
-            "image/png",
-            "image/jpeg",
-            "image/bmp"
-          ]
-        },
-        "data": {
-          "type": "string"
-        }
-      }
-    },
-    "assets": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/asset"
-      }
-    },
-    "element": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/baseElement"
-        },
-        {
-          "$ref": "#/$defs/circleElement"
-        },
-        {
-          "$ref": "#/$defs/imageElement"
-        },
-        {
-          "$ref": "#/$defs/rectangleElement"
-        },
-        {
-          "$ref": "#/$defs/textElement"
-        },
-        {
-          "$ref": "#/$defs/graphElement"
-        },
-        {
-          "$ref": "#/$defs/horizonElement"
-        },
-        {
-          "$ref": "#/$defs/circularNeedleElement"
-        },
-        {
-          "$ref": "#/$defs/circularScaleElement"
-        }
-      ]
+    "layout": {
+      "$ref": "#/$defs/rootLayout"
     },
     "children": {
-      "description": "Optional. List of child elements.",
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/element"
-      }
-    },
-    "props": {
-      "description": "Optional. Element properties object.",
-      "type": "object",
-      "additionalProperties": true
-    },
-    "typedElement": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "type": "string"
-        },
-        "style": {
-          "$ref": "#/$defs/style"
-        },
-        "props": {
-          "$ref": "#/$defs/props"
-        },
-        "children": {
-          "$ref": "#/$defs/children"
-        }
-      }
-    },
-    "baseElement": {
-      "description": "Base element when 'type' is omitted.",
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "style": {
-          "$ref": "#/$defs/style"
-        },
-        "props": {
-          "$ref": "#/$defs/props"
-        },
-        "children": {
-          "$ref": "#/$defs/children"
-        }
-      },
-      "not": {
-        "required": [
-          "type"
-        ]
-      }
-    },
-    "circleElement": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/typedElement"
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "circle"
-            },
-            "props": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "paint": {
-                  "$ref": "#/$defs/Paint"
-                }
-              }
-            }
-          }
-        }
+      "$ref": "#/$defs/children"
+    }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "stringOrNull": {
+      "type": [
+        "string",
+        "null"
       ]
     },
-    "imageElement": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/typedElement"
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "image"
-            },
-            "props": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "path": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
+    "numberOrNull": {
+      "type": [
+        "number",
+        "null"
       ]
     },
-    "rectangleElement": {
-      "allOf": [
-        {
-          "$ref": "#/$defs/typedElement"
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "rectangle"
-            },
-            "props": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "paint": {
-                  "$ref": "#/$defs/Paint"
-                },
-                "radius": {
-                  "type": "number"
-                }
-              }
-            }
-          }
-        }
+    "integerOrNull": {
+      "type": [
+        "integer",
+        "null"
       ]
     },
-    "fontFamily": {
+    "valueId": {
       "type": "string",
-      "enum": [
-        "sans",
-        "serif",
-        "mono",
-        "orbitron",
-        "dejavu",
-        "roboto"
-      ]
+      "description": "Runtime lookup key for mg::ValueRef. The loader accepts any string; unresolved ids simply leave the reference unresolved."
     },
-    "textPaint": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "family": {
-          "$ref": "#/$defs/fontFamily"
-        },
-        "pt": {
+    "layoutSize": {
+      "description": "Matches mg::gauge::LayoutSize. Accepted forms are a number, 'auto', '<n>', '<n>px', or '<n>%'.",
+      "oneOf": [
+        {
           "type": "number"
         },
-        "weight": {
-          "type": "string",
-          "enum": [
-            "normal",
-            "bold"
-          ]
-        },
-        "slant": {
-          "type": "string",
-          "enum": [
-            "normal",
-            "italic"
-          ]
-        },
-        "color": {
-          "$ref": "#/$defs/color"
-        }
-      }
-    },
-    "textElement": {
-      "allOf": [
         {
-          "$ref": "#/$defs/typedElement"
-        },
-        {
-          "properties": {
-            "type": {
-              "const": "text"
-            },
-            "props": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "text": {
-                  "type": "string"
-                },
-                "paint": {
-                  "$ref": "#/$defs/textPaint"
-                },
-                "ellipses": {
-                  "type": "boolean"
-                },
-                "hyphens": {
-                  "type": "boolean"
-                }
-              }
-            }
-          }
+          "type": "string",
+          "pattern": "^(auto|-?(?:(?:\\d+(?:\\.\\d+)?)|(?:\\.\\d+))(?:(?:px)|(?:%))?)$"
         }
       ]
     },
-    "style": {
-      "description": "Optional. Object of style fields.",
-      "$ref": "#/$defs/styleObject"
-    },
-    "styleObject": {
+    "layoutBox": {
       "type": "object",
-      "additionalProperties": false,
       "properties": {
+        "left": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "right": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "top": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "bottom": {
+          "$ref": "#/$defs/layoutSize"
+        }
+      },
+      "additionalProperties": true
+    },
+    "gap": {
+      "type": "object",
+      "properties": {
+        "row": {
+          "type": "number"
+        },
+        "column": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true
+    },
+    "ygFlexDirection": {
+      "type": "string",
+      "enum": [
+        "row",
+        "column",
+        "row-reverse",
+        "column-reverse"
+      ]
+    },
+    "ygJustify": {
+      "type": "string",
+      "enum": [
+        "flex-start",
+        "center",
+        "flex-end",
+        "space-between",
+        "space-around",
+        "space-evenly"
+      ]
+    },
+    "ygAlign": {
+      "type": "string",
+      "enum": [
+        "flex-start",
+        "center",
+        "flex-end"
+      ],
+      "description": "These are the only values currently decodable by the YGAlign codec. Values such as 'stretch' or 'auto' are not loaded from JSON even though Yoga supports them internally."
+    },
+    "ygWrap": {
+      "type": "string",
+      "enum": [
+        "no-wrap",
+        "wrap",
+        "wrap-reverse"
+      ]
+    },
+    "ygPositionType": {
+      "type": "string",
+      "enum": [
+        "static",
+        "relative",
+        "absolute"
+      ]
+    },
+    "ygDisplay": {
+      "type": "string",
+      "enum": [
+        "on",
+        "off"
+      ]
+    },
+    "ygOverflow": {
+      "type": "string",
+      "enum": [
+        "visible",
+        "hidden"
+      ]
+    },
+    "flexContainer": {
+      "type": "object",
+      "properties": {
+        "direction": {
+          "$ref": "#/$defs/ygFlexDirection"
+        },
+        "justify": {
+          "$ref": "#/$defs/ygJustify"
+        },
+        "align-items": {
+          "$ref": "#/$defs/ygAlign"
+        },
+        "align-content": {
+          "$ref": "#/$defs/ygAlign"
+        },
+        "wrap": {
+          "$ref": "#/$defs/ygWrap"
+        },
+        "gap": {
+          "$ref": "#/$defs/gap"
+        }
+      },
+      "additionalProperties": true
+    },
+    "flexItem": {
+      "type": "object",
+      "properties": {
+        "grow": {
+          "type": "number"
+        },
+        "shrink": {
+          "type": "number"
+        },
+        "basis": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "align-self": {
+          "$ref": "#/$defs/ygAlign"
+        }
+      },
+      "additionalProperties": true
+    },
+    "position": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "$ref": "#/$defs/ygPositionType"
+        },
+        "left": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "right": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "top": {
+          "$ref": "#/$defs/layoutSize"
+        },
+        "bottom": {
+          "$ref": "#/$defs/layoutSize"
+        }
+      },
+      "additionalProperties": true
+    },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "flex-container": {
+          "$ref": "#/$defs/flexContainer"
+        },
+        "flex-item": {
+          "$ref": "#/$defs/flexItem"
+        },
+        "position": {
+          "$ref": "#/$defs/position"
+        },
+        "margin": {
+          "$ref": "#/$defs/layoutBox"
+        },
+        "padding": {
+          "$ref": "#/$defs/layoutBox"
+        },
+        "overflow": {
+          "$ref": "#/$defs/ygOverflow"
+        },
+        "display": {
+          "$ref": "#/$defs/ygDisplay"
+        },
         "width": {
           "$ref": "#/$defs/layoutSize"
         },
@@ -305,223 +248,21 @@
         },
         "aspect-ratio": {
           "type": "number"
-        },
-        "padding": {
-          "$ref": "#/$defs/layoutBox"
-        },
-        "margin": {
-          "$ref": "#/$defs/layoutBox"
-        },
-        "position": {
-          "$ref": "#/$defs/position"
-        },
-        "display": {
-          "type": "string",
-          "enum": [
-            "on",
-            "off"
-          ]
-        },
-        "overflow": {
-          "type": "string",
-          "enum": [
-            "visible",
-            "hidden"
-          ]
-        },
+        }
+      },
+      "additionalProperties": true
+    },
+    "rootLayout": {
+      "type": "object",
+      "properties": {
         "flex-container": {
           "$ref": "#/$defs/flexContainer"
         },
-        "flex-item": {
-          "$ref": "#/$defs/flexItem"
+        "padding": {
+          "$ref": "#/$defs/layoutBox"
         }
-      }
-    },
-    "layoutSize": {
-      "oneOf": [
-        {
-          "type": "number"
-        },
-        {
-          "type": "string",
-          "pattern": "^(auto|-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)%?|-?(?:\\d+(?:\\.\\d+)?|\\.\\d+)px)$"
-        }
-      ]
-    },
-    "layoutBox": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "left": {
-          "$ref": "#/$defs/layoutSize"
-        },
-        "right": {
-          "$ref": "#/$defs/layoutSize"
-        },
-        "top": {
-          "$ref": "#/$defs/layoutSize"
-        },
-        "bottom": {
-          "$ref": "#/$defs/layoutSize"
-        }
-      }
-    },
-    "gap": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "row": {
-          "type": "number"
-        },
-        "column": {
-          "type": "number"
-        }
-      }
-    },
-    "flexContainer": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "direction": {
-          "type": "string",
-          "enum": [
-            "row",
-            "column",
-            "row-reverse",
-            "column-reverse"
-          ]
-        },
-        "justify": {
-          "type": "string",
-          "enum": [
-            "flex-start",
-            "center",
-            "flex-end",
-            "space-between",
-            "space-around",
-            "space-evenly"
-          ]
-        },
-        "align-items": {
-          "type": "string",
-          "enum": [
-            "flex-start",
-            "center",
-            "flex-end",
-            "stretch"
-          ]
-        },
-        "align-content": {
-          "type": "string",
-          "enum": [
-            "flex-start",
-            "center",
-            "flex-end",
-            "stretch"
-          ]
-        },
-        "wrap": {
-          "type": "string",
-          "enum": [
-            "no-wrap",
-            "wrap",
-            "wrap-reverse"
-          ]
-        },
-        "gap": {
-          "$ref": "#/$defs/gap"
-        }
-      }
-    },
-    "flexItem": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "grow": {
-          "type": "number"
-        },
-        "shrink": {
-          "type": "number"
-        },
-        "basis": {
-          "$ref": "#/$defs/layoutSize"
-        },
-        "align-self": {
-          "type": "string",
-          "enum": [
-            "auto",
-            "flex-start",
-            "center",
-            "flex-end",
-            "stretch"
-          ]
-        }
-      }
-    },
-    "position": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "type": {
-          "type": "string",
-          "enum": [
-            "static",
-            "relative",
-            "absolute"
-          ]
-        },
-        "left": {
-          "$ref": "#/$defs/layoutSize"
-        },
-        "right": {
-          "$ref": "#/$defs/layoutSize"
-        },
-        "top": {
-          "$ref": "#/$defs/layoutSize"
-        },
-        "bottom": {
-          "$ref": "#/$defs/layoutSize"
-        }
-      }
-    },
-    "Paint": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "fill": {
-          "$ref": "#/$defs/color"
-        },
-        "stroke": {
-          "$ref": "#/$defs/color"
-        },
-        "thickness": {
-          "type": "number",
-          "default": 1.0
-        }
-      }
-    },
-    "color": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/rgba"
-        },
-        {
-          "$ref": "#/$defs/colorObject"
-        }
-      ]
-    },
-    "rgba": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/hexColor"
-        },
-        {
-          "$ref": "#/$defs/rgbFunction"
-        },
-        {
-          "$ref": "#/$defs/namedColor"
-        }
-      ]
+      },
+      "additionalProperties": true
     },
     "hexColor": {
       "type": "string",
@@ -529,7 +270,11 @@
     },
     "rgbFunction": {
       "type": "string",
-      "pattern": "^rgb\\(\\s*(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\s*,\\s*(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\s*,\\s*(?:25[0-5]|2[0-4]\\d|1?\\d?\\d)\\s*\\)$"
+      "pattern": "^rgb\\(\\s*-?\\d+\\s*,\\s*-?\\d+\\s*,\\s*-?\\d+\\s*\\)$"
+    },
+    "rgbaFunction": {
+      "type": "string",
+      "pattern": "^rgba\\(\\s*-?\\d+\\s*,\\s*-?\\d+\\s*,\\s*-?\\d+\\s*,\\s*-?\\d+\\s*\\)$"
     },
     "namedColor": {
       "type": "string",
@@ -551,86 +296,47 @@
         "purple"
       ]
     },
-
-    "colorObject": {
-      "oneOf": [
-        { "$ref": "#/$defs/staticColor" },
-        { "$ref": "#/$defs/valueColor" },
-        { "$ref": "#/$defs/timeColor" },
-        { "$ref": "#/$defs/userColor" }
+    "rgba": {
+      "description": "String form accepted by mg::Codec<rgba>.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/hexColor"
+        },
+        {
+          "$ref": "#/$defs/rgbFunction"
+        },
+        {
+          "$ref": "#/$defs/rgbaFunction"
+        },
+        {
+          "$ref": "#/$defs/namedColor"
+        }
       ]
     },
     "staticColor": {
       "type": "object",
-      "additionalProperties": false,
-      "required": ["type", "color"],
       "properties": {
-        "type": { "const": "static" },
-        "color": { "$ref": "#/$defs/rgba" }
-      }
-    },
-
-    "valueColor": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["type", "timeline", "id"],
-      "properties": {
-        "type": { "const": "value" },
-        "timeline": { "$ref": "#/$defs/colorTimeline" },
-        "id": { "$ref": "#/$defs/valueId" }
-      }
-    },
-
-    "timeColor": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["type", "timeline"],
-      "properties": {
-        "type": { "const": "time" },
-        "timeline": { "$ref": "#/$defs/colorTimeline" },
-        "loop": {
-          "enum": ["forward", "reverse", "pingpong"]
-        }
-      }
-    },
-
-    "userColor": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["type"],
-      "properties": {
-        "type": { "const": "user" }
-      }
-    },
-
-    "colorTimeline": {
-      "oneOf": [
-        {
-          "$ref": "#/$defs/color"
+        "type": {
+          "const": "static"
         },
-        {
-          "type": "object",
-          "additionalProperties": false,
-          "properties": {
-            "keyframes": {
-              "type": "array",
-              "items": {
-                "$ref": "#/$defs/colorKeyframe"
-              }
-            }
-          }
-        },
-        {
-          "type": "array",
-          "items": {
-            "$ref": "#/$defs/colorKeyframe"
-          }
+        "color": {
+          "$ref": "#/$defs/rgba"
         }
-      ]
+      },
+      "additionalProperties": true
+    },
+    "staticColorNoType": {
+      "type": "object",
+      "description": "Object form without a type tag. The runtime falls back to StaticColor when no recognized type is supplied.",
+      "properties": {
+        "color": {
+          "$ref": "#/$defs/rgba"
+        }
+      },
+      "additionalProperties": true
     },
     "colorKeyframe": {
       "type": "object",
-      "additionalProperties": false,
       "properties": {
         "pos": {
           "type": "number"
@@ -638,11 +344,142 @@
         "color": {
           "$ref": "#/$defs/color"
         }
-      }
+      },
+      "additionalProperties": true
     },
-    "PaintTimeline": {
+    "colorTimelineObject": {
       "type": "object",
-      "additionalProperties": false,
+      "properties": {
+        "keyframes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/colorKeyframe"
+          }
+        }
+      },
+      "additionalProperties": true
+    },
+    "colorTimeline": {
+      "description": "ColorTimeline accepts a color shorthand or an object with 'keyframes'. Array shorthand is not supported by the current loader.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/color"
+        },
+        {
+          "$ref": "#/$defs/colorTimelineObject"
+        }
+      ]
+    },
+    "valueColor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "value"
+        },
+        "timeline": {
+          "$ref": "#/$defs/colorTimeline"
+        },
+        "id": {
+          "$ref": "#/$defs/stringOrNull"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": true
+    },
+    "timeColor": {
+      "type": "object",
+      "properties": {
+        "type": {
+          "const": "time"
+        },
+        "timeline": {
+          "$ref": "#/$defs/colorTimeline"
+        },
+        "loop": {
+          "type": "string",
+          "enum": [
+            "forward",
+            "reverse",
+            "pingpong"
+          ]
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": true
+    },
+    "userColor": {
+      "type": "object",
+      "description": "UserColor currently exposes no loadable properties. The default constructor slot is used.",
+      "properties": {
+        "type": {
+          "const": "user"
+        }
+      },
+      "required": [
+        "type"
+      ],
+      "additionalProperties": true
+    },
+    "unknownColorObject": {
+      "type": "object",
+      "description": "Fallback accepted by the runtime: unknown color types are created as a default StaticColor and then any recognized properties are loaded.",
+      "properties": {
+        "type": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": true
+    },
+    "color": {
+      "description": "Accepted by mg::Codec<OwnedColor>: null, an rgba-like string, or an object-based color.",
+      "anyOf": [
+        {
+          "type": "null"
+        },
+        {
+          "$ref": "#/$defs/rgba"
+        },
+        {
+          "$ref": "#/$defs/staticColor"
+        },
+        {
+          "$ref": "#/$defs/staticColorNoType"
+        },
+        {
+          "$ref": "#/$defs/valueColor"
+        },
+        {
+          "$ref": "#/$defs/timeColor"
+        },
+        {
+          "$ref": "#/$defs/userColor"
+        },
+        {
+          "$ref": "#/$defs/unknownColorObject"
+        }
+      ]
+    },
+    "paint": {
+      "type": "object",
+      "properties": {
+        "fill": {
+          "$ref": "#/$defs/color"
+        },
+        "stroke": {
+          "$ref": "#/$defs/color"
+        },
+        "thickness": {
+          "type": "number"
+        }
+      },
+      "additionalProperties": true
+    },
+    "paintTimeline": {
+      "type": "object",
       "properties": {
         "fill": {
           "$ref": "#/$defs/colorTimeline"
@@ -653,51 +490,57 @@
         "thickness": {
           "type": "number"
         }
-      }
+      },
+      "additionalProperties": true
     },
-    "valueId": {
-      "enum": [
-        "n/a",
-        "engineRPM",
-        "engineCoolantTemp",
-        "engineOilTemp",
-        "transmissionTemp",
-        "engineOilPressure",
-        "transmissionFluidPressure",
-        "fuelPressure",
-        "boostPressure",
-        "fuelLevel",
-        "distanceDriven",
-        "speed",
-        "verticalAcceleration",
-        "longitudinalAcceleration",
-        "lateralAcceleration",
-        "calculatedEngineLoad",
-        "throttlePosition",
-        "engineFuelRate"
-      ]
-    },
-    "tickValueStyle": {
+    "textPaint": {
       "type": "object",
-      "additionalProperties": false,
+      "description": "Only family, pt, and color are currently exposed through MG_PROPS. Weight and slant exist in memory but are not loadable from JSON.",
       "properties": {
+        "family": {
+          "type": "string"
+        },
+        "pt": {
+          "type": "number"
+        },
         "color": {
-          "$ref": "#/$defs/colorTimeline"
-        },
-        "paint": {
-          "$ref": "#/$defs/textPaint"
-        },
-        "spacing": {
-          "type": "integer"
-        },
-        "flipValuesPosition": {
-          "type": "boolean"
+          "$ref": "#/$defs/color"
         }
-      }
+      },
+      "additionalProperties": true
+    },
+    "displayValueObject": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stringOrNull"
+        },
+        "min": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "max": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "unitIndex": {
+          "$ref": "#/$defs/integerOrNull"
+        }
+      },
+      "additionalProperties": true
+    },
+    "displayValue": {
+      "description": "DisplayValue accepts either a string shorthand or an object. Null is not a valid top-level DisplayValue payload, but object.id may be null.",
+      "anyOf": [
+        {
+          "$ref": "#/$defs/valueId"
+        },
+        {
+          "$ref": "#/$defs/displayValueObject"
+        }
+      ]
     },
     "rootTick": {
       "type": "object",
-      "additionalProperties": false,
+      "description": "Only the listed RootTick properties are exposed through MG_PROPS. Internal fields such as style and valueStyle are not loadable from JSON.",
       "properties": {
         "divisions": {
           "type": "integer"
@@ -715,37 +558,39 @@
           "type": "number"
         },
         "paint": {
-          "$ref": "#/$defs/PaintTimeline"
-        },
-        "valueStyle": {
-          "$ref": "#/$defs/tickValueStyle"
+          "$ref": "#/$defs/paintTimeline"
         }
-      }
+      },
+      "additionalProperties": true
     },
     "subTick": {
       "type": "object",
-      "additionalProperties": false,
+      "description": "Only the listed SubTick properties are exposed through MG_PROPS.",
       "properties": {
         "divisions": {
           "type": "integer"
         },
         "length": {
-          "type": "number"
+          "$ref": "#/$defs/numberOrNull"
         },
         "thickness": {
-          "type": "number"
+          "$ref": "#/$defs/numberOrNull"
         },
         "paint": {
-          "$ref": "#/$defs/PaintTimeline"
-        },
-        "valueStyle": {
-          "$ref": "#/$defs/tickValueStyle"
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/paintTimeline"
+            }
+          ]
         }
-      }
+      },
+      "additionalProperties": true
     },
     "tickList": {
       "type": "object",
-      "additionalProperties": false,
       "properties": {
         "root": {
           "$ref": "#/$defs/rootTick"
@@ -759,72 +604,171 @@
         "offset": {
           "type": "number"
         }
-      }
+      },
+      "additionalProperties": true
     },
-    "displayValue": {
-      "oneOf": [
+    "elementEnvelope": {
+      "type": "object",
+      "properties": {
+        "style": {
+          "$ref": "#/$defs/layout"
+        },
+        "props": {
+          "type": "object"
+        },
+        "children": {
+          "$ref": "#/$defs/children"
+        }
+      },
+      "additionalProperties": true
+    },
+    "typedElementEnvelope": {
+      "allOf": [
         {
-          "$ref": "#/$defs/valueId"
+          "$ref": "#/$defs/elementEnvelope"
         },
         {
           "type": "object",
-          "additionalProperties": false,
           "properties": {
-            "id": {
-              "$ref": "#/$defs/valueId"
-            },
-            "min": {
-              "type": "number"
-            },
-            "max": {
-              "type": "number"
-            },
-            "unitIndex": {
-              "type": [
-                "integer",
-                "null"
-              ]
+            "type": {
+              "type": "string"
             }
+          },
+          "required": [
+            "type"
+          ]
+        }
+      ]
+    },
+    "baseElement": {
+      "description": "Base Element when 'type' is omitted. Only style and children are meaningful; arbitrary props are ignored.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/elementEnvelope"
+        },
+        {
+          "not": {
+            "required": [
+              "type"
+            ]
           }
         }
       ]
     },
     "circularProps": {
       "type": "object",
-      "additionalProperties": false,
       "properties": {
-        "startAngle": {
-          "type": "number"
-        },
-        "endAngle": {
-          "type": "number"
-        },
         "value": {
           "$ref": "#/$defs/displayValue"
+        },
+        "startAngle": {
+          "$ref": "#/$defs/numberOrNull"
+        },
+        "endAngle": {
+          "$ref": "#/$defs/numberOrNull"
         }
-      }
+      },
+      "additionalProperties": true
     },
-    "graphElement": {
+    "circleElement": {
       "allOf": [
         {
-          "$ref": "#/$defs/typedElement"
+          "$ref": "#/$defs/typedElementEnvelope"
         },
         {
           "properties": {
             "type": {
-              "const": "graph"
+              "const": "circle"
             },
             "props": {
               "type": "object",
-              "additionalProperties": false,
               "properties": {
-                "value": { "$ref": "#/$defs/displayValue" },
-                "bgColor": { "$ref": "#/$defs/color"},
-                "secondsColor": {"$ref": "#/$defs/color"},
-                "graphColor": { "$ref": "#/$defs/color"},
-                "borderColor": {"$ref": "#/$defs/color"},
-                "seconds": { "type": "number" }
-              }
+                "paint": {
+                  "$ref": "#/$defs/paint"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "rectangleElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElementEnvelope"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "rectangle"
+            },
+            "props": {
+              "type": "object",
+              "properties": {
+                "paint": {
+                  "$ref": "#/$defs/paint"
+                },
+                "radius": {
+                  "type": "number"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "imageElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElementEnvelope"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "image"
+            },
+            "props": {
+              "type": "object",
+              "properties": {
+                "path": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "textElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElementEnvelope"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "text"
+            },
+            "props": {
+              "type": "object",
+              "properties": {
+                "text": {
+                  "type": "string"
+                },
+                "paint": {
+                  "$ref": "#/$defs/textPaint"
+                },
+                "ellipses": {
+                  "type": "boolean"
+                },
+                "hyphens": {
+                  "type": "boolean"
+                }
+              },
+              "additionalProperties": true
             }
           }
         }
@@ -833,7 +777,7 @@
     "horizonElement": {
       "allOf": [
         {
-          "$ref": "#/$defs/typedElement"
+          "$ref": "#/$defs/typedElementEnvelope"
         },
         {
           "properties": {
@@ -842,7 +786,6 @@
             },
             "props": {
               "type": "object",
-              "additionalProperties": false,
               "properties": {
                 "bgColor": {
                   "$ref": "#/$defs/color"
@@ -856,7 +799,63 @@
                 "borderColor": {
                   "$ref": "#/$defs/color"
                 }
-              }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "graphElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElementEnvelope"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "graph"
+            },
+            "props": {
+              "type": "object",
+              "properties": {
+                "seconds": {
+                  "type": "number"
+                },
+                "bgColor": {
+                  "$ref": "#/$defs/color"
+                },
+                "secondsColor": {
+                  "$ref": "#/$defs/color"
+                },
+                "graphColor": {
+                  "$ref": "#/$defs/color"
+                },
+                "borderColor": {
+                  "$ref": "#/$defs/color"
+                },
+                "value": {
+                  "$ref": "#/$defs/displayValue"
+                }
+              },
+              "additionalProperties": true
+            }
+          }
+        }
+      ]
+    },
+    "circularElement": {
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElementEnvelope"
+        },
+        {
+          "properties": {
+            "type": {
+              "const": "circular-element"
+            },
+            "props": {
+              "$ref": "#/$defs/circularProps"
             }
           }
         }
@@ -865,7 +864,7 @@
     "circularNeedleElement": {
       "allOf": [
         {
-          "$ref": "#/$defs/typedElement"
+          "$ref": "#/$defs/typedElementEnvelope"
         },
         {
           "properties": {
@@ -873,25 +872,23 @@
               "const": "circular-needle"
             },
             "props": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "startAngle": {
-                  "type": "number"
+              "allOf": [
+                {
+                  "$ref": "#/$defs/circularProps"
                 },
-                "endAngle": {
-                  "type": "number"
-                },
-                "value": {
-                  "$ref": "#/$defs/displayValue"
-                },
-                "radius": {
-                  "type": "number"
-                },
-                "paint": {
-                  "$ref": "#/$defs/Paint"
+                {
+                  "type": "object",
+                  "properties": {
+                    "paint": {
+                      "$ref": "#/$defs/paint"
+                    },
+                    "radius": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true
                 }
-              }
+              ]
             }
           }
         }
@@ -900,7 +897,7 @@
     "circularScaleElement": {
       "allOf": [
         {
-          "$ref": "#/$defs/typedElement"
+          "$ref": "#/$defs/typedElementEnvelope"
         },
         {
           "properties": {
@@ -908,29 +905,100 @@
               "const": "circular-scale"
             },
             "props": {
-              "type": "object",
-              "additionalProperties": false,
-              "properties": {
-                "startAngle": {
-                  "type": "number"
+              "allOf": [
+                {
+                  "$ref": "#/$defs/circularProps"
                 },
-                "endAngle": {
-                  "type": "number"
-                },
-                "value": {
-                  "$ref": "#/$defs/displayValue"
-                },
-                "radius": {
-                  "type": "number"
-                },
-                "ticks": {
-                  "$ref": "#/$defs/tickList"
+                {
+                  "type": "object",
+                  "properties": {
+                    "ticks": {
+                      "$ref": "#/$defs/tickList"
+                    },
+                    "radius": {
+                      "type": "number"
+                    }
+                  },
+                  "additionalProperties": true
                 }
-              }
+              ]
             }
           }
         }
       ]
+    },
+    "unknownTypedElement": {
+      "description": "Unknown element types are still accepted by the runtime. They fall back to a base Element and then load style/children plus any recognized properties.",
+      "allOf": [
+        {
+          "$ref": "#/$defs/typedElementEnvelope"
+        },
+        {
+          "not": {
+            "properties": {
+              "type": {
+                "enum": [
+                  "circle",
+                  "rectangle",
+                  "image",
+                  "text",
+                  "horizon",
+                  "graph",
+                  "circular-element",
+                  "circular-needle",
+                  "circular-scale"
+                ]
+              }
+            },
+            "required": [
+              "type"
+            ]
+          }
+        }
+      ]
+    },
+    "element": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/baseElement"
+        },
+        {
+          "$ref": "#/$defs/circleElement"
+        },
+        {
+          "$ref": "#/$defs/rectangleElement"
+        },
+        {
+          "$ref": "#/$defs/imageElement"
+        },
+        {
+          "$ref": "#/$defs/textElement"
+        },
+        {
+          "$ref": "#/$defs/horizonElement"
+        },
+        {
+          "$ref": "#/$defs/graphElement"
+        },
+        {
+          "$ref": "#/$defs/circularElement"
+        },
+        {
+          "$ref": "#/$defs/circularNeedleElement"
+        },
+        {
+          "$ref": "#/$defs/circularScaleElement"
+        },
+        {
+          "$ref": "#/$defs/unknownTypedElement"
+        }
+      ]
+    },
+    "children": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/element"
+      }
     }
   }
 }
