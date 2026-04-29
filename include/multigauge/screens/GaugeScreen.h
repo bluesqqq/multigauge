@@ -16,6 +16,8 @@ class GaugeScreen : public Screen {
     public:
         explicit GaugeScreen();
 
+        void setFace(std::unique_ptr<::mg::gauge::GaugeFace> face);
+
         void onShow(RuntimeContext& ctx) override;
         void onHide(RuntimeContext& ctx) override;
         void update(RuntimeContext& ctx, uint64_t deltaUs) override;

@@ -9,6 +9,10 @@ namespace mg {
 
 GaugeScreen::GaugeScreen() = default;
 
+void GaugeScreen::setFace(std::unique_ptr<::mg::gauge::GaugeFace> newFace) {
+    face = std::move(newFace);
+}
+
 void GaugeScreen::onShow(RuntimeContext& ctx) {
     if (face) face->init(ctx.getAssetManager(), ctx.getGraphicsContext());
 }

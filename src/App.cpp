@@ -1,8 +1,13 @@
 #include <multigauge/App.h>
 
 #include <multigauge/HandlePool.h>
+#include <multigauge/editor/Api.h>
+#include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/screens/GaugeScreen.h>
+#include <multigauge/screens/EditorScreen.h>
 #include <multigauge/io/Log.h>
+
+#include <rapidjson/document.h>
 
 #include <utility>
 
@@ -87,6 +92,49 @@ bool clearScreen(ContextId id) {
 
     context->clearScreen();
     return true;
+}
+
+namespace {
+bool loadGaugeFaceFromJson(const std::string& json, std::unique_ptr<gauge::GaugeFace>& outFace) {
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+    if (doc.HasParseError() || !doc.IsObject()) return false;
+
+    auto face = std::make_unique<gauge::GaugeFace>();
+    face->load(doc);
+    outFace = std::move(face);
+    return true;
+}
+}
+
+bool setGaugeScreen(ContextId id, const std::string& json) {
+    RuntimeContext* context = getContext(id);
+    if (!context) return false;
+
+    std::unique_ptr<gauge::GaugeFace> face;
+    if (!loadGaugeFaceFromJson(json, face)) return false;
+
+    auto screen = std::make_unique<GaugeScreen>();
+    screen->setFace(std::move(face));
+    return context->setScreen(std::move(screen));
+}
+
+bool setGaugeScreenFromFile(ContextId id, const std::string& path) {
+    if (!g_fs) return false;
+
+    std::vector<uint8_t> bytes;
+    if (!g_fs->readAll(path, bytes)) return false;
+
+    std::string json(bytes.begin(), bytes.end());
+    return setGaugeScreen(id, json);
+}
+
+bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::Editor::Id faceId) {
+    RuntimeContext* context = getContext(id);
+    if (!context || !editor::exists(editorId) || !editor::isFace(editorId, faceId)) return false;
+
+    auto screen = std::make_unique<EditorScreen>(editorId, faceId);
+    return context->setScreen(std::move(screen));
 }
 
 } // namespace mg

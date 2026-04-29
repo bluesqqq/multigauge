@@ -1,6 +1,7 @@
 #pragma once
 
 #include <multigauge/RuntimeContext.h>
+#include <multigauge/editor/Api.h>
 #include <yoga/Yoga.h>
 
 #include <multigauge/io/FileSystem.h>
@@ -27,5 +28,9 @@ bool removeContext(ContextId id);
 
 bool setScreen(ContextId, std::unique_ptr<Screen> screen);
 bool clearScreen(ContextId id);
+
+bool setGaugeScreen(ContextId id, const std::string& json);
+bool setGaugeScreenFromFile(ContextId id, const std::string& path);
+bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::Editor::Id faceId);
 
 }

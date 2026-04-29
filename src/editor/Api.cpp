@@ -77,6 +77,17 @@ void clearClipboard(EditorId EditorId) {
     if (editor) editor->clearClipboard();
 }
 
+std::size_t faceCount(EditorId EditorId) {
+    Editor* editor = getEditor(EditorId);
+    return editor ? editor->faceCount() : 0;
+}
+
+Editor::Id faceAt(EditorId EditorId, std::size_t index) {
+    Editor* editor = getEditor(EditorId);
+    if (!editor || index >= editor->faceCount()) return 0;
+    return editor->idOf(editor->faceAt(index));
+}
+
 Result listElementTypes(EditorId EditorId) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->listElementTypes() : invalidEditorId();

@@ -18,6 +18,8 @@ Result getHierarchy(EditorId);
 Result getHistory(EditorId);
 ClipboardSummary getClipboardSummary(EditorId);
 void clearClipboard(EditorId);
+std::size_t faceCount(EditorId);
+Editor::Id faceAt(EditorId, std::size_t index);
 Result listElementTypes(EditorId);
 Result listValueIDs(EditorId);
 bool hasNode(EditorId, Editor::Id id);
