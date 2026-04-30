@@ -7,6 +7,7 @@ namespace mg::editor {
 namespace {
 
 HandlePool<Editor> editors;
+ClipboardState clipboard;
 
 Editor* getEditor(EditorId EditorId) {
     return editors.get(EditorId);
@@ -68,13 +69,13 @@ Result getHistory(EditorId EditorId) {
 }
 
 ClipboardSummary getClipboardSummary(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->getClipboardSummary() : ClipboardSummary{};
+    (void)EditorId;
+    return { clipboard.kind };
 }
 
 void clearClipboard(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    if (editor) editor->clearClipboard();
+    (void)EditorId;
+    clipboard.clear();
 }
 
 std::size_t faceCount(EditorId EditorId) {
@@ -186,37 +187,75 @@ Result getPropertiesMeta(EditorId EditorId, Editor::Id id, const std::string& pa
 
 Result copyFace(EditorId EditorId, Editor::Id faceId) {
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->copyFace(faceId) : invalidEditorId();
+    if (!editor) return invalidEditorId();
+
+    Result serialized = editor->serializeFace(faceId);
+    if (!serialized.ok) return serialized;
+
+    clipboard.kind = ClipboardState::Kind::Face;
+    clipboard.json = serialized.data["json"].GetString();
+    return OkObject();
 }
 
 Result cutFace(EditorId EditorId, Editor::Id faceId) {
+    Result copied = copyFace(EditorId, faceId);
+    if (!copied.ok) return copied;
+
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->cutFace(faceId) : invalidEditorId();
+    return editor ? editor->removeFace(faceId) : invalidEditorId();
 }
 
 Result pasteFace(EditorId EditorId, Editor::FacePlacement where) {
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->pasteFace(where) : invalidEditorId();
+    if (!editor) return invalidEditorId();
+
+    if (clipboard.kind != ClipboardState::Kind::Face) {
+        return Error("Clipboard does not contain a face");
+    }
+
+    return editor->createFace(clipboard.json, where);
 }
 
 Result copyElement(EditorId EditorId, Editor::Id elementId) {
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->copyElement(elementId) : invalidEditorId();
+    if (!editor) return invalidEditorId();
+
+    Result serialized = editor->serializeElement(elementId);
+    if (!serialized.ok) return serialized;
+
+    clipboard.kind = ClipboardState::Kind::Element;
+    clipboard.json = serialized.data["json"].GetString();
+    return OkObject();
 }
 
 Result cutElement(EditorId EditorId, Editor::Id elementId) {
+    Result copied = copyElement(EditorId, elementId);
+    if (!copied.ok) return copied;
+
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->cutElement(elementId) : invalidEditorId();
+    return editor ? editor->removeElement(elementId) : invalidEditorId();
 }
 
 Result pasteElement(EditorId EditorId, const Editor::ElementPlacement& where) {
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->pasteElement(where) : invalidEditorId();
+    if (!editor) return invalidEditorId();
+
+    if (clipboard.kind != ClipboardState::Kind::Element) {
+        return Error("Clipboard does not contain an element");
+    }
+
+    return editor->createElement(where, clipboard.json);
 }
 
 Result pasteToReplaceElement(EditorId EditorId, Editor::Id elementId) {
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->pasteToReplaceElement(elementId) : invalidEditorId();
+    if (!editor) return invalidEditorId();
+
+    if (clipboard.kind != ClipboardState::Kind::Element) {
+        return Error("Clipboard does not contain an element");
+    }
+
+    return editor->replaceElementFromJson(elementId, clipboard.json);
 }
 
 bool undo(EditorId EditorId) {

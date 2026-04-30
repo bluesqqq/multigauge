@@ -100,11 +100,11 @@ std::string toString(const rapidjson::Value& value) {
     return buffer.GetString();
 }
 
-std::string serializeElement(const Element& element) {
-    rapidjson::Document doc;
-    doc.SetObject();
-    element.saveToJson(doc, doc.GetAllocator());
-    return toString(doc);
+Result saveJsonResult(const std::string& json) {
+    Result result = OkObject();
+    auto& allocator = result.data.GetAllocator();
+    result.data.AddMember("json", rapidjson::Value(json.c_str(), allocator), allocator);
+    return result;
 }
 
 void collectSubtreeIds(const Editor& editor, const Element* element, std::vector<Editor::Id>& ids) {
@@ -118,7 +118,10 @@ void collectSubtreeIds(const Editor& editor, const Element* element, std::vector
 
 ElementSnapshot snapshotElement(const Editor& editor, const Element& element) {
     ElementSnapshot snapshot;
-    snapshot.json = serializeElement(element);
+    rapidjson::Document doc;
+    doc.SetObject();
+    element.saveToJson(doc, doc.GetAllocator());
+    snapshot.json = toString(doc);
     collectSubtreeIds(editor, &element, snapshot.ids);
     return snapshot;
 }
@@ -441,6 +444,21 @@ std::string Editor::saveDocument() const {
     }
 
     return toString(doc);
+}
+
+Result Editor::serializeFace(Id faceId) const {
+    const GaugeFace* face = getFaceById(faceId);
+    if (!face) return Error("Invalid face id");
+    return saveJsonResult(toString(face->save()));
+}
+
+Result Editor::serializeElement(Id elementId) const {
+    const Element* element = getElementById(elementId);
+    if (!element) return Error("Invalid element id");
+    rapidjson::Document doc;
+    doc.SetObject();
+    element->saveToJson(doc, doc.GetAllocator());
+    return saveJsonResult(toString(doc));
 }
 
 bool Editor::hasNode(Id id) const {
@@ -1053,66 +1071,6 @@ Result Editor::getPropertiesMeta(Id id, const std::string& path) const {
     result.data.AddMember("path", rapidjson::Value(path.c_str(), allocator), allocator);
     result.data.AddMember("meta", std::move(meta), allocator);
     return result;
-}
-
-ClipboardSummary Editor::getClipboardSummary() const {
-    return sharedClipboardSummary();
-}
-
-void Editor::clearClipboard() {
-    clearSharedClipboard();
-}
-
-Result Editor::copyFace(Id faceId) {
-    const GaugeFace* face = getFaceById(faceId);
-    if (!face) return Error("Invalid face id");
-
-    ClipboardState& clipboard = sharedClipboard();
-    clipboard.kind = ClipboardState::Kind::Face;
-    clipboard.json = toString(face->save());
-    return OkObject();
-}
-
-Result Editor::cutFace(Id faceId) {
-    Result copied = copyFace(faceId);
-    if (!copied.ok) return copied;
-    return removeFace(faceId);
-}
-
-Result Editor::pasteFace(FacePlacement where) {
-    const ClipboardState& clipboard = sharedClipboard();
-    if (clipboard.kind != ClipboardState::Kind::Face)
-        return Error("Clipboard does not contain a face");
-
-    return createFace(clipboard.json, where);
-}
-
-Result Editor::copyElement(Id elementId) {
-    const Element* element = getElementById(elementId);
-    if (!element) return Error("Invalid element id");
-
-    ClipboardState& clipboard = sharedClipboard();
-    clipboard.kind = ClipboardState::Kind::Element;
-    clipboard.json = serializeElement(*element);
-    return OkObject();
-}
-
-Result Editor::cutElement(Id elementId) {
-    Result copied = copyElement(elementId);
-    if (!copied.ok) return copied;
-    return removeElement(elementId);
-}
-
-Result Editor::pasteElement(const ElementPlacement& where) {
-    const ClipboardState& clipboard = sharedClipboard();
-    if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
-    return createElement(where, clipboard.json);
-}
-
-Result Editor::pasteToReplaceElement(Id elementId) {
-    const ClipboardState& clipboard = sharedClipboard();
-    if (clipboard.kind != ClipboardState::Kind::Element) return Error("Clipboard does not contain an element");
-    return replaceElementFromJson(elementId, clipboard.json);
 }
 
 Result Editor::getHistory() const {

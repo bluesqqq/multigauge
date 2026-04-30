@@ -119,10 +119,20 @@ class Editor {
 
         /// Clears the loaded document, history, and node IDs.
         void clear();
+        
         /// Loads faces and elements from a document JSON array.
         void loadDocument(const std::string& json);
+        
         /// Saves the current document as a JSON array.
         std::string saveDocument() const;
+
+        /// Serializes a single face as JSON.
+        /// @return `{ "json": string }`.
+        Result serializeFace(Id faceId) const;
+
+        /// Serializes a single element as JSON.
+        /// @return `{ "json": string }`.
+        Result serializeElement(Id elementId) const;
 
         //----------[ QUERIES ]----------//
 
@@ -152,12 +162,10 @@ class Editor {
         /// where element nodes also include `"type": string`.
         Result getHierarchy() const;
 
-        /// Lists registered element types for editor UI creation menus.
-        /// @return `[ { "name": string, "type": string }, ... ]`.
+        /// Returns the available element type descriptors.
         Result listElementTypes() const;
 
-        /// Lists known value IDs for editor UI binding menus.
-        /// @return `[ string, ... ]`.
+        /// Returns the available value IDs.
         Result listValueIDs() const;
 
         //----------[ GAUGE FACES ]----------//
@@ -215,37 +223,6 @@ class Editor {
         /// @return `{ "id": uint, "meta": object }` for an empty `path`, or
         /// `{ "id": uint, "path": string, "meta": object }` for a resolved property.
         Result getPropertiesMeta(Id id, const std::string& path = "") const;
-
-        //----------[ CLIPBOARD ]----------//
-
-        ClipboardSummary getClipboardSummary() const;
-        void clearClipboard();
-
-        /// Copies a face into the editor clipboard.
-        Result copyFace(Id faceId);
-
-        /// Copies a face into the editor clipboard and removes it.
-        Result cutFace(Id faceId);
-
-        /// Pastes a face from the editor clipboard.
-        /// @note `where.index` appends when set to `Append` or greater than the face count.
-        /// @return `{ "id": uint }` for the inserted face.
-        Result pasteFace(FacePlacement where = FacePlacement{});
-
-        /// Copies an element into the editor clipboard.
-        Result copyElement(Id elementId);
-
-        /// Copies an element into the editor clipboard and removes it.
-        Result cutElement(Id elementId);
-
-        /// Pastes an element from the editor clipboard under a face or element parent.
-        /// @note `where.parentId` may refer to either a face or an element.
-        /// @return `{ "id": uint, "parentId": uint }` for the inserted element.
-        Result pasteElement(const ElementPlacement& where);
-
-        /// Replaces an element with the current clipboard element payload.
-        /// @return `{ "id": uint }` for the replaced element.
-        Result pasteToReplaceElement(Id elementId);
 
         //----------[ HISTORY ]----------//
 

@@ -28,8 +28,4 @@ struct ClipboardSummary {
     }
 };
 
-ClipboardState& sharedClipboard();
-ClipboardSummary sharedClipboardSummary();
-void clearSharedClipboard();
-
 }

@@ -19,14 +19,7 @@ class History {
         std::size_t head = 0;
 
     public:
-        bool commit(Command cmd) {
-            if (!cmd.execute()) return false;
-
-            historyStack.erase(historyStack.begin() + head, historyStack.end());
-            historyStack.push_back(std::move(cmd));
-            head = historyStack.size();
-            return true;
-        }
+        bool commit(Command cmd);
         
         bool canUndo() const { return head > 0; }
         bool canRedo() const { return head < historyStack.size(); }

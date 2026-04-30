@@ -2,6 +2,15 @@
 
 namespace mg::editor {
 
+bool History::commit(Command cmd) {
+    if (!cmd.execute()) return false;
+
+    historyStack.erase(historyStack.begin() + head, historyStack.end());
+    historyStack.push_back(std::move(cmd));
+    head = historyStack.size();
+    return true;
+}
+
 bool History::undo() {
     if (!canUndo()) return false;
     if (!historyStack[head - 1].unexecute()) return false;
