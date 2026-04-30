@@ -1,8 +1,10 @@
 # Elements
 
-This page is a quick guide to the built-in gauge elements available in `multigauge-core`, plus a short note on how to add your own.
+This page indexes the built-in gauge elements available in `multigauge-core`.
 
 ## Overview
+
+![Element preview](../assets/placeholder.jpg)
 
 Every visible part of a gauge is an `Element` or a subclass of it. A gauge face is made from a tree of elements, where each element has:
 
@@ -28,77 +30,23 @@ The `style` block is shared across all elements and is backed by Yoga layout.
 
 ## Built-In Elements
 
-### Root Element
-
-The document root is [`RootElement`](../include/multigauge/gauge/elements/RootElement.h).
-
-- Type: none, this is implicit at the document root
-- Purpose: top-level container for the whole gauge face
-- Key props: `title`, `description`, `bgColor`
-
 ### Primitive Elements
 
-#### `rectangle`
+- [rectangle](elements/rectangle.md)
+- [circle](elements/circle.md)
+- [text](elements/text.md)
+- [image](elements/image.md)
 
-- Header: [`include/multigauge/gauge/elements/primitives/RectangleElement.h`](../include/multigauge/gauge/elements/primitives/RectangleElement.h)
-- Purpose: filled/stroked rectangle
-- Key props: `paint`, `radius`
+### Specialized Elements
 
-#### `circle`
+- [horizon](elements/horizon.md)
+- [graph](elements/graph.md)
 
-- Header: [`include/multigauge/gauge/elements/primitives/CircleElement.h`](../include/multigauge/gauge/elements/primitives/CircleElement.h)
-- Purpose: filled/stroked circle or ellipse inside the element bounds
-- Key props: `paint`
+### Circular Elements
 
-#### `text`
-
-- Header: [`include/multigauge/gauge/elements/primitives/TextElement.h`](../include/multigauge/gauge/elements/primitives/TextElement.h)
-- Purpose: draw text in the element bounds
-- Key props: `text`, `paint`, `ellipses`, `hyphens`
-
-#### `image`
-
-- Header: [`include/multigauge/gauge/elements/primitives/ImageElement.h`](../include/multigauge/gauge/elements/primitives/ImageElement.h)
-- Purpose: load and draw an image asset
-- Key props: `path`
-
-## Specialized Elements
-
-### `horizon`
-
-- Header: [`include/multigauge/gauge/elements/Horizon.h`](../include/multigauge/gauge/elements/Horizon.h)
-- Purpose: synthetic horizon-style background/grid element
-- Key props: `bgColor`, `groundColor`, `horizonColor`, `borderColor`
-
-### `graph`
-
-- Header: [`include/multigauge/gauge/elements/Graph.h`](../include/multigauge/gauge/elements/Graph.h)
-- Purpose: time-series style value graph
-- Key props: `seconds`, `bgColor`, `secondsColor`, `graphColor`, `borderColor`, `value`
-
-## Circular Elements
-
-### `circular-element`
-
-- Header: [`include/multigauge/gauge/elements/circular/CircularElement.h`](../include/multigauge/gauge/elements/circular/CircularElement.h)
-- Purpose: base circular container and shared circular property source
-- Key props: `value`, `startAngle`, `endAngle`
-
-`CircularElement` is useful as a parent node because child circular elements inherit `value`, `startAngle`, and `endAngle` from the nearest circular ancestor when their own values are unset.
-
-### `circular-scale`
-
-- Header: [`include/multigauge/gauge/elements/circular/CircularScale.h`](../include/multigauge/gauge/elements/circular/CircularScale.h)
-- Purpose: draw a circular tick scale
-- Key props: `ticks`, `radius`
-
-Tick data lives under [`include/multigauge/gauge/ticks`](../include/multigauge/gauge/ticks).
-
-### `circular-needle`
-
-- Header: [`include/multigauge/gauge/elements/circular/CircularNeedle.h`](../include/multigauge/gauge/elements/circular/CircularNeedle.h)
-- Purpose: draw a needle against a circular value range
-- Key props: `paint`, `radius`
+- [circular-element](elements/circular-element.md)
+- [circular-scale](elements/circular-scale.md)
+- [circular-needle](elements/circular-needle.md)
 
 ## Implementing Your Own Element
 
