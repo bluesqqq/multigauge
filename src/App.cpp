@@ -1,5 +1,6 @@
 #include <multigauge/App.h>
 
+#include <multigauge/RuntimeContext.h>
 #include <multigauge/HandlePool.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/gauge/GaugeFace.h>
@@ -80,6 +81,10 @@ bool removeContext(ContextId id) { return contexts.remove(id); }
 
 RuntimeContext* getContext(ContextId id) { return contexts.get(id); }
 
+bool hasContext(ContextId id) { return contexts.exists(id); }
+
+std::size_t contextCount() { return contexts.size(); }
+
 bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
     RuntimeContext* context = getContext(id);
     if (!context || !screen) return false;
@@ -92,6 +97,13 @@ bool clearScreen(ContextId id) {
 
     context->clearScreen();
     return true;
+}
+
+bool hasScreen(ContextId id) {
+    RuntimeContext* context = getContext(id);
+    if (!context) return false;
+
+    return context->getScreen();
 }
 
 namespace {
@@ -129,9 +141,10 @@ bool setGaugeScreenFromFile(ContextId id, const std::string& path) {
     return setGaugeScreen(id, json);
 }
 
-bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::Editor::Id faceId) {
+bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
     RuntimeContext* context = getContext(id);
-    if (!context || !editor::exists(editorId) || !editor::isFace(editorId, faceId)) return false;
+    if (!context) return false;
+    if (!editor::exists(editorId) || !editor::isFace(editorId, faceId)) return false;
 
     auto screen = std::make_unique<EditorScreen>(editorId, faceId);
     return context->setScreen(std::move(screen));

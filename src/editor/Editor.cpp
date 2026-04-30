@@ -16,32 +16,32 @@ namespace {
 struct FaceInsertState {
     GaugeFace* face = nullptr;
     std::size_t index = 0;
-    Editor::Id faceId = 0;
-    std::vector<std::vector<Editor::Id>> rootIds;
+    NodeId faceId = 0;
+    std::vector<std::vector<NodeId>> rootIds;
     bool initialized = false;
 };
 
 struct FaceRemoveState {
     GaugeFace* face = nullptr;
-    Editor::Id faceId = 0;
+    NodeId faceId = 0;
     std::size_t index = 0;
-    std::vector<std::vector<Editor::Id>> rootIds;
+    std::vector<std::vector<NodeId>> rootIds;
 };
 
 struct FaceReorderState {
     GaugeFace* face = nullptr;
-    Editor::Id faceId = 0;
+    NodeId faceId = 0;
     std::size_t from = 0;
     std::size_t to = 0;
 };
 
 struct ElementSnapshot {
     std::string json;
-    std::vector<Editor::Id> ids;
+    std::vector<NodeId> ids;
 };
 
 struct ElementCreateState {
-    Editor::Id parentId = 0;
+    NodeId parentId = 0;
     std::size_t index = 0;
     std::string json;
     ElementSnapshot created;
@@ -49,30 +49,30 @@ struct ElementCreateState {
 };
 
 struct ElementRemoveState {
-    Editor::Id parentId = 0;
+    NodeId parentId = 0;
     std::size_t index = 0;
     ElementSnapshot removed;
 };
 
 struct ElementReorderState {
-    Editor::Id parentId = 0;
-    Editor::Id elementId = 0;
+    NodeId parentId = 0;
+    NodeId elementId = 0;
     std::size_t from = 0;
     std::size_t to = 0;
 };
 
 struct ElementMoveState {
-    Editor::Id elementId = 0;
-    Editor::Id oldParentId = 0;
-    Editor::Id newParentId = 0;
+    NodeId elementId = 0;
+    NodeId oldParentId = 0;
+    NodeId newParentId = 0;
     std::size_t fromIndex = 0;
     std::size_t toIndex = 0;
 };
 
 struct ReplaceState {
-    Editor::Id targetId = 0;
-    Editor::Id faceId = 0;
-    Editor::Id parentId = 0;
+    NodeId targetId = 0;
+    NodeId faceId = 0;
+    NodeId parentId = 0;
     std::size_t index = 0;
     ElementSnapshot before;
     ElementSnapshot after;
@@ -81,7 +81,7 @@ struct ReplaceState {
 };
 
 struct PropertySetState {
-    Editor::Id nodeId = 0;
+    NodeId nodeId = 0;
     std::string path;
     std::string beforeJson;
     std::string afterJson;
@@ -107,7 +107,7 @@ Result saveJsonResult(const std::string& json) {
     return result;
 }
 
-void collectSubtreeIds(const Editor& editor, const Element* element, std::vector<Editor::Id>& ids) {
+void collectSubtreeIds(const Editor& editor, const Element* element, std::vector<NodeId>& ids) {
     if (!element) return;
 
     ids.push_back(editor.idOf(element));
@@ -126,12 +126,12 @@ ElementSnapshot snapshotElement(const Editor& editor, const Element& element) {
     return snapshot;
 }
 
-std::vector<std::vector<Editor::Id>> snapshotFaceRootIds(const Editor& editor, const GaugeFace& face) {
-    std::vector<std::vector<Editor::Id>> rootIds;
+std::vector<std::vector<NodeId>> snapshotFaceRootIds(const Editor& editor, const GaugeFace& face) {
+    std::vector<std::vector<NodeId>> rootIds;
     rootIds.reserve(face.childCount());
 
     for (std::size_t i = 0; i < face.childCount(); ++i) {
-        std::vector<Editor::Id> ids;
+        std::vector<NodeId> ids;
         collectSubtreeIds(editor, face.childAt(i), ids);
         rootIds.push_back(std::move(ids));
     }
@@ -175,14 +175,14 @@ std::size_t indexOfChild(const Element& parent, const Element* child) {
     return Editor::Append;
 }
 
-Result okWithId(Editor::Id id) {
+Result okWithId(NodeId id) {
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
     result.data.AddMember("id", id, allocator);
     return result;
 }
 
-Result okWithIds(Editor::Id id, Editor::Id parentId) {
+Result okWithIds(NodeId id, NodeId parentId) {
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
     result.data.AddMember("id", id, allocator);
@@ -194,7 +194,7 @@ void appendElementHierarchyNode(const Editor& editor,
                                 const Element& element,
                                 rapidjson::Value& nodes,
                                 rapidjson::Document::AllocatorType& allocator) {
-    const Editor::Id id = editor.idOf(&element);
+    const NodeId id = editor.idOf(&element);
     rapidjson::Value nodeKey(std::to_string(id).c_str(), allocator);
     rapidjson::Value nodeValue(rapidjson::kObjectType);
 
@@ -221,27 +221,27 @@ void appendElementHierarchyNode(const Editor& editor,
 
 } // namespace
 
-Editor::NodeRef* Editor::getNode(Id id) {
+Editor::NodeRef* Editor::getNode(NodeId id) {
     auto it = nodes.find(id);
     return it == nodes.end() ? nullptr : &it->second;
 }
 
-const Editor::NodeRef* Editor::getNode(Id id) const {
+const Editor::NodeRef* Editor::getNode(NodeId id) const {
     auto it = nodes.find(id);
     return it == nodes.end() ? nullptr : &it->second;
 }
 
-Editor::Id Editor::registerFace(GaugeFace* face) {
+NodeId Editor::registerFace(GaugeFace* face) {
     if (!face) return 0;
 
     auto it = faceToId.find(face);
     if (it != faceToId.end()) return it->second;
 
-    const Id id = makeId();
+    const NodeId id = makeId();
     return registerFaceWithId(id, face);
 }
 
-Editor::Id Editor::registerFaceWithId(Id id, GaugeFace* face) {
+NodeId Editor::registerFaceWithId(NodeId id, GaugeFace* face) {
     if (!face || id == 0) return 0;
     if (nextId <= id) nextId = id + 1;
 
@@ -250,17 +250,17 @@ Editor::Id Editor::registerFaceWithId(Id id, GaugeFace* face) {
     return id;
 }
 
-Editor::Id Editor::registerElement(Element* element) {
+NodeId Editor::registerElement(Element* element) {
     if (!element) return 0;
 
     auto it = elementToId.find(element);
     if (it != elementToId.end()) return it->second;
 
-    const Id id = makeId();
+    const NodeId id = makeId();
     return registerElementWithId(id, element);
 }
 
-Editor::Id Editor::registerElementWithId(Id id, Element* element) {
+NodeId Editor::registerElementWithId(NodeId id, Element* element) {
     if (!element || id == 0) return 0;
     if (nextId <= id) nextId = id + 1;
 
@@ -278,7 +278,7 @@ void Editor::registerSubtree(Element* element) {
     }
 }
 
-bool Editor::registerSubtreeWithIds(Element* element, const std::vector<Id>& ids, std::size_t& nextIndex) {
+bool Editor::registerSubtreeWithIds(Element* element, const std::vector<NodeId>& ids, std::size_t& nextIndex) {
     if (!element) return false;
     if (nextIndex >= ids.size()) return false;
 
@@ -317,39 +317,39 @@ void Editor::unregisterElementRecursive(Element* element) {
     }
 }
 
-GaugeFace* Editor::getFaceById(Id id) {
+GaugeFace* Editor::getFaceById(NodeId id) {
     NodeRef* node = getNode(id);
     return (node && node->kind == NodeKind::Face) ? node->face : nullptr;
 }
 
-const GaugeFace* Editor::getFaceById(Id id) const {
+const GaugeFace* Editor::getFaceById(NodeId id) const {
     const NodeRef* node = getNode(id);
     return (node && node->kind == NodeKind::Face) ? node->face : nullptr;
 }
 
-Element* Editor::getElementById(Id id) {
+Element* Editor::getElementById(NodeId id) {
     NodeRef* node = getNode(id);
     return (node && node->kind == NodeKind::Element) ? node->element : nullptr;
 }
 
-const Element* Editor::getElementById(Id id) const {
+const Element* Editor::getElementById(NodeId id) const {
     const NodeRef* node = getNode(id);
     return (node && node->kind == NodeKind::Element) ? node->element : nullptr;
 }
 
-::mg::PropertyObject* Editor::getObjectById(Id id) {
+::mg::PropertyObject* Editor::getObjectById(NodeId id) {
     if (GaugeFace* face = getFaceById(id)) return face;
     if (Element* element = getElementById(id)) return element;
     return nullptr;
 }
 
-const ::mg::PropertyObject* Editor::getObjectById(Id id) const {
+const ::mg::PropertyObject* Editor::getObjectById(NodeId id) const {
     if (const GaugeFace* face = getFaceById(id)) return face;
     if (const Element* element = getElementById(id)) return element;
     return nullptr;
 }
 
-Editor::ElementContainerRef Editor::getElementContainerById(Id id) {
+Editor::ElementContainerRef Editor::getElementContainerById(NodeId id) {
     if (GaugeFace* face = getFaceById(id)) return { face, nullptr };
     if (Element* element = getElementById(id)) return { nullptr, element };
     return {};
@@ -367,15 +367,9 @@ Editor::ElementContainerRef Editor::getElementContainerOf(Element* element) {
     return {};
 }
 
-Editor::Id Editor::idOfContainer(const ElementContainerRef& container) const {
+NodeId Editor::idOfContainer(const ElementContainerRef& container) const {
     if (container.face) return idOf(container.face);
     if (container.element) return idOf(container.element);
-    return 0;
-}
-
-std::size_t Editor::childCountOf(const ElementContainerRef& container) const {
-    if (container.face) return container.face->childCount();
-    if (container.element) return container.element->childCount();
     return 0;
 }
 
@@ -389,12 +383,6 @@ OwnedElement Editor::removeFromContainer(const ElementContainerRef& container, E
     if (container.face) return container.face->removeChild(child);
     if (container.element) return container.element->removeChild(child);
     return {};
-}
-
-std::size_t Editor::indexInContainer(const ElementContainerRef& container, const Element* child) const {
-    if (container.face) return indexOfRoot(*container.face, child);
-    if (container.element) return indexOfChild(*container.element, child);
-    return Append;
 }
 
 void Editor::clear() {
@@ -446,13 +434,13 @@ std::string Editor::saveDocument() const {
     return toString(doc);
 }
 
-Result Editor::serializeFace(Id faceId) const {
+Result Editor::serializeFace(NodeId faceId) const {
     const GaugeFace* face = getFaceById(faceId);
     if (!face) return Error("Invalid face id");
     return saveJsonResult(toString(face->save()));
 }
 
-Result Editor::serializeElement(Id elementId) const {
+Result Editor::serializeElement(NodeId elementId) const {
     const Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
     rapidjson::Document doc;
@@ -461,24 +449,24 @@ Result Editor::serializeElement(Id elementId) const {
     return saveJsonResult(toString(doc));
 }
 
-bool Editor::hasNode(Id id) const {
+bool Editor::hasNode(NodeId id) const {
     return getNode(id) != nullptr;
 }
 
-bool Editor::isFace(Id id) const {
+bool Editor::isFace(NodeId id) const {
     return getFaceById(id) != nullptr;
 }
 
-bool Editor::isElement(Id id) const {
+bool Editor::isElement(NodeId id) const {
     return getElementById(id) != nullptr;
 }
 
-Editor::Id Editor::idOf(const GaugeFace* face) const {
+NodeId Editor::idOf(const GaugeFace* face) const {
     auto it = faceToId.find(const_cast<GaugeFace*>(face));
     return it == faceToId.end() ? 0 : it->second;
 }
 
-Editor::Id Editor::idOf(const Element* element) const {
+NodeId Editor::idOf(const Element* element) const {
     auto it = elementToId.find(const_cast<Element*>(element));
     return it == elementToId.end() ? 0 : it->second;
 }
@@ -495,7 +483,7 @@ Result Editor::getHierarchy() const {
     for (const auto& face : faces) {
         if (!face) continue;
 
-        const Id faceId = idOf(face.get());
+        const NodeId faceId = idOf(face.get());
         roots.PushBack(faceId, allocator);
 
         rapidjson::Value nodeKey(std::to_string(faceId).c_str(), allocator);
@@ -562,7 +550,7 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
     if (!doc.IsObject()) return Error("Invalid JSON");
 
     const std::size_t index = clampIndex(where.index, faces.size());
-    const Id id = makeId();
+    const NodeId id = makeId();
 
     auto state = std::make_shared<FaceInsertState>();
     state->index = index;
@@ -612,7 +600,7 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
     return committed ? okWithId(id) : Error("Failed to create face");
 }
 
-Result Editor::removeFace(Id faceId) {
+Result Editor::removeFace(NodeId faceId) {
     auto it = std::find_if(faces.begin(), faces.end(),
         [&](const auto& f) { return idOf(f.get()) == faceId; });
 
@@ -663,7 +651,7 @@ Result Editor::removeFace(Id faceId) {
     return committed ? OkObject() : Error("Failed to remove face");
 }
 
-Result Editor::reorderFace(Id faceId, std::size_t index) {
+Result Editor::reorderFace(NodeId faceId, std::size_t index) {
     auto it = std::find_if(faces.begin(), faces.end(),
         [&](const auto& f) { return idOf(f.get()) == faceId; });
 
@@ -753,7 +741,7 @@ Result Editor::createElement(const ElementPlacement& where, const std::string& j
     return committed ? okWithIds(state->created.ids.front(), where.parentId) : Error("Failed to create element");
 }
 
-Result Editor::removeElement(Id elementId) {
+Result Editor::removeElement(NodeId elementId) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -793,7 +781,7 @@ Result Editor::removeElement(Id elementId) {
     return committed ? OkObject() : Error("Failed to remove element");
 }
 
-Result Editor::reorderElement(Id elementId, std::size_t index) {
+Result Editor::reorderElement(NodeId elementId, std::size_t index) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -831,7 +819,7 @@ Result Editor::reorderElement(Id elementId, std::size_t index) {
     return committed ? OkObject() : Error("Failed to reorder element");
 }
 
-Result Editor::moveElement(Id elementId, const ElementPlacement& where) {
+Result Editor::moveElement(NodeId elementId, const ElementPlacement& where) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -883,7 +871,7 @@ Result Editor::moveElement(Id elementId, const ElementPlacement& where) {
     return committed ? okWithIds(elementId, where.parentId) : Error("Failed to move element");
 }
 
-Result Editor::replaceElementFromJson(Id elementId, const std::string& json) {
+Result Editor::replaceElement(NodeId elementId, const std::string& json) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
@@ -975,7 +963,7 @@ Result Editor::replaceElementFromJson(Id elementId, const std::string& json) {
     return committed ? okWithId(state->targetId) : Error("Failed to replace element");
 }
 
-Result Editor::setProperty(Id id, const std::string& path, const std::string& json) {
+Result Editor::setProperty(NodeId id, const std::string& path, const std::string& json) {
     ::mg::PropertyObject* object = getObjectById(id);
     if (!object) return Error("Invalid id");
 
@@ -1026,7 +1014,7 @@ Result Editor::setProperty(Id id, const std::string& path, const std::string& js
     return committed ? OkObject() : Error("Failed to set property");
 }
 
-Result Editor::getProperty(Id id, const std::string& path) const {
+Result Editor::getProperty(NodeId id, const std::string& path) const {
     const NodeRef* node = getNode(id);
     if (!node) return Error("Invalid id");
     if (path.empty()) return Error("Property path is required");
@@ -1047,7 +1035,7 @@ Result Editor::getProperty(Id id, const std::string& path) const {
     return result;
 }
 
-Result Editor::getPropertiesMeta(Id id, const std::string& path) const {
+Result Editor::getPropertiesMeta(NodeId id, const std::string& path) const {
     const NodeRef* node = getNode(id);
     if (!node) return Error("Invalid id");
 

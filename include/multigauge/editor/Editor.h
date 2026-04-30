@@ -1,13 +1,13 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include <multigauge/editor/Clipboard.h>
+#include <multigauge/editor/Types.h>
 #include <multigauge/editor/Result.h>
 #include <multigauge/editor/History.h>
 #include <multigauge/gauge/GaugeFace.h>
@@ -20,27 +20,12 @@ using ::mg::gauge::OwnedElement;
 
 class Editor {
     public:
-        /// Identifies a face or element within the editor.
-        using Id = uint32_t;
         /// Appends at the end of a sibling list when used as an index.
         static constexpr std::size_t Append = static_cast<std::size_t>(-1);
 
         enum class NodeKind {
             Face,
             Element
-        };
-
-        struct FacePlacement {
-            std::size_t index;
-
-            explicit FacePlacement(std::size_t i = Append) : index(i) {}
-        };
-
-        struct ElementPlacement {
-            Id parentId;
-            std::size_t index;
-
-            ElementPlacement(Id p = 0, std::size_t i = Append) : parentId(p), index(i) {}
         };
 
     private:
@@ -66,43 +51,61 @@ class Editor {
 
         std::vector<std::unique_ptr<GaugeFace>> faces;
 
-        std::unordered_map<Id, NodeRef> nodes;
-        std::unordered_map<GaugeFace*, Id> faceToId;
-        std::unordered_map<Element*, Id> elementToId;
+        std::unordered_map<NodeId, NodeRef> nodes;
+        std::unordered_map<GaugeFace*, NodeId> faceToId;
+        std::unordered_map<Element*, NodeId> elementToId;
 
-        Id nextId = 1;
+        NodeId nextId = 1;
         History history;
     private:
         //----------[ INTERNAL HELPERS ]----------//
 
-        Id makeId() { return nextId++; }
+        NodeId makeId() { return nextId++; }
 
-        NodeRef* getNode(Id id);
-        const NodeRef* getNode(Id id) const;
+        NodeRef* getNode(NodeId id);
+        const NodeRef* getNode(NodeId id) const;
 
-        Id registerFace(GaugeFace* face);
-        Id registerFaceWithId(Id id, GaugeFace* face);
-        Id registerElement(Element* element);
-        Id registerElementWithId(Id id, Element* element);
+        NodeId registerFace(GaugeFace* face);
+        NodeId registerFaceWithId(NodeId id, GaugeFace* face);
+        NodeId registerElement(Element* element);
+        NodeId registerElementWithId(NodeId id, Element* element);
         void registerSubtree(Element* element);
-        bool registerSubtreeWithIds(Element* element, const std::vector<Id>& ids, std::size_t& nextIndex);
+        bool registerSubtreeWithIds(Element* element, const std::vector<NodeId>& ids, std::size_t& nextIndex);
         void unregisterFace(GaugeFace* face);
         void unregisterElementRecursive(Element* element);
 
-        GaugeFace* getFaceById(Id id);
-        const GaugeFace* getFaceById(Id id) const;
+        GaugeFace* getFaceById(NodeId id);
+        const GaugeFace* getFaceById(NodeId id) const;
 
-        Element* getElementById(Id id);
-        const Element* getElementById(Id id) const;
-        ::mg::PropertyObject* getObjectById(Id id);
-        const ::mg::PropertyObject* getObjectById(Id id) const;
-        ElementContainerRef getElementContainerById(Id id);
+        Element* getElementById(NodeId id);
+        const Element* getElementById(NodeId id) const;
+        ::mg::PropertyObject* getObjectById(NodeId id);
+        const ::mg::PropertyObject* getObjectById(NodeId id) const;
+        ElementContainerRef getElementContainerById(NodeId id);
         ElementContainerRef getElementContainerOf(Element* element);
-        Id idOfContainer(const ElementContainerRef& container) const;
-        std::size_t childCountOf(const ElementContainerRef& container) const;
+        NodeId idOfContainer(const ElementContainerRef& container) const;
         bool insertIntoContainer(const ElementContainerRef& container, OwnedElement child, std::size_t index);
         OwnedElement removeFromContainer(const ElementContainerRef& container, Element* child);
-        std::size_t indexInContainer(const ElementContainerRef& container, const Element* child) const;
+        std::size_t childCountOf(const ElementContainerRef& container) const {
+            if (container.face) return container.face->childCount();
+            if (container.element) return container.element->childCount();
+            return 0;
+        }
+        std::size_t indexInContainer(const ElementContainerRef& container, const Element* child) const {
+            if (container.face) {
+                for (std::size_t i = 0; i < container.face->childCount(); ++i) {
+                    if (container.face->childAt(i) == child) return i;
+                }
+                return Append;
+            }
+            if (container.element) {
+                for (std::size_t i = 0; i < container.element->childCount(); ++i) {
+                    if (container.element->childAt(i) == child) return i;
+                }
+                return Append;
+            }
+            return Append;
+        }
 
         static std::size_t clampIndex(std::size_t index, std::size_t size) {
             return (index == Append || index > size) ? size : index;
@@ -128,30 +131,30 @@ class Editor {
 
         /// Serializes a single face as JSON.
         /// @return `{ "json": string }`.
-        Result serializeFace(Id faceId) const;
+        Result serializeFace(NodeId faceId) const;
 
         /// Serializes a single element as JSON.
         /// @return `{ "json": string }`.
-        Result serializeElement(Id elementId) const;
+        Result serializeElement(NodeId elementId) const;
 
         //----------[ QUERIES ]----------//
 
         /// Returns whether a face or element with `id` exists.
-        bool hasNode(Id id) const;
+        bool hasNode(NodeId id) const;
 
         /// Returns whether `id` refers to a face.
-        bool isFace(Id id) const;
+        bool isFace(NodeId id) const;
 
         /// Returns whether `id` refers to an element.
-        bool isElement(Id id) const;
+        bool isElement(NodeId id) const;
 
         /// Returns the editor ID for `face`.
         /// @return Face ID, or `0` if `face` is not registered.
-        Id idOf(const GaugeFace* face) const;
+        NodeId idOf(const GaugeFace* face) const;
 
         /// Returns the editor ID for `element`.
         /// @return Element ID, or `0` if `element` is not registered.
-        Id idOf(const Element* element) const;
+        NodeId idOf(const Element* element) const;
 
         std::size_t faceCount() const { return faces.size(); }
         GaugeFace* faceAt(std::size_t index) { return faces.at(index).get(); }
@@ -176,11 +179,11 @@ class Editor {
         Result createFace(const std::string& json, FacePlacement where = FacePlacement{});
 
         /// Removes a face from the face list.
-        Result removeFace(Id faceId);
+        Result removeFace(NodeId faceId);
 
         /// Reorders a face within the face list.
         /// @note `index` is zero-based and clamps to the valid face range.
-        Result reorderFace(Id faceId, std::size_t index);
+        Result reorderFace(NodeId faceId, std::size_t index);
 
         //----------[ ELEMENTS ]----------//
 
@@ -191,38 +194,38 @@ class Editor {
         Result createElement(const ElementPlacement& where, const std::string& json);
 
         /// Removes an element from its current parent.
-        Result removeElement(Id elementId);
+        Result removeElement(NodeId elementId);
 
         /// Reorders an element within its current parent.
         /// @note `index` is zero-based and clamps to the valid sibling range.
-        Result reorderElement(Id elementId, std::size_t index);
+        Result reorderElement(NodeId elementId, std::size_t index);
 
         /// Moves an element to a new face or element parent.
         /// @note `where.parentId` may refer to either a face or an element.
         /// @note `where.index` appends when set to `Append` or greater than the destination child count.
         /// @return `{ "id": uint, "parentId": uint }` for the moved element.
-        Result moveElement(Id elementId, const ElementPlacement& where);
+        Result moveElement(NodeId elementId, const ElementPlacement& where);
 
         /// Replaces an element with a new element loaded from JSON.
         /// @return `{ "id": uint }` for the replaced element.
-        Result replaceElementFromJson(Id elementId, const std::string& json);
+        Result replaceElement(NodeId elementId, const std::string& json);
 
         //----------[ PROPERTIES ]----------//
 
         /// Sets a property on a face or element from JSON.
         /// @param path Dotted property path such as `"style.margin.left"`.
-        Result setProperty(Id id, const std::string& path, const std::string& json);
+        Result setProperty(NodeId id, const std::string& path, const std::string& json);
 
         /// Gets a property from a face or element.
         /// @param path Dotted property path such as `"style.margin.left"`.
         /// @return `{ "id": uint, "path": string, "value": any }`.
-        Result getProperty(Id id, const std::string& path) const;
+        Result getProperty(NodeId id, const std::string& path) const;
 
         /// Gets property metadata from a face or element.
         /// @param path Dotted property path, or empty to describe the whole object.
         /// @return `{ "id": uint, "meta": object }` for an empty `path`, or
         /// `{ "id": uint, "path": string, "meta": object }` for a resolved property.
-        Result getPropertiesMeta(Id id, const std::string& path = "") const;
+        Result getPropertiesMeta(NodeId id, const std::string& path = "") const;
 
         //----------[ HISTORY ]----------//
 

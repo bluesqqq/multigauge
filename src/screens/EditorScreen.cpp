@@ -2,10 +2,14 @@
 
 namespace mg {
 
-EditorScreen::EditorScreen(editor::EditorId editorId, editor::Editor::Id faceId)
+namespace editor {
+gauge::GaugeFace* getFace(EditorId editorId, NodeId faceId);
+}
+
+EditorScreen::EditorScreen(editor::EditorId editorId, editor::NodeId faceId)
     : editorId(editorId), faceId(faceId) {}
 
-void EditorScreen::setFace(editor::EditorId newEditorId, editor::Editor::Id newFaceId) {
+void EditorScreen::setFace(editor::EditorId newEditorId, editor::NodeId newFaceId) {
     editorId = newEditorId;
     faceId = newFaceId;
     lastFace = nullptr;

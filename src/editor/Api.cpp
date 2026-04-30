@@ -1,4 +1,6 @@
 #include <multigauge/editor/Api.h>
+#include <multigauge/editor/Clipboard.h>
+#include <multigauge/editor/Editor.h>
 
 #include <multigauge/HandlePool.h>
 
@@ -24,6 +26,19 @@ Result saveJsonResult(const std::string& json) {
     return result;
 }
 
+}
+
+gauge::GaugeFace* getFace(EditorId EditorId, NodeId faceId) {
+    Editor* editor = getEditor(EditorId);
+    if (!editor || !editor->isFace(faceId)) return nullptr;
+
+    for (std::size_t i = 0; i < editor->faceCount(); ++i) {
+        if (editor->faceAt(i) && editor->idOf(editor->faceAt(i)) == faceId) {
+            return editor->faceAt(i);
+        }
+    }
+
+    return nullptr;
 }
 
 EditorId create() {
@@ -83,7 +98,7 @@ std::size_t faceCount(EditorId EditorId) {
     return editor ? editor->faceCount() : 0;
 }
 
-Editor::Id faceAt(EditorId EditorId, std::size_t index) {
+NodeId faceAt(EditorId EditorId, std::size_t index) {
     Editor* editor = getEditor(EditorId);
     if (!editor || index >= editor->faceCount()) return 0;
     return editor->idOf(editor->faceAt(index));
@@ -99,93 +114,77 @@ Result listValueIDs(EditorId EditorId) {
     return editor ? editor->listValueIDs() : invalidEditorId();
 }
 
-bool hasNode(EditorId EditorId, Editor::Id id) {
+bool hasNode(EditorId EditorId, NodeId id) {
     Editor* editor = getEditor(EditorId);
     return editor && editor->hasNode(id);
 }
 
-bool isFace(EditorId EditorId, Editor::Id id) {
+bool isFace(EditorId EditorId, NodeId id) {
     Editor* editor = getEditor(EditorId);
     return editor && editor->isFace(id);
 }
 
-bool isElement(EditorId EditorId, Editor::Id id) {
+bool isElement(EditorId EditorId, NodeId id) {
     Editor* editor = getEditor(EditorId);
     return editor && editor->isElement(id);
 }
 
-gauge::GaugeFace* getFace(EditorId EditorId, Editor::Id faceId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor || !editor->isFace(faceId)) return nullptr;
-
-    for (std::size_t i = 0; i < editor->faceCount(); ++i) {
-        gauge::GaugeFace* face = editor->faceAt(i);
-        if (face && editor->idOf(face) == faceId) return face;
-    }
-
-    return nullptr;
-}
-
-const gauge::GaugeFace* getFace(EditorId EditorId, Editor::Id faceId, std::nullptr_t) {
-    return getFace(EditorId, faceId);
-}
-
-Result createFace(EditorId EditorId, const std::string& json, Editor::FacePlacement where) {
+Result createFace(EditorId EditorId, const std::string& json, FacePlacement where) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->createFace(json, where) : invalidEditorId();
 }
 
-Result removeFace(EditorId EditorId, Editor::Id faceId) {
+Result removeFace(EditorId EditorId, NodeId faceId) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->removeFace(faceId) : invalidEditorId();
 }
 
-Result reorderFace(EditorId EditorId, Editor::Id faceId, std::size_t index) {
+Result reorderFace(EditorId EditorId, NodeId faceId, std::size_t index) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->reorderFace(faceId, index) : invalidEditorId();
 }
 
-Result createElement(EditorId EditorId, const Editor::ElementPlacement& where, const std::string& json) {
+Result createElement(EditorId EditorId, const ElementPlacement& where, const std::string& json) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->createElement(where, json) : invalidEditorId();
 }
 
-Result removeElement(EditorId EditorId, Editor::Id elementId) {
+Result removeElement(EditorId EditorId, NodeId elementId) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->removeElement(elementId) : invalidEditorId();
 }
 
-Result reorderElement(EditorId EditorId, Editor::Id elementId, std::size_t index) {
+Result reorderElement(EditorId EditorId, NodeId elementId, std::size_t index) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->reorderElement(elementId, index) : invalidEditorId();
 }
 
-Result moveElement(EditorId EditorId, Editor::Id elementId, const Editor::ElementPlacement& where) {
+Result moveElement(EditorId EditorId, NodeId elementId, const ElementPlacement& where) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->moveElement(elementId, where) : invalidEditorId();
 }
 
-Result replaceElementFromJson(EditorId EditorId, Editor::Id elementId, const std::string& json) {
+Result replaceElement(EditorId EditorId, NodeId elementId, const std::string& json) {
     Editor* editor = getEditor(EditorId);
-    return editor ? editor->replaceElementFromJson(elementId, json) : invalidEditorId();
+    return editor ? editor->replaceElement(elementId, json) : invalidEditorId();
 }
 
-Result setProperty(EditorId EditorId, Editor::Id id, const std::string& path, const std::string& json) {
+Result setProperty(EditorId EditorId, NodeId id, const std::string& path, const std::string& json) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->setProperty(id, path, json) : invalidEditorId();
 }
 
-Result getProperty(EditorId EditorId, Editor::Id id, const std::string& path) {
+Result getProperty(EditorId EditorId, NodeId id, const std::string& path) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->getProperty(id, path) : invalidEditorId();
 }
 
-Result getPropertiesMeta(EditorId EditorId, Editor::Id id, const std::string& path) {
+Result getPropertiesMeta(EditorId EditorId, NodeId id, const std::string& path) {
     Editor* editor = getEditor(EditorId);
     return editor ? editor->getPropertiesMeta(id, path) : invalidEditorId();
 }
 
-Result copyFace(EditorId EditorId, Editor::Id faceId) {
+Result copyFace(EditorId EditorId, NodeId faceId) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
 
@@ -197,7 +196,7 @@ Result copyFace(EditorId EditorId, Editor::Id faceId) {
     return OkObject();
 }
 
-Result cutFace(EditorId EditorId, Editor::Id faceId) {
+Result cutFace(EditorId EditorId, NodeId faceId) {
     Result copied = copyFace(EditorId, faceId);
     if (!copied.ok) return copied;
 
@@ -205,7 +204,7 @@ Result cutFace(EditorId EditorId, Editor::Id faceId) {
     return editor ? editor->removeFace(faceId) : invalidEditorId();
 }
 
-Result pasteFace(EditorId EditorId, Editor::FacePlacement where) {
+Result pasteFace(EditorId EditorId, FacePlacement where) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
 
@@ -216,7 +215,7 @@ Result pasteFace(EditorId EditorId, Editor::FacePlacement where) {
     return editor->createFace(clipboard.json, where);
 }
 
-Result copyElement(EditorId EditorId, Editor::Id elementId) {
+Result copyElement(EditorId EditorId, NodeId elementId) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
 
@@ -228,7 +227,7 @@ Result copyElement(EditorId EditorId, Editor::Id elementId) {
     return OkObject();
 }
 
-Result cutElement(EditorId EditorId, Editor::Id elementId) {
+Result cutElement(EditorId EditorId, NodeId elementId) {
     Result copied = copyElement(EditorId, elementId);
     if (!copied.ok) return copied;
 
@@ -236,7 +235,7 @@ Result cutElement(EditorId EditorId, Editor::Id elementId) {
     return editor ? editor->removeElement(elementId) : invalidEditorId();
 }
 
-Result pasteElement(EditorId EditorId, const Editor::ElementPlacement& where) {
+Result pasteElement(EditorId EditorId, const ElementPlacement& where) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
 
@@ -247,7 +246,7 @@ Result pasteElement(EditorId EditorId, const Editor::ElementPlacement& where) {
     return editor->createElement(where, clipboard.json);
 }
 
-Result pasteToReplaceElement(EditorId EditorId, Editor::Id elementId) {
+Result pasteToReplaceElement(EditorId EditorId, NodeId elementId) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
 
@@ -255,7 +254,7 @@ Result pasteToReplaceElement(EditorId EditorId, Editor::Id elementId) {
         return Error("Clipboard does not contain an element");
     }
 
-    return editor->replaceElementFromJson(elementId, clipboard.json);
+    return editor->replaceElement(elementId, clipboard.json);
 }
 
 bool undo(EditorId EditorId) {
