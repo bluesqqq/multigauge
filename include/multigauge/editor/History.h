@@ -42,6 +42,17 @@ class History {
             ++head;
             return true;
         }
+
+        std::vector<std::string> names() const {
+            std::vector<std::string> result;
+            result.reserve(historyStack.size());
+
+            for (const auto& command : historyStack) {
+                result.push_back(command.name);
+            }
+
+            return result;
+        }
 };
 
 }

@@ -258,8 +258,8 @@ class Editor {
         /// Redoes the next committed edit.
         bool redo() { return history.redo(); }
 
-        /// Returns undo and redo availability for editor UI state.
-        /// @return `{ "canUndo": bool, "canRedo": bool }`.
+        /// Returns the history command names in order.
+        /// @return `[ string, ... ]`.
         Result getHistory() const;
 };
 

@@ -1116,10 +1116,13 @@ Result Editor::pasteToReplaceElement(Id elementId) {
 }
 
 Result Editor::getHistory() const {
-    Result result = OkObject();
+    Result result = OkArray();
     auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("canUndo", history.canUndo(), allocator);
-    result.data.AddMember("canRedo", history.canRedo(), allocator);
+
+    for (const auto& name : history.names()) {
+        result.data.PushBack(rapidjson::Value(name.c_str(), allocator), allocator);
+    }
+
     return result;
 }
 
