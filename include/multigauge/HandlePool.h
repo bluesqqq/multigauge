@@ -1,8 +1,9 @@
 #pragma once
 
-#include <vector>
+#include <cstddef>
 #include <cstdint>
 #include <utility>
+#include <vector>
 
 namespace mg {
 
@@ -12,15 +13,6 @@ public:
     using Id = uint32_t;
 
     static constexpr Id Invalid = 0;
-
-    using Reference = T&;
-    using ConstReference = const T&;
-
-    using Pointer = T*;
-    using ConstPointer = const T*;
-
-    using Iterator = typename std::vector<T>::iterator;
-    using ConstIterator = typename std::vector<T>::const_iterator;
 
 private:
     struct Slot {
@@ -36,18 +28,40 @@ private:
     static constexpr uint32_t INDEX_BITS = 16;
     static constexpr uint32_t INDEX_MASK = (1u << INDEX_BITS) - 1;
 
-    static Id makeId(uint32_t slot, uint32_t gen) {
-        return (gen << INDEX_BITS) | slot;
-    }
+    static Id makeId(uint32_t slot, uint32_t gen) { return (gen << INDEX_BITS) | slot; }
 
     static uint32_t getSlot(Id id) { return id & INDEX_MASK; }
     static uint32_t getGeneration(Id id) { return id >> INDEX_BITS; }
 
-public:
-    //----------[ CONSTRUCTOR + DESTRUCTOR ]----------//
-    HandlePool() = default;
-    ~HandlePool() = default;
+    Slot* findSlot(Id id) {
+        if (id == Invalid) return nullptr;
 
+        uint32_t slot = getSlot(id);
+        uint32_t gen  = getGeneration(id);
+
+        if (slot >= slots.size()) return nullptr;
+
+        Slot& s = slots[slot];
+        if (s.generation != gen) return nullptr;
+
+        return &s;
+    }
+
+    const Slot* findSlot(Id id) const {
+        if (id == Invalid) return nullptr;
+
+        uint32_t slot = getSlot(id);
+        uint32_t gen  = getGeneration(id);
+
+        if (slot >= slots.size()) return nullptr;
+
+        const Slot& s = slots[slot];
+        if (s.generation != gen) return nullptr;
+
+        return &s;
+    }
+
+public:
     //----------[ ITERATORS ]----------//
     auto begin() { return values.begin(); }
     auto begin() const { return values.begin(); }
@@ -56,7 +70,7 @@ public:
     auto end() const { return values.end(); }
 
     //----------[ CAPACITY ]----------//
-    size_t size() const { return values.size(); }
+    std::size_t size() const { return values.size(); }
     bool empty() const { return values.empty(); }
 
     //----------[ MODIFIERS ]----------//
@@ -67,26 +81,7 @@ public:
         freeSlots.clear();
     }
 
-    Id add(T value) {
-        uint32_t slotIndex;
-
-        if (!freeSlots.empty()) {
-            slotIndex = freeSlots.back();
-            freeSlots.pop_back();
-        } else {
-            slotIndex = static_cast<uint32_t>(slots.size());
-            slots.push_back({0, 1});
-        }
-
-        uint32_t valueIndex = static_cast<uint32_t>(values.size());
-
-        values.push_back(std::move(value));
-        valueToSlot.push_back(slotIndex);
-
-        slots[slotIndex].index = valueIndex;
-
-        return makeId(slotIndex, slots[slotIndex].generation);
-    }
+    Id add(T value) { return emplace(std::move(value)); }
 
     template<typename... Args>
     Id emplace(Args&&... args) {
@@ -112,7 +107,6 @@ public:
 
     bool remove(Id id) {
         if (id == Invalid) return false;
-        if (values.empty()) return false;
 
         uint32_t slot = getSlot(id);
         uint32_t gen  = getGeneration(id);
@@ -145,33 +139,17 @@ public:
     }
 
     //----------[ ACCESS ]----------//
-    Pointer get(Id id) {
-        if (id == Invalid) return nullptr;
-
-        uint32_t slot = getSlot(id);
-        uint32_t gen  = getGeneration(id);
-
-        if (slot >= slots.size()) return nullptr;
-
-        Slot& s = slots[slot];
-        if (s.generation != gen) return nullptr;
-
-        return &values[s.index];
+    T* get(Id id) {
+        Slot* s = findSlot(id);
+        return s ? &values[s->index] : nullptr;
     }
 
-    ConstPointer get(Id id) const {
-        if (id == Invalid) return nullptr;
-
-        uint32_t slot = getSlot(id);
-        uint32_t gen  = getGeneration(id);
-
-        if (slot >= slots.size()) return nullptr;
-
-        const Slot& s = slots[slot];
-        if (s.generation != gen) return nullptr;
-
-        return &values[s.index];
+    const T* get(Id id) const {
+        const Slot* s = findSlot(id);
+        return s ? &values[s->index] : nullptr;
     }
+
+    bool exists(Id id) const { return findSlot(id) != nullptr; }
 };
 
 } // namespace mg
