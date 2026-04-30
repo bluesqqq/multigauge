@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <string>
 #include <functional>
 #include <vector>
@@ -15,44 +16,26 @@ struct Command {
 class History {
     private:
         std::vector<Command> historyStack;
-        int head = -1;
+        std::size_t head = 0;
+
     public:
         bool commit(Command cmd) {
             if (!cmd.execute()) return false;
 
-            historyStack.erase(historyStack.begin() + head + 1, historyStack.end());
+            historyStack.erase(historyStack.begin() + head, historyStack.end());
             historyStack.push_back(std::move(cmd));
-            head = (int)historyStack.size() - 1;
+            head = historyStack.size();
             return true;
         }
         
-        bool canUndo() const { return head >= 0; }
-        bool canRedo() const { return head < (int)historyStack.size() - 1; }
+        bool canUndo() const { return head > 0; }
+        bool canRedo() const { return head < historyStack.size(); }
 
-        bool undo() {
-            if (!canUndo()) return false;
-            if (!historyStack[head].unexecute()) return false;
-            --head;
-            return true;
-        }
+        bool undo();
+        bool redo();
+        bool jumpTo(std::size_t index);
 
-        bool redo() {
-            if (!canRedo()) return false;
-            if (!historyStack[head + 1].execute()) return false;
-            ++head;
-            return true;
-        }
-
-        std::vector<std::string> names() const {
-            std::vector<std::string> result;
-            result.reserve(historyStack.size());
-
-            for (const auto& command : historyStack) {
-                result.push_back(command.name);
-            }
-
-            return result;
-        }
+        std::vector<std::string> names() const;
 };
 
 }
