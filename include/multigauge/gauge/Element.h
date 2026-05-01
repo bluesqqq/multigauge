@@ -106,7 +106,7 @@ class Element : public ::mg::PropertyObject {
 
         MG_PROPS_BEGIN()
             MG_PROP(style, "style", "Style", "Layout options.")
-            MG_PROP_CUSTOM("children", "Children", "Child elements.", &Element::setChildren, &Element::getChildren)
+            MG_PROP_CUSTOM_HIDDEN("children", "Children", "Child elements.", &Element::setChildren, &Element::getChildren)
         MG_PROPS_END()
 };
 

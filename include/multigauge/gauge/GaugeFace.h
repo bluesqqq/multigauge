@@ -26,7 +26,7 @@ class GaugeFace : public ::mg::PropertyObject {
         MG_PROPS_BEGIN()
             MG_PROP(style, "layout", "Layout", "Root layout options.")
             MG_PROP(backgroundColor, "bgColor", "Background Color", "Background color.")
-            MG_PROP_CUSTOM("children", "Children", "Child elements.", &GaugeFace::setChildren, &GaugeFace::getChildren)
+            MG_PROP_CUSTOM_HIDDEN("children", "Children", "Child elements.", &GaugeFace::setChildren, &GaugeFace::getChildren)
         MG_PROPS_END()
 
     public:

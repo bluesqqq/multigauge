@@ -346,6 +346,19 @@ public: \
         get_fn \
     ),
 
+/** Declares a hidden custom property. */
+#define MG_PROP_CUSTOM_HIDDEN(key, display_name, description, set_fn, get_fn) \
+    ::mg::props::makeCustomProperty( \
+        key, \
+        display_name, \
+        description, \
+        nullptr, \
+        nullptr, \
+        false, \
+        set_fn, \
+        get_fn \
+    ),
+
 /** Ends a `propertyList()` override and returns the static property list. */
 #define MG_PROPS_END() \
         }; \
