@@ -20,9 +20,13 @@ class GaugeFace : public ::mg::PropertyObject {
 
         RootLayout style;
 
+        static bool setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v);
+        static bool getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
+
         MG_PROPS_BEGIN()
             MG_PROP(style, "layout", "Layout", "Root layout options.")
             MG_PROP(backgroundColor, "bgColor", "Background Color", "Background color.")
+            MG_PROP_CUSTOM("children", "Children", "Child elements.", &GaugeFace::setChildren, &GaugeFace::getChildren)
         MG_PROPS_END()
 
     public:

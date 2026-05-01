@@ -121,7 +121,7 @@ ElementSnapshot snapshotElement(const Editor& editor, const Element& element) {
     ElementSnapshot snapshot;
     rapidjson::Document doc;
     doc.SetObject();
-    element.saveToJson(doc, doc.GetAllocator());
+    element.saveProperties(doc, doc.GetAllocator());
     snapshot.json = toString(doc);
     collectSubtreeIds(editor, &element, snapshot.ids);
     return snapshot;
@@ -448,7 +448,7 @@ Result Editor::serializeElement(NodeId elementId) const {
     if (!element) return Error("Invalid element id");
     rapidjson::Document doc;
     doc.SetObject();
-    element->saveToJson(doc, doc.GetAllocator());
+    element->saveProperties(doc, doc.GetAllocator());
     return saveJsonResult(toString(doc));
 }
 
@@ -725,8 +725,8 @@ Result Editor::createElement(const ElementPlacement& where, const std::string& j
             if (!currentParent.isFace() && !currentParent.isElement()) return false;
 
             rapidjson::Document parsed = parseJson(state->json);
-            const rapidjson::Value& parsedValue = parsed;
-            OwnedElement element = Element::fromJson(parsedValue.GetObject());
+            OwnedElement element;
+            if (!decodeAny(parsed, element)) return false;
             Element* raw = element.get();
             if (!insertIntoContainer(currentParent, std::move(element), state->index)) return false;
 
@@ -781,8 +781,8 @@ Result Editor::removeElement(NodeId elementId) {
             ElementContainerRef currentParent = getElementContainerById(state->parentId);
             if (!currentParent.isFace() && !currentParent.isElement()) return false;
             rapidjson::Document parsed = parseJson(state->removed.json);
-            const rapidjson::Value& parsedValue = parsed;
-            OwnedElement restored = Element::fromJson(parsedValue.GetObject());
+            OwnedElement restored;
+            if (!decodeAny(parsed, restored)) return false;
             Element* raw = restored.get();
             if (!insertIntoContainer(currentParent, std::move(restored), state->index)) return false;
             std::size_t next = 0;
@@ -923,8 +923,8 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
             }
 
             rapidjson::Document parsed = parseJson(state->initialized ? state->after.json : state->pendingJson);
-            const rapidjson::Value& parsedValue = parsed;
-            OwnedElement replacement = Element::fromJson(parsedValue.GetObject());
+            OwnedElement replacement;
+            if (!decodeAny(parsed, replacement)) return false;
             Element* raw = replacement.get();
 
             const bool inserted = state->parentId != 0
@@ -958,8 +958,8 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
             }
 
             rapidjson::Document parsed = parseJson(state->before.json);
-            const rapidjson::Value& parsedValue = parsed;
-            OwnedElement restored = Element::fromJson(parsedValue.GetObject());
+            OwnedElement restored;
+            if (!decodeAny(parsed, restored)) return false;
             Element* raw = restored.get();
 
             const bool inserted = state->parentId != 0

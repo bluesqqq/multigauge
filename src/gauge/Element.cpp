@@ -65,28 +65,26 @@ namespace {
     }
 }
 
-void Element::loadLayout(const rapidjson::Value::ConstObject &json) {
-    auto it = json.FindMember("style");
-    if (it != json.MemberEnd() && it->value.IsObject()) {
-        style.loadProperties(it->value.GetObject());
+bool Element::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) {
+    auto* self = static_cast<Element*>(obj);
+
+    std::vector<OwnedElement> decoded;
+    if (!decodeAny(v, decoded)) return false;
+
+    while (!self->children.empty()) {
+        self->removeChild(self->children.back().get());
     }
+
+    for (auto& child : decoded) {
+        if (!self->insertChild(std::move(child), self->children.size())) return false;
+    }
+
+    return true;
 }
 
-void Element::loadProps(const rapidjson::Value::ConstObject &json) {
-    if (json.HasMember("props") && json["props"].IsObject())
-        loadProperties(json["props"].GetObject());
-}
-
-void Element::loadChildren(const rapidjson::Value::ConstObject &json) {
-    if (json.HasMember("children") && json["children"].IsArray()) {
-        children.clear();
-        for (const auto& childJson : json["children"].GetArray()) {
-            OwnedElement child = Element::fromJson(childJson.GetObject());
-            if (!child) continue;
-
-            insertChild(std::move(child), children.size());
-        }
-    }
+bool Element::getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+    const auto* self = static_cast<const Element*>(obj);
+    return encodeAny(out, a, self->children);
 }
 
 bool Element::insertChild(OwnedElement child, std::size_t index) {
@@ -171,65 +169,40 @@ void Element::layoutRecursive(float parentAbsX, float parentAbsY) {
     for (auto& c : children)c->layoutRecursive(absX, absY);
 }
 
-void Element::saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
-    out.SetObject();
+} // namespace mg::gauge
 
-    if (const char* type = typeId()) {
-        out.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(type, a), a);
+namespace mg {
+
+DECODE_IMPL(gauge::OwnedElement) {
+    if (v.IsNull()) {
+        out = nullptr;
+        return true;
     }
 
-    rapidjson::Value styleValue;
-    if (getProperty("style", styleValue, a)) {
-        out.AddMember(rapidjson::Value("style", a), std::move(styleValue), a);
-    }
+    if (!v.IsObject()) return false;
 
-    rapidjson::Value props(rapidjson::kObjectType);
-    propertyList().forEach(this, [&](const Property& property) {
-        if (!property.key || !property.get) return;
-        if (findProperty(property.key) != &property) return;
-        if (std::strcmp(property.key, "style") == 0) return;
-
-        rapidjson::Value value;
-        if (!property.get(this, value, a)) return;
-
-        props.AddMember(rapidjson::Value(property.key, a), std::move(value), a);
-    });
-    out.AddMember(rapidjson::Value("props", a), std::move(props), a);
-
-    rapidjson::Value childArray(rapidjson::kArrayType);
-    childArray.Reserve(static_cast<rapidjson::SizeType>(children.size()), a);
-    for (const auto& child : children) {
-        if (!child) continue;
-        rapidjson::Value childValue;
-        child->saveToJson(childValue, a);
-        childArray.PushBack(std::move(childValue), a);
-    }
-    out.AddMember(rapidjson::Value("children", a), std::move(childArray), a);
-}
-
-OwnedElement Element::fromJson(const rapidjson::Value::ConstObject json) {
-    constexpr const char* TAG = "Element::fromJson";
+    const auto obj = v.GetObject();
 
     const char* type = nullptr;
-    if (auto it = json.FindMember("type"); it != json.MemberEnd() && it->value.IsString())
+    if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) {
         type = it->value.GetString();
-
-    OwnedElement out;
-
-    if (!type) {
-        LOG_INFO(TAG, "No valid 'type'; constructing base Element.");
-        out = std::make_unique<Element>(nullptr);
-    } else {
-        const auto* descriptor = registry().find(type);
-
-        out = registry().create(type, nullptr);
-
-        if (!descriptor) LOG_WARN(TAG, "Unknown type='%s'. Falling back to base Element.", type);
     }
 
-    out->loadFromJson(json);
+    out = gauge::Element::registry().create(type, nullptr);
+    if (!out) return false;
 
-    return out;
+    out->loadProperties(obj);
+    return true;
 }
 
-} // namespace mg::gauge
+ENCODE_IMPL(gauge::OwnedElement) {
+    if (!v) {
+        out.SetNull();
+        return true;
+    }
+
+    v->saveProperties(out, a);
+    return true;
+}
+
+} // namespace mg

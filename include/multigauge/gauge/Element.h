@@ -64,7 +64,7 @@ class Element : public ::mg::PropertyObject {
 
         MG_POLYMORPHIC_REGISTRY_WITH_ARGS(OwnedElement, Element*)
 
-        explicit Element(Element* parent);
+        explicit Element(Element* parent = nullptr);
         virtual ~Element();
 
         virtual Type getType() const { return Type::Base; }
@@ -101,24 +101,23 @@ class Element : public ::mg::PropertyObject {
 
         //----------[ SERIALIZATION ]----------//
 
-        static OwnedElement fromJson(const rapidjson::Value::ConstObject json);
-        void saveToJson(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
-
-        void loadFromJson(const rapidjson::Value::ConstObject& json) {
-            loadLayout(json);
-            loadProps(json);
-            loadChildren(json);
-        }
-
-        void loadLayout(const rapidjson::Value::ConstObject& json);
-
-        void loadProps(const rapidjson::Value::ConstObject& json);
-
-        void loadChildren(const rapidjson::Value::ConstObject& json);
+        static bool setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v);
+        static bool getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
 
         MG_PROPS_BEGIN()
             MG_PROP(style, "style", "Style", "Layout options.")
+            MG_PROP_CUSTOM("children", "Children", "Child elements.", &Element::setChildren, &Element::getChildren)
         MG_PROPS_END()
 };
 
 } // namespace mg::gauge
+
+namespace mg {
+
+CODEC_BEGIN(gauge::OwnedElement)
+    DECODE();
+
+    ENCODE();
+CODEC_END()
+
+} // namespace mg

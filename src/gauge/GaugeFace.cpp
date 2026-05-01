@@ -22,15 +22,6 @@ void GaugeFace::load(const rapidjson::Value& json) {
     if (!json.IsObject()) return;
 
     loadProperties(json.GetObject());
-
-    if (json.HasMember("children") && json["children"].IsArray()) {
-        for (const auto& c : json["children"].GetArray()) {
-            auto child = Element::fromJson(c.GetObject());
-            if (!child) continue;
-
-            insertChild(std::move(child), children.size());
-        }
-    }
 }
 
 rapidjson::Document GaugeFace::save() const {
@@ -41,17 +32,29 @@ rapidjson::Document GaugeFace::save() const {
 
     saveProperties(doc, a);
 
-    rapidjson::Value arr(rapidjson::kArrayType);
+    return doc;
+}
 
-    for (const auto& c : children) {
-        rapidjson::Value v;
-        c->saveToJson(v, a);
-        arr.PushBack(std::move(v), a);
+bool GaugeFace::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) {
+    auto* self = static_cast<GaugeFace*>(obj);
+
+    std::vector<OwnedElement> decoded;
+    if (!decodeAny(v, decoded)) return false;
+
+    while (!self->children.empty()) {
+        self->removeChild(self->children.back().get());
     }
 
-    doc.AddMember("children", std::move(arr), a);
+    for (auto& child : decoded) {
+        if (!self->insertChild(std::move(child), self->children.size())) return false;
+    }
 
-    return doc;
+    return true;
+}
+
+bool GaugeFace::getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+    const auto* self = static_cast<const GaugeFace*>(obj);
+    return encodeAny(out, a, self->children);
 }
 
 bool GaugeFace::init(AssetManager& assetManager, GraphicsContext& context) {
