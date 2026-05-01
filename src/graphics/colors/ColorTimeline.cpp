@@ -123,7 +123,10 @@ rgba ColorTimeline::getColor(float position) const {
 
     if (index >= keyframes.size() - 1) return keyframes.back().color->getColor();
 
-    float normalized = (position - keyframes[index].position) / (keyframes[index + 1].position - keyframes[index].position);
+    const float span = keyframes[index + 1].position - keyframes[index].position;
+    if (span == 0.0f) return keyframes[index + 1].color->getColor();
+
+    float normalized = (position - keyframes[index].position) / span;
 
     return keyframes[index].color->getColor().blended(keyframes[index + 1].color->getColor(), normalized);
 }
@@ -155,6 +158,11 @@ std::vector<rgba> ColorTimeline::sample(float startPosition, float endPosition, 
     std::vector<rgba> result;
     if (keyframes.empty() || numSamples == 0) return result;
     result.reserve(numSamples);
+
+    if (numSamples == 1) {
+        result.push_back(getColor(startPosition));
+        return result;
+    }
 
     float step = (endPosition - startPosition) / (numSamples - 1);
     size_t startIndex = 0;
