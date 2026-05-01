@@ -63,7 +63,7 @@ bool clear(EditorId EditorId) {
 Result loadDocument(EditorId EditorId, const std::string& json) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
-    editor->loadDocument(json);
+    if (!editor->loadDocument(json)) return Error("Invalid JSON");
     return OkObject();
 }
 

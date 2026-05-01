@@ -395,11 +395,11 @@ void Editor::clear() {
     history = History();
 }
 
-void Editor::loadDocument(const std::string& json) {
-    clear();
-
+bool Editor::loadDocument(const std::string& json) {
     rapidjson::Document doc = parseJson(json);
-    if (!doc.IsArray()) return;
+    if (doc.HasParseError() || !doc.IsArray()) return false;
+
+    clear();
 
     for (const auto& faceJson : doc.GetArray()) {
         if (!faceJson.IsObject()) continue;
@@ -416,6 +416,8 @@ void Editor::loadDocument(const std::string& json) {
             registerSubtree(raw->childAt(i));
         }
     }
+
+    return true;
 }
 
 std::string Editor::saveDocument() const {

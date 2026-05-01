@@ -124,7 +124,7 @@ class Editor {
         void clear();
         
         /// Loads faces and elements from a document JSON array.
-        void loadDocument(const std::string& json);
+        bool loadDocument(const std::string& json);
         
         /// Saves the current document as a JSON array.
         std::string saveDocument() const;
