@@ -9,7 +9,7 @@ This page indexes the built-in gauge elements available in `multigauge-core`.
 Every visible part of a gauge is an `Element` or a subclass of it. A gauge face is made from a tree of elements, where each element has:
 
 - layout through [`Layout`](../include/multigauge/gauge/Layout.h)
-- element-specific properties in `props`
+- element-specific properties directly on the element object
 - optional child elements
 
 Element JSON generally looks like this:
@@ -21,7 +21,6 @@ Element JSON generally looks like this:
     "width": "100%",
     "height": 40
   },
-  "props": {},
   "children": []
 }
 ```

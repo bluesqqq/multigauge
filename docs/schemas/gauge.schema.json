@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://www.multi-gauge.com/schemas/gauge.schema.json",
   "title": "Gauge Face Schema",
-  "description": "Schema for the JSON consumed by mg::gauge::GaugeFace::load and mg::gauge::Element::fromJson. The runtime loads a face object with optional 'layout', 'bgColor', and 'children' members, and generally ignores unknown object members instead of rejecting them.",
+  "description": "Schema for the JSON consumed by mg::gauge::GaugeFace::load and the element property loaders. The runtime loads a face object with optional 'layout', 'bgColor', and 'children' members, and generally ignores unknown object members instead of rejecting them.",
   "type": "object",
   "properties": {
     "$schema": {
@@ -616,9 +616,6 @@
         "style": {
           "$ref": "#/$defs/layout"
         },
-        "props": {
-          "type": "object"
-        },
         "children": {
           "$ref": "#/$defs/children"
         }
@@ -644,7 +641,7 @@
       ]
     },
     "baseElement": {
-      "description": "Base Element when 'type' is omitted. Only style and children are meaningful; arbitrary props are ignored.",
+      "description": "Base Element when 'type' is omitted. Only style and children are meaningful; unknown properties are ignored.",
       "allOf": [
         {
           "$ref": "#/$defs/elementEnvelope"
@@ -683,14 +680,8 @@
             "type": {
               "const": "circle"
             },
-            "props": {
-              "type": "object",
-              "properties": {
-                "paint": {
-                  "$ref": "#/$defs/paint"
-                }
-              },
-              "additionalProperties": true
+            "paint": {
+              "$ref": "#/$defs/paint"
             }
           }
         }
@@ -706,17 +697,11 @@
             "type": {
               "const": "rectangle"
             },
-            "props": {
-              "type": "object",
-              "properties": {
-                "paint": {
-                  "$ref": "#/$defs/paint"
-                },
-                "radius": {
-                  "type": "number"
-                }
-              },
-              "additionalProperties": true
+            "paint": {
+              "$ref": "#/$defs/paint"
+            },
+            "radius": {
+              "type": "number"
             }
           }
         }
@@ -732,14 +717,8 @@
             "type": {
               "const": "image"
             },
-            "props": {
-              "type": "object",
-              "properties": {
-                "path": {
-                  "type": "string"
-                }
-              },
-              "additionalProperties": true
+            "path": {
+              "type": "string"
             }
           }
         }
@@ -755,23 +734,17 @@
             "type": {
               "const": "text"
             },
-            "props": {
-              "type": "object",
-              "properties": {
-                "text": {
-                  "type": "string"
-                },
-                "paint": {
-                  "$ref": "#/$defs/textPaint"
-                },
-                "ellipses": {
-                  "type": "boolean"
-                },
-                "hyphens": {
-                  "type": "boolean"
-                }
-              },
-              "additionalProperties": true
+            "text": {
+              "type": "string"
+            },
+            "paint": {
+              "$ref": "#/$defs/textPaint"
+            },
+            "ellipses": {
+              "type": "boolean"
+            },
+            "hyphens": {
+              "type": "boolean"
             }
           }
         }
@@ -787,23 +760,17 @@
             "type": {
               "const": "horizon"
             },
-            "props": {
-              "type": "object",
-              "properties": {
-                "bgColor": {
-                  "$ref": "#/$defs/color"
-                },
-                "groundColor": {
-                  "$ref": "#/$defs/color"
-                },
-                "horizonColor": {
-                  "$ref": "#/$defs/color"
-                },
-                "borderColor": {
-                  "$ref": "#/$defs/color"
-                }
-              },
-              "additionalProperties": true
+            "bgColor": {
+              "$ref": "#/$defs/color"
+            },
+            "groundColor": {
+              "$ref": "#/$defs/color"
+            },
+            "horizonColor": {
+              "$ref": "#/$defs/color"
+            },
+            "borderColor": {
+              "$ref": "#/$defs/color"
             }
           }
         }
@@ -819,29 +786,23 @@
             "type": {
               "const": "graph"
             },
-            "props": {
-              "type": "object",
-              "properties": {
-                "seconds": {
-                  "type": "number"
-                },
-                "bgColor": {
-                  "$ref": "#/$defs/color"
-                },
-                "secondsColor": {
-                  "$ref": "#/$defs/color"
-                },
-                "graphColor": {
-                  "$ref": "#/$defs/color"
-                },
-                "borderColor": {
-                  "$ref": "#/$defs/color"
-                },
-                "value": {
-                  "$ref": "#/$defs/displayValue"
-                }
-              },
-              "additionalProperties": true
+            "seconds": {
+              "type": "number"
+            },
+            "bgColor": {
+              "$ref": "#/$defs/color"
+            },
+            "secondsColor": {
+              "$ref": "#/$defs/color"
+            },
+            "graphColor": {
+              "$ref": "#/$defs/color"
+            },
+            "borderColor": {
+              "$ref": "#/$defs/color"
+            },
+            "value": {
+              "$ref": "#/$defs/displayValue"
             }
           }
         }
@@ -856,11 +817,11 @@
           "properties": {
             "type": {
               "const": "circular-element"
-            },
-            "props": {
-              "$ref": "#/$defs/circularProps"
             }
           }
+        },
+        {
+          "$ref": "#/$defs/circularProps"
         }
       ]
     },
@@ -873,25 +834,20 @@
           "properties": {
             "type": {
               "const": "circular-needle"
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/circularProps"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "paint": {
+              "$ref": "#/$defs/paint"
             },
-            "props": {
-              "allOf": [
-                {
-                  "$ref": "#/$defs/circularProps"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "paint": {
-                      "$ref": "#/$defs/paint"
-                    },
-                    "radius": {
-                      "type": "number"
-                    }
-                  },
-                  "additionalProperties": true
-                }
-              ]
+            "radius": {
+              "type": "number"
             }
           }
         }
@@ -906,25 +862,20 @@
           "properties": {
             "type": {
               "const": "circular-scale"
+            }
+          }
+        },
+        {
+          "$ref": "#/$defs/circularProps"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "ticks": {
+              "$ref": "#/$defs/tickList"
             },
-            "props": {
-              "allOf": [
-                {
-                  "$ref": "#/$defs/circularProps"
-                },
-                {
-                  "type": "object",
-                  "properties": {
-                    "ticks": {
-                      "$ref": "#/$defs/tickList"
-                    },
-                    "radius": {
-                      "type": "number"
-                    }
-                  },
-                  "additionalProperties": true
-                }
-              ]
+            "radius": {
+              "type": "number"
             }
           }
         }
