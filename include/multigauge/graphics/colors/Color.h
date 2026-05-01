@@ -22,7 +22,6 @@ class Color : public ::mg::PropertyObject {
         virtual ~Color() = default;
 
         MG_POLYMORPHIC_REGISTRY(OwnedColor)
-        static OwnedColor createByType(const char* type);
         
         /// @brief Creates a clone of this Color object
         /// @return A unique pointer to the created Color object

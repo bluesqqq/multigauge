@@ -34,10 +34,6 @@ const Color::Registry& Color::registry() {
     return registry;
 }
 
-OwnedColor Color::createByType(const char* type) {
-    return registry().create(type);
-}
-
 const ColorTimeline* Color::getTimeline() const { return nullptr; }
 
 } // namespace mg::graphics
@@ -57,8 +53,9 @@ DECODE_IMPL(graphics::OwnedColor) {
     const char* type = nullptr;
     if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) type = it->value.GetString();
 
-    out = graphics::Color::createByType(type);
-
+    out = graphics::Color::registry().create(type);
+    if (!out) return false;
+    
     out->loadProperties(obj);
 
     return true;
