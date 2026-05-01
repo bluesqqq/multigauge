@@ -25,6 +25,7 @@ struct FaceRemoveState {
     GaugeFace* face = nullptr;
     NodeId faceId = 0;
     std::size_t index = 0;
+    std::string json;
     std::vector<std::vector<NodeId>> rootIds;
 };
 
@@ -612,6 +613,7 @@ Result Editor::removeFace(NodeId faceId) {
     state->face = it->get();
     state->faceId = faceId;
     state->index = index;
+    state->json = toString(state->face->save());
     state->rootIds = snapshotFaceRootIds(*this, *it->get());
 
     const bool committed = history.commit({
@@ -631,11 +633,11 @@ Result Editor::removeFace(NodeId faceId) {
 
         // UNDO
         [this, state]() {
-            rapidjson::Document doc = parseJson(state->rootIds.empty() ? "{}" : "{}");
+            rapidjson::Document doc = parseJson(state->json);
+            if (!doc.IsObject()) return false;
 
             auto face = std::make_unique<GaugeFace>();
-            // NOTE: restoring full face state properly would require storing JSON
-
+            face->load(doc);
             GaugeFace* raw = face.get();
 
             faces.insert(
@@ -644,6 +646,15 @@ Result Editor::removeFace(NodeId faceId) {
             );
 
             registerFaceWithId(state->faceId, raw);
+
+            if (state->rootIds.size() != raw->childCount()) return false;
+
+            for (std::size_t i = 0; i < raw->childCount(); ++i) {
+                std::size_t next = 0;
+                if (!registerSubtreeWithIds(raw->childAt(i), state->rootIds.at(i), next)) return false;
+                if (next != state->rootIds.at(i).size()) return false;
+            }
+
             return true;
         }
     });
