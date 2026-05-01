@@ -46,30 +46,26 @@ DECODE_IMPL(graphics::OwnedColor) {
         return true;
     }
 
-    if (!v.IsObject()) return false;
+    if (!v.IsString()) return false;
 
-    const auto obj = v.GetObject();
+    graphics::rgba color;
+    if (!Codec<graphics::rgba>::decode(v, color)) return false;
 
-    const char* type = nullptr;
-    if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) type = it->value.GetString();
-
-    out = graphics::Color::registry().create(type);
-    if (!out) return false;
-    
-    out->loadProperties(obj);
-
+    out = std::make_unique<graphics::StaticColor>(color);
     return true;
 }
 
 ENCODE_IMPL(graphics::OwnedColor) {
-    if (!v) { 
-        out.SetNull(); 
-        return true; 
+    if (!v) {
+        out.SetNull();
+        return true;
     }
 
-    v->saveProperties(out, a);
+    if (v->getType() == graphics::Color::Type::Static) {
+        return Codec<graphics::rgba>::encode(out, a, v->getColor());
+    }
 
-    return true;
+    return false;
 }
 
 } // namespace mg

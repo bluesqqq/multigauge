@@ -185,7 +185,7 @@ namespace mg {
 CODEC_BEGIN(graphics::ColorTimeline)
     DECODE() {
         graphics::OwnedColor color;
-        if (Codec<graphics::OwnedColor>::decode(v, color)) {
+        if (decodeAny(v, color)) {
             out = graphics::ColorTimeline(std::move(color));
             return true;
         }
@@ -193,7 +193,7 @@ CODEC_BEGIN(graphics::ColorTimeline)
     }
 
     ENCODE() {
-        if (v.size() == 1) return Codec<graphics::OwnedColor>::encode(out, a, v.keyframes[0].color);
+        if (v.size() == 1) return encodeAny(out, a, v.keyframes[0].color);
         return false;
     }
 CODEC_END()

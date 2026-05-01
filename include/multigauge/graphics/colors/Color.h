@@ -57,6 +57,41 @@ class Color : public ::mg::PropertyObject {
         virtual OwnedColor blended(const Color& color, float alpha) const = 0;
 };
 
+} // namespace mg::graphics
+
+namespace mg {
+
+template <>
+struct MgPropWidgetTraits<graphics::OwnedColor> { static constexpr const char* value = "color"; };
+
+template <>
+struct MgPropNullableTraits<graphics::OwnedColor> { static constexpr bool value = true; };
+
+template <>
+struct MgPolymorphicRegistryTraits<graphics::OwnedColor> {
+    static constexpr bool supported = true;
+
+    static rapidjson::Value getTypesMeta(rapidjson::Document::AllocatorType& a) {
+        return graphics::Color::registry().getTypesMeta(a);
+    }
+};
+
+template <>
+struct PolymorphicOwnedTraits<graphics::OwnedColor> {
+    static constexpr bool supported = true;
+    using Base = graphics::Color;
+};
+
+CODEC_BEGIN(graphics::OwnedColor)
+    DECODE();
+
+    ENCODE();
+CODEC_END()
+
+} // namespace mg
+
+namespace mg::graphics {
+
 //----------[ FILL STROKE ]----------//
 
 struct Paint : public ::mg::PropertyObject {
@@ -82,28 +117,3 @@ struct Paint : public ::mg::PropertyObject {
 };
 
 } // namespace mg::graphics
-
-namespace mg {
-
-template <>
-struct MgPropWidgetTraits<graphics::OwnedColor> { static constexpr const char* value = "color"; };
-
-template <>
-struct MgPropNullableTraits<graphics::OwnedColor> { static constexpr bool value = true; };
-
-template <>
-struct MgPolymorphicRegistryTraits<graphics::OwnedColor> {
-    static constexpr bool supported = true;
-
-    static rapidjson::Value getTypesMeta(rapidjson::Document::AllocatorType& a) {
-        return graphics::Color::registry().getTypesMeta(a);
-    }
-};
-
-CODEC_BEGIN(graphics::OwnedColor)
-    DECODE();
-
-    ENCODE();
-CODEC_END()
-
-} // namespace mg
