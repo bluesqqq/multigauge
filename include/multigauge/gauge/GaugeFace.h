@@ -16,7 +16,14 @@ class GaugeFace : public ::mg::PropertyObject {
 
         std::vector<OwnedElement> children;
 
+        OwnedColor backgroundColor;
+
         RootLayout style;
+
+        MG_PROPS_BEGIN()
+            MG_PROP(style, "layout", "Layout", "Root layout options.")
+            MG_PROP(backgroundColor, "bgColor", "Background Color", "Background color.")
+        MG_PROPS_END()
 
     public:
         GaugeFace();
@@ -44,6 +51,6 @@ class GaugeFace : public ::mg::PropertyObject {
 
         void layout(Graphics& g);
         YGNodeRef getNode() const { return node; }
-};
+    };
 
 } // namespace mg::gauge

@@ -4,10 +4,13 @@
 #include <cstdlib>
 #include <cstring>
 
+#include <multigauge/graphics/colors/Color.h>
 #include <multigauge/properties/PropertyObject.h>
 #include <yoga/Yoga.h>
 
 namespace mg::gauge {
+
+using ::mg::graphics::OwnedColor;
 
 struct LayoutSize {
     enum class Unit { Px, Percent, Auto } unit = Unit::Auto;

@@ -16,12 +16,12 @@ GaugeFace::~GaugeFace() {
 
 void GaugeFace::load(const rapidjson::Value& json) {
     children.clear();
+    backgroundColor.reset();
+    style = RootLayout{};
 
     if (!json.IsObject()) return;
 
-    if (json.HasMember("layout") && json["layout"].IsObject()) {
-        style.loadProperties(json["layout"].GetObject());
-    }
+    loadProperties(json.GetObject());
 
     if (json.HasMember("children") && json["children"].IsArray()) {
         for (const auto& c : json["children"].GetArray()) {
@@ -39,9 +39,7 @@ rapidjson::Document GaugeFace::save() const {
 
     auto& a = doc.GetAllocator();
 
-    rapidjson::Value layoutValue;
-    style.saveProperties(layoutValue, a);
-    doc.AddMember("layout", std::move(layoutValue), a);
+    saveProperties(doc, a);
 
     rapidjson::Value arr(rapidjson::kArrayType);
 
@@ -69,6 +67,8 @@ void GaugeFace::update(int deltaTime) {
 }
 
 void GaugeFace::draw(Graphics& g) const {
+    g.fillAll(backgroundColor.get());
+
     for (const auto& c : children) c->drawRecursive(g);
 }
 
