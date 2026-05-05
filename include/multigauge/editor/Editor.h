@@ -241,6 +241,8 @@ class Editor {
         /// Jumps the history cursor to `index`.
         bool jumpTo(std::size_t index) { return history.jumpTo(index); }
 
+        std::size_t historyIndex() { return history.headIndex(); }
+
         /// Returns the history command names in order.
         /// @return `[ string, ... ]`.
         Result getHistory() const;

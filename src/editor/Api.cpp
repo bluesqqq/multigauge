@@ -272,4 +272,9 @@ bool jumpTo(EditorId EditorId, std::size_t index) {
     return editor && editor->jumpTo(index);
 }
 
+std::size_t historyIndex(EditorId EditorId) {
+    Editor* editor = getEditor(EditorId);
+    return editor ? editor->historyIndex() : 0;
+}
+
 }

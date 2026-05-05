@@ -160,6 +160,8 @@ bool redo(EditorId);
 /// Jumps the history cursor to `index`.
 bool jumpTo(EditorId, std::size_t index);
 
+std::size_t historyIndex(EditorId);
+
 /// Returns the history command names in order.
 /// @return `[ string, ... ]`
 Result getHistory(EditorId);

@@ -27,6 +27,7 @@ class History {
         bool undo();
         bool redo();
         bool jumpTo(std::size_t index);
+        std::size_t headIndex() const { return head; }
 
         std::vector<std::string> names() const;
 };
