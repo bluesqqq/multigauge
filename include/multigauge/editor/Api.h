@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cstddef>
 #include <memory>
 #include <string>
 
@@ -155,6 +156,9 @@ bool undo(EditorId);
 
 /// Redoes the next committed edit.
 bool redo(EditorId);
+
+/// Jumps the history cursor to `index`.
+bool jumpTo(EditorId, std::size_t index);
 
 /// Returns the history command names in order.
 /// @return `[ string, ... ]`

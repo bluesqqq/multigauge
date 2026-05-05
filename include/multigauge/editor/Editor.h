@@ -238,6 +238,9 @@ class Editor {
         /// Redoes the next committed edit.
         bool redo() { return history.redo(); }
 
+        /// Jumps the history cursor to `index`.
+        bool jumpTo(std::size_t index) { return history.jumpTo(index); }
+
         /// Returns the history command names in order.
         /// @return `[ string, ... ]`.
         Result getHistory() const;

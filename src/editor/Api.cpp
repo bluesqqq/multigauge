@@ -267,4 +267,9 @@ bool redo(EditorId EditorId) {
     return editor && editor->redo();
 }
 
+bool jumpTo(EditorId EditorId, std::size_t index) {
+    Editor* editor = getEditor(EditorId);
+    return editor && editor->jumpTo(index);
+}
+
 }
