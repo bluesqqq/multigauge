@@ -3,7 +3,7 @@
 #include <memory>
 #include <string>
 
-#include <multigauge/AssetManager.h>
+#include <multigauge/runtime/AssetManager.h>
 #include <multigauge/screens/Screen.h>
 #include <multigauge/gauge/GaugeFace.h>
 

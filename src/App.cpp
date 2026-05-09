@@ -1,6 +1,6 @@
 #include <multigauge/App.h>
 
-#include <multigauge/RuntimeContext.h>
+#include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/HandlePool.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/gauge/GaugeFace.h>
@@ -30,7 +30,7 @@ namespace {
     io::Time* g_time = nullptr;
 }
 
-bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger) {
+bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger, const std::string& dataRoot) {
     if (initialized) return true;
 
     g_fs = &fs;

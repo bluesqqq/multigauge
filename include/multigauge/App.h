@@ -22,7 +22,7 @@ using ContextId = uint32_t;
 
 //----------[ LIFETIME ]----------//
 
-bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger = nullptr);
+bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger = nullptr, const std::string& dataRoot = "/multigauge");
 void shutdown();
 void frame();
 YGConfigRef getYogaConfig();
@@ -43,5 +43,7 @@ bool hasScreen(ContextId id);
 bool setGaugeScreen(ContextId id, const std::string& json);
 bool setGaugeScreenFromFile(ContextId id, const std::string& path);
 bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId);
+
+Result getGaugeLibrary();
 
 }

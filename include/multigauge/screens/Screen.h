@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/RuntimeContext.h>
+#include <multigauge/runtime/RuntimeContext.h>
 
 namespace mg {
 

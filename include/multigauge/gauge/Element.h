@@ -7,7 +7,7 @@
 
 #include <rapidjson/document.h>
 
-#include <multigauge/AssetManager.h>
+#include <multigauge/runtime/AssetManager.h>
 
 #include <multigauge/properties/PropertyObject.h>
 

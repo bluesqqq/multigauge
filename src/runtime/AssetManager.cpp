@@ -1,4 +1,4 @@
-#include <multigauge/AssetManager.h>
+#include <multigauge/runtime/AssetManager.h>
 
 #include <multigauge/io/Base64.h>
 #include <multigauge/io/Log.h>

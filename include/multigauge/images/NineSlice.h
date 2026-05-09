@@ -1,7 +1,7 @@
 #pragma once
 
 #include <multigauge/images/Image.h>
-#include <multigauge/AssetManager.h>
+#include <multigauge/runtime/AssetManager.h>
 #include "rapidjson/document.h"
 
 namespace mg::images {

@@ -1,6 +1,6 @@
 #include <multigauge/screens/GaugeScreen.h>
 
-#include <multigauge/RuntimeContext.h>
+#include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/io/Log.h>
 
 #include <rapidjson/document.h>

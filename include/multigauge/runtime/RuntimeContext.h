@@ -4,7 +4,7 @@
 #include <memory>
 
 #include <multigauge/graphics/Graphics.h>
-#include <multigauge/AssetManager.h>
+#include <multigauge/runtime/AssetManager.h>
 
 namespace mg {
 
