@@ -28,7 +28,6 @@ namespace {
 
     io::FileSystem* g_fs = nullptr;
     io::Time* g_time = nullptr;
-}
 
 bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger) {
     if (initialized) return true;
@@ -134,10 +133,9 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
 bool setGaugeScreenFromFile(ContextId id, const std::string& path) {
     if (!g_fs) return false;
 
-    std::vector<uint8_t> bytes;
-    if (!g_fs->readAll(path, bytes)) return false;
+    std::string json;
+    if (!g_fs->readText(path, json)) return false;
 
-    std::string json(bytes.begin(), bytes.end());
     return setGaugeScreen(id, json);
 }
 

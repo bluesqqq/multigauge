@@ -59,8 +59,8 @@ bool AssetManager::loadJson(const std::string &path, rapidjson::Document &out) {
     LOG_DEBUG(TAG, "Reading gauge document: %s", path.c_str());
 
     std::vector<uint8_t> bytes;
-    if (!fs->readAll(path, bytes)) {
-        LOG_ERROR(TAG, "readAll failed: %s", path.c_str());
+    if (!fs->readBytes(path, bytes)) {
+        LOG_ERROR(TAG, "readBytes failed: %s", path.c_str());
         return false;
     }
 
@@ -129,7 +129,7 @@ bool AssetManager::loadDocumentAssets(const rapidjson::Value::ConstArray &assets
 
         const std::string path = "/assets/images/" + name;
 
-        if (!fs->writeAll(path, decoded.data(), decoded.size())) {
+        if (!fs->writeBytes(path, decoded.data(), decoded.size())) {
             LOG_ERROR(TAG, "Failed to write asset: %s", path.c_str());
             return false;
         }
@@ -154,7 +154,7 @@ bool AssetManager::loadImage(graphics::GraphicsContext& ctx, const std::string &
     }
 
     std::vector<uint8_t> data;
-    if (!fs->readAll(path, data) || data.empty()) {
+    if (!fs->readBytes(path, data) || data.empty()) {
         LOG_ERROR(TAG, "Failed to read image: %s", path.c_str());
         return false;
     }

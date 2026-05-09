@@ -48,7 +48,7 @@ In practice, most ports map these calls onto an existing graphics backend or har
 
 Current expectations:
 
-- `readAll(...)` must read an entire file into memory
+- `readBytes(...)` must read an entire file into memory
 - `exists(...)` and `size(...)` are used by the asset loader
 - write and directory helpers should behave normally even if your target only uses a subset of them today
 
