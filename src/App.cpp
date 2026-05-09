@@ -28,6 +28,7 @@ namespace {
 
     io::FileSystem* g_fs = nullptr;
     io::Time* g_time = nullptr;
+}
 
 bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger) {
     if (initialized) return true;
