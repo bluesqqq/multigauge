@@ -9,6 +9,8 @@
 
 namespace mg::editor {
 
+using ::mg::Result;
+
 struct ClipboardSummary;
 
 //----------[ EDITORS ]----------//

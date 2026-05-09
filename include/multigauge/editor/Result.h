@@ -5,7 +5,7 @@
 #include <rapidjson/document.h>
 #include <rapidjson/writer.h>
 
-namespace mg::editor {
+namespace mg {
 
 struct Result {
     bool ok = false;
@@ -67,4 +67,4 @@ inline Result Error(const std::string& error) {
     return Result::Error(error);
 }
 
-}
+} // namespace mg

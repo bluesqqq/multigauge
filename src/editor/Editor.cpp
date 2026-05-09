@@ -11,6 +11,8 @@
 
 namespace mg::editor {
 
+using ::mg::Result;
+
 namespace {
 
 struct FaceInsertState {

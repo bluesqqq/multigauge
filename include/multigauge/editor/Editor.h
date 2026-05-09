@@ -14,6 +14,7 @@
 
 namespace mg::editor {
 
+using ::mg::Result;
 using ::mg::gauge::Element;
 using ::mg::gauge::GaugeFace;
 using ::mg::gauge::OwnedElement;

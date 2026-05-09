@@ -6,6 +6,8 @@
 
 namespace mg::editor {
 
+using ::mg::Result;
+
 namespace {
 
 HandlePool<Editor> editors;
