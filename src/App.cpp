@@ -1,5 +1,7 @@
 #include <multigauge/App.h>
 
+#include "AppPaths.h"
+
 #include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/HandlePool.h>
 #include <multigauge/editor/Api.h>
@@ -9,12 +11,13 @@
 #include <multigauge/io/Log.h>
 
 #include <rapidjson/document.h>
-
 #include <utility>
 
 namespace mg {
 
 namespace {
+    std::string g_dataRoot = "/multigauge";
+
     YGConfigRef createYogaConfig() {
         YGConfigRef config = YGConfigNew();
         YGConfigSetUseWebDefaults(config, false);
@@ -28,13 +31,15 @@ namespace {
 
     io::FileSystem* g_fs = nullptr;
     io::Time* g_time = nullptr;
+
 }
 
-bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger, const std::string& dataRoot) {
+bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logger* logger) {
     if (initialized) return true;
 
     g_fs = &fs;
     g_time = &time;
+    g_dataRoot = config.dataRoot.empty() ? "/multigauge" : config.dataRoot;
 
     io::setLogger(logger);
 
@@ -147,6 +152,10 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
 
     auto screen = std::make_unique<EditorScreen>(editorId, faceId);
     return context->setScreen(std::move(screen));
+}
+
+Result getGaugeLibrary() {
+    return Error("Not implemented yet");
 }
 
 } // namespace mg

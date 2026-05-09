@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <memory>
+#include <string>
 
 #include <multigauge/editor/Api.h>
 #include <yoga/Yoga.h>
@@ -20,9 +21,13 @@ class GraphicsContext;
 
 using ContextId = uint32_t;
 
+struct AppConfig {
+    std::string dataRoot = "/multigauge";
+};
+
 //----------[ LIFETIME ]----------//
 
-bool init(io::FileSystem& fs, io::Time& time, io::Logger* logger = nullptr, const std::string& dataRoot = "/multigauge");
+bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config = AppConfig{}, io::Logger* logger = nullptr);
 void shutdown();
 void frame();
 YGConfigRef getYogaConfig();
