@@ -51,7 +51,7 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
 
 //----------[ PACKAGES ]----------//
 
-Result getPackages();
+Result listPackages();
 
 Result getPackage(const std::string& packageId);
 Result importPackage(const std::string& json);

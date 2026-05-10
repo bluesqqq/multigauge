@@ -1,6 +1,7 @@
 #include <multigauge/App.h>
 
 #include "AppPaths.h"
+#include "runtime/PackageManager.h"
 
 #include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/HandlePool.h>
@@ -17,6 +18,7 @@ namespace mg {
 
 namespace {
     std::string g_dataRoot = "/multigauge";
+    std::unique_ptr<PackageManager> g_packages;
 
     YGConfigRef createYogaConfig() {
         YGConfigRef config = YGConfigNew();
@@ -49,6 +51,7 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
 
     if (!g_fs->init()) return false;
 
+    g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
     contexts.clear();
     yogaConfig = createYogaConfig();
     initialized = true;
@@ -60,6 +63,7 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
 
 void shutdown() {
     contexts.clear();
+    g_packages.reset();
     if (yogaConfig) {
         YGConfigFree(yogaConfig);
         yogaConfig = nullptr;
@@ -136,13 +140,14 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
     return context->setScreen(std::move(screen));
 }
 
-bool setGaugeScreenFromFile(ContextId id, const std::string& path) {
-    if (!g_fs) return false;
+bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) {
+    if (!g_packages) return false;
 
-    std::string json;
-    if (!g_fs->readText(path, json)) return false;
+    Result faceResult = g_packages->getFace(packageId, faceId);
+    if (!faceResult.ok || !faceResult.data.IsObject()) return false;
+    if (!faceResult.data.HasMember("json") || !faceResult.data["json"].IsString()) return false;
 
-    return setGaugeScreen(id, json);
+    return setGaugeScreen(id, faceResult.data["json"].GetString());
 }
 
 bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
@@ -152,6 +157,31 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
 
     auto screen = std::make_unique<EditorScreen>(editorId, faceId);
     return context->setScreen(std::move(screen));
+}
+
+Result getPackages() {
+    if (!g_packages) return Error("App not initialized");
+    return g_packages->listPackages();
+}
+
+Result getPackage(const std::string& packageId) {
+    if (!g_packages) return Error("App not initialized");
+    return g_packages->getPackage(packageId);
+}
+
+Result importPackage(const std::string& json) {
+    if (!g_packages) return Error("App not initialized");
+    return g_packages->importPackage(json);
+}
+
+Result exportPackage(const std::string& packageId) {
+    if (!g_packages) return Error("App not initialized");
+    return g_packages->exportPackage(packageId);
+}
+
+Result removePackage(const std::string& packageId) {
+    if (!g_packages) return Error("App not initialized");
+    return g_packages->removePackage(packageId);
 }
 
 } // namespace mg
