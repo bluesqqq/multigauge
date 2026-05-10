@@ -46,9 +46,16 @@ bool clearScreen(ContextId id);
 bool hasScreen(ContextId id);
 
 bool setGaugeScreen(ContextId id, const std::string& json);
-bool setGaugeScreenFromFile(ContextId id, const std::string& path);
+bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId);
 bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId);
 
-Result getGaugeLibrary();
+//----------[ PACKAGES ]----------//
+
+Result getPackages();
+
+Result getPackage(const std::string& packageId);
+Result importPackage(const std::string& json);
+Result exportPackage(const std::string& packageId);
+Result removePackage(const std::string& packageId);
 
 }

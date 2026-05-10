@@ -154,8 +154,4 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
     return context->setScreen(std::move(screen));
 }
 
-Result getGaugeLibrary() {
-    return Error("Not implemented yet");
-}
-
 } // namespace mg
