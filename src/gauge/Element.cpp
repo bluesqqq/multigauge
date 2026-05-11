@@ -1,5 +1,6 @@
 #include <multigauge/App.h>
 #include <multigauge/gauge/Element.h>
+#include <multigauge/utils/Json.h>
 
 #include <algorithm>
 
@@ -184,8 +185,9 @@ DECODE_IMPL(gauge::OwnedElement) {
     const auto obj = v.GetObject();
 
     const char* type = nullptr;
-    if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) {
-        type = it->value.GetString();
+    std::string typeString;
+    if (mg::json::getStringMember(v, "type", typeString)) {
+        type = typeString.c_str();
     }
 
     out = gauge::Element::registry().create(type, nullptr);

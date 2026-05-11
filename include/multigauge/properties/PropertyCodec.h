@@ -1,6 +1,7 @@
 #pragma once
 
 #include <multigauge/properties/Codec.h>
+#include <multigauge/utils/Json.h>
 
 namespace mg {
 
@@ -23,8 +24,9 @@ inline bool decodePolymorphicOwned(const rapidjson::Value& v, Owned& out) {
     const auto obj = v.GetObject();
 
     const char* type = nullptr;
-    if (auto it = obj.FindMember("type"); it != obj.MemberEnd() && it->value.IsString()) {
-        type = it->value.GetString();
+    std::string typeString;
+    if (mg::json::getStringMember(v, "type", typeString)) {
+        type = typeString.c_str();
     }
 
     out = Base::registry().create(type);

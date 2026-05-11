@@ -2,6 +2,7 @@
 
 #include <multigauge/io/Base64.h>
 #include <multigauge/io/Log.h>
+#include <multigauge/utils/Json.h>
 
 namespace mg {
 
@@ -101,23 +102,20 @@ bool AssetManager::loadDocumentAssets(const rapidjson::Value::ConstArray &assets
             return false;
         }
 
-        const auto obj = asset.GetObject();
+        std::string name;
+        std::string data;
 
-        auto nameIt = obj.FindMember("name");
-        auto dataIt = obj.FindMember("data");
-
-        if (nameIt == obj.MemberEnd() || !nameIt->value.IsString()) {
+        if (!mg::json::getStringMember(asset, "name", name)) {
             LOG_ERROR(TAG, "Missing 'name'");
             return false;
         }
 
-        if (dataIt == obj.MemberEnd() || !dataIt->value.IsString()) {
-            LOG_ERROR(TAG, "Missing 'data' for '%s'", nameIt->value.GetString());
+        if (!mg::json::getStringMember(asset, "data", data)) {
+            LOG_ERROR(TAG, "Missing 'data' for '%s'", name.c_str());
             return false;
         }
 
-        const std::string name(nameIt->value.GetString(), nameIt->value.GetStringLength());
-        const std::string_view encoded(dataIt->value.GetString(), dataIt->value.GetStringLength());
+        const std::string_view encoded(data);
 
         std::vector<uint8_t> decoded;
         if (!decodeBase64(encoded, decoded)) {

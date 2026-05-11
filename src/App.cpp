@@ -10,6 +10,7 @@
 #include <multigauge/screens/GaugeScreen.h>
 #include <multigauge/screens/EditorScreen.h>
 #include <multigauge/io/Log.h>
+#include <multigauge/utils/Json.h>
 
 #include <rapidjson/document.h>
 #include <utility>
@@ -145,9 +146,10 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
 
     Result faceResult = g_packages->getFace(packageId, faceId);
     if (!faceResult.ok || !faceResult.data.IsObject()) return false;
-    if (!faceResult.data.HasMember("json") || !faceResult.data["json"].IsString()) return false;
+    std::string faceJson;
+    if (!mg::json::getStringMember(faceResult.data, "json", faceJson)) return false;
 
-    return setGaugeScreen(id, faceResult.data["json"].GetString());
+    return setGaugeScreen(id, faceJson);
 }
 
 bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
