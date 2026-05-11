@@ -1,7 +1,7 @@
 #pragma once
 
 #include <multigauge/gauge/Element.h>
-#include <multigauge/images/NineSlice.h>
+#include <multigauge/graphics/image/NineSlice.h>
 
 /*
 class NineSliceElement : public Element {

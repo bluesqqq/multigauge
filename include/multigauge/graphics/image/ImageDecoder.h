@@ -2,7 +2,7 @@
 
 #include <multigauge/graphics/colors/rgba.h>
 #include <multigauge/io/Log.h>
-#include <multigauge/utils.h>
+#include <multigauge/utils/Binary.h>
 
 #include "lodepng.h"
 #include "tjpgd.h"

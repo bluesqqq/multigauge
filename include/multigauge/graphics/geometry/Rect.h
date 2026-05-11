@@ -2,10 +2,10 @@
 
 #include <optional>
 
-#include <multigauge/geometry/Point.h>
-#include <multigauge/geometry/alignment.h>
-#include <multigauge/geometry/Line.h>
-#include <multigauge/geometry/Path.h>
+#include <multigauge/graphics/geometry/Point.h>
+#include <multigauge/graphics/geometry/alignment.h>
+#include <multigauge/graphics/geometry/Line.h>
+#include <multigauge/graphics/geometry/Path.h>
 
 #include <vector>
 

@@ -5,9 +5,10 @@
 #include <cstdint>
 #include <cstdio>
 
-#include <multigauge/values/Value.h>
-#include <multigauge/values/UnitType.h>
-#include <multigauge/utils.h>
+#include <multigauge/value/Value.h>
+#include <multigauge/value/UnitType.h>
+#include <multigauge/utils/Math.h>
+#include <multigauge/utils/Text.h>
 
 namespace mg::values::embed {
 

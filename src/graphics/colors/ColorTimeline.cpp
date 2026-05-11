@@ -2,7 +2,7 @@
 #include <multigauge/graphics/colors/StaticColor.h>
 #include <multigauge/graphics/colors/TimeColor.h>
 #include <multigauge/graphics/colors/ValueColor.h>
-#include <multigauge/utils.h>
+#include <multigauge/utils/Math.h>
 #include <set>
 #include <algorithm>
 #include <utility>

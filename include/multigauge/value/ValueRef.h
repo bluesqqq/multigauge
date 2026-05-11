@@ -4,7 +4,7 @@
 
 #include <multigauge/properties/Codec.h>
 #include <multigauge/properties/WidgetTraits.h>
-#include <multigauge/values/Value.h>
+#include <multigauge/value/Value.h>
 
 namespace mg {
 

@@ -36,7 +36,9 @@ PackageManager::PackageManager(io::FileSystem& fs, std::string dataRoot)
 }
 
 Result PackageManager::listPackages() const {
-    return readTextFile(fs, paths::libraryPath(dataRoot));
+    const std::string path = paths::libraryPath(dataRoot);
+    if (!fs.exists(path)) return Error("library.json not found");
+    return readTextFile(fs, path);
 }
 
 Result PackageManager::getPackage(const std::string& packageId) const {
@@ -57,6 +59,9 @@ Result PackageManager::exportPackage(const std::string&) const {
 
 Result PackageManager::removePackage(const std::string&) {
     return notImplemented();
+}
+
+void PackageManager::rebuildLibrary() const {
 }
 
 } // namespace mg

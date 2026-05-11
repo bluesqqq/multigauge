@@ -1,4 +1,4 @@
-#include <multigauge/values/Value.h>
+#include <multigauge/value/Value.h>
 
 #include <multigauge/io/Log.h>
 

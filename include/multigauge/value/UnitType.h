@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/values/Unit.h>
+#include <multigauge/value/Unit.h>
 
 #include <vector>
 #include <string>

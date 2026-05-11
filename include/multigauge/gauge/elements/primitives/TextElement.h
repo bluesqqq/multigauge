@@ -2,7 +2,7 @@
 
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/colors/Color.h>
-#include <multigauge/values/ValueEmbed.h>
+#include <multigauge/value/ValueEmbed.h>
 
 namespace mg::gauge {
 

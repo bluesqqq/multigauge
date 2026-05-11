@@ -1,9 +1,9 @@
 #pragma once
 
-#include <multigauge/geometry/alignment.h>
+#include <multigauge/graphics/geometry/alignment.h>
 #include <multigauge/graphics/TextPaint.h>
 #include <multigauge/graphics/colors/Color.h>
-#include <multigauge/images/Image.h>
+#include <multigauge/graphics/image/Image.h>
 
 #include <string>
 #include <string_view>

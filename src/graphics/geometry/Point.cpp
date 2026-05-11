@@ -1,11 +1,11 @@
-#include <multigauge/geometry/Point.h>
+#include <multigauge/graphics/geometry/Point.h>
 #include <multigauge/constants.h>
 #include <cmath>
 #include <algorithm>
 
-#include <multigauge/geometry/Line.h>
-#include <multigauge/geometry/Rect.h>
-#include <multigauge/geometry/Circle.h>
+#include <multigauge/graphics/geometry/Line.h>
+#include <multigauge/graphics/geometry/Rect.h>
+#include <multigauge/graphics/geometry/Circle.h>
 
 namespace mg {
 

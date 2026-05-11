@@ -4,7 +4,7 @@
 #include <multigauge/gauge/ticks/SubTick.h>
 #include <multigauge/gauge/ticks/TickStyle.h>
 #include <multigauge/graphics/colors/ColorTimeline.h>
-#include <multigauge/utils.h>
+#include <multigauge/utils/Math.h>
 
 #include <multigauge/graphics/Graphics.h>
 

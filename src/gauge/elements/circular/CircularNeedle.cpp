@@ -1,7 +1,7 @@
 #include <multigauge/gauge/elements/circular/CircularNeedle.h>
 
 #include <multigauge/constants.h>
-#include <multigauge/utils.h>
+#include <multigauge/utils/Math.h>
 #include <cmath>
 
 namespace mg::gauge {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/images/Image.h>
+#include <multigauge/graphics/image/Image.h>
 #include <multigauge/runtime/AssetManager.h>
 #include "rapidjson/document.h"
 

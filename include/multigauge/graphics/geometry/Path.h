@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/geometry/Rect.h>
+#include <multigauge/graphics/geometry/Rect.h>
 
 namespace mg {
 

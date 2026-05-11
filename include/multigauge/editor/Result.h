@@ -3,7 +3,8 @@
 #include <string>
 
 #include <rapidjson/document.h>
-#include <rapidjson/writer.h>
+
+#include <multigauge/utils/Json.h>
 
 namespace mg {
 
@@ -27,10 +28,7 @@ struct Result {
             d.AddMember("error", rapidjson::Value(error.c_str(), a), a);
         }
 
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        d.Accept(writer);
-        return buffer.GetString();
+        return ::mg::json::toString(d);
     }
 
     static Result OkObject() {
@@ -55,16 +53,10 @@ struct Result {
     }
 };
 
-inline Result OkObject() {
-    return Result::OkObject();
-}
+inline Result OkObject() { return Result::OkObject(); }
 
-inline Result OkArray() {
-    return Result::OkArray();
-}
+inline Result OkArray() { return Result::OkArray(); }
 
-inline Result Error(const std::string& error) {
-    return Result::Error(error);
-}
+inline Result Error(const std::string& error) { return Result::Error(error); }
 
 } // namespace mg

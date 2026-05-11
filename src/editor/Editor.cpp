@@ -4,10 +4,9 @@
 #include <memory>
 
 #include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
 
-#include <multigauge/values/Value.h>
+#include <multigauge/value/Value.h>
+#include <multigauge/utils/Json.h>
 
 namespace mg::editor {
 
@@ -90,19 +89,6 @@ struct PropertySetState {
     std::string afterJson;
 };
 
-rapidjson::Document parseJson(const std::string& json) {
-    rapidjson::Document doc;
-    doc.Parse(json.c_str());
-    return doc;
-}
-
-std::string toString(const rapidjson::Value& value) {
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    value.Accept(writer);
-    return buffer.GetString();
-}
-
 Result saveJsonResult(const std::string& json) {
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
@@ -124,7 +110,7 @@ ElementSnapshot snapshotElement(const Editor& editor, const Element& element) {
     rapidjson::Document doc;
     doc.SetObject();
     element.saveProperties(doc, doc.GetAllocator());
-    snapshot.json = toString(doc);
+    snapshot.json = mg::json::toString(doc);
     collectSubtreeIds(editor, &element, snapshot.ids);
     return snapshot;
 }
@@ -398,7 +384,7 @@ void Editor::clear() {
 }
 
 bool Editor::loadDocument(const std::string& json) {
-    rapidjson::Document doc = parseJson(json);
+    rapidjson::Document doc = mg::json::parseJson(json);
     if (doc.HasParseError() || !doc.IsArray()) return false;
 
     clear();
@@ -436,13 +422,13 @@ std::string Editor::saveDocument() const {
         doc.PushBack(std::move(copy), allocator);
     }
 
-    return toString(doc);
+    return mg::json::toString(doc);
 }
 
 Result Editor::serializeFace(NodeId faceId) const {
     const GaugeFace* face = getFaceById(faceId);
     if (!face) return Error("Invalid face id");
-    return saveJsonResult(toString(face->save()));
+    return saveJsonResult(mg::json::toString(face->save()));
 }
 
 Result Editor::serializeElement(NodeId elementId) const {
@@ -451,7 +437,7 @@ Result Editor::serializeElement(NodeId elementId) const {
     rapidjson::Document doc;
     doc.SetObject();
     element->saveProperties(doc, doc.GetAllocator());
-    return saveJsonResult(toString(doc));
+    return saveJsonResult(mg::json::toString(doc));
 }
 
 bool Editor::hasNode(NodeId id) const {
@@ -551,7 +537,7 @@ Result Editor::listValueIDs() const {
 }
 
 Result Editor::createFace(const std::string& json, FacePlacement where) {
-    rapidjson::Document doc = parseJson(json);
+    rapidjson::Document doc = mg::json::parseJson(json);
     if (!doc.IsObject()) return Error("Invalid JSON");
 
     const std::size_t index = clampIndex(where.index, faces.size());
@@ -566,7 +552,7 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
 
         // DO
         [this, state, json]() {
-            rapidjson::Document doc = parseJson(json);
+            rapidjson::Document doc = mg::json::parseJson(json);
 
             auto face = std::make_unique<GaugeFace>();
             face->load(doc);
@@ -617,7 +603,7 @@ Result Editor::removeFace(NodeId faceId) {
     state->face = it->get();
     state->faceId = faceId;
     state->index = index;
-    state->json = toString(state->face->save());
+    state->json = mg::json::toString(state->face->save());
     state->rootIds = snapshotFaceRootIds(*this, *it->get());
 
     const bool committed = history.commit({
@@ -637,7 +623,7 @@ Result Editor::removeFace(NodeId faceId) {
 
         // UNDO
         [this, state]() {
-            rapidjson::Document doc = parseJson(state->json);
+            rapidjson::Document doc = mg::json::parseJson(state->json);
             if (!doc.IsObject()) return false;
 
             auto face = std::make_unique<GaugeFace>();
@@ -711,7 +697,7 @@ Result Editor::createElement(const ElementPlacement& where, const std::string& j
     ElementContainerRef parent = getElementContainerById(where.parentId);
     if (!parent.isFace() && !parent.isElement()) return Error("Invalid parent id");
 
-    rapidjson::Document doc = parseJson(json);
+    rapidjson::Document doc = mg::json::parseJson(json);
     if (!doc.IsObject()) return Error("Invalid JSON");
 
     const std::size_t index = clampIndex(where.index, childCountOf(parent));
@@ -726,7 +712,7 @@ Result Editor::createElement(const ElementPlacement& where, const std::string& j
             ElementContainerRef currentParent = getElementContainerById(state->parentId);
             if (!currentParent.isFace() && !currentParent.isElement()) return false;
 
-            rapidjson::Document parsed = parseJson(state->json);
+            rapidjson::Document parsed = mg::json::parseJson(state->json);
             OwnedElement element;
             if (!decodeAny(parsed, element)) return false;
             Element* raw = element.get();
@@ -782,7 +768,7 @@ Result Editor::removeElement(NodeId elementId) {
         [this, state]() {
             ElementContainerRef currentParent = getElementContainerById(state->parentId);
             if (!currentParent.isFace() && !currentParent.isElement()) return false;
-            rapidjson::Document parsed = parseJson(state->removed.json);
+            rapidjson::Document parsed = mg::json::parseJson(state->removed.json);
             OwnedElement restored;
             if (!decodeAny(parsed, restored)) return false;
             Element* raw = restored.get();
@@ -890,7 +876,7 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
-    rapidjson::Document doc = parseJson(json);
+    rapidjson::Document doc = mg::json::parseJson(json);
     if (!doc.IsObject()) return Error("Invalid JSON");
 
     auto state = std::make_shared<ReplaceState>();
@@ -924,7 +910,7 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
                 if (!face || !face->removeChild(current)) return false;
             }
 
-            rapidjson::Document parsed = parseJson(state->initialized ? state->after.json : state->pendingJson);
+            rapidjson::Document parsed = mg::json::parseJson(state->initialized ? state->after.json : state->pendingJson);
             OwnedElement replacement;
             if (!decodeAny(parsed, replacement)) return false;
             Element* raw = replacement.get();
@@ -959,7 +945,7 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
                 if (!face || !face->removeChild(current)) return false;
             }
 
-            rapidjson::Document parsed = parseJson(state->before.json);
+            rapidjson::Document parsed = mg::json::parseJson(state->before.json);
             OwnedElement restored;
             if (!decodeAny(parsed, restored)) return false;
             Element* raw = restored.get();
@@ -982,7 +968,7 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
     ::mg::PropertyObject* object = getObjectById(id);
     if (!object) return Error("Invalid id");
 
-    rapidjson::Document value = parseJson(json);
+    rapidjson::Document value = mg::json::parseJson(json);
     if (value.HasParseError()) return Error("Invalid JSON");
 
     ::mg::PropertyObject* owner = nullptr;
@@ -997,7 +983,7 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
         return Error("Failed to read current property value");
     }
 
-    const std::string beforeJson = toString(beforeDoc);
+    const std::string beforeJson = mg::json::toString(beforeDoc);
     auto state = std::make_shared<PropertySetState>();
     state->nodeId = id;
     state->path = path;
@@ -1012,7 +998,7 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
     ::mg::PropertyObject* currentOwner = nullptr;
             const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
-            rapidjson::Document parsed = parseJson(state->afterJson);
+            rapidjson::Document parsed = mg::json::parseJson(state->afterJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
         },
         [this, state]() {
@@ -1021,7 +1007,7 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
     ::mg::PropertyObject* currentOwner = nullptr;
             const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
-            rapidjson::Document parsed = parseJson(state->beforeJson);
+            rapidjson::Document parsed = mg::json::parseJson(state->beforeJson);
             return currentOwner->setProperty(currentProperty->key, parsed);
         }
     });

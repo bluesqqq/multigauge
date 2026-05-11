@@ -1,4 +1,4 @@
-#include <multigauge/geometry/Line.h>
+#include <multigauge/graphics/geometry/Line.h>
 
 #include <algorithm>
 #include <cmath>
@@ -6,8 +6,8 @@
 #include <vector>
 #include <limits>
 
-#include <multigauge/geometry/Rect.h>
-#include <multigauge/geometry/Circle.h>
+#include <multigauge/graphics/geometry/Rect.h>
+#include <multigauge/graphics/geometry/Circle.h>
 
 namespace mg {
 

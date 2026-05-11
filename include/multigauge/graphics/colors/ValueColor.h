@@ -2,7 +2,7 @@
 
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/graphics/colors/ColorTimeline.h>
-#include <multigauge/values/ValueRef.h>
+#include <multigauge/value/ValueRef.h>
 
 namespace mg::graphics {
 

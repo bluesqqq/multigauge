@@ -1,14 +1,14 @@
 #pragma once
 
-#include <multigauge/geometry/alignment.h>
-#include <multigauge/geometry/Rect.h>
-#include <multigauge/geometry/Point.h>
-#include <multigauge/geometry/Line.h>
-#include <multigauge/geometry/Path.h>
+#include <multigauge/graphics/geometry/alignment.h>
+#include <multigauge/graphics/geometry/Rect.h>
+#include <multigauge/graphics/geometry/Point.h>
+#include <multigauge/graphics/geometry/Line.h>
+#include <multigauge/graphics/geometry/Path.h>
 
 #include <multigauge/graphics/GraphicsContext.h>
-#include <multigauge/images/Image.h>
-#include <multigauge/images/NineSlice.h>
+#include <multigauge/graphics/image/Image.h>
+#include <multigauge/graphics/image/NineSlice.h>
 #include <multigauge/graphics/TextPaint.h>
 
 #include <string>

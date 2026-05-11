@@ -1,6 +1,6 @@
-#include <multigauge/values/UnitType.h>
+#include <multigauge/value/UnitType.h>
 
-#include <multigauge/utils.h>
+#include <multigauge/utils/Math.h>
 
 namespace mg {
 

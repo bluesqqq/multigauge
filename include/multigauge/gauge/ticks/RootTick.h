@@ -1,7 +1,7 @@
 #pragma once
 
 #include <multigauge/gauge/ticks/TickStyle.h>
-#include <multigauge/utils.h>
+#include <multigauge/utils/Math.h>
 
 #include <cmath>
 #include <vector>

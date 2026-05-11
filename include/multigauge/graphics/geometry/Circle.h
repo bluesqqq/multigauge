@@ -1,7 +1,7 @@
 #pragma once
 
-#include <multigauge/geometry/Point.h>
-#include <multigauge/geometry/Rect.h>
+#include <multigauge/graphics/geometry/Point.h>
+#include <multigauge/graphics/geometry/Rect.h>
 
 namespace mg {
 

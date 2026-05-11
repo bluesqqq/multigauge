@@ -2,8 +2,8 @@
 
 #include <multigauge/io/FileSystem.h>
 #include <multigauge/graphics/GraphicsContext.h>
-#include <multigauge/images/Image.h>
-#include <multigauge/images/ImageDecoder.h>
+#include <multigauge/graphics/image/Image.h>
+#include <multigauge/graphics/image/ImageDecoder.h>
 
 #include <rapidjson/document.h>
 

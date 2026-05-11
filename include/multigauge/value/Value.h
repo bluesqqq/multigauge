@@ -3,7 +3,7 @@
 #include <string>
 #include <functional>
 #include <vector>
-#include <multigauge/values/UnitType.h>
+#include <multigauge/value/UnitType.h>
 #include <unordered_map>
 
 namespace mg {

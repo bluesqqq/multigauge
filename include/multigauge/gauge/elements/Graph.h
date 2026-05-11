@@ -2,7 +2,7 @@
 
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/DisplayValue.h>
-#include <multigauge/utils.h>
+#include <multigauge/utils/Math.h>
 
 namespace mg::gauge {
 

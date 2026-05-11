@@ -1,6 +1,6 @@
 #pragma once
 
-#include <multigauge/fonts/Font.h>
+#include <multigauge/graphics/font/Font.h>
 #include <multigauge/graphics/colors/Color.h>
 
 #include <rapidjson/document.h>

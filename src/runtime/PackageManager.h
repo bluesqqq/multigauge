@@ -21,6 +21,8 @@ public:
     Result exportPackage(const std::string& packageId) const;
     Result removePackage(const std::string& packageId);
 
+    void rebuildLibrary() const;
+
 private:
     io::FileSystem& fs;
     std::string dataRoot;

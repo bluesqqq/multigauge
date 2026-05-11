@@ -1,7 +1,7 @@
 #pragma once
 
 #include <multigauge/properties/PropertyObject.h>
-#include <multigauge/values/ValueRef.h>
+#include <multigauge/value/ValueRef.h>
 
 namespace mg::graphics {
 

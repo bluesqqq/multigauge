@@ -1,5 +1,5 @@
-#include <multigauge/geometry/Rect.h>
-#include <multigauge/utils.h>
+#include <multigauge/graphics/geometry/Rect.h>
+#include <multigauge/utils/Math.h>
 #include <algorithm>
 #include <cmath>
 #include <array>
