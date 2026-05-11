@@ -145,11 +145,9 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
     if (!g_packages) return false;
 
     Result faceResult = g_packages->getFace(packageId, faceId);
-    if (!faceResult.ok || !faceResult.data.IsObject()) return false;
-    std::string faceJson;
-    if (!mg::json::getStringMember(faceResult.data, "json", faceJson)) return false;
+    if (!faceResult.ok) return false;
 
-    return setGaugeScreen(id, faceJson);
+    return setGaugeScreen(id, mg::json::toString(faceResult.data));
 }
 
 bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {

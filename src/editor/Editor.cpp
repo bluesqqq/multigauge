@@ -89,13 +89,6 @@ struct PropertySetState {
     std::string afterJson;
 };
 
-Result saveJsonResult(const std::string& json) {
-    Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("json", rapidjson::Value(json.c_str(), allocator), allocator);
-    return result;
-}
-
 void collectSubtreeIds(const Editor& editor, const Element* element, std::vector<NodeId>& ids) {
     if (!element) return;
 
@@ -126,15 +119,6 @@ std::vector<std::vector<NodeId>> snapshotFaceRootIds(const Editor& editor, const
     }
 
     return rootIds;
-}
-
-void addString(rapidjson::Value& object,
-               const char* key,
-               const char* value,
-               rapidjson::Document::AllocatorType& allocator) {
-    object.AddMember(rapidjson::Value(key, allocator),
-                     rapidjson::Value(value, allocator),
-                     allocator);
 }
 
 bool elementContains(const Element* root, const Element* target) {
@@ -187,9 +171,9 @@ void appendElementHierarchyNode(const Editor& editor,
     rapidjson::Value nodeKey(std::to_string(id).c_str(), allocator);
     rapidjson::Value nodeValue(rapidjson::kObjectType);
 
-    addString(nodeValue, "kind", "element", allocator);
-    addString(nodeValue, "type", element.typeName(), allocator);
-    addString(nodeValue, "name", element.typeName(), allocator);
+    nodeValue.AddMember("kind", rapidjson::Value("element", allocator), allocator);
+    nodeValue.AddMember("type", rapidjson::Value(element.typeName(), allocator), allocator);
+    nodeValue.AddMember("name", rapidjson::Value(element.typeName(), allocator), allocator);
 
     rapidjson::Value children(rapidjson::kArrayType);
     children.Reserve(static_cast<rapidjson::SizeType>(element.childCount()), allocator);
@@ -428,7 +412,10 @@ std::string Editor::saveDocument() const {
 Result Editor::serializeFace(NodeId faceId) const {
     const GaugeFace* face = getFaceById(faceId);
     if (!face) return Error("Invalid face id");
-    return saveJsonResult(mg::json::toString(face->save()));
+    std::string json = mg::json::toString(face->save());
+    Result result = OkObject();
+    result.data.AddMember("json", rapidjson::Value(json.c_str(), result.data.GetAllocator()), result.data.GetAllocator());
+    return result;
 }
 
 Result Editor::serializeElement(NodeId elementId) const {
@@ -437,7 +424,10 @@ Result Editor::serializeElement(NodeId elementId) const {
     rapidjson::Document doc;
     doc.SetObject();
     element->saveProperties(doc, doc.GetAllocator());
-    return saveJsonResult(mg::json::toString(doc));
+    std::string json = mg::json::toString(doc);
+    Result result = OkObject();
+    result.data.AddMember("json", rapidjson::Value(json.c_str(), result.data.GetAllocator()), result.data.GetAllocator());
+    return result;
 }
 
 bool Editor::hasNode(NodeId id) const {
@@ -480,8 +470,8 @@ Result Editor::getHierarchy() const {
         rapidjson::Value nodeKey(std::to_string(faceId).c_str(), allocator);
         rapidjson::Value nodeValue(rapidjson::kObjectType);
 
-        addString(nodeValue, "kind", "face", allocator);
-        addString(nodeValue, "name", face->typeName(), allocator);
+        nodeValue.AddMember("kind", rapidjson::Value("face", allocator), allocator);
+        nodeValue.AddMember("name", rapidjson::Value(face->typeName(), allocator), allocator);
 
         rapidjson::Value children(rapidjson::kArrayType);
         children.Reserve(static_cast<rapidjson::SizeType>(face->childCount()), allocator);

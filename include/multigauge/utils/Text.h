@@ -5,6 +5,9 @@
 
 namespace mg::utils {
 
+/// @brief Returns true if c is a path separator.
+static inline bool isPathSeparator(char c) { return c == '/' || c == '\\'; }
+
 /// @brief Parses an unsigned decimal integer from s starting at i.
 /// @param s The input view.
 /// @param i In/out cursor. Advances past parsed digits.
