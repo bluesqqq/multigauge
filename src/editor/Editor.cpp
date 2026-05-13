@@ -1,7 +1,6 @@
 #include <multigauge/editor/Editor.h>
 
 #include <algorithm>
-#include <cctype>
 #include <memory>
 
 #include <rapidjson/document.h>
@@ -14,44 +13,6 @@ namespace mg::editor {
 using ::mg::Result;
 
 namespace {
-
-std::string slugify(const std::string& name) {
-    std::string out;
-    bool lastHyphen = false;
-
-    for (unsigned char c : name) {
-        if (std::isalnum(c)) {
-            out.push_back(static_cast<char>(std::tolower(c)));
-            lastHyphen = false;
-        } else if (!out.empty() && !lastHyphen) {
-            out.push_back('-');
-            lastHyphen = true;
-        }
-    }
-
-    while (!out.empty() && out.back() == '-') {
-        out.pop_back();
-    }
-
-    if (out.empty()) out = "face";
-    return out;
-}
-
-std::string uniqueFaceId(const std::string& name, const std::vector<std::string>& existingIds) {
-    const std::string base = slugify(name);
-    std::string candidate = base;
-    int suffix = 2;
-
-    while (std::find(existingIds.begin(), existingIds.end(), candidate) != existingIds.end()) {
-        candidate = base + "-" + std::to_string(suffix++);
-    }
-
-    return candidate;
-}
-
-std::string facePathForId(const std::string& faceId) {
-    return "faces/" + faceId + ".json";
-}
 
 struct FaceInsertState {
     GaugeFace* face = nullptr;
@@ -412,7 +373,6 @@ void Editor::clear() {
     elementToId.clear();
     nextId = 1;
     history = History();
-    packageId = "editor-export";
     packageName = "Editor Export";
     packageAuthor = "Unknown";
     packageDescription.clear();
@@ -423,12 +383,10 @@ bool Editor::loadDocument(const std::string& json) {
     if (doc.HasParseError()) return false;
     if (!doc.IsObject()) return false;
 
-    std::string id;
     std::string name;
     std::string author;
     std::string description;
-    if (!mg::json::getStringMember(doc, "id", id) ||
-        !mg::json::getStringMember(doc, "name", name) ||
+    if (!mg::json::getStringMember(doc, "name", name) ||
         !mg::json::getStringMember(doc, "author", author) ||
         !mg::json::getStringMember(doc, "description", description)) {
         return false;
@@ -438,20 +396,15 @@ bool Editor::loadDocument(const std::string& json) {
     if (!faces) return false;
 
     clear();
-    packageId = std::move(id);
     packageName = std::move(name);
     packageAuthor = std::move(author);
     packageDescription = std::move(description);
 
     for (const auto& faceEntry : faces->GetArray()) {
-        if (!faceEntry.IsObject()) continue;
+        if (!faceEntry.IsObject()) return false;
 
-        std::string faceId;
         std::string faceName;
-        std::string facePath;
-        if (!mg::json::getStringMember(faceEntry, "id", faceId) ||
-            !mg::json::getStringMember(faceEntry, "name", faceName) ||
-            !mg::json::getStringMember(faceEntry, "path", facePath)) {
+        if (!mg::json::getStringMember(faceEntry, "name", faceName)) {
             return false;
         }
 
@@ -464,7 +417,7 @@ bool Editor::loadDocument(const std::string& json) {
         GaugeFace* raw = face.get();
 
         this->faces.push_back(std::move(face));
-        faceMeta.push_back({ std::move(faceId), std::move(faceName), std::move(facePath) });
+        faceMeta.push_back({ std::move(faceName) });
         registerFace(raw);
 
         for (std::size_t i = 0; i < raw->childCount(); ++i) {
@@ -480,7 +433,6 @@ std::string Editor::saveDocument() const {
     doc.SetObject();
     auto& allocator = doc.GetAllocator();
 
-    doc.AddMember("id", rapidjson::Value(packageId.c_str(), allocator), allocator);
     doc.AddMember("name", rapidjson::Value(packageName.c_str(), allocator), allocator);
     doc.AddMember("author", rapidjson::Value(packageAuthor.c_str(), allocator), allocator);
     doc.AddMember("description", rapidjson::Value(packageDescription.c_str(), allocator), allocator);
@@ -492,10 +444,8 @@ std::string Editor::saveDocument() const {
 
         rapidjson::Document saved = face->save();
         rapidjson::Value entry(rapidjson::kObjectType);
-        const FaceMeta meta = i < faceMeta.size() ? faceMeta[i] : FaceMeta{ "face", "Face", "faces/face.json" };
-        entry.AddMember("id", rapidjson::Value(meta.id.c_str(), allocator), allocator);
+        const FaceMeta meta = i < faceMeta.size() ? faceMeta[i] : FaceMeta{ "Face" };
         entry.AddMember("name", rapidjson::Value(meta.name.c_str(), allocator), allocator);
-        entry.AddMember("path", rapidjson::Value(meta.path.c_str(), allocator), allocator);
         rapidjson::Value faceValue;
         faceValue.CopyFrom(saved, allocator);
         entry.AddMember("face", std::move(faceValue), allocator);
@@ -631,16 +581,11 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
     const std::size_t index = clampIndex(where.index, faces.size());
     const NodeId id = makeId();
     const std::string faceName = "Face " + std::to_string(index + 1);
-    std::vector<std::string> existingIds;
-    existingIds.reserve(faceMeta.size());
-    for (const auto& meta : faceMeta) existingIds.push_back(meta.id);
 
     auto state = std::make_shared<FaceInsertState>();
     state->index = index;
     state->faceId = id;
-    state->meta.id = uniqueFaceId(faceName, existingIds);
     state->meta.name = faceName;
-    state->meta.path = facePathForId(state->meta.id);
 
     const bool committed = history.commit({
         "create face",

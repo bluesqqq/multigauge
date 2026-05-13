@@ -6,9 +6,6 @@
   "type": "object",
   "additionalProperties": false,
   "properties": {
-    "id": {
-      "$ref": "#/$defs/nonEmptyString"
-    },
     "name": {
       "$ref": "#/$defs/nonEmptyString"
     },
@@ -32,7 +29,6 @@
     }
   },
   "required": [
-    "id",
     "name",
     "author",
     "description",
@@ -51,13 +47,7 @@
     "faceEntry": {
       "type": "object",
       "properties": {
-        "id": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
         "name": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
-        "path": {
           "$ref": "#/$defs/nonEmptyString"
         },
         "face": {
@@ -65,9 +55,7 @@
         }
       },
       "required": [
-        "id",
         "name",
-        "path",
         "face"
       ],
       "additionalProperties": false

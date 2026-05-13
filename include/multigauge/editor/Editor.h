@@ -23,9 +23,7 @@ using ::mg::gauge::OwnedElement;
 class Editor {
     public:
         struct FaceMeta {
-            std::string id;
             std::string name;
-            std::string path;
         };
 
         /// Appends at the end of a sibling list when used as an index.
@@ -59,7 +57,6 @@ class Editor {
 
         std::vector<std::unique_ptr<GaugeFace>> faces;
         std::vector<FaceMeta> faceMeta;
-        std::string packageId = "editor-export";
         std::string packageName = "Editor Export";
         std::string packageAuthor = "Unknown";
         std::string packageDescription;

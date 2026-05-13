@@ -29,23 +29,6 @@ using mg::json::getArrayMember;
 using mg::json::getObjectMember;
 using mg::json::getStringMember;
 
-struct FaceSummary {
-    std::string id;
-    std::string name;
-    std::string path;
-};
-
-bool isSafePathComponent(const std::string& value) {
-    if (value.empty()) return false;
-    if (value == "." || value == "..") return false;
-
-    for (char c : value) {
-        if (mg::utils::isPathSeparator(c) || c == ':') return false;
-    }
-
-    return true;
-}
-
 bool isSafeRelativePath(const std::string& value) {
     if (value.empty()) return false;
     if (value.front() == '/' || value.front() == '\\') return false;
@@ -111,17 +94,28 @@ bool ensureParentDirectories(io::FileSystem& fs, const std::string& path) {
     return makeDirectoryChain(fs, path.substr(0, lastSep));
 }
 
-bool buildLibraryIndex(
-    io::FileSystem& fs,
-    std::string_view currentId,
-    const std::string& currentName,
-    const std::string& currentAuthor,
-    const std::string& currentDescription,
-    const std::vector<FaceSummary>* currentFaces,
-    std::string_view dataRoot) {
+bool buildLibraryIndex(io::FileSystem& fs, std::string_view dataRoot) {
     if (!makeDirectoryChain(fs, std::string(dataRoot)) ||
         !makeDirectoryChain(fs, paths::packagesRootPath(dataRoot))) {
         return false;
+    }
+
+    std::set<std::string> favoriteIds;
+    rapidjson::Document previousLibrary;
+    if (mg::json::readJsonFile(fs, paths::libraryPath(dataRoot), previousLibrary) && previousLibrary.IsObject()) {
+        if (const auto* packages = getArrayMember(previousLibrary, "packages")) {
+            for (const auto& item : packages->GetArray()) {
+                if (!item.IsObject()) continue;
+
+                std::string id;
+                bool favorite = false;
+                if (getStringMember(item, "id", id) &&
+                    mg::json::getBoolMember(item, "favorite", favorite) &&
+                    favorite) {
+                    favoriteIds.insert(id);
+                }
+            }
+        }
     }
 
     rapidjson::StringBuffer buffer;
@@ -135,34 +129,31 @@ bool buildLibraryIndex(
     std::sort(packageIds.begin(), packageIds.end());
 
     for (const auto& packageId : packageIds) {
-        const bool isCurrent = !currentId.empty() && packageId == currentId;
+        rapidjson::Document manifest;
+        if (!mg::json::readJsonFile(fs, paths::manifestPath(dataRoot, packageId), manifest) || !manifest.IsObject()) {
+            continue;
+        }
+
+        std::string name;
+        std::string author;
+        std::string description;
+        if (!getStringMember(manifest, "name", name) ||
+            !getStringMember(manifest, "author", author) ||
+            !getStringMember(manifest, "description", description)) {
+            continue;
+        }
 
         writer.StartObject();
         writer.Key("id");
         writer.String(packageId.c_str());
         writer.Key("name");
-        writer.String(isCurrent ? currentName.c_str() : packageId.c_str());
+        writer.String(name.c_str());
         writer.Key("author");
-        writer.String(isCurrent ? currentAuthor.c_str() : "");
+        writer.String(author.c_str());
         writer.Key("description");
-        writer.String(isCurrent ? currentDescription.c_str() : "");
+        writer.String(description.c_str());
         writer.Key("favorite");
-        writer.Bool(false);
-        if (isCurrent && currentFaces && !currentFaces->empty()) {
-            writer.Key("faces");
-            writer.StartArray();
-            for (const auto& faceEntry : *currentFaces) {
-                writer.StartObject();
-                writer.Key("id");
-                writer.String(faceEntry.id.c_str());
-                writer.Key("name");
-                writer.String(faceEntry.name.c_str());
-                writer.Key("path");
-                writer.String(faceEntry.path.c_str());
-                writer.EndObject();
-            }
-            writer.EndArray();
-        }
+        writer.Bool(favoriteIds.count(packageId) != 0);
         writer.EndObject();
     }
 
@@ -241,41 +232,6 @@ std::string uniqueSlug(const std::string& name, std::set<std::string>& usedIds) 
     return candidate;
 }
 
-bool makeFacePayload(const rapidjson::Value& faceEntry, rapidjson::Document& out) {
-    out.SetObject();
-
-    const rapidjson::Value* payload = &faceEntry;
-
-    if (faceEntry.IsObject()) {
-        if (const auto* faceValue = getObjectMember(faceEntry, "face")) {
-            payload = faceValue;
-        } else if (const auto* documentValue = getObjectMember(faceEntry, "document")) {
-            payload = documentValue;
-        } else {
-            std::string json;
-            if (getStringMember(faceEntry, "json", json)) {
-                out = mg::json::parseJson(json);
-                return out.IsObject();
-            }
-            if (const auto* jsonObject = getObjectMember(faceEntry, "json")) {
-                payload = jsonObject;
-            }
-        }
-    }
-
-    out.CopyFrom(*payload, out.GetAllocator());
-
-    if (out.HasMember("id")) out.RemoveMember("id");
-    if (out.HasMember("name")) out.RemoveMember("name");
-    if (out.HasMember("path")) out.RemoveMember("path");
-    if (out.HasMember("face")) out.RemoveMember("face");
-    if (out.HasMember("document")) out.RemoveMember("document");
-    if (out.HasMember("json")) out.RemoveMember("json");
-    if (out.HasMember("assets")) out.RemoveMember("assets");
-
-    return true;
-}
-
 bool decodeAssetBytes(const rapidjson::Value& assetValue, std::vector<uint8_t>& out) {
     std::string data;
     if (!getStringMember(assetValue, "data", data)) {
@@ -345,21 +301,15 @@ Result PackageManager::importPackage(const std::string& json) {
         return Error("Invalid package JSON");
     }
 
-    std::string packageId;
     std::string packageName;
     std::string packageAuthor;
     std::string packageDescription;
 
-    if (!getStringMember(input, "id", packageId) ||
-        !getStringMember(input, "name", packageName) ||
+    if (!getStringMember(input, "name", packageName) ||
         !getStringMember(input, "author", packageAuthor) ||
         !getStringMember(input, "description", packageDescription)) {
         LOG_ERROR(TAG, "importPackage: missing required package fields");
         return Error("Package JSON is missing required fields");
-    }
-
-    if (!isSafePathComponent(packageId)) {
-        return Error("Invalid package id");
     }
 
     const rapidjson::Value* facesValue = getArrayMember(input, "faces");
@@ -369,19 +319,19 @@ Result PackageManager::importPackage(const std::string& json) {
     }
 
     const rapidjson::Value* assetsValue = getArrayMember(input, "assets");
+    std::set<std::string> usedPackageIds;
+    for (const auto& packageId : readPackageDirectories(fs, paths::packagesRootPath(dataRoot))) {
+        usedPackageIds.insert(packageId);
+    }
+    const std::string packageId = uniqueSlug(packageName, usedPackageIds);
     LOG_INFO(TAG,
-             "importPackage: id=%s name=%s faces=%u assets=%s",
+             "importPackage: packageId=%s name=%s faces=%u assets=%s",
              packageId.c_str(),
              packageName.c_str(),
              static_cast<unsigned>(facesValue->Size()),
              assetsValue ? "yes" : "no");
 
     const std::string packageRoot = paths::packagePath(dataRoot, packageId);
-    if (fs.exists(packageRoot) && !removeTree(fs, packageRoot)) {
-        LOG_ERROR(TAG, "importPackage: failed to remove existing package root %s", packageRoot.c_str());
-        return Error("Failed to replace existing package");
-    }
-
     if (!makeDirectoryChain(fs, dataRoot) ||
         !makeDirectoryChain(fs, paths::packagesRootPath(dataRoot)) ||
         !makeDirectoryChain(fs, packageRoot) ||
@@ -391,11 +341,7 @@ Result PackageManager::importPackage(const std::string& json) {
         return Error("Failed to create package directories");
     }
 
-    LOG_INFO(TAG, "importPackage: package directories ready at %s", packageRoot.c_str());
-
     std::set<std::string> usedFaceIds;
-    std::vector<FaceSummary> importedFaces;
-    importedFaces.reserve(facesValue->Size());
     rapidjson::StringBuffer manifestBuffer;
     rapidjson::Writer<rapidjson::StringBuffer> manifestWriter(manifestBuffer);
     manifestWriter.StartObject();
@@ -414,50 +360,30 @@ Result PackageManager::importPackage(const std::string& json) {
         ++faceIndex;
         if (!faceValue.IsObject()) {
             LOG_ERROR(TAG, "importPackage: face %u is not an object", faceIndex);
-            removeTree(fs, packageRoot);
             return Error("Face entries must be objects");
         }
 
         std::string faceName;
-        std::string faceId;
-        std::string facePath;
-        if (!getStringMember(faceValue, "id", faceId) ||
-            !getStringMember(faceValue, "name", faceName) ||
-            !getStringMember(faceValue, "path", facePath)) {
-            LOG_ERROR(TAG, "importPackage: face %u missing required fields", faceIndex);
+        if (!getStringMember(faceValue, "name", faceName)) {
+            LOG_ERROR(TAG, "importPackage: face %u missing name", faceIndex);
             removeTree(fs, packageRoot);
-            return Error("Face entry is missing required fields");
-        }
-
-        if (!isSafeRelativePath(facePath)) {
-            LOG_ERROR(TAG, "importPackage: face %u has unsafe path %s", faceIndex, facePath.c_str());
-            removeTree(fs, packageRoot);
-            return Error("Invalid face path");
+            return Error("Face entry is missing a name");
         }
 
         const rapidjson::Value* faceDocValue = getObjectMember(faceValue, "face");
-        if (!faceDocValue) {
+        if (!faceDocValue || !faceDocValue->IsObject()) {
             LOG_ERROR(TAG, "importPackage: face %u missing payload", faceIndex);
             removeTree(fs, packageRoot);
             return Error("Face entry is missing face payload");
         }
 
-        LOG_INFO(TAG,
-                 "importPackage: face %u id=%s path=%s",
-                 faceIndex,
-                 faceId.c_str(),
-                 facePath.c_str());
-
-        if (usedFaceIds.count(faceId) != 0) {
-            LOG_ERROR(TAG, "importPackage: duplicate face id %s", faceId.c_str());
-            removeTree(fs, packageRoot);
-            return Error("Duplicate face id");
-        }
-        usedFaceIds.insert(faceId);
-
+        const std::string faceId = uniqueSlug(faceName, usedFaceIds);
         const std::string faceStoragePath = paths::facePath(dataRoot, packageId, faceId);
-
         const std::string faceJson = mg::json::toString(*faceDocValue);
+        LOG_INFO(TAG,
+                 "importPackage: face %u id=%s",
+                 faceIndex,
+                 faceId.c_str());
         LOG_DEBUG(TAG, "importPackage: writing face file %s (%u bytes)", faceStoragePath.c_str(), static_cast<unsigned>(faceJson.size()));
         if (!fs.writeText(faceStoragePath, faceJson)) {
             LOG_ERROR(TAG, "importPackage: failed to write face file %s", faceStoragePath.c_str());
@@ -465,15 +391,14 @@ Result PackageManager::importPackage(const std::string& json) {
             return Error("Failed to write face file");
         }
 
-        importedFaces.push_back(FaceSummary{faceId, faceName, facePath});
-
         manifestWriter.StartObject();
         manifestWriter.Key("id");
         manifestWriter.String(faceId.c_str());
         manifestWriter.Key("name");
         manifestWriter.String(faceName.c_str());
         manifestWriter.Key("path");
-        manifestWriter.String(facePath.c_str());
+        const std::string faceRelPath = paths::joinPath(paths::facesDir, faceId + ".json");
+        manifestWriter.String(faceRelPath.c_str());
         manifestWriter.Key("face");
         faceDocValue->Accept(manifestWriter);
         manifestWriter.EndObject();
@@ -498,9 +423,11 @@ Result PackageManager::importPackage(const std::string& json) {
 
             std::string assetPath;
             if (!getStringMember(assetValue, "path", assetPath)) {
-                LOG_ERROR(TAG, "importPackage: asset entry missing path");
-                removeTree(fs, packageRoot);
-                return Error("Asset entry is missing a path");
+                if (!getStringMember(assetValue, "name", assetPath)) {
+                    LOG_ERROR(TAG, "importPackage: asset entry missing path");
+                    removeTree(fs, packageRoot);
+                    return Error("Asset entry is missing a path");
+                }
             }
 
             if (!isSafeRelativePath(assetPath)) {
@@ -545,7 +472,7 @@ Result PackageManager::importPackage(const std::string& json) {
     }
 
     LOG_INFO(TAG, "importPackage: writing library index");
-    if (!buildLibraryIndex(fs, packageId, packageName, packageAuthor, packageDescription, &importedFaces, dataRoot)) {
+    if (!buildLibraryIndex(fs, dataRoot)) {
         LOG_ERROR(TAG, "importPackage: failed to write library index");
         removeTree(fs, packageRoot);
         return Error("Failed to update library index");
@@ -570,7 +497,7 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
     exportDoc.SetObject();
     auto& allocator = exportDoc.GetAllocator();
 
-    const char* keys[] = {"id", "name", "author", "description"};
+    const char* keys[] = {"name", "author", "description"};
     for (const char* key : keys) {
         if (!manifest.HasMember(key)) {
             return Error("Package manifest is invalid");
@@ -602,9 +529,7 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
         }
 
         rapidjson::Value entry(rapidjson::kObjectType);
-        entry.AddMember("id", rapidjson::Value(faceId.c_str(), allocator), allocator);
         entry.AddMember("name", rapidjson::Value(faceName.c_str(), allocator), allocator);
-        entry.AddMember("path", rapidjson::Value(facePath.c_str(), allocator), allocator);
         rapidjson::Value faceValue;
         faceValue.CopyFrom(faceDoc, allocator);
         entry.AddMember("face", faceValue, allocator);
@@ -628,14 +553,14 @@ Result PackageManager::removePackage(const std::string& packageId) {
         return Error("Failed to remove package");
     }
 
-    if (!buildLibraryIndex(fs, "", "", "", "", nullptr, dataRoot)) {
+    if (!buildLibraryIndex(fs, dataRoot)) {
         return Error("Failed to update library index");
     }
     return OkObject();
 }
 
 void PackageManager::rebuildLibrary() const {
-    (void)buildLibraryIndex(fs, "", "", "", "", nullptr, dataRoot);
+    (void)buildLibraryIndex(fs, dataRoot);
 }
 
 } // namespace mg
