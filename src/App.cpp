@@ -117,13 +117,11 @@ bool hasScreen(ContextId id) {
 }
 
 namespace {
-bool loadGaugeFaceFromJson(const std::string& json, std::unique_ptr<gauge::GaugeFace>& outFace) {
-    rapidjson::Document doc;
-    doc.Parse(json.c_str());
-    if (doc.HasParseError() || !doc.IsObject()) return false;
+bool loadGaugeFaceFromValue(const rapidjson::Value& value, std::unique_ptr<gauge::GaugeFace>& outFace) {
+    if (!value.IsObject()) return false;
 
     auto face = std::make_unique<gauge::GaugeFace>();
-    face->load(doc);
+    face->load(value);
     outFace = std::move(face);
     return true;
 }
@@ -133,8 +131,12 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
     RuntimeContext* context = getContext(id);
     if (!context) return false;
 
+    rapidjson::Document doc;
+    doc.Parse(json.c_str());
+    if (doc.HasParseError() || !doc.IsObject()) return false;
+
     std::unique_ptr<gauge::GaugeFace> face;
-    if (!loadGaugeFaceFromJson(json, face)) return false;
+    if (!loadGaugeFaceFromValue(doc, face)) return false;
 
     auto screen = std::make_unique<GaugeScreen>();
     screen->setFace(std::move(face));
@@ -147,7 +149,14 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
     Result faceResult = g_packages->getFace(packageId, faceId);
     if (!faceResult.ok) return false;
 
-    return setGaugeScreen(id, mg::json::toString(faceResult.data));
+    std::unique_ptr<gauge::GaugeFace> face;
+    if (!loadGaugeFaceFromValue(faceResult.data, face)) return false;
+
+    auto screen = std::make_unique<GaugeScreen>();
+    screen->setFace(std::move(face));
+    RuntimeContext* context = getContext(id);
+    if (!context) return false;
+    return context->setScreen(std::move(screen));
 }
 
 bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
