@@ -1,6 +1,7 @@
 #include <multigauge/editor/Editor.h>
 
 #include <algorithm>
+#include <cctype>
 #include <memory>
 
 #include <rapidjson/document.h>
@@ -14,10 +15,49 @@ using ::mg::Result;
 
 namespace {
 
+std::string slugify(const std::string& name) {
+    std::string out;
+    bool lastHyphen = false;
+
+    for (unsigned char c : name) {
+        if (std::isalnum(c)) {
+            out.push_back(static_cast<char>(std::tolower(c)));
+            lastHyphen = false;
+        } else if (!out.empty() && !lastHyphen) {
+            out.push_back('-');
+            lastHyphen = true;
+        }
+    }
+
+    while (!out.empty() && out.back() == '-') {
+        out.pop_back();
+    }
+
+    if (out.empty()) out = "face";
+    return out;
+}
+
+std::string uniqueFaceId(const std::string& name, const std::vector<std::string>& existingIds) {
+    const std::string base = slugify(name);
+    std::string candidate = base;
+    int suffix = 2;
+
+    while (std::find(existingIds.begin(), existingIds.end(), candidate) != existingIds.end()) {
+        candidate = base + "-" + std::to_string(suffix++);
+    }
+
+    return candidate;
+}
+
+std::string facePathForId(const std::string& faceId) {
+    return "faces/" + faceId + ".json";
+}
+
 struct FaceInsertState {
     GaugeFace* face = nullptr;
     std::size_t index = 0;
     NodeId faceId = 0;
+    Editor::FaceMeta meta;
     std::vector<std::vector<NodeId>> rootIds;
     bool initialized = false;
 };
@@ -26,6 +66,7 @@ struct FaceRemoveState {
     GaugeFace* face = nullptr;
     NodeId faceId = 0;
     std::size_t index = 0;
+    Editor::FaceMeta meta;
     std::string json;
     std::vector<std::vector<NodeId>> rootIds;
 };
@@ -161,6 +202,11 @@ Result okWithIds(NodeId id, NodeId parentId) {
     result.data.AddMember("id", id, allocator);
     result.data.AddMember("parentId", parentId, allocator);
     return result;
+}
+
+bool validatePackageShape(const rapidjson::Value& value) {
+    (void)value;
+    return true;
 }
 
 void appendElementHierarchyNode(const Editor& editor,
@@ -360,28 +406,65 @@ OwnedElement Editor::removeFromContainer(const ElementContainerRef& container, E
 
 void Editor::clear() {
     faces.clear();
+    faceMeta.clear();
     nodes.clear();
     faceToId.clear();
     elementToId.clear();
     nextId = 1;
     history = History();
+    packageId = "editor-export";
+    packageName = "Editor Export";
+    packageAuthor = "Unknown";
+    packageDescription.clear();
 }
 
 bool Editor::loadDocument(const std::string& json) {
     rapidjson::Document doc = mg::json::parseJson(json);
-    if (doc.HasParseError() || !doc.IsArray()) return false;
+    if (doc.HasParseError()) return false;
+    if (!doc.IsObject()) return false;
+
+    std::string id;
+    std::string name;
+    std::string author;
+    std::string description;
+    if (!mg::json::getStringMember(doc, "id", id) ||
+        !mg::json::getStringMember(doc, "name", name) ||
+        !mg::json::getStringMember(doc, "author", author) ||
+        !mg::json::getStringMember(doc, "description", description)) {
+        return false;
+    }
+
+    const rapidjson::Value* faces = mg::json::getArrayMember(doc, "faces");
+    if (!faces) return false;
 
     clear();
+    packageId = std::move(id);
+    packageName = std::move(name);
+    packageAuthor = std::move(author);
+    packageDescription = std::move(description);
 
-    for (const auto& faceJson : doc.GetArray()) {
-        if (!faceJson.IsObject()) continue;
+    for (const auto& faceEntry : faces->GetArray()) {
+        if (!faceEntry.IsObject()) continue;
+
+        std::string faceId;
+        std::string faceName;
+        std::string facePath;
+        if (!mg::json::getStringMember(faceEntry, "id", faceId) ||
+            !mg::json::getStringMember(faceEntry, "name", faceName) ||
+            !mg::json::getStringMember(faceEntry, "path", facePath)) {
+            return false;
+        }
+
+        const rapidjson::Value* faceJson = mg::json::getObjectMember(faceEntry, "face");
+        if (!faceJson) return false;
 
         auto face = std::make_unique<GaugeFace>();
-        face->load(faceJson);
+        face->load(*faceJson);
 
         GaugeFace* raw = face.get();
 
-        faces.push_back(std::move(face));
+        this->faces.push_back(std::move(face));
+        faceMeta.push_back({ std::move(faceId), std::move(faceName), std::move(facePath) });
         registerFace(raw);
 
         for (std::size_t i = 0; i < raw->childCount(); ++i) {
@@ -394,17 +477,32 @@ bool Editor::loadDocument(const std::string& json) {
 
 std::string Editor::saveDocument() const {
     rapidjson::Document doc;
-    doc.SetArray();
+    doc.SetObject();
     auto& allocator = doc.GetAllocator();
 
-    for (const auto& face : faces) {
+    doc.AddMember("id", rapidjson::Value(packageId.c_str(), allocator), allocator);
+    doc.AddMember("name", rapidjson::Value(packageName.c_str(), allocator), allocator);
+    doc.AddMember("author", rapidjson::Value(packageAuthor.c_str(), allocator), allocator);
+    doc.AddMember("description", rapidjson::Value(packageDescription.c_str(), allocator), allocator);
+
+    rapidjson::Value facesOut(rapidjson::kArrayType);
+    for (std::size_t i = 0; i < this->faces.size(); ++i) {
+        const auto& face = this->faces[i];
         if (!face) continue;
 
         rapidjson::Document saved = face->save();
-        rapidjson::Value copy;
-        copy.CopyFrom(saved, allocator);
-        doc.PushBack(std::move(copy), allocator);
+        rapidjson::Value entry(rapidjson::kObjectType);
+        const FaceMeta meta = i < faceMeta.size() ? faceMeta[i] : FaceMeta{ "face", "Face", "faces/face.json" };
+        entry.AddMember("id", rapidjson::Value(meta.id.c_str(), allocator), allocator);
+        entry.AddMember("name", rapidjson::Value(meta.name.c_str(), allocator), allocator);
+        entry.AddMember("path", rapidjson::Value(meta.path.c_str(), allocator), allocator);
+        rapidjson::Value faceValue;
+        faceValue.CopyFrom(saved, allocator);
+        entry.AddMember("face", std::move(faceValue), allocator);
+        facesOut.PushBack(std::move(entry), allocator);
     }
+
+    doc.AddMember("faces", std::move(facesOut), allocator);
 
     return mg::json::toString(doc);
 }
@@ -532,10 +630,17 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
 
     const std::size_t index = clampIndex(where.index, faces.size());
     const NodeId id = makeId();
+    const std::string faceName = "Face " + std::to_string(index + 1);
+    std::vector<std::string> existingIds;
+    existingIds.reserve(faceMeta.size());
+    for (const auto& meta : faceMeta) existingIds.push_back(meta.id);
 
     auto state = std::make_shared<FaceInsertState>();
     state->index = index;
     state->faceId = id;
+    state->meta.id = uniqueFaceId(faceName, existingIds);
+    state->meta.name = faceName;
+    state->meta.path = facePathForId(state->meta.id);
 
     const bool committed = history.commit({
         "create face",
@@ -552,6 +657,10 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
             faces.insert(
                 faces.begin() + static_cast<std::ptrdiff_t>(state->index),
                 std::move(face)
+            );
+            faceMeta.insert(
+                faceMeta.begin() + static_cast<std::ptrdiff_t>(state->index),
+                state->meta
             );
 
             registerFaceWithId(state->faceId, raw);
@@ -573,6 +682,9 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
             faces.erase(
                 faces.begin() + static_cast<std::ptrdiff_t>(state->index)
             );
+            faceMeta.erase(
+                faceMeta.begin() + static_cast<std::ptrdiff_t>(state->index)
+            );
 
             return true;
         }
@@ -593,6 +705,9 @@ Result Editor::removeFace(NodeId faceId) {
     state->face = it->get();
     state->faceId = faceId;
     state->index = index;
+    if (index < faceMeta.size()) {
+        state->meta = faceMeta[index];
+    }
     state->json = mg::json::toString(state->face->save());
     state->rootIds = snapshotFaceRootIds(*this, *it->get());
 
@@ -608,6 +723,9 @@ Result Editor::removeFace(NodeId faceId) {
 
             unregisterFace(it->get());
             faces.erase(it);
+            if (state->index < faceMeta.size()) {
+                faceMeta.erase(faceMeta.begin() + static_cast<std::ptrdiff_t>(state->index));
+            }
             return true;
         },
 
@@ -623,6 +741,10 @@ Result Editor::removeFace(NodeId faceId) {
             faces.insert(
                 faces.begin() + static_cast<std::ptrdiff_t>(state->index),
                 std::move(face)
+            );
+            faceMeta.insert(
+                faceMeta.begin() + static_cast<std::ptrdiff_t>(state->index),
+                state->meta
             );
 
             registerFaceWithId(state->faceId, raw);
@@ -666,7 +788,10 @@ Result Editor::reorderFace(NodeId faceId, std::size_t index) {
             auto it = faces.begin() + static_cast<std::ptrdiff_t>(state->from);
             auto face = std::move(*it);
             faces.erase(it);
+            FaceMeta meta = faceMeta.at(state->from);
+            faceMeta.erase(faceMeta.begin() + static_cast<std::ptrdiff_t>(state->from));
             faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->to), std::move(face));
+            faceMeta.insert(faceMeta.begin() + static_cast<std::ptrdiff_t>(state->to), std::move(meta));
             return true;
         },
 
@@ -675,7 +800,10 @@ Result Editor::reorderFace(NodeId faceId, std::size_t index) {
             auto it = faces.begin() + static_cast<std::ptrdiff_t>(state->to);
             auto face = std::move(*it);
             faces.erase(it);
+            FaceMeta meta = faceMeta.at(state->to);
+            faceMeta.erase(faceMeta.begin() + static_cast<std::ptrdiff_t>(state->to));
             faces.insert(faces.begin() + static_cast<std::ptrdiff_t>(state->from), std::move(face));
+            faceMeta.insert(faceMeta.begin() + static_cast<std::ptrdiff_t>(state->from), std::move(meta));
             return true;
         }
     });

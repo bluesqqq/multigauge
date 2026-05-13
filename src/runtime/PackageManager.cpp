@@ -252,21 +252,16 @@ Result PackageManager::importPackage(const std::string& json) {
         return Error("Invalid package JSON");
     }
 
-    const rapidjson::Value* manifest = &input;
-    if (const auto* manifestObject = getObjectMember(input, "manifest")) {
-        manifest = manifestObject;
-    }
-
     std::string packageId;
     std::string packageName;
     std::string packageAuthor;
     std::string packageDescription;
 
-    if (!getStringMember(*manifest, "id", packageId) ||
-        !getStringMember(*manifest, "name", packageName) ||
-        !getStringMember(*manifest, "author", packageAuthor) ||
-        !getStringMember(*manifest, "description", packageDescription)) {
-        return Error("Package manifest is missing required fields");
+    if (!getStringMember(input, "id", packageId) ||
+        !getStringMember(input, "name", packageName) ||
+        !getStringMember(input, "author", packageAuthor) ||
+        !getStringMember(input, "description", packageDescription)) {
+        return Error("Package JSON is missing required fields");
     }
 
     if (!isSafePathComponent(packageId)) {
@@ -275,16 +270,10 @@ Result PackageManager::importPackage(const std::string& json) {
 
     const rapidjson::Value* facesValue = getArrayMember(input, "faces");
     if (!facesValue) {
-        facesValue = getArrayMember(*manifest, "faces");
-    }
-    if (!facesValue) {
         return Error("Package has no faces");
     }
 
     const rapidjson::Value* assetsValue = getArrayMember(input, "assets");
-    if (!assetsValue && manifest != &input) {
-        assetsValue = getArrayMember(*manifest, "assets");
-    }
 
     const std::string packageRoot = paths::packagePath(dataRoot, packageId);
     if (fs.exists(packageRoot) && !fs.remove(packageRoot)) {
@@ -317,30 +306,53 @@ Result PackageManager::importPackage(const std::string& json) {
         }
 
         std::string faceName;
-        if (!getStringMember(faceValue, "name", faceName)) {
+        std::string faceId;
+        std::string facePath;
+        if (!getStringMember(faceValue, "id", faceId) ||
+            !getStringMember(faceValue, "name", faceName) ||
+            !getStringMember(faceValue, "path", facePath)) {
             fs.remove(packageRoot);
-            return Error("Face entry is missing a name");
+            return Error("Face entry is missing required fields");
+        }
+
+        if (!isSafeRelativePath(facePath)) {
+            fs.remove(packageRoot);
+            return Error("Invalid face path");
+        }
+
+        const rapidjson::Value* faceDocValue = getObjectMember(faceValue, "face");
+        if (!faceDocValue) {
+            fs.remove(packageRoot);
+            return Error("Face entry is missing face payload");
         }
 
         rapidjson::Document faceDoc;
-        if (!makeFacePayload(faceValue, faceDoc) || !faceDoc.IsObject()) {
+        faceDoc.CopyFrom(*faceDocValue, faceDoc.GetAllocator());
+        if (!faceDoc.IsObject()) {
             fs.remove(packageRoot);
             return Error("Invalid face payload");
         }
 
-        const std::string faceId = uniqueSlug(faceName, usedFaceIds);
-        const std::string facePath = paths::facePath(dataRoot, packageId, faceId);
+        if (std::find(usedFaceIds.begin(), usedFaceIds.end(), faceId) != usedFaceIds.end()) {
+            fs.remove(packageRoot);
+            return Error("Duplicate face id");
+        }
+        usedFaceIds.insert(faceId);
 
-        if (!writeFaceFile(fs, facePath, faceDoc)) {
+        const std::string faceStoragePath = paths::facePath(dataRoot, packageId, faceId);
+
+        if (!writeFaceFile(fs, faceStoragePath, faceDoc)) {
             fs.remove(packageRoot);
             return Error("Failed to write face file");
         }
 
         rapidjson::Value faceEntry(rapidjson::kObjectType);
-        const std::string faceRelPath = paths::joinPath(paths::facesDir, faceId + ".json");
         faceEntry.AddMember("id", rapidjson::Value(faceId.c_str(), manifestAllocator), manifestAllocator);
         faceEntry.AddMember("name", rapidjson::Value(faceName.c_str(), manifestAllocator), manifestAllocator);
-        faceEntry.AddMember("path", rapidjson::Value(faceRelPath.c_str(), manifestAllocator), manifestAllocator);
+        faceEntry.AddMember("path", rapidjson::Value(facePath.c_str(), manifestAllocator), manifestAllocator);
+        rapidjson::Value faceValueOut;
+        faceValueOut.CopyFrom(faceDoc, manifestAllocator);
+        faceEntry.AddMember("face", faceValueOut, manifestAllocator);
         facesOut.PushBack(faceEntry, manifestAllocator);
     }
 
@@ -359,7 +371,7 @@ Result PackageManager::importPackage(const std::string& json) {
             }
 
             std::string assetPath;
-            if (!getStringMember(assetValue, "path", assetPath) && !getStringMember(assetValue, "name", assetPath)) {
+            if (!getStringMember(assetValue, "path", assetPath)) {
                 fs.remove(packageRoot);
                 return Error("Asset entry is missing a path");
             }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -21,6 +22,12 @@ using ::mg::gauge::OwnedElement;
 
 class Editor {
     public:
+        struct FaceMeta {
+            std::string id;
+            std::string name;
+            std::string path;
+        };
+
         /// Appends at the end of a sibling list when used as an index.
         static constexpr std::size_t Append = static_cast<std::size_t>(-1);
 
@@ -51,6 +58,11 @@ class Editor {
         };
 
         std::vector<std::unique_ptr<GaugeFace>> faces;
+        std::vector<FaceMeta> faceMeta;
+        std::string packageId = "editor-export";
+        std::string packageName = "Editor Export";
+        std::string packageAuthor = "Unknown";
+        std::string packageDescription;
 
         std::unordered_map<NodeId, NodeRef> nodes;
         std::unordered_map<GaugeFace*, NodeId> faceToId;
@@ -124,10 +136,10 @@ class Editor {
         /// Clears the loaded document, history, and node IDs.
         void clear();
         
-        /// Loads faces and elements from a document JSON array.
+        /// Loads faces and elements from a package object.
         bool loadDocument(const std::string& json);
         
-        /// Saves the current document as a JSON array.
+        /// Saves the current document as a package object.
         std::string saveDocument() const;
 
         /// Serializes a single face as JSON.

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/package.schema.json",
+  "title": "Multigauge Package Schema",
+  "description": "Schema for the canonical editor/package document used by importPackage, exportPackage, and the editor document loader/saver.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "name": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "author": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "description": {
+      "type": "string"
+    },
+    "faces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/faceEntry"
+      }
+    },
+    "assets": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/assetEntry"
+      }
+    }
+  },
+  "required": [
+    "id",
+    "name",
+    "author",
+    "description",
+    "faces"
+  ],
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "faceDocument": {
+      "type": "object",
+      "description": "Opaque face payload loaded by GaugeFace; the runtime accepts the normal gauge face object shape here.",
+      "additionalProperties": true
+    },
+    "faceEntry": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "path": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "face": {
+          "$ref": "#/$defs/faceDocument"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "path",
+        "face"
+      ],
+      "additionalProperties": false
+    },
+    "assetEntry": {
+      "type": "object",
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "name": {
+          "type": "string"
+        },
+        "data": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "data"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

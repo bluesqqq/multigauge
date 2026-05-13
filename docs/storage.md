@@ -78,6 +78,30 @@ Each face entry contains:
 
 `id` is the internal face id. It is generated from the user-facing face `name` by lowercasing and replacing spaces or punctuation with hyphens. If an id already exists within the package, a numeric suffix is added.
 
+### `package.schema.json`
+
+`package.schema.json` is the canonical schema for the package document used by the editor, `importPackage`, and `exportPackage`.
+
+The schema lives in [`docs/schemas/package.schema.json`](./schemas/package.schema.json).
+
+Current package fields:
+
+- `id`
+- `name`
+- `author`
+- `description`
+- `faces`
+- `assets` in packages that embed external files
+
+Each face entry contains:
+
+- `id`
+- `name`
+- `path`
+- `face`
+
+`face` is the opaque face payload loaded by `GaugeFace`.
+
 ### `faces/`
 
 `faces/` contains the gauge face JSON files for the package.
@@ -112,9 +136,9 @@ When a package is imported:
 
 When a package is exported:
 
-1. The package is exported in the same structural form it was imported with
+1. The package is exported using the canonical package schema
 2. The exported package contains the same one-file-per-face layout under `faces/`
-3. Asset bytes may be re-embedded only if the export format is the original single-file import form
+3. Asset bytes may be re-embedded when available
 
 ## Source of Truth
 

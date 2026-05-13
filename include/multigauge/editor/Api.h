@@ -29,10 +29,10 @@ bool exists(EditorId);
 /// Clears the loaded document, history, and node IDs for the editor.
 bool clear(EditorId);
 
-/// Loads a document from a JSON array of faces.
+/// Loads a document from a package object.
 Result loadDocument(EditorId, const std::string& json);
 
-/// Saves the current document as a JSON array.
+/// Saves the current document as a package object.
 Result saveDocument(EditorId);
 
 //----------[ QUERIES ]----------//
