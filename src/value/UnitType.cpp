@@ -2,6 +2,8 @@
 
 #include <multigauge/utils/Math.h>
 
+#include <cstring>
+
 namespace mg {
 
 UnitType::UnitType(const char* baseName, const char* baseAbbreviation, uint8_t baseDecimalPlaces, const std::vector<Unit>& conversionUnits, uint8_t defaultUnitIndex) {

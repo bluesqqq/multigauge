@@ -159,6 +159,11 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
     return context->setScreen(std::move(screen));
 }
 
+Result listPackages() {
+    if (!g_packages) return Error("App not initialized");
+    return g_packages->listPackages();
+}
+
 Result getPackages() {
     if (!g_packages) return Error("App not initialized");
     return g_packages->listPackages();

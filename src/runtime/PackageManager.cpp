@@ -1,6 +1,6 @@
-#include "runtime/PackageManager.h"
+#include "PackageManager.h"
 
-#include "AppPaths.h"
+#include "../AppPaths.h"
 
 #include <multigauge/io/Base64.h>
 #include <multigauge/io/FileSystem.h>

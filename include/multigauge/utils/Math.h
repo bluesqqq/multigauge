@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cmath>
 #include <string>
 
 namespace mg::utils {
@@ -72,6 +73,16 @@ inline float mapf(float x, float inMin, float inMax, float outMin, float outMax)
 float floorDivisible(float n, float factor, float offset = 0);
 
 float ceilDivisible(float n, float factor, float offset = 0);
+
+inline float floorDivisible(float n, float factor, float offset) {
+    if (factor == 0.0f) return n;
+    return std::floor((n - offset) / factor) * factor + offset;
+}
+
+inline float ceilDivisible(float n, float factor, float offset) {
+    if (factor == 0.0f) return n;
+    return std::ceil((n - offset) / factor) * factor + offset;
+}
 
 inline bool inRange(float v, float lo, float hi) { return (v >= lo) && (v <= hi); }
 

@@ -33,7 +33,7 @@ struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>
 
 #define MG_EDITOR_WIDGET(type, widget_literal) \
 template <> \
-struct ::mg::MgPropWidgetTraits<type> { static constexpr const char* value = widget_literal; };
+struct MgPropWidgetTraits<type> { static constexpr const char* value = widget_literal; };
 
 MG_EDITOR_WIDGET(bool, "boolean")
 MG_EDITOR_WIDGET(graphics::rgba, "color-selector")
