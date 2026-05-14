@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://www.multi-gauge.com/schemas/package.schema.json",
   "title": "Multigauge Package Schema",
-  "description": "Schema for the canonical editor/package document used by importPackage, exportPackage, and the editor document loader/saver.",
+  "description": "Schema for the canonical package document used by importPackage, exportPackage, and the editor document loader/saver. The document contains only user-facing package data and no internal ids or storage paths.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -17,14 +17,9 @@
     },
     "faces": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "#/$defs/faceEntry"
-      }
-    },
-    "assets": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/assetEntry"
       }
     }
   },
@@ -57,25 +52,6 @@
       "required": [
         "name",
         "face"
-      ],
-      "additionalProperties": false
-    },
-    "assetEntry": {
-      "type": "object",
-      "properties": {
-        "path": {
-          "$ref": "#/$defs/nonEmptyString"
-        },
-        "name": {
-          "type": "string"
-        },
-        "data": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "path",
-        "data"
       ],
       "additionalProperties": false
     }

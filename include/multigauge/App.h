@@ -3,8 +3,12 @@
 #include <cstdint>
 #include <memory>
 #include <string>
+#include <vector>
+
+#include <rapidjson/document.h>
 
 #include <multigauge/editor/Api.h>
+#include <multigauge/runtime/PackageManager.h>
 #include <yoga/Yoga.h>
 
 #include <multigauge/io/FileSystem.h>
@@ -51,10 +55,12 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
 
 //----------[ PACKAGES ]----------//
 
-Result listPackages();
+bool listPackages(std::vector<PackageSummary>& out);
+bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out);
 
 Result getPackage(const std::string& packageId);
 Result importPackage(const std::string& json);
+Result importPackage(const rapidjson::Value& package);
 Result exportPackage(const std::string& packageId);
 Result removePackage(const std::string& packageId);
 
