@@ -2,12 +2,9 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://www.multi-gauge.com/schemas/manifest.schema.json",
   "title": "Multigauge Package Manifest Schema",
-  "description": "Schema for an installed package manifest. The manifest describes the package and the faces contained within it.",
+  "description": "Schema for an installed package manifest. The manifest stores package metadata and the installed face list without package ids or storage paths.",
   "type": "object",
   "properties": {
-    "id": {
-      "$ref": "#/$defs/nonEmptyString"
-    },
     "name": {
       "$ref": "#/$defs/nonEmptyString"
     },
@@ -19,13 +16,13 @@
     },
     "faces": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "$ref": "#/$defs/faceEntry"
       }
     }
   },
   "required": [
-    "id",
     "name",
     "author",
     "description",
@@ -45,15 +42,11 @@
         },
         "name": {
           "$ref": "#/$defs/nonEmptyString"
-        },
-        "path": {
-          "$ref": "#/$defs/nonEmptyString"
         }
       },
       "required": [
         "id",
-        "name",
-        "path"
+        "name"
       ],
       "additionalProperties": false
     }

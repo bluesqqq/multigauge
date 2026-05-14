@@ -1,7 +1,8 @@
 #include <multigauge/App.h>
 
 #include "AppPaths.h"
-#include "runtime/PackageManager.h"
+
+#include <multigauge/runtime/PackageManager.h>
 
 #include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/HandlePool.h>
@@ -53,6 +54,7 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
     if (!g_fs->init()) return false;
 
     g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
+    g_packages->rebuildLibrary();
     contexts.clear();
     yogaConfig = createYogaConfig();
     initialized = true;
@@ -168,14 +170,14 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
     return context->setScreen(std::move(screen));
 }
 
-Result listPackages() {
-    if (!g_packages) return Error("App not initialized");
-    return g_packages->listPackages();
+bool listPackages(std::vector<PackageSummary>& out) {
+    if (!g_packages) return false;
+    return g_packages->listPackages(out);
 }
 
-Result getPackages() {
-    if (!g_packages) return Error("App not initialized");
-    return g_packages->listPackages();
+bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out) {
+    if (!g_packages) return false;
+    return g_packages->listFaces(packageId, out);
 }
 
 Result getPackage(const std::string& packageId) {
@@ -186,6 +188,11 @@ Result getPackage(const std::string& packageId) {
 Result importPackage(const std::string& json) {
     if (!g_packages) return Error("App not initialized");
     return g_packages->importPackage(json);
+}
+
+Result importPackage(const rapidjson::Value& package) {
+    if (!g_packages) return Error("App not initialized");
+    return g_packages->importPackage(package);
 }
 
 Result exportPackage(const std::string& packageId) {
