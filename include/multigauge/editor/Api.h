@@ -24,16 +24,34 @@ bool destroy(EditorId);
 /// Returns whether an editor instance with `id` exists.
 bool exists(EditorId);
 
-//----------[ DOCUMENT ]----------//
+//----------[ PACKAGE ]----------//
 
-/// Clears the loaded document, history, and node IDs for the editor.
+/// Clears the loaded package, history, and node IDs for the editor.
 bool clear(EditorId);
 
-/// Loads a document from a package object.
-Result loadDocument(EditorId, const std::string& json);
+/// Updates the package-level metadata.
+Result setPackageInfo(EditorId, const std::string& name, const std::string& author, const std::string& description);
 
-/// Saves the current document as a package object.
-Result saveDocument(EditorId);
+/// Returns the package-level metadata.
+Result getPackageInfo(EditorId);
+
+/// Updates the face name for `faceId`.
+Result setFaceName(EditorId, NodeId faceId, const std::string& name);
+
+/// Returns the face name for `faceId`.
+Result getFaceName(EditorId, NodeId faceId);
+
+/// Loads a package object.
+Result loadPackage(EditorId, const std::string& json);
+
+/// Saves the current package as a package object.
+Result exportPackage(EditorId);
+
+/// Backwards-compatible alias for `loadPackage`.
+inline Result loadDocument(EditorId editorId, const std::string& json) { return loadPackage(editorId, json); }
+
+/// Backwards-compatible alias for `exportPackage`.
+inline Result saveDocument(EditorId editorId) { return exportPackage(editorId); }
 
 //----------[ QUERIES ]----------//
 

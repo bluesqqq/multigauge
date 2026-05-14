@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://www.multi-gauge.com/schemas/package.schema.json",
   "title": "Multigauge Package Schema",
-  "description": "Schema for the canonical editor/package document used by importPackage, exportPackage, and the editor document loader/saver.",
+  "description": "Schema for the canonical editor package used by importPackage, exportPackage, and the editor package loader/saver.",
   "type": "object",
   "additionalProperties": false,
   "properties": {

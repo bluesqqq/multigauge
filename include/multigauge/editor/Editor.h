@@ -22,6 +22,12 @@ using ::mg::gauge::OwnedElement;
 
 class Editor {
     public:
+        struct PackageInfo {
+            std::string name;
+            std::string author;
+            std::string description;
+        };
+
         struct FaceMeta {
             std::string name;
         };
@@ -57,7 +63,7 @@ class Editor {
 
         std::vector<std::unique_ptr<GaugeFace>> faces;
         std::vector<FaceMeta> faceMeta;
-        std::string packageName = "Editor Export";
+        std::string packageName = "Package Export";
         std::string packageAuthor = "Unknown";
         std::string packageDescription;
 
@@ -128,16 +134,34 @@ class Editor {
         Editor(Editor&&) noexcept = default;
         Editor& operator=(Editor&&) noexcept = default;
 
-        //----------[ DOCUMENT ]----------//
+        //----------[ PACKAGE ]----------//
 
-        /// Clears the loaded document, history, and node IDs.
+        /// Clears the loaded package, history, and node IDs.
         void clear();
-        
+
+        /// Updates the package-level metadata.
+        bool setPackageInfo(const std::string& name, const std::string& author, const std::string& description);
+
+        /// Returns the package-level metadata.
+        PackageInfo getPackageInfo() const;
+
+        /// Updates the face name for `faceId`.
+        bool setFaceName(NodeId faceId, const std::string& name);
+
+        /// Returns the face name for `faceId`.
+        std::string getFaceName(NodeId faceId) const;
+
         /// Loads faces and elements from a package object.
-        bool loadDocument(const std::string& json);
-        
-        /// Saves the current document as a package object.
-        std::string saveDocument() const;
+        bool loadPackage(const std::string& json);
+
+        /// Saves the current package as a package object.
+        std::string exportPackage() const;
+
+        /// Backwards-compatible alias for `loadPackage`.
+        bool loadDocument(const std::string& json) { return loadPackage(json); }
+
+        /// Backwards-compatible alias for `exportPackage`.
+        std::string saveDocument() const { return exportPackage(); }
 
         /// Serializes a single face as JSON.
         /// @return `{ "json": string }`.

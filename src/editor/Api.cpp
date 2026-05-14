@@ -28,6 +28,23 @@ Result saveJsonResult(const std::string& json) {
     return result;
 }
 
+Result packageInfoResult(const Editor::PackageInfo& info) {
+    Result result = OkObject();
+    auto& allocator = result.data.GetAllocator();
+    result.data.AddMember("name", rapidjson::Value(info.name.c_str(), allocator), allocator);
+    result.data.AddMember("author", rapidjson::Value(info.author.c_str(), allocator), allocator);
+    result.data.AddMember("description", rapidjson::Value(info.description.c_str(), allocator), allocator);
+    return result;
+}
+
+Result faceNameResult(NodeId faceId, const std::string& name) {
+    Result result = OkObject();
+    auto& allocator = result.data.GetAllocator();
+    result.data.AddMember("id", faceId, allocator);
+    result.data.AddMember("name", rapidjson::Value(name.c_str(), allocator), allocator);
+    return result;
+}
+
 }
 
 gauge::GaugeFace* getFace(EditorId EditorId, NodeId faceId) {
@@ -62,17 +79,44 @@ bool clear(EditorId EditorId) {
     return true;
 }
 
-Result loadDocument(EditorId EditorId, const std::string& json) {
+Result setPackageInfo(EditorId EditorId, const std::string& name, const std::string& author, const std::string& description) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
-    if (!editor->loadDocument(json)) return Error("Invalid JSON");
+    if (!editor->setPackageInfo(name, author, description)) return Error("Failed to set package info");
+    return packageInfoResult(editor->getPackageInfo());
+}
+
+Result getPackageInfo(EditorId EditorId) {
+    Editor* editor = getEditor(EditorId);
+    if (!editor) return invalidEditorId();
+    return packageInfoResult(editor->getPackageInfo());
+}
+
+Result setFaceName(EditorId EditorId, NodeId faceId, const std::string& name) {
+    Editor* editor = getEditor(EditorId);
+    if (!editor) return invalidEditorId();
+    if (!editor->setFaceName(faceId, name)) return Error("Invalid face id");
+    return faceNameResult(faceId, editor->getFaceName(faceId));
+}
+
+Result getFaceName(EditorId EditorId, NodeId faceId) {
+    Editor* editor = getEditor(EditorId);
+    if (!editor) return invalidEditorId();
+    if (!editor->isFace(faceId)) return Error("Invalid face id");
+    return faceNameResult(faceId, editor->getFaceName(faceId));
+}
+
+Result loadPackage(EditorId EditorId, const std::string& json) {
+    Editor* editor = getEditor(EditorId);
+    if (!editor) return invalidEditorId();
+    if (!editor->loadPackage(json)) return Error("Invalid JSON");
     return OkObject();
 }
 
-Result saveDocument(EditorId EditorId) {
+Result exportPackage(EditorId EditorId) {
     Editor* editor = getEditor(EditorId);
     if (!editor) return invalidEditorId();
-    return saveJsonResult(editor->saveDocument());
+    return saveJsonResult(editor->exportPackage());
 }
 
 Result getHierarchy(EditorId EditorId) {

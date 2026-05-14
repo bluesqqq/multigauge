@@ -91,6 +91,21 @@ struct PropertySetState {
     std::string afterJson;
 };
 
+struct PackageInfoState {
+    std::string beforeName;
+    std::string beforeAuthor;
+    std::string beforeDescription;
+    std::string afterName;
+    std::string afterAuthor;
+    std::string afterDescription;
+};
+
+struct FaceRenameState {
+    NodeId faceId = 0;
+    std::string beforeName;
+    std::string afterName;
+};
+
 void collectSubtreeIds(const Editor& editor, const Element* element, std::vector<NodeId>& ids) {
     if (!element) return;
 
@@ -373,12 +388,99 @@ void Editor::clear() {
     elementToId.clear();
     nextId = 1;
     history = History();
-    packageName = "Editor Export";
+    packageName = "Package Export";
     packageAuthor = "Unknown";
     packageDescription.clear();
 }
 
-bool Editor::loadDocument(const std::string& json) {
+bool Editor::setPackageInfo(const std::string& name, const std::string& author, const std::string& description) {
+    if (packageName == name && packageAuthor == author && packageDescription == description) {
+        return true;
+    }
+
+    auto state = std::make_shared<PackageInfoState>();
+    state->beforeName = packageName;
+    state->beforeAuthor = packageAuthor;
+    state->beforeDescription = packageDescription;
+    state->afterName = name;
+    state->afterAuthor = author;
+    state->afterDescription = description;
+
+    const bool committed = history.commit({
+        "set package info",
+        [this, state]() {
+            packageName = state->afterName;
+            packageAuthor = state->afterAuthor;
+            packageDescription = state->afterDescription;
+            return true;
+        },
+        [this, state]() {
+            packageName = state->beforeName;
+            packageAuthor = state->beforeAuthor;
+            packageDescription = state->beforeDescription;
+            return true;
+        }
+    });
+
+    return committed;
+}
+
+Editor::PackageInfo Editor::getPackageInfo() const {
+    return { packageName, packageAuthor, packageDescription };
+}
+
+bool Editor::setFaceName(NodeId faceId, const std::string& name) {
+    auto it = std::find_if(faces.begin(), faces.end(),
+        [&](const auto& face) { return idOf(face.get()) == faceId; });
+    if (it == faces.end()) return false;
+
+    const std::size_t index = static_cast<std::size_t>(std::distance(faces.begin(), it));
+    const std::string beforeName = index < faceMeta.size() ? faceMeta[index].name : std::string();
+    if (beforeName == name) return true;
+
+    auto state = std::make_shared<FaceRenameState>();
+    state->faceId = faceId;
+    state->beforeName = beforeName;
+    state->afterName = name;
+
+    const bool committed = history.commit({
+        "rename face",
+        [this, state]() {
+            auto it = std::find_if(faces.begin(), faces.end(),
+                [&](const auto& face) { return idOf(face.get()) == state->faceId; });
+            if (it == faces.end()) return false;
+
+            const std::size_t currentIndex = static_cast<std::size_t>(std::distance(faces.begin(), it));
+            if (currentIndex >= faceMeta.size()) return false;
+            faceMeta[currentIndex].name = state->afterName;
+            return true;
+        },
+        [this, state]() {
+            auto it = std::find_if(faces.begin(), faces.end(),
+                [&](const auto& face) { return idOf(face.get()) == state->faceId; });
+            if (it == faces.end()) return false;
+
+            const std::size_t currentIndex = static_cast<std::size_t>(std::distance(faces.begin(), it));
+            if (currentIndex >= faceMeta.size()) return false;
+            faceMeta[currentIndex].name = state->beforeName;
+            return true;
+        }
+    });
+
+    return committed;
+}
+
+std::string Editor::getFaceName(NodeId faceId) const {
+    auto it = std::find_if(faces.begin(), faces.end(),
+        [&](const auto& face) { return idOf(face.get()) == faceId; });
+    if (it == faces.end()) return {};
+
+    const std::size_t index = static_cast<std::size_t>(std::distance(faces.begin(), it));
+    if (index >= faceMeta.size()) return {};
+    return faceMeta[index].name;
+}
+
+bool Editor::loadPackage(const std::string& json) {
     rapidjson::Document doc = mg::json::parseJson(json);
     if (doc.HasParseError()) return false;
     if (!doc.IsObject()) return false;
@@ -428,7 +530,7 @@ bool Editor::loadDocument(const std::string& json) {
     return true;
 }
 
-std::string Editor::saveDocument() const {
+std::string Editor::exportPackage() const {
     rapidjson::Document doc;
     doc.SetObject();
     auto& allocator = doc.GetAllocator();
@@ -509,7 +611,8 @@ Result Editor::getHierarchy() const {
 
     rapidjson::Value nodesValue(rapidjson::kObjectType);
 
-    for (const auto& face : faces) {
+    for (std::size_t i = 0; i < faces.size(); ++i) {
+        const auto& face = faces[i];
         if (!face) continue;
 
         const NodeId faceId = idOf(face.get());
@@ -519,7 +622,8 @@ Result Editor::getHierarchy() const {
         rapidjson::Value nodeValue(rapidjson::kObjectType);
 
         nodeValue.AddMember("kind", rapidjson::Value("face", allocator), allocator);
-        nodeValue.AddMember("name", rapidjson::Value(face->typeName(), allocator), allocator);
+        const std::string faceName = i < faceMeta.size() ? faceMeta[i].name : face->typeName();
+        nodeValue.AddMember("name", rapidjson::Value(faceName.c_str(), allocator), allocator);
 
         rapidjson::Value children(rapidjson::kArrayType);
         children.Reserve(static_cast<rapidjson::SizeType>(face->childCount()), allocator);

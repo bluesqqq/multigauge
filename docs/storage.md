@@ -80,7 +80,7 @@ Each face entry contains:
 
 ### `package.schema.json`
 
-`package.schema.json` is the canonical schema for the package document used by the editor, `importPackage`, and `exportPackage`.
+`package.schema.json` is the canonical schema for the package used by the editor, `importPackage`, and `exportPackage`.
 
 The schema lives in [`docs/schemas/package.schema.json`](./schemas/package.schema.json).
 
@@ -136,7 +136,7 @@ When a package is imported:
 When a package is exported:
 
 1. The package is exported using the canonical package schema
-2. The exported package contains the same faces, but only the schema fields needed by the package document
+2. The exported package contains the same faces, but only the schema fields needed by the package
 3. Asset bytes may be re-embedded when available
 
 ## Source of Truth
