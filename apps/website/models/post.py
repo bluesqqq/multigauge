@@ -1,20 +1,31 @@
-
 from datetime import datetime
+
 from models import db
 
+
 class Post(db.Model):
-    __tablename__ = 'posts'
-    
-    id          = db.Column(db.Integer, primary_key=True, autoincrement=True) # Post ID
-    gauge       = db.Column(db.Text)                                          # JSON GaugeFace file
-    title       = db.Column(db.String(255), nullable=False)                   # Post title
-    description = db.Column(db.String(255), nullable=False)                   # Post description
-    gauge_type  = db.Column(db.String(255), nullable=False)
+    __tablename__ = "posts"
 
-    posted_at = db.Column(db.DateTime, default=datetime.utcnow)      # Date posted at
-    posted_by = db.Column(db.Integer, nullable=False)                # The ID of the user who posted
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(255), nullable=False)
+    description = db.Column(db.Text, nullable=False)
+    posted_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    posted_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    package_id = db.Column(db.Integer, db.ForeignKey("packages.id"), nullable=False, unique=True)
 
-    downloads = db.Column(db.Integer, default=0, nullable=False)  # Total number of downloads
+    package = db.relationship(
+        "Package",
+        backref=db.backref("post", uselist=False),
+        cascade="all, delete-orphan",
+        single_parent=True,
+        uselist=False,
+    )
+
+    __table_args__ = (
+        db.Index("ix_posts_posted_by", "posted_by"),
+        db.Index("ix_posts_posted_at", "posted_at"),
+        db.Index("ix_posts_package_id", "package_id"),
+    )
 
     def posted_how_long_ago(self):
         now = datetime.utcnow()
@@ -32,45 +43,50 @@ class Post(db.Model):
             days = int(diff.total_seconds() / 86400)
             return f"{days} day{'s' if days != 1 else ''} ago"
         else:
-            return self.posted_at.strftime("%b %d, %Y")  # e.g., "Apr 07, 2025"
+            return self.posted_at.strftime("%b %d, %Y")
 
-    def total_likes(self):
-        return len(self.likes)
-    
-    def total_features(self):
-        return len(self.features)
-
-    def is_featured(self):
-        return len(self.features) > 0
-    
     def __repr__(self):
-        return f'<Post {self.title}>'
+        return f"<Post id={self.id}, package_id={self.package_id}>"
+
 
 class PostLike(db.Model):
-    __tablename__ = 'post_likes'
+    __tablename__ = "post_likes"
 
-    id         = db.Column(db.Integer, primary_key=True, autoincrement=True)      # Like ID
-    post_id    = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False) # The ID of the post being liked
-    user_id    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # The ID of the user who liked the post
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)                  # Date liked at
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    post = db.relationship('Post', backref=db.backref('likes', lazy=True))
-    user = db.relationship('User', backref=db.backref('likes', lazy=True))
+    post = db.relationship("Post", backref=db.backref("likes", lazy=True))
+    user = db.relationship("User", backref=db.backref("likes", lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint("post_id", "user_id", name="uq_post_likes_post_user"),
+        db.Index("ix_post_likes_post_id", "post_id"),
+        db.Index("ix_post_likes_user_id", "user_id"),
+    )
 
     def __repr__(self):
-        return f'<PostLike post_id={self.post_id}, user_id={self.user_id}>'
+        return f"<PostLike post_id={self.post_id}, user_id={self.user_id}>"
+
 
 class PostComment(db.Model):
-    __tablename__ = 'post_comments'
+    __tablename__ = "post_comments"
 
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)           # Comment ID
-    post_id = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False) # The ID of the post being commented on
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # The ID of the user who commented
-    content = db.Column(db.Text, nullable=False)                               # The content of the comment
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)               # Date commented at
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    content = db.Column(db.Text, nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    post = db.relationship('Post', backref=db.backref('comments', lazy=True))
-    user = db.relationship('User', backref=db.backref('comments', lazy=True))
+    post = db.relationship("Post", backref=db.backref("comments", lazy=True))
+    user = db.relationship("User", backref=db.backref("comments", lazy=True))
+
+    __table_args__ = (
+        db.Index("ix_post_comments_post_id", "post_id"),
+        db.Index("ix_post_comments_user_id", "user_id"),
+        db.Index("ix_post_comments_created_at", "created_at"),
+    )
 
     def how_long_ago(self):
         now = datetime.utcnow()
@@ -88,36 +104,66 @@ class PostComment(db.Model):
             days = int(diff.total_seconds() / 86400)
             return f"{days} day{'s' if days != 1 else ''} ago"
         else:
-            return self.posted_at.strftime("%b %d, %Y")  # e.g., "Apr 07, 2025"
+            return self.created_at.strftime("%b %d, %Y")
 
     def __repr__(self):
-        return f'<PostComment post_id={self.post_id}, user_id={self.user_id}>'
+        return f"<PostComment post_id={self.post_id}, user_id={self.user_id}>"
+
 
 class PostFavorite(db.Model):
-    __tablename__ = 'post_favorites'
+    __tablename__ = "post_favorites"
 
-    id         = db.Column(db.Integer, primary_key=True, autoincrement=True)      # Favorite ID
-    post_id    = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False) # The ID of the post being favorited
-    user_id    = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # The ID of the user who favorited the post
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)                  # Date favorited at
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    post = db.relationship('Post', backref=db.backref('favorites', lazy=True))
-    user = db.relationship('User', backref=db.backref('favorites', lazy=True))
+    post = db.relationship("Post", backref=db.backref("favorites", lazy=True))
+    user = db.relationship("User", backref=db.backref("favorites", lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint("post_id", "user_id", name="uq_post_favorites_post_user"),
+        db.Index("ix_post_favorites_post_id", "post_id"),
+        db.Index("ix_post_favorites_user_id", "user_id"),
+    )
 
     def __repr__(self):
-        return f'<PostFavorite post_id={self.post_id}, user_id={self.user_id}>'
-    
+        return f"<PostFavorite post_id={self.post_id}, user_id={self.user_id}>"
+
+
 class PostFeature(db.Model):
-    __tablename__ = 'post_feature'
+    __tablename__ = "post_feature"
 
-    id           = db.Column(db.Integer, primary_key=True, autoincrement=True)      # Feature ID
-    post_id      = db.Column(db.Integer, db.ForeignKey('posts.id'), nullable=False) # The ID of the post being featured
-    moderator_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)  # The ID of the user who featured the post
-    created_at   = db.Column(db.DateTime, default=datetime.utcnow)                  # Date featured at
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+    moderator_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-    post = db.relationship('Post', backref=db.backref('features', lazy=True))
-    user = db.relationship('User', backref=db.backref('featured_posts', lazy=True))
+    post = db.relationship("Post", backref=db.backref("features", lazy=True))
+    user = db.relationship("User", backref=db.backref("featured_posts", lazy=True))
+
+    __table_args__ = (
+        db.UniqueConstraint("post_id", "moderator_id", name="uq_post_feature_post_moderator"),
+        db.Index("ix_post_feature_post_id", "post_id"),
+        db.Index("ix_post_feature_moderator_id", "moderator_id"),
+    )
 
     def __repr__(self):
-        return f'<PostFeature post_id={self.post_id}, moderator_id={self.moderator_id}>'
-    
+        return f"<PostFeature post_id={self.post_id}, moderator_id={self.moderator_id}>"
+
+
+class Package(db.Model):
+    __tablename__ = "packages"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    package_json = db.Column(db.Text, nullable=False)
+    package_format = db.Column(db.String(64), nullable=False, default="package+json")
+    package_version = db.Column(db.Integer, nullable=False, default=1)
+    package_hash = db.Column(db.String(128), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+
+    __table_args__ = (
+        db.Index("ix_packages_package_format", "package_format"),
+        db.Index("ix_packages_package_version", "package_version"),
+    )

@@ -11,6 +11,10 @@ class User(db.Model, UserMixin):
     password = db.Column(db.String(256), nullable=False)              # User's password (hashed)
     role = db.Column(db.String(20), default="user")                  # User's role (admin, moderator, user)
 
+    __table_args__ = (
+        db.Index('ix_users_role', 'role'),
+    )
+
     def is_moderator(self):
         """Check if the user has moderator privileges"""
         return self.role in ["moderator", "admin"]
