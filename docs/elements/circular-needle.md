@@ -6,7 +6,7 @@ The circular needle element draws a needle against a circular value range.
 
 ## Header
 
-[`include/multigauge/gauge/elements/circular/CircularNeedle.h`](../../include/multigauge/gauge/elements/circular/CircularNeedle.h)
+[`core/include/multigauge/gauge/elements/circular/CircularNeedle.h`](../../core/include/multigauge/gauge/elements/circular/CircularNeedle.h)
 
 ## Properties
 

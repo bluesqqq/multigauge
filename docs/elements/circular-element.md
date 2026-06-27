@@ -6,7 +6,7 @@ The circular element provides shared circular layout and property behavior for c
 
 ## Header
 
-[`include/multigauge/gauge/elements/circular/CircularElement.h`](../../include/multigauge/gauge/elements/circular/CircularElement.h)
+[`core/include/multigauge/gauge/elements/circular/CircularElement.h`](../../core/include/multigauge/gauge/elements/circular/CircularElement.h)
 
 ## Properties
 

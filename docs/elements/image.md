@@ -6,7 +6,7 @@ The image element loads and draws an image asset inside its layout bounds.
 
 ## Header
 
-[`include/multigauge/gauge/elements/primitives/ImageElement.h`](../../include/multigauge/gauge/elements/primitives/ImageElement.h)
+[`core/include/multigauge/gauge/elements/primitives/ImageElement.h`](../../core/include/multigauge/gauge/elements/primitives/ImageElement.h)
 
 ## Properties
 

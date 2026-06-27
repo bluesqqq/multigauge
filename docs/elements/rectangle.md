@@ -6,7 +6,7 @@ The rectangle element draws a filled or stroked rectangular shape inside its lay
 
 ## Header
 
-[`include/multigauge/gauge/elements/primitives/RectangleElement.h`](../../include/multigauge/gauge/elements/primitives/RectangleElement.h)
+[`core/include/multigauge/gauge/elements/primitives/RectangleElement.h`](../../core/include/multigauge/gauge/elements/primitives/RectangleElement.h)
 
 ## Properties
 

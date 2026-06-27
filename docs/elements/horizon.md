@@ -6,7 +6,7 @@ The horizon element renders a synthetic horizon-style background and grid.
 
 ## Header
 
-[`include/multigauge/gauge/elements/Horizon.h`](../../include/multigauge/gauge/elements/Horizon.h)
+[`core/include/multigauge/gauge/elements/Horizon.h`](../../core/include/multigauge/gauge/elements/Horizon.h)
 
 ## Properties
 

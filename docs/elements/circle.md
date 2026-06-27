@@ -6,7 +6,7 @@ The circle element draws a circle or ellipse inside its layout bounds.
 
 ## Header
 
-[`include/multigauge/gauge/elements/primitives/CircleElement.h`](../../include/multigauge/gauge/elements/primitives/CircleElement.h)
+[`core/include/multigauge/gauge/elements/primitives/CircleElement.h`](../../core/include/multigauge/gauge/elements/primitives/CircleElement.h)
 
 ## Properties
 

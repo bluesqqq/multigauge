@@ -6,7 +6,7 @@ The text element draws a single line or block of text inside its layout bounds.
 
 ## Header
 
-[`include/multigauge/gauge/elements/primitives/TextElement.h`](../../include/multigauge/gauge/elements/primitives/TextElement.h)
+[`core/include/multigauge/gauge/elements/primitives/TextElement.h`](../../core/include/multigauge/gauge/elements/primitives/TextElement.h)
 
 ## Properties
 

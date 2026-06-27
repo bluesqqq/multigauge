@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multigauge Runtime Example</title>
+  <style>
+    body {
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .stage {
+      display: grid;
+      place-items: center;
+      padding: 10px;
+    }
+
+    .shell {
+      width: min(70vw, 720px);
+      height: min(55vh, 420px);
+      min-width: 240px;
+      min-height: 180px;
+      overflow: hidden;
+      border-radius: 18px;
+    }
+  </style>
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+  <header class="toolbar">
+    <h1>Runtime Example</h1>
+    <div class="status">Static canvas</div>
+  </header>
+  <main class="stage">
+    <div class="shell">
+      <canvas id="screen"></canvas>
+    </div>
+  </main>
+  <script src="../../web/dist/mg.js"></script>
+  <script>
+    (async function() {
+      const mg = await Multigauge.init();
+      const canvas = document.getElementById("screen");
+      const runtime = mg.createRuntime(canvas);
+
+      const gauge = await fetch("./gauge.json").then(function(response) {
+        if (!response.ok) {
+          throw new Error("Failed to load gauge.json");
+        }
+        return response.json();
+      });
+
+      runtime.load(gauge);
+
+      runtime.start();
+    })().catch(function(err) {
+      console.error(err);
+    });
+  </script>
+</body>
+</html>

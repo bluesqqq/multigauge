@@ -6,7 +6,7 @@ The graph element draws a time-series style value chart.
 
 ## Header
 
-[`include/multigauge/gauge/elements/Graph.h`](../../include/multigauge/gauge/elements/Graph.h)
+[`core/include/multigauge/gauge/elements/Graph.h`](../../core/include/multigauge/gauge/elements/Graph.h)
 
 ## Properties
 

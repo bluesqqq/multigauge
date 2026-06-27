@@ -1,0 +1,74 @@
+{
+  "$schema": "../../../../docs/schemas/gauge.schema.json",
+  "bgColor": "#07111f",
+  "layout": {
+    "flex-container": {
+      "direction": "column",
+      "justify": "center",
+      "align-items": "center"
+    },
+    "padding": {
+      "left": 10,
+      "right": 10,
+      "top": 10,
+      "bottom": 10
+    }
+  },
+  "children": [
+    {
+      "type": "rectangle",
+      "style": {
+        "width": "78%",
+        "height": "70%",
+        "flex-container": {
+          "direction": "column",
+          "justify": "space-between",
+          "align-items": "center"
+        },
+        "padding": 10
+      },
+      "paint": {
+        "fill": "#00000000"
+      },
+      "radius": 18,
+      "children": [
+        {
+          "type": "rectangle",
+          "style": {
+            "width": "70%",
+            "height": 90
+          },
+          "paint": {
+            "fill": "#151515"
+          },
+          "radius": 14,
+          "children": []
+        },
+        {
+          "type": "rectangle",
+          "style": {
+            "width": 100,
+            "height": 90
+          },
+          "paint": {
+            "fill": "#f97316"
+          },
+          "radius": 14,
+          "children": []
+        },
+        {
+          "type": "rectangle",
+          "style": {
+            "width": "50%",
+            "height": 90
+          },
+          "paint": {
+            "fill": "#d14b4b"
+          },
+          "radius": 14,
+          "children": []
+        }
+      ]
+    }
+  ]
+}

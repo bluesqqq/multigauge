@@ -34,9 +34,8 @@ and system integration required to run gauges.
 
 ### Current targets
 
-- [ESP32](https://github.com/bluesqqq/multigauge-esp32)
-- [WASM](https://github.com/bluesqqq/website-multigauge)  
-  Currently lives in the website repository, but will likely be split into its own repo later.
+- [ESP32](./ports/esp32/)
+- [WASM](./ports/web/)
 
 ### Planned targets
 
@@ -55,12 +54,12 @@ services required by the core engine.
 
 At a minimum, a target implementation should provide:
 
-- a [`GraphicsContext`](./include/multigauge/graphics/GraphicsContext.h) for rendering
-- a [`FileSystem`](./include/multigauge/io/FileSystem.h) for loading files and assets
-- a [`Time`](./include/multigauge/io/Time.h) implementation for timing
-- (optional) a [`Logger`](./include/multigauge/io/Logger.h) for diagnostics
+- a [`GraphicsContext`](./core/include/multigauge/graphics/GraphicsContext.h) for rendering
+- a [`FileSystem`](./core/include/multigauge/io/FileSystem.h) for loading files and assets
+- a [`Time`](./core/include/multigauge/io/Time.h) implementation for timing
+- (optional) a [`Logger`](./core/include/multigauge/io/Logger.h) for diagnostics
 
-These services are grouped together through [`Platform`](./include/multigauge/Platform.h), which must be set before using the core API.
+These services are passed into `mg::init(...)` before using the core API.
 
 See [Porting](./docs/porting.md) for more information.
 
@@ -73,7 +72,7 @@ See [Porting](./docs/porting.md) for more information.
 - [`lodepng`](https://github.com/lvandeve/lodepng) for PNG decoding
 - [`tjpgd`](https://elm-chan.org/fsw/tjpgd/) for JPEG decoding
 
-These are currently vendored in the [`lib/`](./lib) directory.
+These are currently vendored in the [`core/lib/`](./core/lib) directory.
 
 ## Status
 
