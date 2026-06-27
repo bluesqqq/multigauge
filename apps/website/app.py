@@ -5,14 +5,16 @@ from datetime import datetime, timedelta
 
 from routes import auth_bp, cart_bp, main_bp, admin_bp, users_bp, payment_bp, workshop_bp, products_bp, multigauge_web_bp
 
+import os
 import stripe
+from dotenv import load_dotenv
 
 app = Flask(__name__, static_folder="static", static_url_path='/static')
 
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///site.db"
 app.config["SECRET_KEY"] = "your_secret_key"  # Change this to something secure
 
-stripe.api_key = 'oh-no-no-no'
+stripe.api_key = os.environ["STRIPE_KEY"]
 
 '''###
 log = logging.getLogger('werkzeug')
