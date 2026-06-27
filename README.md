@@ -1,6 +1,10 @@
 <p align="center">
   <a href="https://www.multi-gauge.com/">
-    <img src="./assets/multigauge.png" alt="Multigauge" width="250" />
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="./assets/multigauge-wordmark-light.png">
+      <source media="(prefers-color-scheme: light)" srcset="./assets/multigauge-wordmark-dark.png">
+      <img src="./assets/multigauge-wordmark-dark.png" alt="Multigauge" width="250">
+    </picture>
   </a>
 </p>
 
