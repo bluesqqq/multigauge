@@ -54,10 +54,10 @@
                         <tbody>
                             {% for item in order.items %}
                             <tr>
-                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.product_name_snapshot or item.product.name }}</td>
                                 <td>{{ item.quantity }}</td>
-                                <td>${{ '%.2f'|format(item.product.current_price()) }}</td>
-                                <td>${{ '%.2f'|format(item.quantity * item.product.current_price()) }}</td>
+                                <td>${{ '%.2f'|format(item.unit_price()) }}</td>
+                                <td>${{ '%.2f'|format(item.total_price()) }}</td>
                             </tr>
                             {% endfor %}
                         </tbody>

@@ -28,12 +28,11 @@ def get_or_create_cart(user):
 
 @cart_bp.route("/cart")
 def cart():
-    session_id = session.get('guest_cart_id')
-
-    cart = Cart.query.filter_by(session_id = session_id).first()
-
-    if not cart:
-        cart = None
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    else:
+        session_id = session.get('guest_cart_id')
+        cart = Cart.query.filter_by(session_id=session_id).first() if session_id else None
 
     return render_template('cart.html', cart=cart)
 
@@ -62,9 +61,15 @@ def add_to_cart(product_id):
     cart = get_or_create_cart(current_user)
     existing_item = CartItem.query.filter_by(cart_id=cart.id, product_id=product.id).first()
     if existing_item:
-        existing_item.increment()
+        existing_item.unit_price_cents = existing_item.unit_price_cents or int(product.current_price() * 100)
+        existing_item.increment(quantity)
     else:
-        new_item = CartItem(cart_id=cart.id, product_id=product.id, quantity=quantity)
+        new_item = CartItem(
+            cart_id=cart.id,
+            product_id=product.id,
+            quantity=quantity,
+            unit_price_cents=int(product.current_price() * 100),
+        )
         db.session.add(new_item)
 
     db.session.commit()
@@ -88,6 +93,8 @@ def merge_guest_cart(app, user):
                     existing = CartItem.query.filter_by(cart_id=user_cart.id, product_id=item.product_id).first()
                     if existing:
                         existing.quantity += item.quantity
+                        if existing.unit_price_cents is None:
+                            existing.unit_price_cents = item.unit_price_cents
                         db.session.delete(item)
                     else:
                         item.cart_id = user_cart.id

@@ -1,4 +1,6 @@
 from flask import Blueprint, request, render_template
+from sqlalchemy.orm import selectinload
+
 from models import User, Post
 
 users_bp = Blueprint('users', __name__)
@@ -13,7 +15,14 @@ def user(user_id):
 
     if user:
         # Fetch only the first 4 posts by the user
-        user_posts = Post.query.filter_by(posted_by=user_id).order_by(Post.posted_at.desc()).limit(4).all()
+        user_posts = (
+            Post.query
+            .options(selectinload(Post.user), selectinload(Post.package))
+            .filter_by(posted_by=user_id)
+            .order_by(Post.posted_at.desc())
+            .limit(4)
+            .all()
+        )
 
         # Total number of posts (for display)
         post_count = Post.query.filter_by(posted_by=user_id).count()

@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         const renderer = await getPageRenderer((message) => console.info("[gauge]", message));
         await renderer.renderGaugeJson({
             canvas,
-            wasmPath: "/work/posts/post-current.gauge",
+            wasmPath: "/work/posts/post-current.package.json",
             gaugeJson: postData,
             name: "Post Preview",
         });

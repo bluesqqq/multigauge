@@ -24,10 +24,13 @@ class Cart(db.Model):
     )
 
     def get_subtotal(self):
-        return sum(item.quantity * (item.product.current_price()) for item in self.items)
+        total = 0
+        for item in self.items:
+            total += item.total_price()
+        return total
     
     def get_subtotal_cents(self):
-        return int(self.get_subtotal() * 100)
+        return int(round(self.get_subtotal() * 100))
     
     def clear_cart(self):
         self.items.clear()
@@ -58,6 +61,14 @@ class CartItem(db.Model):
 
     def stock_is_available(self):
         return (self.product.stock >= self.quantity)
+
+    def unit_price(self):
+        if self.unit_price_cents is not None:
+            return self.unit_price_cents / 100
+        return self.product.current_price()
+
+    def total_price(self):
+        return self.quantity * self.unit_price()
     
     def increment(self, amount = 1):
         if self.quantity + amount <= self.product.stock:

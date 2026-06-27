@@ -40,6 +40,10 @@
                             <div>
                                 <h2 style="margin: 0;">{{ post.title }}</h2>
                                 <h3 style="margin: 0;">by <a href="/user/{{ post.posted_by }}">{{ posted_by_username }}</a></h3>
+                                {% if post.package %}
+                                    <p style="margin: 6px 0 0 0;">Package: <strong>{{ post.package.name or 'Untitled package' }}</strong></p>
+                                    <p style="margin: 4px 0 0 0;">{{ post.package.description }}</p>
+                                {% endif %}
                             </div>
                             <h3 style="margin: 0;">Posted: {{ post.posted_at }}</h3>
                         </div>
@@ -75,7 +79,6 @@
                                     width="25"
                                     height="25">
                             </a>
-                            <p id="download-count">{{ post.downloads }} downloads</p>
 
                             <!-- Feature button -->
                             {% if current_user.is_authenticated and current_user.is_moderator() %}
@@ -130,7 +133,7 @@
         </div>
 
         <script>
-            var postData = {{ post.gauge | tojson}};
+            var postData = {{ post.package.first_face_json() | tojson }};
 
             function handleLike(event) {
                 event.preventDefault();  // Prevent the form from submitting in the traditional way

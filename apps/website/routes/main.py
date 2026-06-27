@@ -1,21 +1,22 @@
 from flask import Blueprint, redirect, render_template, url_for
 from flask_login import current_user
-from models import db, Post, User
+from sqlalchemy.orm import selectinload
+
+from models import db, Post
 
 main_bp = Blueprint('main', __name__)
 
 # Home route
 @main_bp.route("/")
 def home():
-    query = Post.query.order_by(Post.posted_at.desc())
+    query = Post.query.options(selectinload(Post.user), selectinload(Post.package)).order_by(Post.posted_at.desc())
 
     pagination = query.paginate(page=1, per_page=4, error_out=False)
     posts = pagination.items
 
     # For each post, add the like count
     for post in posts:
-        user = User.query.get(int(post.posted_by))
-        post.user_username = user.username
+        post.user_username = post.user.username if post.user else "Unknown"
         post.liked = False
         post.favorited = False
         if current_user.is_authenticated:

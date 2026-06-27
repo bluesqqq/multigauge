@@ -31,6 +31,7 @@
                     <div class="order-summary">
                         <h2>Order #{{ order.id }}</h2>
                         <p>Status: {{ order.status }}</p>
+                        <p>Total: ${{ '%.2f'|format(order.total_price()) }}</p>
                     </div>
                 </a>
             {% endfor %}

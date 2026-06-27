@@ -10,7 +10,7 @@
 
         <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
 
-        <title>Upload Gauge Face</title>
+        <title>Upload Package</title>
     </head>
     <body>
         <!-- Navigation bar -->
@@ -21,7 +21,7 @@
                 <div class = "page-header-content margined">
                     <!-- Title and action-->
                     <div class="title">
-                        <h1>UPLOAD</h1>
+                        <h1>UPLOAD PACKAGE</h1>
                     </div>
                 </div>
             </div>
@@ -32,31 +32,22 @@
                 <div class="flex-col flex-2 justify-center">
                     <form action="/workshop/upload" method="POST" enctype="multipart/form-data" class="flex-col gap-common">
                         <div class="flex-row items-center form-row">
-                            <label class="p-common">Title:</label>
+                            <label class="p-common">Post Title:</label>
                             <textarea name="title" rows="1" required></textarea>
                         </div>
 
                         <div class="flex-row items-center form-row">
-                            <label class="p-common">File:</label>
-                            <input name="gauge" type="file" accept=".gauge" required></input>
+                            <label class="p-common">Package File:</label>
+                            <input name="package" type="file" accept=".json,.package,application/json" required></input>
                         </div>
 
                         <div class="flex-row items-center form-row">
-                            <label class="p-common">Descrition:</label>
+                            <label class="p-common">Post Description:</label>
                             <textarea name="description" rows="5" required></textarea>
                         </div>
 
                         <div class="flex-row items-center form-row">
-                            <label class="p-common">Type:</label>
-                            <select name="gauge-type" id="gauge-type">
-                                <option value="tachometer">Tachometer</option>
-                                <option value="speedometer">Speedometer</option>
-                                <option value="boost">Boost</option>
-                                <option value="temperature">Temperature</option>
-                                <option value="fuel-level">Fuel Level</option>
-                                <option value="voltmeter">Voltmeter</option>
-                                <option value="other">Hybrid/Other</option>
-                            </select>
+                            <p class="p-common">Upload a package JSON with <code>name</code>, <code>author</code>, <code>description</code>, and <code>faces</code>.</p>
                         </div>
 
                         <!-- Submit button-->

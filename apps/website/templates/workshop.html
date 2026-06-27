@@ -20,46 +20,29 @@
       <div class="page-header">
         <div class = "page-header-content margined">
           <!-- Title and action-->
-          <div class="title">
-            <h1>WORKSHOP</h1>
+            <div class="title">
+              <h1>WORKSHOP</h1>
 
-            <a href="/workshop/upload" style="height:100%;">
-              <button class="upload-button">
-                Upload a Gauge Face
-              </button>
-            </a>
-          </div>
+              <a href="/workshop/upload" style="height:100%;">
+                <button class="upload-button">
+                Upload a Package
+                </button>
+              </a>
+            </div>
 
           <!-- Sorting options for posts -->
           <div class="post-filters">
             <div class="filter">
               <h3> Sort By: </h3>
               <div class="sort-options">
-                <select id="sortDropdown">
-                  <option value="sort=new">New</option>
-                  <option value="sort=top">Top</option>
-                  <option value="sort=most_downloaded">Most Downloaded</option>
-                  <option value="featured=true">Featured</option>
-                  <option value="sort=trending">Trending</option>
-                </select>
+                  <select id="sortDropdown">
+                    <option value="sort=new">New</option>
+                    <option value="sort=top">Top</option>
+                    <option value="featured=true">Featured</option>
+                    <option value="sort=trending">Trending</option>
+                  </select>
+                </div>
               </div>
-            </div>
-      
-            <div class="filter">
-              <h3> Type: </h3>
-              <div class="type-options">
-                <select id="typeDropdown">
-                  <option value="type=all">All</option>
-                  <option value="type=tachometer">Tachometer</option>
-                  <option value="type=speedometer">Speedometer</option>
-                  <option value="type=boost">Boost</option>
-                  <option value="type=temperature">Temperature</option>
-                  <option value="type=fuel-level">Fuel Level</option>
-                  <option value="type=voltmeter">Voltmeter</option>
-                  <option value="type=other">Hybrid/Other</option>
-                </select>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -87,13 +70,13 @@
         {% if pagination.pages > 1 %}
           <div class="pagination">
             {% if pagination.has_prev %}
-              <a href="{{ url_for('workshop', page=pagination.prev_num, sort=sort_option, type=request.args.get('type'), featured=request.args.get('featured')) }}">Previous</a>
+              <a href="{{ url_for('workshop.workshop', page=pagination.prev_num, sort=sort_option, featured=request.args.get('featured')) }}">Previous</a>
             {% endif %}
 
             Page {{ pagination.page }} of {{ pagination.pages }}
 
             {% if pagination.has_next %}
-              <a href="{{ url_for('workshop', page=pagination.next_num, sort=sort_option, type=request.args.get('type'), featured=request.args.get('featured')) }}">Next</a>
+              <a href="{{ url_for('workshop.workshop', page=pagination.next_num, sort=sort_option, featured=request.args.get('featured')) }}">Next</a>
             {% endif %}
           </div>
         {% endif %}
@@ -151,12 +134,10 @@
         const params = new URLSearchParams(window.location.search);
     
         const sortDropdown = document.getElementById('sortDropdown');
-        const typeDropdown = document.getElementById('typeDropdown');
-    
-        const activeParams = new Set();
-        for (const [key, value] of params.entries()) {
-          activeParams.add(`${key}=${value}`);
-        }
+      const activeParams = new Set();
+      for (const [key, value] of params.entries()) {
+        activeParams.add(`${key}=${value}`);
+      }
 
         // Match sort dropdown based on full key=value
         for (const option of sortDropdown.options) {
@@ -166,27 +147,16 @@
           }
         }
 
-        // Match type dropdown (these are all type=...)
-        for (const option of typeDropdown.options) {
-          if (activeParams.has(option.value)) {
-            option.selected = true;
-            break;
-          }
-        }
-
         function updateURL() {
           const sortValue = sortDropdown.value; // e.g., "sort=new"
-          const typeValue = typeDropdown.value; // e.g., "type=tachometer"
-
-          // Combine the parameters
-          const queryParams = [sortValue, typeValue].join("&");
+          const featuredValue = sortValue === "featured=true" ? "featured=true" : "";
+          const queryParams = featuredValue ? [featuredValue].join("&") : sortValue;
 
           // Navigate to the new URL
           window.location.href = "/workshop?" + queryParams;
         }
 
         sortDropdown.addEventListener("change", updateURL);
-        typeDropdown.addEventListener("change", updateURL);
       });
     </script>
   </body> 

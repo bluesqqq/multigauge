@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         try {
             await renderer.renderGaugeJson({
                 canvas,
-                wasmPath: `/work/posts/post-${postId}.gauge`,
+                wasmPath: `/work/posts/post-${postId}.package.json`,
                 gaugeJson: gaugeDataElement.textContent || "",
                 name: `Post ${postId}`,
             });

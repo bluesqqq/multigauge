@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from models import db
@@ -13,6 +14,7 @@ class Post(db.Model):
     posted_by = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     package_id = db.Column(db.Integer, db.ForeignKey("packages.id"), nullable=False, unique=True)
 
+    user = db.relationship("User", backref=db.backref("posts", lazy=True))
     package = db.relationship(
         "Package",
         backref=db.backref("post", uselist=False),
@@ -44,6 +46,15 @@ class Post(db.Model):
             return f"{days} day{'s' if days != 1 else ''} ago"
         else:
             return self.posted_at.strftime("%b %d, %Y")
+
+    def total_likes(self):
+        return len(self.likes)
+
+    def total_features(self):
+        return len(self.features)
+
+    def is_featured(self):
+        return len(self.features) > 0
 
     def __repr__(self):
         return f"<Post id={self.id}, package_id={self.package_id}>"
@@ -167,3 +178,44 @@ class Package(db.Model):
         db.Index("ix_packages_package_format", "package_format"),
         db.Index("ix_packages_package_version", "package_version"),
     )
+
+    def data(self):
+        try:
+            parsed = json.loads(self.package_json)
+            return parsed if isinstance(parsed, dict) else {}
+        except (TypeError, json.JSONDecodeError):
+            return {}
+
+    @property
+    def name(self):
+        return self.data().get("name", "")
+
+    @property
+    def author(self):
+        return self.data().get("author", "")
+
+    @property
+    def description(self):
+        return self.data().get("description", "")
+
+    @property
+    def faces(self):
+        faces = self.data().get("faces", [])
+        return faces if isinstance(faces, list) else []
+
+    @property
+    def face_count(self):
+        return len(self.faces)
+
+    def first_face(self):
+        faces = self.faces
+        if not faces:
+            return {}
+        first = faces[0]
+        if not isinstance(first, dict):
+            return {}
+        face = first.get("face", {})
+        return face if isinstance(face, dict) else {}
+
+    def first_face_json(self):
+        return json.dumps(self.first_face())

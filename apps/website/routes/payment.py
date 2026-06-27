@@ -1,14 +1,15 @@
-from flask import Blueprint, session, flash, redirect, url_for, request, render_template
-
-from flask_login import current_user
-from models import db, Order, OrderItem, Address, Cart
-
 import uuid
+
 import stripe
+from flask import Blueprint, flash, redirect, render_template, request, session as flask_session, url_for
+from flask_login import current_user
+
+from models import Address, Cart, CartItem, Order, OrderItem, db
 
 payment_bp = Blueprint('payment', __name__)
 
 YOUR_DOMAIN = 'http://localhost:5000'  # change to your domain when live
+
 
 def get_or_create_cart(user):
     if user.is_authenticated:
@@ -18,20 +19,23 @@ def get_or_create_cart(user):
             db.session.add(cart)
             db.session.commit()
         return cart
-    else: # Guest user
-        if 'guest_cart_id' not in session:
-            session['guest_cart_id'] = str(uuid.uuid4())
-        sid = session['guest_cart_id']
-        cart = Cart.query.filter_by(session_id=sid).first()
-        if not cart:
-            cart = Cart(session_id=sid)
-            db.session.add(cart)
-            db.session.commit()
-        return cart
+
+    if 'guest_cart_id' not in flask_session:
+        flask_session['guest_cart_id'] = str(uuid.uuid4())
+
+    sid = flask_session['guest_cart_id']
+    cart = Cart.query.filter_by(session_id=sid).first()
+    if not cart:
+        cart = Cart(session_id=sid)
+        db.session.add(cart)
+        db.session.commit()
+    return cart
+
 
 @payment_bp.route('/cancel')
 def cancel():
     return 'Payment canceled.'
+
 
 @payment_bp.route('/create-checkout-session', methods=['POST'])
 def create_checkout_session():
@@ -40,11 +44,12 @@ def create_checkout_session():
     if not cart or not cart.items:
         flash("Your cart is empty!")
         return redirect(url_for('cart.cart'))
-    
-    # Create pending order from cart
+
     total_cents = cart.get_subtotal_cents()
     order = Order(
         user_id=current_user.id if current_user.is_authenticated else None,
+        customer_email=current_user.email if current_user.is_authenticated else None,
+        customer_name=current_user.username if current_user.is_authenticated else None,
         total_amount=total_cents,
         status='pending',
         currency='usd',
@@ -56,17 +61,15 @@ def create_checkout_session():
         db.session.add(OrderItem(
             order_id=order.id,
             product_id=item.product.id,
-            quantity=item.quantity
+            quantity=item.quantity,
+            unit_price_cents=item.unit_price_cents or int(item.product.current_price() * 100),
+            product_name_snapshot=item.product.name,
         ))
 
-    db.session.commit()
-
-    # Create line items for Stripe
     line_items = []
     for item in cart.items:
         product = item.product
-        unit_price = int(product.current_price() * 100)
-
+        unit_price = item.unit_price_cents or int(product.current_price() * 100)
         line_items.append({
             'price_data': {
                 'currency': 'usd',
@@ -79,16 +82,14 @@ def create_checkout_session():
         })
 
     try:
-        DOMAIN = 'http://127.0.0.1:5000'
-
-        session = stripe.checkout.Session.create(
+        domain = YOUR_DOMAIN
+        stripe_session = stripe.checkout.Session.create(
             payment_method_types=['card'],
             line_items=line_items,
             mode='payment',
             client_reference_id=str(order.id),
-            success_url=DOMAIN + '/success?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url=DOMAIN + '/cancel',
-
+            success_url=domain + '/success?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url=domain + '/cancel',
             shipping_address_collection={
                 'allowed_countries': ['US', 'CA']
             },
@@ -109,69 +110,83 @@ def create_checkout_session():
                 }
             ],
         )
-        return redirect(session.url, code=303)
+        order.stripe_session_id = stripe_session.id
+        db.session.commit()
+        return redirect(stripe_session.url, code=303)
     except Exception as e:
+        db.session.rollback()
         return str(e), 400
-    
+
+
 @payment_bp.route("/success")
 def success():
     session_id = request.args.get('session_id')
-    print(f"Session ID: {session_id}")
-
     if not session_id:
         flash("Missing session ID.")
         return redirect(url_for('main.index'))
 
-    session = stripe.checkout.Session.retrieve(session_id, expand=['payment_intent'])
-    
-    payment_intent = session.payment_intent
-    print("PAYMENT INTENT:", payment_intent)
+    stripe_session = stripe.checkout.Session.retrieve(session_id, expand=['payment_intent'])
+    payment_intent = stripe_session.payment_intent
 
-    order_id = session.client_reference_id
+    order_id = stripe_session.client_reference_id
     order = Order.query.get(order_id)
 
     if not order:
         flash("Order not found.")
         return redirect(url_for('main.index'))
-    
-    # Update Stripe info
-    order.stripe_session_id = session.id
+
+    order.stripe_session_id = stripe_session.id
     order.stripe_payment_intent = payment_intent.id
     order.status = 'paid'
 
-    # Store shipping address
-    shipping = session.get('shipping')
-    if shipping and shipping.get('address'):
+    customer_details = getattr(stripe_session, "customer_details", None)
+    if customer_details:
+        order.customer_email = getattr(customer_details, "email", None) or order.customer_email
+        order.customer_name = getattr(customer_details, "name", None) or order.customer_name
+
+    shipping_details = getattr(stripe_session, "shipping_details", None)
+    if shipping_details and getattr(shipping_details, "address", None):
+        address = shipping_details.address
         delivery = Address(
-            user_id=current_user.id,
-            line1=shipping["address"].get("line1"),
-            line2=shipping["address"].get("line2"),
-            city=shipping["address"].get("city"),
-            state=shipping["address"].get("state"),
-            postal_code=shipping["address"].get("postal_code"),
-            country=shipping["address"].get("country"),
+            user_id=order.user_id,
+            line1=address.line1,
+            line2=address.line2,
+            city=address.city,
+            state=address.state,
+            postal_code=address.postal_code,
+            country=address.country,
         )
         db.session.add(delivery)
         db.session.flush()
-
         order.delivery_address_id = delivery.id
 
-    # Store billing address if available
-    billing = session.get('customer_details', {}).get('address')
-    if billing:
-        billing_addr = Address(
-            user_id=current_user.id,
-            line1=billing.get('line1'),
-            line2=billing.get('line2'),
-            city=billing.get('city'),
-            state=billing.get('state'),
-            postal_code=billing.get('postal_code'),
-            country=billing.get('country')
+    billing_address = getattr(customer_details, "address", None) if customer_details else None
+    if billing_address:
+        billing = Address(
+            user_id=order.user_id,
+            line1=billing_address.line1,
+            line2=billing_address.line2,
+            city=billing_address.city,
+            state=billing_address.state,
+            postal_code=billing_address.postal_code,
+            country=billing_address.country,
         )
-        db.session.add(billing_addr)
+        db.session.add(billing)
         db.session.flush()
-        order.billing_address_id = billing_addr.id
+        order.billing_address_id = billing.id
+
+    cart = None
+    if order.user_id:
+        cart = Cart.query.filter_by(user_id=order.user_id).first()
+    else:
+        guest_sid = flask_session.get('guest_cart_id')
+        if guest_sid:
+            cart = Cart.query.filter_by(session_id=guest_sid).first()
+
+    if cart:
+        cart.clear_cart()
 
     db.session.commit()
+    flask_session.pop('guest_cart_id', None)
 
     return render_template("success.html", order_id=order_id)

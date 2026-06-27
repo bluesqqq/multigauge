@@ -63,6 +63,9 @@ class Order(db.Model):
     )
 
     def total_price(self):
+        if self.total_amount is not None:
+            return self.total_amount / 100
+
         total = 0
         for item in self.items:
             total += item.total_price()
@@ -105,3 +108,8 @@ class OrderItem(db.Model):
             return self.quantity * self.unit_price_cents / 100
 
         return self.quantity * self.product.current_price()
+
+    def unit_price(self):
+        if self.unit_price_cents is not None:
+            return self.unit_price_cents / 100
+        return self.product.current_price()

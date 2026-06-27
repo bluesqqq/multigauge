@@ -10,11 +10,11 @@ directly.
 import os
 
 import stripe
-from flask import Flask
-from flask_login import LoginManager
+from flask import Flask, session
+from flask_login import LoginManager, current_user
 from dotenv import load_dotenv
 
-from models import db, User
+from models import db, User, Cart
 from routes import (
     auth_bp,
     cart_bp,
@@ -22,6 +22,7 @@ from routes import (
     admin_bp,
     users_bp,
     payment_bp,
+    subscribers_bp,
     workshop_bp,
     products_bp,
     multigauge_web_bp
@@ -52,6 +53,20 @@ def load_user(user_id):
     return db.session.get(User, int(user_id))
 
 
+@app.context_processor
+def inject_cart_count():
+    cart = None
+    if current_user.is_authenticated:
+        cart = Cart.query.filter_by(user_id=current_user.id).first()
+    else:
+        guest_cart_id = session.get("guest_cart_id")
+        if guest_cart_id:
+            cart = Cart.query.filter_by(session_id=guest_cart_id).first()
+
+    cart_count = len(cart.items) if cart else 0
+    return {"cart_count": cart_count}
+
+
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(cart_bp)
@@ -59,6 +74,7 @@ app.register_blueprint(main_bp)
 app.register_blueprint(multigauge_web_bp)
 app.register_blueprint(payment_bp)
 app.register_blueprint(products_bp)
+app.register_blueprint(subscribers_bp)
 app.register_blueprint(users_bp)
 app.register_blueprint(workshop_bp)
 

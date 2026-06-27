@@ -12,11 +12,17 @@
       <canvas id="gaugeCanvas-{{ post.id }}" class="post-canvas{% if post.is_featured() %} featured{% endif %}"></canvas>
     </div>
 
-    <div class="post-info">
+      <div class="post-info">
       <div style="display: flex; justify-content: space-between;">
         <h3>{{ post.title }}</h3>
         <h3 class="post-time">{{ post.posted_how_long_ago() }}</h3>
       </div>
+
+      {% if post.package %}
+      <div class="post-user">
+        <h4 style="font-weight: 10;">Package: {{ post.package.name or 'Untitled package' }}</h4>
+      </div>
+      {% endif %}
 
       {% if show_user %}
       <div class="post-user">
@@ -33,10 +39,9 @@
           </div>
           {% endif %}
 
-          {% if post.downloads > 0 %}
+          {% if post.package and post.package.face_count > 1 %}
           <div class="post-stat">
-            <img src="/static/images/download.png" width="25" height="25">
-            <h5>{{ post.downloads }}</h5>
+            <h5>{{ post.package.face_count }} faces</h5>
           </div>
           {% endif %}
 
@@ -69,7 +74,7 @@
     </div>
 
     <script type="application/json" id="gaugeData-{{ post.id }}">
-      {{ post.gauge | tojson }}
+      {{ post.package.first_face_json() | safe }}
     </script>
   </div>
 </a>
