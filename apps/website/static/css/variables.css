@@ -1,0 +1,22 @@
+:root {
+    /* Colors */
+    --text-color: #fffaf2; /* Floral White */
+    --accent-color: #ed1c24; /* Red */
+    --accent-color-hover: #ea6166; /* Red */
+    --lightest-background-color: #707078;
+    --light-background-color: #40424f;
+    --background-color: #31333d; /* Jet */
+    --dark-background-color: #242427; /* Raisin Black */
+    --darker-background-color: #1d1d20;
+    --darkest-background-color: #161618;
+
+    --common-border-radius: 5px;
+    --common-padding: 10px;
+    --common-box-shadow: 0 0 15px rgba(0, 0, 0, 0.5);
+
+    --common-font-family: 'Inter'; 
+
+    --button-size: 35px;
+    --mini-button-size: 20px;
+    --icon-padding: 5px;
+}

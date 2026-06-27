@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html> 
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/static/css/style.css" /> 
+    <link rel="stylesheet" href="/static/css/navbar.css" /> 
+
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+
+    <title>Home</title>
+  </head>
+  <body> 
+    {% include 'navbar.html' %}
+
+    <h1>{{product.name}}</h1> 
+
+    <h3>{{product.description}}</h3> 
+
+    <form action="/create-checkout-session" method="POST">
+      <button type="submit">Test Checkout button</button>
+    </form>
+
+    {% include 'footer.html' %}
+  </body> 
+</html> 

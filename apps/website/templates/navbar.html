@@ -1,0 +1,64 @@
+<nav class="navbar">
+    <div class="navbar-container">
+        <div class="left-nav">
+            <ul>
+                <li><a href="/"><img src="/static/images/logo.svg" width="30px" height="30px"></a></li>
+                <li><a href="/products">Products</a></li>
+
+                <li style="border-left: 1px solid #ccc; height: 25px; margin: 0;"></li>
+
+                <li><a href="/workshop">Workshop</a></li>
+                <li><a href="/editor">Editor</a></li>
+
+                {% if current_user.is_authenticated and current_user.is_admin() %}
+                    <li style="border-left: 1px solid #ccc; height: 25px; margin: 0;"></li>
+
+                    <li><a href="/admin">Admin</a></li>
+                {% endif%}
+            </ul>
+        </div>
+
+        <div class="right-nav">  
+            <ul>
+                {% if current_user.is_authenticated %}
+                <li>
+                    <a href="/notifications">
+                        <img src="/static/images/no_notification.png" width="25px" height="25px">
+                    </a>
+                </li>
+                {% endif %}
+
+                <li>
+                    <button class="profile-btn" onclick="toggleDropdown()">
+                        <img src="/static/images/default_pfp.jpg" width="25px" height="25px">
+                    </button>
+
+                    <div class="dropdown-content">
+                        {% if current_user.is_authenticated %}
+                            <a href="/user/{{ current_user.id }}">Profile</a>
+                            <a href="/settings">Settings</a>
+                            <a href="/logout">Log out</a>
+                        {% else %}
+                            <a href="/login">Log in</a>
+                            <a href="/register">Sign up</a>
+                        {% endif %}
+                    </div>
+                </li>
+
+                <li>
+                    <a href="/cart" class="cart-button" href>
+                        <img src="/static/images/cart.png" width="25px" height="25px">
+                        <h4>1</h4>
+                    </a>
+                </li>
+            </ul>
+        </div>  
+    </div>
+</nav>
+
+<script>
+    function toggleDropdown() {
+    const dropdown = document.querySelector('.dropdown-content');
+    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+    }
+</script>

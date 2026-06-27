@@ -1,0 +1,76 @@
+{% macro render_post(post, show_user=True, show_feature_star=False) %}
+<a href="/workshop/{{ post.id }}">
+  <div class="post">
+    {% if post.is_featured() %}
+    <div class="featured-banner"></div>
+    {% if show_feature_star %}
+    <img class="featured-star" src="/static/images/featured.png">
+    {% endif %}
+    {% endif %}
+
+    <div class="post-view">
+      <canvas id="gaugeCanvas-{{ post.id }}" class="post-canvas{% if post.is_featured() %} featured{% endif %}"></canvas>
+    </div>
+
+    <div class="post-info">
+      <div style="display: flex; justify-content: space-between;">
+        <h3>{{ post.title }}</h3>
+        <h3 class="post-time">{{ post.posted_how_long_ago() }}</h3>
+      </div>
+
+      {% if show_user %}
+      <div class="post-user">
+        <h4 style="font-weight: 10;">by {{ post.user_username if post.user_username else post.user.username }}</h4>
+      </div>
+      {% endif %}
+
+      <div class="post-stats">
+        <div style="display: flex; gap: 10px;">
+          {% if post.total_likes() > 0 %}
+          <div class="post-stat">
+            <img src="/static/images/liked.png" width="25" height="25">
+            <h5>{{ post.total_likes() }}</h5>
+          </div>
+          {% endif %}
+
+          {% if post.downloads > 0 %}
+          <div class="post-stat">
+            <img src="/static/images/download.png" width="25" height="25">
+            <h5>{{ post.downloads }}</h5>
+          </div>
+          {% endif %}
+
+          {% if post.is_featured() %}
+          <div class="post-stat">
+            <img src="/static/images/featured.png" width="25" height="25">
+            <h5>{{ post.total_features() }}</h5>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <form class="favorite-form" data-id="{{ post.id }}" data-action="favorite" onsubmit="event.preventDefault();">
+        <button type="submit" class="post-favorite" style="border: none; background: none; padding: 0;">
+          <img src="{{ url_for('static', filename='images/favorited.png') if post.favorited else url_for('static', filename='images/not_favorited.png') }}" alt="Favorite" width="25" height="25"/>
+        </button>
+      </form>
+
+      <form class="like-form" data-id="{{ post.id }}" data-action="like" onsubmit="event.preventDefault();">
+        <button type="submit" class="post-like" style="border: none; background: none; padding: 0;">
+          <img src="{{ url_for('static', filename='images/liked.png') if post.liked else url_for('static', filename='images/not_liked.png') }}" alt="Like" width="25" height="25"/>
+        </button>
+      </form>
+
+      <form action="/workshop/{{ post.id }}/download" method="get" onsubmit="event.stopPropagation()">
+        <button type="submit" class="post-download" style="border: none; background: none; padding: 0;">
+          <img src="/static/images/download.png" width="25" height="25">
+        </button>
+      </form>
+    </div>
+
+    <script type="application/json" id="gaugeData-{{ post.id }}">
+      {{ post.gauge | tojson }}
+    </script>
+  </div>
+</a>
+{% endmacro %}

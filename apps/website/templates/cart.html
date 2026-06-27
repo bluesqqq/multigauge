@@ -1,0 +1,98 @@
+<html> 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/style.css" /> 
+        <link rel="stylesheet" href="/static/css/cart.css" /> 
+
+        <link rel="stylesheet" href="/static/css/navbar.css" /> 
+        <link rel="stylesheet" href="/static/css/footer.css" /> 
+
+        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+        <title>Workshop</title>
+    </head>
+    <body> 
+        <!-- Navigation bar -->
+        {% include 'navbar.html' %}
+
+        <div class="page">
+            <div class="page-header">
+                <div class = "page-header-content margined">
+                    <!-- Title and action-->
+                    <div class="title">
+                        <h1>CART</h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-content margined">
+            {% if cart and cart.items %}
+                <div class="cart-items">
+                {% for item in cart.items %}
+                    <div class="cart-item">
+                        <div class="product-image-container">
+                            <img src="{{ item.product.image_url }}" />
+                        </div>
+
+                        <div class="product-info-container">
+                            <div style="display: flex; justify-content: space-between;">
+                                <h2>{{ item.product.name }}</h2>
+
+                                {% if item.product.discount_price %}
+                                    <h2><s>${{ item.product.price }}</s> → ${{ item.product.discount_price }}</h2>
+                                {% else %}
+                                    <h2>${{ item.product.price }}</h2>
+                                {% endif %}
+                            </div>
+
+                            <div style="display: flex; justify-content: space-between;">
+                                <div class="item-quantity-widget">
+                                    <!-- Decrement -->
+                                    <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                        <input type="hidden" name="action" value="decrement">
+                                        <button type="submit">−</button>
+                                    </form>
+
+                                    <span>{{ item.quantity }}</span>
+
+                                    <!-- Increment -->
+                                    <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                        <input type="hidden" name="action" value="increment">
+                                        <button type="submit">+</button>
+                                    </form>
+                                </div>
+
+                                <!-- Remove -->
+                                <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                    <input type="hidden" name="action" value="remove">
+                                    <button type="submit" style="background: none; border: none;">
+                                        <img src="/static/images/trash.png" style="height: 25px; aspect-ratio: 1;">
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr style="width: 100%;">
+                {% endfor %}
+                </div>
+                <div style="display: flex; justify-content: end;">
+                    <div style="text-align: right;">
+                        <h2>Subtotal: ${{cart.get_subtotal()}}</h2>
+                        <p>Shipping, taxes, and discount codes calculated at checkout.</p>
+                            <form action="/create-checkout-session" method="POST">
+                                <button type="submit">Check Out</button>
+                            </form>
+                    </div>
+                </div>
+            {% else %}
+                <p>Your cart is empty!</p>
+            {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        {% include 'footer.html' %}
+    </body> 
+
+</html>

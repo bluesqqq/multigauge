@@ -1,0 +1,42 @@
+@import url("variables.css");
+
+body {
+    background-color: var(--dark-background-color);
+
+    width: 100%;
+    height: 100vh;
+
+    margin: 0;
+}
+
+.login-container {
+    width: 100%;
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+    
+    justify-content: center;
+    align-items: center;
+
+}
+
+.login {
+    background-color: var(--light-background-color);
+    padding: var(--common-padding);
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: var(--common-padding);
+}
+
+.login button {
+    width: 100%;
+}
+
+.login a {
+    color: var(--accent-color);
+     text-decoration: none;
+}

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html> 
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/static/css/footer.css" /> 
+    <link rel="stylesheet" href="/static/css/navbar.css" /> 
+
+    <link rel="stylesheet" href="/static/css/style.css" /> 
+    <link rel="stylesheet" href="/static/css/post.css" /> 
+
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+
+    <title>{{ user.username }}'s Page</title>
+  </head>
+  <body> 
+    <!-- Navigation bar -->
+    {% include 'navbar.html' %}
+
+    <div class="page">
+      <div class="page-header">
+        <div class = "page-header-content margined">
+
+          <div class="title">
+
+            <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
+              <!-- Profile Picture-->
+              <div>
+                <img src="/static/images/gauge.png" width="100px" height="100px">
+              </div>
+
+              <!-- Username-->
+              <div>
+                <h1>
+                  {% if user.role == "moderator" %}
+                    [mod] 
+                  {% elif user.role == "admin" %}
+                    [admin] 
+                  {% endif %}
+                  {{ user.username }}
+                </h1>
+              </div>
+            </div>
+
+            <!-- Stats-->
+            <div>
+              <p>Total likes: {{total_likes}}</p>
+              <p>Joined: TEMP</p>
+              <p>Total Posts: {{ post_count }}</p>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="page-content margined">
+      <!-- Display posts -->
+      {% if user_posts %}
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h1>Newest posts</h1>
+          <a href="{{ url_for('workshop.workshop', user=user.id) }}">See all</a>
+        </div>
+        <div class="post-grid">
+
+          {% import 'macros/post_card.html' as post_macros %}
+
+          {% for post in user_posts %}
+            {{ post_macros.render_post(post, show_user=False) }}
+          {% endfor %}
+
+        </div>
+
+      {% else %}
+
+        <p>No posts found!</p>
+
+      {% endif %}
+    </div>
+    
+    <!-- Footer -->
+    {% include 'footer.html' %}
+
+    <script src="/static/js/gaugePreview.js" type="module"></script>
+  </body> 
+</html> 

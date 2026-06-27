@@ -1,0 +1,83 @@
+<html> 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/style.css" /> 
+        <link rel="stylesheet" href="/static/css/product.css" /> 
+
+        <link rel="stylesheet" href="/static/css/navbar.css" />
+        <link rel="stylesheet" href="/static/css/footer.css" />
+
+        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+        <title>Workshop</title>
+    </head>
+    <body> 
+        <!-- Navigation bar -->
+        {% include 'navbar.html' %}
+
+        <div class="page">
+            <div class="page-header">
+                <div class = "page-header-content margined">
+                    <div class="title">
+                        <h1>PRODUCTS</h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-content margined">
+                {% if products %}
+                    <div class="product-grid">
+                        {% for product in products %}
+                        <a href="/products/{{ product.slug }}">
+                            <div class="product">
+                                <div class="product-image-container">
+                                    <img src="{{ product.image_url }}" />
+                                    {% if product.is_discounted() %}
+                                        <div class="discount-badge">
+                                            {{ product.get_discount_percent() }}% Off
+                                            {% if product.discount_expires_at %}
+                                                until {{ product.discount_expires_at.strftime("%m/%d") }}
+                                            {% endif %}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="product-info-container">
+                                    <div class="product-info">
+                                        <h2>{{product.name}}</h2>
+                                        <div class="price-row">
+                                            {% if product.is_discounted() %}
+                                                <s><h4 style="font-weight: normal;">${{ product.price }}</h4></s>
+                                                <h4>${{ product.discount_price }}</h4>
+                                            {% else %}
+                                                <h4>${{ product.price }}</h3>
+                                            {% endif %}
+                                            {% if product.is_low_stock() %}
+                                                <p class="low-stock-warning">Only {{product.stock}} left!</p>            
+                                            {% endif %}
+                                        </div>
+                                        <h4>{{product.description}}</h4>
+                                    </div>
+
+                                    <form action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" method="POST">
+                                        <button type="submit" class="add-to-cart-button">Add to cart</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </a>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p>No products found, come back later!</p>
+                {% endif %}
+            </div>
+
+            <br>
+
+        </div>
+
+        <!-- Footer -->
+        {% include 'footer.html' %}
+    </body> 
+
+</html>

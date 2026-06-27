@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html> 
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="stylesheet" href="/static/css/style.css" /> 
+    <link rel="stylesheet" href="/static/css/navbar.css" />
+    <link rel="stylesheet" href="/static/css/footer.css" />
+    <link rel="stylesheet" href="/static/css/post.css" /> 
+    <link rel="stylesheet" href="/static/css/load.css">
+
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+
+    <title>Home</title>
+  </head>
+  <body> 
+    {% include 'load_screen.html' %}
+
+    {% include 'navbar.html' %}
+
+    <div class="page-content full-width hero">
+      <canvas id="heroBackground">
+      </canvas>
+      
+      <h1 style="position: absolute; z-index: 1000; font-size: 60px; right: 50%; transform: translate(-200px, 0);" class="scramble" data-text="MULTIGAUGE" data-duration="1000"></h1>
+      
+      <div style="position: absolute; z-index: 1000; left: 50%; transform: translate(141px, 141px);">
+        <h1 style="font-size: 30px;" class="scramble" data-text="one gauge, " data-duration="1000"></h1>
+        <a href="/workshop" style="font-size: 30px; color: var(--accent-color)" class="scramble" data-text="infinite faces" data-duration="1000"></a>
+      </div>
+      
+
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; justify-content: center;">
+        <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
+
+        <model-viewer
+        alt="Multi-Gauge"
+        src="/static/models/placeholder.glb"
+        environment-image="/static/models/sky.hdr"
+        camera-controls
+        interaction-prompt="none"
+        touch-action="none"
+        disable-zoom
+        disable-pan
+        ar
+        style="width: 300px; height: 300px;">
+        </model-viewer>
+      </div>
+
+      <!--
+      <div style="display: flex; justify-content: center;">
+        <button class="image-button" onClick="document.getElementById('middle').scrollIntoView();">
+          <img src="/static/images/down.png" style="width: 50px; height: 50px;">
+        </button>
+      </div>
+      -->
+    </div>
+
+    <div class="page-content margined" id="middle">
+      <div style="display: flex;">
+
+      </div>
+    </div>
+    
+    <div class="page-content">
+      <div class="margined">
+        <h2 style="text-align: center; margin: 20px">See what the community is making</h2>
+
+        {% if posts %}
+
+          <div class="post-grid">
+
+            {% import 'macros/post_card.html' as post_macros %}
+
+            {% for post in posts %}
+              {{ post_macros.render_post(post, show_user=True, show_feature_star=True) }}
+            {% endfor %}
+
+          </div>
+
+        {% else %}
+
+          <p>No posts found!</p>
+
+        {% endif %}
+
+      </div>
+    </div>
+
+    <div class="page-content" style="background-color: var(--background-color);">
+      <div class="margined">
+        <blockquote class="tiktok-embed" cite="https://www.tiktok.com/@bluesqqq" data-unique-id="bluesqqq" data-embed-type="creator" style="width:100%; border-radius: 10px;" >
+          <section>
+            <a target="_blank" href="https://www.tiktok.com/@bluesqqq?refer=creator_embed">@bluesqqq</a>
+          </section>
+        </blockquote>
+        <script async src="https://www.tiktok.com/embed.js"></script>
+      </div>
+    </div>
+
+    {% include 'footer.html' %}
+
+    <script src="/static/js/gaugePreview.js" type="module"></script>
+    <script type="module" src="/static/js/textScrambler.js"></script>
+    <script type="module" src="/static/js/heroAnimation.js"></script>
+  </body> 
+</html> 

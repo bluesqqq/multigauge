@@ -1,0 +1,43 @@
+<html> 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/style.css" /> 
+        <link rel="stylesheet" href="/static/css/cart.css" /> 
+
+        <link rel="stylesheet" href="/static/css/navbar.css" /> 
+        <link rel="stylesheet" href="/static/css/footer.css" /> 
+
+        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+        <title>Orders</title>
+    </head>
+    <body> 
+        <!-- Navigation bar -->
+        {% include 'navbar.html' %}
+
+        <div class="page">
+            <div class="page-header">
+                <div class = "page-header-content margined">
+                    <div class="title">
+                        <h1>ORDERS</h1>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content margined">
+            {% for order in orders %}
+                <a href="/admin/orders/{{ order.id }}">
+                    <div class="order-summary">
+                        <h2>Order #{{ order.id }}</h2>
+                        <p>Status: {{ order.status }}</p>
+                    </div>
+                </a>
+            {% endfor %}
+        </div>
+
+        <!-- Footer -->
+        {% include 'footer.html' %}
+    </body> 
+
+</html>

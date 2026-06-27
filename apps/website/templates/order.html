@@ -1,0 +1,85 @@
+<html> 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/style.css" /> 
+        <link rel="stylesheet" href="/static/css/cart.css" /> 
+
+        <link rel="stylesheet" href="/static/css/navbar.css" /> 
+        <link rel="stylesheet" href="/static/css/footer.css" /> 
+
+        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+        <title>Workshop</title>
+    </head>
+    <body> 
+        <!-- Navigation bar -->
+        {% include 'navbar.html' %}
+
+        <div class="page">
+            <div class="page-header">
+                <div class = "page-header-content margined">
+                    <div class="title">
+                        <h1>ORDER</h1>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page-content margined">
+                {% if order %}
+                    <div class="order-summary">
+                        <h2>Order #{{ order.id }}</h2>
+                        <p>Status: {{ order.status }}</p>
+                        <p>Placed on: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
+                        <p>Stripe Session: {{ order.stripe_session_id }}</p>
+                        <p>Payment Intent: {{ order.stripe_payment_intent }}</p>
+                        {% if order.user %}
+                            <p>Placed by: {{ order.user.email }}</p>
+                        {% else %}
+                            <p>Guest order (no user attached)</p>
+                        {% endif %}
+                    </div>
+
+                    <hr>
+
+                    <h3>Items</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Qty</th>
+                                <th>Unit Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for item in order.items %}
+                            <tr>
+                                <td>{{ item.product.name }}</td>
+                                <td>{{ item.quantity }}</td>
+                                <td>${{ '%.2f'|format(item.product.current_price()) }}</td>
+                                <td>${{ '%.2f'|format(item.quantity * item.product.current_price()) }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <p><strong>Total: ${{ '%.2f'|format(order.total_price()) }}</strong></p>
+
+                    <hr>
+
+                    <h3>Customer Info</h3>
+                    <p>Name: {{ order.customer_name }}</p>
+                    <p>Email: {{ order.customer_email }}</p>
+                    <p>Shipping Address: {{ order.get_shipping_address() }}</p>
+                    <p>Billing Address: {{ order.get_billing_address() }}</p>
+                {% else %}
+                    <h1>Order not found!</h1>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Footer -->
+        {% include 'footer.html' %}
+    </body> 
+
+</html>

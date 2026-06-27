@@ -1,0 +1,95 @@
+@import url("variables.css");
+
+.product-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Flexible columns */
+    gap: var(--common-padding); /* Space between items */
+    padding-top: var(--common-padding); /* Padding around the grid */
+    padding-bottom: var(--common-padding); /* Padding around the grid */
+    color: var(--text-color);;
+}
+
+.product {
+    background-color: var(--darkest-background-color);
+    border-radius: var(--common-border-radius);
+    
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 1/2;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.product-image-container {
+    flex: 50%;
+    overflow: hidden;
+}
+
+.product-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.3s ease; 
+}
+
+.product-image-container:hover img {
+    transform: scale(1.1);
+}
+
+.product-info-container {
+    padding: 10px;
+    flex: 50%;
+    box-sizing: border-box;
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.price-row {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+
+    gap: var(--common-padding);
+}
+
+.discount-badge {
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    background-color: #e53935; /* Red badge */
+    color: white;
+    padding: 4px 8px;
+    font-size: 0.8rem;
+    font-weight: bold;
+    border-radius: 4px;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+h2, h4, p {
+    margin: 0;
+}
+
+.low-stock-warning {
+    color: var(--accent-color);
+}
+
+.product-info {
+    gap: var(--common-padding);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.add-to-cart-button {
+    background-color: var(--accent-color);
+    border-radius: var(--common-border-radius);
+    padding: var(--common-padding);
+    border: none;
+    color: var(--text-color);
+}

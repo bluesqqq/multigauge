@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/navbar.css" /> 
+        <link rel="stylesheet" href="/static/css/login.css" /> 
+        <title>Log in</title>
+    </head>
+    <body> 
+        {% include 'navbar.html' %}
+
+        <div class="login-container">
+            <form method="POST">
+                <fieldset class="login">
+                    <legend>Log In</legend>
+                    {{ form.hidden_tag() }}
+                    <span>Don't have an account? <a href="/register">Sign Up</a></span>
+
+                    <label for="username">Username or Email</label>
+                    {{ form.username() }}
+                    
+                    <label for="password">Password</label>
+                    {{ form.password() }}
+                    
+                    <button type="submit">Login</button>
+                </fieldset>
+            </form>
+        </div>
+    </body>
+</html>

@@ -1,0 +1,194 @@
+<html> 
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css" /> 
+    <link rel="stylesheet" href="/static/css/post.css" /> 
+
+    <link rel="stylesheet" href="/static/css/navbar.css"/> 
+    <link rel="stylesheet" href="/static/css/footer.css"/> 
+
+    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+
+    <title>Workshop</title>
+  </head>
+  <body> 
+    <!-- Navigation bar -->
+    {% include 'navbar.html' %}
+
+    <div class="page">
+      <div class="page-header">
+        <div class = "page-header-content margined">
+          <!-- Title and action-->
+          <div class="title">
+            <h1>WORKSHOP</h1>
+
+            <a href="/workshop/upload" style="height:100%;">
+              <button class="upload-button">
+                Upload a Gauge Face
+              </button>
+            </a>
+          </div>
+
+          <!-- Sorting options for posts -->
+          <div class="post-filters">
+            <div class="filter">
+              <h3> Sort By: </h3>
+              <div class="sort-options">
+                <select id="sortDropdown">
+                  <option value="sort=new">New</option>
+                  <option value="sort=top">Top</option>
+                  <option value="sort=most_downloaded">Most Downloaded</option>
+                  <option value="featured=true">Featured</option>
+                  <option value="sort=trending">Trending</option>
+                </select>
+              </div>
+            </div>
+      
+            <div class="filter">
+              <h3> Type: </h3>
+              <div class="type-options">
+                <select id="typeDropdown">
+                  <option value="type=all">All</option>
+                  <option value="type=tachometer">Tachometer</option>
+                  <option value="type=speedometer">Speedometer</option>
+                  <option value="type=boost">Boost</option>
+                  <option value="type=temperature">Temperature</option>
+                  <option value="type=fuel-level">Fuel Level</option>
+                  <option value="type=voltmeter">Voltmeter</option>
+                  <option value="type=other">Hybrid/Other</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="page-content margined">
+        <!-- Display posts -->
+        {% if posts %}
+
+          <div class="post-grid">
+
+            {% import 'macros/post_card.html' as post_macros %}
+
+            {% for post in posts %}
+              {{ post_macros.render_post(post, show_user=True, show_feature_star=True) }}
+            {% endfor %}
+
+          </div>
+
+        {% else %}
+
+          <p>No posts found!</p>
+
+        {% endif %}
+
+        {% if pagination.pages > 1 %}
+          <div class="pagination">
+            {% if pagination.has_prev %}
+              <a href="{{ url_for('workshop', page=pagination.prev_num, sort=sort_option, type=request.args.get('type'), featured=request.args.get('featured')) }}">Previous</a>
+            {% endif %}
+
+            Page {{ pagination.page }} of {{ pagination.pages }}
+
+            {% if pagination.has_next %}
+              <a href="{{ url_for('workshop', page=pagination.next_num, sort=sort_option, type=request.args.get('type'), featured=request.args.get('featured')) }}">Next</a>
+            {% endif %}
+          </div>
+        {% endif %}
+
+      </div>
+
+      <br>
+
+    </div>
+
+    <!-- Footer -->
+    {% include 'footer.html' %}
+
+    <script src="/static/js/gaugePreview.js" type="module"></script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('.like-form, .favorite-form').forEach(form => {
+          form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const postId = form.dataset.id;
+            const action = form.dataset.action; // "like" or "favorite"
+            const url = `/workshop/${postId}/${action}`;
+
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'X-Requested-With': 'XMLHttpRequest' // Optional: helps distinguish AJAX
+              }
+            });
+
+            if (response.ok) {
+              const data = await response.json();
+              console.log(`Post ${postId} ${action} response:`, data);
+
+              // You can now update the UI, for example toggle icon
+              const icon = form.querySelector('img');
+              if (data.liked !== undefined) {
+                icon.src = data.liked ? '/static/images/liked.png' : '/static/images/not_liked.png';
+              } else if (data.favorited !== undefined) {
+                icon.src = data.favorited ? '/static/images/favorited.png' : '/static/images/not_favorited.png';
+              }
+
+            } else {
+              console.error(`Failed to ${action} post ${postId}`);
+            }
+          });
+        });
+      });
+    </script>
+
+    <script>
+      window.addEventListener('DOMContentLoaded', () => {
+        const params = new URLSearchParams(window.location.search);
+    
+        const sortDropdown = document.getElementById('sortDropdown');
+        const typeDropdown = document.getElementById('typeDropdown');
+    
+        const activeParams = new Set();
+        for (const [key, value] of params.entries()) {
+          activeParams.add(`${key}=${value}`);
+        }
+
+        // Match sort dropdown based on full key=value
+        for (const option of sortDropdown.options) {
+          if (activeParams.has(option.value)) {
+            option.selected = true;
+            break;
+          }
+        }
+
+        // Match type dropdown (these are all type=...)
+        for (const option of typeDropdown.options) {
+          if (activeParams.has(option.value)) {
+            option.selected = true;
+            break;
+          }
+        }
+
+        function updateURL() {
+          const sortValue = sortDropdown.value; // e.g., "sort=new"
+          const typeValue = typeDropdown.value; // e.g., "type=tachometer"
+
+          // Combine the parameters
+          const queryParams = [sortValue, typeValue].join("&");
+
+          // Navigate to the new URL
+          window.location.href = "/workshop?" + queryParams;
+        }
+
+        sortDropdown.addEventListener("change", updateURL);
+        typeDropdown.addEventListener("change", updateURL);
+      });
+    </script>
+  </body> 
+  
+</html>

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html> 
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/static/css/navbar.css" /> 
+        <link rel="stylesheet" href="/static/css/login.css" /> 
+        <title>Log in</title>
+    </head>
+    <body> 
+        {% include 'navbar.html' %}
+
+        <div class="login-container">
+            <h1>Thank You for Your Purchase!</h1>
+            <p>Your order has been received and is being processed.</p>
+            
+            {% if order_id %}
+                <p><strong>Order #{{ order_id }}</strong></p>
+            {% endif %}
+
+            <p>You will receive a confirmation email shortly.</p>
+
+            <a href="/" class="btn">Return to Home</a>
+            <a href="/orders" class="btn">View My Orders</a>
+        </div>
+    </body>
+</html>

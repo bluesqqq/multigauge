@@ -1,0 +1,219 @@
+@import url("variables.css");
+
+.post-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); /* Flexible columns */
+    gap: var(--common-padding); /* Space between items */
+    padding: var(--common-padding); /* Padding around the grid */
+    color: var(--text-color);;
+}
+
+.post {
+    background-color: var(--darkest-background-color);
+    border-radius: var(--common-border-radius);
+    
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    position: relative;
+    aspect-ratio: 1;
+
+    display: flex;
+    flex-direction: column;
+}
+
+.post-view {
+    position: absolute;
+    top: 50%; /* Start at 30% from the top */
+    left: 50%;
+    transform: translate(-50%, -80%); /* Adjust the translate to match the starting position */
+    z-index: 1;
+    width: 60%; /* Initially 50% width of the post */
+    height: 60%; /* Initially 50% height of the post */
+    transition: width 0.3s ease, height 0.3s ease, top 0.3s ease, transform 0.3s ease; /* Smooth transition for width, height, top, and transform */
+    padding: 0;
+    margin: 0;
+}
+
+.post:hover .post-view {
+    width: 80%; /* Grow to 90% width on hover */
+    height: 80%; /* Grow to 90% height on hover */
+    transform: translate(-50%, -68.5%); /* Adjust the translate to center it */
+}
+
+.post-info {
+    position: absolute;
+    bottom: 0; /* Stick to the bottom */
+    left: 0;
+
+    width: 100%;
+    height: 35%;
+    box-sizing: border-box;
+
+    background-color: var(--background-color);
+    padding: var(--common-padding);
+
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+
+    transition: height 0.3s ease; /* Smooth transition for height */
+
+    z-index: 2;
+}
+
+/* Hover effect on the post */
+.post:hover .post-info {
+    height: 15%;
+}
+
+.post h2 {
+    margin: 0;
+    color: var(--text-color);
+    padding: var(--common-padding);
+}
+
+.post-stats {
+    display: flex;
+    justify-content: space-between;
+}
+
+.post-stat {
+    display: flex;
+    align-items: center;
+}
+
+.post-favorite {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 10; /* Ensure it's above other content */
+}
+
+.post-like {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 10; /* Ensure it's above other content */
+    opacity: 0;
+    transition: right 0.3s ease, opacity 0.3s ease;
+}
+
+.post-download {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    z-index: 10; /* Ensure it's above other content */
+    opacity: 0;
+    transition: right 0.2s ease, opacity 0.3s ease;
+}
+
+.post:hover .post-like {
+right: 45px;
+opacity: 1;
+}
+
+.post:hover .post-download {
+    right: 80px;
+    opacity: 1;
+}
+
+.post-user {
+
+}
+
+.post-time {
+    font-weight: 10;
+}
+
+/* Initially, these stats should be visible */
+.post-stats, .post-user, .post-time {
+    opacity: 1;
+    transition: opacity 0.2s ease;
+}
+
+.post:hover .post-stats,
+.post:hover .post-user,
+.post:hover .post-time {
+    opacity: 0; /* Hide the stats, user, and time on hover */
+}
+
+/* Hover effect on canvas to prevent overlap */
+.post:hover .post-view {
+    z-index: 0; /* Make sure canvas stays behind the info when hovered */
+}
+
+.post-filters {
+    display: flex;
+    gap: var(--common-padding);
+}
+
+.filter {
+    display: flex;
+    align-items: center;
+    gap: var(--common-padding);
+}
+
+h3 {
+    margin: 0;
+}
+
+h4 {
+    margin: 0;
+    font-weight: 10;
+}
+
+h5 {
+    margin: 0;
+    font-weight: 10;
+}
+
+/* Featured gauge's have a white glow */
+.featured {
+    box-shadow: 0 0 40px white;
+}
+
+.featured-banner {
+    position: absolute;
+    top: -60px;
+    left: -60px;
+    width: 60px;
+    height: 60px;
+    transform: rotate(45deg);
+    background: white;
+    transition: width 0.5s ease, height 0.5s ease; /* Smooth transition for height */
+    z-index: 3;
+}
+
+.post:hover .featured-banner {
+    width: 120px;
+    height: 120px;
+}
+
+.featured-star {
+    position: absolute;
+    z-index: 4;
+    filter: invert();
+    width: 50px;
+    height: 50px;
+    transform: translate(-50px, -50px) rotate(0deg);
+    transition: transform 0.5s ease, rotate 0.9s ease-out, width 0.15s ease, height 0.15s ease;
+}
+
+.post:hover .featured-star {
+    transform: translate(0px, 0px) rotate(360deg);
+}
+
+.featured-star:hover {
+    width: 55px;
+    height: 55px;
+}
+
+canvas {
+    /*
+    border-radius: 400px;
+    margin-top: 20px;
+    */ 
+    box-shadow: 0 0 20px black;
+    width: 100%; /* Ensures the canvas takes up the full width of its container */
+    height: 100%; /* Ensures the canvas takes up the full height of its container */
+}

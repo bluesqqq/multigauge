@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/static/css/style.css" /> 
+    <title>Upload Post</title>
+  </head>
+  <body>
+    <!-- Navigation bar -->
+    {% include 'navbar.html' %}
+
+      <h1>Upload a Post</h1>
+      <form action="/upload" method="POST">
+          <textarea name="content" rows="5" placeholder="Write your content here..." required></textarea>
+          <br><br>
+          <button type="submit">Upload</button>
+      </form>
+      <br>
+      <a href="/views">View Posts</a>
+  </body>
+</html>

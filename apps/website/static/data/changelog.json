@@ -1,0 +1,26 @@
+[
+    {
+        "version": "v0.2.0-alpha",
+        "date": "July 16, 2025",
+        "changes": [
+            {
+                "section": "Features",
+                "items": [
+                    "Added Undo + Redo actions and traverse through action history.",
+                    "Added a guided tour/tutorial of the editor.",
+                    "Added copy + pasting + duplicating of elements.",
+                    "Added shortcut commands.",
+                    "Added values view to show currently active values."
+                ]
+            },
+            {
+                "section": "Fixes",
+                "items": [
+                    "Fixed JSON serializing/deserializing issues.",
+                    "Fixed rendering of some objects in the property menu.",
+                    "Improved some dom element rendering efficiency."
+                ]
+            }
+        ]
+    }
+]

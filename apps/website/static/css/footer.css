@@ -1,0 +1,26 @@
+.footer {
+
+}
+
+.footer-linebreak {
+    height: 5px;
+    border: none;
+    background-color: white;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-bottom: 20px;
+    margin-top: 20px;
+}
+
+.copyright h3 {
+    font-weight: 10;
+}
+
+.socials a {
+    font-weight: 20;
+}

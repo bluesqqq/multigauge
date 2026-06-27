@@ -1,0 +1,70 @@
+@import url("/static/css/variables.css");
+
+/* DISPLAY UTILITIES */
+.flex { display: flex }
+
+.grid { display: grid }
+
+.block { display: block }
+
+.hidden { display: none }
+
+/* FLEX DIRECTION UTILITIES */
+.flex-row {
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-col {
+    display: flex;
+    flex-direction: column;
+}
+
+.flex-1 { flex: 1 1 0% }
+.flex-2 { flex: 2 2 0% }
+.flex-none { flex: none }
+
+/* FLEX ALIGNMENT UTILITIES */
+.justify-center  { justify-content: center }
+.justify-between { justify-content: space-between }
+.justify-around  { justify-content: space-around }
+.justify-start   { justify-content: flex-start }
+.justify-end     { justify-content: flex-end }
+.justify-evenly  { justify-content: space-evenly }
+
+.items-center { align-items: center }
+
+/* TEXT ALIGNMENT UTILITIES*/
+.text-left    { text-align: left }
+.text-center  { text-align: center }
+.text-right   { text-align: right }
+.text-justify { text-align: justify }
+
+/* SPACING UTILITIES */
+.p-common  { padding: var(--common-padding) }
+.pt-common { padding-top: var(--common-padding) }
+.pb-common { padding-bottom: var(--common-padding) }
+.pl-common { padding-left: var(--common-padding) }
+.pr-common { padding-right: var(--common-padding) }
+
+.gap-common { gap: var(--common-padding) }
+
+/* STYLE UTILITIES */
+.rounded-common { border-radius: var(--common-border-radius); }
+.rounded-full { border-radius: 9999px }
+
+/* WIDTH & HEIGHT UTILITIES */
+.w-full { width: 100% }
+.h-full { height: 100% }
+.square { aspect-ratio: 1 }
+
+/* POSITIONING UTILITIES */
+.relative { position: relative }
+.absolute { position: absolute }
+.fixed    { position: fixed }
+.sticky   { position: sticky }
+
+/* FONT STYLE UTILITIES */
+.font-bold   { font-weight: bold }
+.font-normal { font-weight: normal }
+.font-light  { font-weight: lighter }

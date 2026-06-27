@@ -1,0 +1,9 @@
+.right-click-menu {
+    width: 150px;
+    
+    background-color: var(--dark-background-color);
+
+    border: var(--light-background-color) 1px solid;
+    border-radius: var(--common-border-radius);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+}
