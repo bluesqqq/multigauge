@@ -1,64 +1,61 @@
 <nav class="navbar">
-    <div class="navbar-container">
-        <div class="left-nav">
-            <ul>
-                <li><a href="/"><img src="/static/images/logo.svg" width="30px" height="30px"></a></li>
-                <li><a href="/products">Products</a></li>
+    <div class="navbar-inner page-container">
+        <button
+            class="navbar-menu-button"
+            type="button"
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            aria-controls="navbar-links"
+        >
+            <img
+                src="/static/images/menu.png"
+                data-menu-src="/static/images/menu.png"
+                data-close-src="/static/images/close.png"
+                class="navbar-menu-icon"
+                alt=""
+            >
+        </button>
 
-                <li style="border-left: 1px solid #ccc; height: 25px; margin: 0;"></li>
+        <a href="/" class="navbar-brand" aria-label="Multigauge home">
+            <img src="/static/images/multigauge-brandmark-light.svg" class="navbar-logo" alt="Multigauge">
+        </a>
 
-                <li><a href="/workshop">Workshop</a></li>
-                <li><a href="/editor">Editor</a></li>
+        <div class="navbar-links" id="navbar-links">
+            <a href="/products">PRODUCTS</a>
+            <a href="/workshop">WORKSHOP</a>
+            <a href="/editor">EDITOR</a>
 
-                {% if current_user.is_authenticated and current_user.is_admin() %}
-                    <li style="border-left: 1px solid #ccc; height: 25px; margin: 0;"></li>
-
-                    <li><a href="/admin">Admin</a></li>
-                {% endif%}
-            </ul>
+            {% if current_user.is_authenticated and current_user.is_admin() %}
+            <a href="/admin">ADMIN</a>
+            {% endif %}
         </div>
 
-        <div class="right-nav">  
-            <ul>
-                {% if current_user.is_authenticated %}
-                <li>
-                    <a href="/notifications">
-                        <img src="/static/images/no_notification.png" width="25px" height="25px">
-                    </a>
-                </li>
-                {% endif %}
+        <div class="navbar-actions">
+            {% if current_user.is_authenticated %}
+            <!-- Notifications here -->
+            {% endif %}
 
-                <li>
-                    <button class="profile-btn" onclick="toggleDropdown()">
-                        <img src="/static/images/default_pfp.jpg" width="25px" height="25px">
-                    </button>
+            <a href="/account" aria-label="Account">
+                <img src="/static/images/default_pfp.jpg" class="navbar-icon" alt="">
+            </a>
 
-                    <div class="dropdown-content">
-                        {% if current_user.is_authenticated %}
-                            <a href="/user/{{ current_user.id }}">Profile</a>
-                            <a href="/settings">Settings</a>
-                            <a href="/logout">Log out</a>
-                        {% else %}
-                            <a href="/login">Log in</a>
-                            <a href="/register">Sign up</a>
-                        {% endif %}
-                    </div>
-                </li>
-
-                <li>
-                    <a href="/cart" class="cart-button" href>
-                        <img src="/static/images/cart.png" width="25px" height="25px">
-                        <h4>{{ cart_count }}</h4>
-                    </a>
-                </li>
-            </ul>
-        </div>  
+            <a href="/cart" class="navbar-cart" aria-label="Cart">
+                <img src="/static/images/cart.png" class="navbar-icon" alt="">
+                <span class="navbar-cart-count">{{ cart_count }}</span>
+            </a>
+        </div>
     </div>
 </nav>
 
 <script>
-    function toggleDropdown() {
-    const dropdown = document.querySelector('.dropdown-content');
-    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
-    }
+    const navbar = document.querySelector(".navbar");
+    const menuButton = document.querySelector(".navbar-menu-button");
+    const menuIcon = document.querySelector(".navbar-menu-icon");
+
+    menuButton.addEventListener("click", () => {
+        const isOpen = navbar.classList.toggle("is-open");
+
+        menuButton.setAttribute("aria-expanded", isOpen ? "true" : "false");
+        menuIcon.src = isOpen ? menuIcon.dataset.closeSrc : menuIcon.dataset.menuSrc;
+    });
 </script>

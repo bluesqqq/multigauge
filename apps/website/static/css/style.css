@@ -1,13 +1,23 @@
 @import url("variables.css");
+@import url('https://googleapis.com');
+
+* {
+    box-sizing: border-box;
+}
 
 html {
-  scroll-behavior: smooth;
+    scroll-behavior: smooth;
+    width: 100%;
+    overflow-x: hidden;
 }
 
 body {
+    width: 100%;
+    overflow-x: hidden;
+
     color: var(--text-color);
     background-color: var(--dark-background-color);
-    font-family: 'Inter'; 
+    font-family: 'IBM Plex Mono', monospace;
     margin: 0;
 }
 
@@ -29,12 +39,80 @@ h1, h2, h3, h4, h5, h6 {
     margin: 0;
 }
 
-.page-content {
+
+.page-container {
+    width: min(100% - calc(var(--page-gutter) * 2), var(--page-max-width));
+    margin-inline: auto;
+}
+
+
+
+
+
+.full-screen { /* NEW */
+    width: 100%;
+    min-height: 100vh;
+}
+
+.half-screen { /* NEW */
+    width: 100%;
+    min-height: 50vh;
+}
+
+.page-content { /* NEW */
     width: 100%;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
 }
+
+.product-card { /* NEW */
+    background-color: var(--text-color);
+    color: var(--darkest-background-color)
+}
+
+cta-button {
+    padding: 16px 32px;
+    border: none;
+    background-color: transparent;
+    color: var(--accent-color);
+    font-size: 16px;
+    cursor: pointer;
+
+    corner-shape: bevel;
+    border-radius: 100px;
+
+    box-shadow:
+        inset 0 0 0 2px var(--accent-color);
+
+    transition:
+        box-shadow 0.1s ease,
+        background-color 0.1s ease,
+        color 0.1s ease;
+}
+
+
+
+cta-button:hover {
+    box-shadow:
+        inset 0 0 0 4px var(--accent-color);
+}
+
+cta-button:active {
+    background-color: var(--accent-color);
+    color: var(--text-color);
+
+    box-shadow:
+        inset 0 0 0 4px var(--accent-color),
+        inset 0 0 0 8px white;
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
+
+
+
 
 .full-width {
     max-width: 100%;
@@ -90,7 +168,6 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .hero {
-  height: calc(100vh - 60px);
   position: relative;
 
   background-color: var(--darkest-background-color);

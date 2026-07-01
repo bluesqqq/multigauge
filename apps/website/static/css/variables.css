@@ -1,4 +1,9 @@
 :root {
+    --page-max-width: 64rem;
+    --page-gutter: 24px;
+    --navbar-height: 60px;
+    --footer-height: 100px;
+    
     /* Colors */
     --text-color: #fffaf2; /* Floral White */
     --accent-color: #ed1c24; /* Red */
