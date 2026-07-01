@@ -125,7 +125,9 @@ class Hero {
 
         const centerX = width / 2;
         const centerY = height / 2;
-        const horizonHeight = height - 200;
+        const horizonHeight = height * 0.80;
+
+        this.centerRadius = Math.min(height * 0.2, width * 0.15);
 
         this.modifier = lerp(this.modifier, 1, 0.02);
 
@@ -152,8 +154,8 @@ class Hero {
             true
         );
         ctx.lineTo(
-            centerX + Math.cos(degToRad(endAngleGauge)) * (this.centerRadius + 100),
-            centerY + Math.sin(degToRad(endAngleGauge)) * (this.centerRadius + 100)
+            centerX + Math.cos(degToRad(endAngleGauge)) * (this.centerRadius * 1.3),
+            centerY + Math.sin(degToRad(endAngleGauge)) * (this.centerRadius * 1.3)
         );
         ctx.stroke();
 
@@ -168,25 +170,25 @@ class Hero {
             degToRad(otherEnd)
         );
         ctx.lineTo(
-            centerX + Math.cos(degToRad(otherEnd)) * (this.centerRadius + 100),
-            centerY + Math.sin(degToRad(otherEnd)) * (this.centerRadius + 100)
+            centerX + Math.cos(degToRad(otherEnd)) * (this.centerRadius * 1.3),
+            centerY + Math.sin(degToRad(otherEnd)) * (this.centerRadius * 1.3)
         );
         ctx.stroke();
 
-        this.diamond(centerX, centerY + this.centerRadius, 30 * smoothVal);
+        this.diamond(centerX, centerY + this.centerRadius, this.centerRadius * smoothVal * 0.1);
 
         this.movingTickArc(
             time,
             centerX,
             centerY,
-            this.centerRadius + 30,
-            this.centerRadius + 10,
+            this.centerRadius * 1.15,
+            this.centerRadius * 1.05,
             endAngleGauge,
             -45,
             10
         );
 
-        this.diamond(centerX + this.centerRadius, centerY, 30 * smoothVal);
+        this.diamond(centerX + this.centerRadius, centerY, this.centerRadius * smoothVal * 0.1);
 
         this.horizon(time, horizonHeight);
 
