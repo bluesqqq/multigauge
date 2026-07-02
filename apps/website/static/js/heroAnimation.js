@@ -1,11 +1,14 @@
 import { lerp, variableSmoothstep, degToRad } from "/static/js/utils.js"
 
+const MOBILE_MEDIA_QUERY = "(max-width: 720px)";
+
 class Hero {
     constructor(canvas) {
         this.canvas = canvas;
         this.ctx = canvas.getContext("2d");
         this.startTime = performance.now();
         this.modifier = 0;
+        this.mobileMediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
 
         this.lineWidth = 2;
         this.centerRadius = 200;
@@ -39,6 +42,22 @@ class Hero {
         this.canvas.height = Math.round(rect.height * dpr);
 
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        const isMobile = this.mobileMediaQuery.matches;
+        const centerY = isMobile ? rect.height * 0.30 : rect.height / 2;
+        const centerRadius = isMobile
+            ? Math.min(rect.height * 0.2, rect.width * 0.46)
+            : Math.min(rect.height * 0.2, rect.width * 0.15);
+
+        const hero = this.canvas.closest(".hero");
+        if (hero) {
+            hero.style.setProperty(
+                "--hero-mobile-copy-top",
+                isMobile
+                    ? `${Math.round(centerY + centerRadius + rect.height * 0.035)}px`
+                    : "0px"
+            );
+        }
     }
 
     // DRAWING
@@ -122,12 +141,15 @@ class Hero {
 
         const width = this.width;
         const height = this.height;
+        const isMobile = this.mobileMediaQuery.matches;
 
         const centerX = width / 2;
-        const centerY = height / 2;
-        const horizonHeight = height * 0.80;
+        const centerY = isMobile ? height * 0.30 : height / 2;
+        const horizonHeight = height * 0.75;
 
-        this.centerRadius = Math.min(height * 0.2, width * 0.15);
+        this.centerRadius = isMobile
+            ? Math.min(height * 0.2, width * 0.46)
+            : Math.min(height * 0.2, width * 0.15);
 
         this.modifier = lerp(this.modifier, 1, 0.02);
 
