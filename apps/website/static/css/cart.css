@@ -47,7 +47,7 @@
     width: 50%;
     display: flex;
     justify-content: space-between;
-    background-color: var(--light-background-color);
+    background-color: var(--color-bg-500);
     border-radius: var(--common-border-radius);
     padding: 10px;
     gap: var(--common-border-radius);
@@ -91,9 +91,9 @@ h4 {
 }
 
 .add-to-cart-button {
-    background-color: var(--accent-color);
+    background-color: var(--color-accent);
     border-radius: var(--common-border-radius);
     padding: var(--common-padding);
     border: none;
-    color: var(--text-color);
+    color: var(--color-text);
 }

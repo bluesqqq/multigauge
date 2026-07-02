@@ -1,7 +1,7 @@
 @import url("variables.css");
 
 body {
-    background-color: var(--dark-background-color);
+    background-color: var(--color-bg-700);
 
     width: 100%;
     height: 100vh;
@@ -22,7 +22,7 @@ body {
 }
 
 .login {
-    background-color: var(--light-background-color);
+    background-color: var(--color-bg-500);
     padding: var(--common-padding);
     
     display: flex;
@@ -37,6 +37,6 @@ body {
 }
 
 .login a {
-    color: var(--accent-color);
+    color: var(--color-accent);
      text-decoration: none;
 }

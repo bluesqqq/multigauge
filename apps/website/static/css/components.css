@@ -1,0 +1,9 @@
+/*
+    components.css - reusable site-wide UI classes
+*/
+
+.page-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}

@@ -8,7 +8,7 @@
     z-index: 1000;
 
     background: transparent;
-    color: var(--text-color);
+    color: var(--color-text);
     font-size: 16px;
 
     mix-blend-mode: difference;
@@ -100,7 +100,7 @@
     }
 
     .navbar.is-open {
-        background: var(--dark-background-color);
+        background: var(--color-bg-700);
         mix-blend-mode: normal;
     }
 
@@ -170,8 +170,8 @@
 
         padding: 8px 24px 24px;
 
-        background: var(--dark-background-color);
-        border-bottom: 1px solid var(--text-color);
+        background: var(--color-bg-700);
+        border-bottom: 1px solid var(--color-text);
     }
 
     .navbar.is-open .navbar-links {
@@ -183,7 +183,7 @@
         padding: 18px 0;
 
         font-size: 20px;
-        border-bottom: 1px solid color-mix(in srgb, var(--text-color) 20%, transparent);
+        border-bottom: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
     }
 
     .navbar-links a:last-child {

@@ -6,7 +6,7 @@
     width: 100%;
     padding: var(--common-padding);
     
-    background-color: var(--dark-background-color);
+    background-color: var(--color-bg-700);
     border-radius: var(--common-border-radius);
 }
 
@@ -18,7 +18,7 @@
     resize: none;
     background-color: transparent;
 
-    color: var(--text-color);
+    color: var(--color-text);
 }
 
 .comment-box:focus {
@@ -31,8 +31,8 @@
 
     border: none;
 
-    background-color: var(--accent-color);
-    color: var(--text-color);
+    background-color: var(--color-accent);
+    color: var(--color-text);
     border-radius: var(--common-border-radius);
 }
 

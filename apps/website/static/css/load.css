@@ -15,7 +15,7 @@
 
 .spinner {
   border: 8px solid #f3f3f3;
-  border-top: 8px solid var(--accent-color, #00f);
+  border-top: 8px solid var(--color-accent, #00f);
   border-radius: 50%;
   width: 60px;
   height: 60px;

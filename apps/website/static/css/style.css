@@ -1,30 +1,31 @@
 @import url("variables.css");
 @import url('https://googleapis.com');
 
-* {
+
+/* RESET */
+*,
+*::before,
+*::after {
     box-sizing: border-box;
 }
 
 html {
     scroll-behavior: smooth;
-    width: 100%;
-    overflow-x: hidden;
 }
 
 body {
-    width: 100%;
-    overflow-x: hidden;
-
-    color: var(--text-color);
-    background-color: var(--dark-background-color);
-    font-family: 'IBM Plex Mono', monospace;
     margin: 0;
+    min-height: 100vh;
+
+    color: var(--color-text);
+    background-color: var(--color-bg-700);
+    font-family: var(--font-main)
 }
 
 select {
-    background-color: var(--dark-background-color);
+    background-color: var(--color-bg-700);
     border-radius: var(--common-border-radius);
-    color: var(--text-color);
+    color: var(--color-text);
     padding: var(--common-padding);
 
     border: none;
@@ -67,15 +68,15 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 .product-card { /* NEW */
-    background-color: var(--text-color);
-    color: var(--darkest-background-color)
+    background-color: var(--color-text);
+    color: var(--color-bg-900)
 }
 
 cta-button {
     padding: 16px 32px;
     border: none;
     background-color: transparent;
-    color: var(--accent-color);
+    color: var(--color-accent);
     font-size: 16px;
     cursor: pointer;
 
@@ -83,7 +84,7 @@ cta-button {
     border-radius: 100px;
 
     box-shadow:
-        inset 0 0 0 2px var(--accent-color);
+        inset 0 0 0 2px var(--color-accent);
 
     transition:
         box-shadow 0.1s ease,
@@ -95,15 +96,15 @@ cta-button {
 
 cta-button:hover {
     box-shadow:
-        inset 0 0 0 4px var(--accent-color);
+        inset 0 0 0 4px var(--color-accent);
 }
 
 cta-button:active {
-    background-color: var(--accent-color);
-    color: var(--text-color);
+    background-color: var(--color-accent);
+    color: var(--color-text);
 
     box-shadow:
-        inset 0 0 0 4px var(--accent-color),
+        inset 0 0 0 4px var(--color-accent),
         inset 0 0 0 8px white;
 }
 
@@ -138,7 +139,7 @@ button:disabled {
 }
 
 .page-header {
-    background-color: var(--background-color);
+    background-color: var(--color-bg-600);
 }
 
 .page-header-content {
@@ -154,8 +155,8 @@ button:disabled {
 }
 
 .upload-button {
-    background-color: var(--accent-color);
-    color: var(--text-color);
+    background-color: var(--color-accent);
+    color: var(--color-text);
     padding: 0.5em 1em; /* add padding for shape */
     border: none;
     border-radius: 4px;
@@ -163,7 +164,7 @@ button:disabled {
 }
 
 .title {
-    background-color: var(--background-color);
+    background-color: var(--color-bg-600);
 
     display: flex;
     justify-content: space-between;
@@ -173,7 +174,7 @@ button:disabled {
 .hero {
   position: relative;
 
-  background-color: var(--darkest-background-color);
+  background-color: var(--color-bg-900);
   /*
   background-image: url('/static/images/background.jpg');
   background-attachment: fixed;
@@ -218,8 +219,8 @@ button:disabled {
 .product-button {
     padding: var(--common-padding);
     background-color: transparent;
-    border: var(--text-color) solid 2px;
-    color: var(--text-color);
+    border: var(--color-text) solid 2px;
+    color: var(--color-text);
     border-radius: var(--common-border-radius);
     font-size: 20px;
 }
