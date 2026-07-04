@@ -35,7 +35,7 @@
 .hero-title {
     position: absolute;
     right: 50%;
-    top: 50%;
+    top: 40%;
     transform: translate(-200px, -50%);
     font-size: 60px;
     line-height: 1;
@@ -45,7 +45,7 @@
 .hero-tagline {
     position: absolute;
     left: 50%;
-    top: 50%;
+    top: 40%;
     transform: translate(141px, 141px);
     font-size: 30px;
     line-height: 1.02;
@@ -91,7 +91,7 @@
         inset 0 0 0 8px white;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
     .hero-title {
         position: static;
         transform: none;

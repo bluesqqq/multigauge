@@ -1,6 +1,32 @@
 import { lerp, variableSmoothstep, degToRad } from "/static/js/utils.js"
 
-const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
+const MOBILE_MEDIA_QUERY = "(max-width: 1024px)";
+const SE_SQRT_2 = Math.SQRT1_2;
+const COLORS = {
+    black: "#000000",
+    white: "#ffffff",
+    red: "#ff0000",
+};
+
+function mixChannel(start, end, amount) {
+    return Math.round(lerp(start, end, amount));
+}
+
+function mixColor(start, end, amount) {
+    const parse = (hex) => {
+        const normalized = hex.replace("#", "");
+        return [
+            parseInt(normalized.slice(0, 2), 16),
+            parseInt(normalized.slice(2, 4), 16),
+            parseInt(normalized.slice(4, 6), 16),
+        ];
+    };
+
+    const [sr, sg, sb] = parse(start);
+    const [er, eg, eb] = parse(end);
+
+    return `rgb(${mixChannel(sr, er, amount)}, ${mixChannel(sg, eg, amount)}, ${mixChannel(sb, eb, amount)})`;
+}
 
 class Hero {
     constructor(canvas) {
@@ -9,14 +35,33 @@ class Hero {
         this.startTime = performance.now();
         this.modifier = 0;
         this.mobileMediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
+        this.hero = canvas.closest(".hero");
+        this.heroCopy = this.hero?.querySelector(".hero-copy") ?? null;
+        this.heroTitle = this.hero?.querySelector(".hero-title") ?? null;
+        this.heroTagline = this.hero?.querySelector(".hero-tagline") ?? null;
 
         this.lineWidth = 2;
-        this.centerRadius = 200;
         this.width = 0;
         this.height = 0;
         this.frameId = null;
+
+        this.openAmount = 0;
+        this.isLoaded = document.readyState === "complete";
+        this.inkColor = COLORS.black;
+        this.geometry = {
+            centerX: 0,
+            centerY: 0,
+            horizonHeight: 0,
+            centerRadius: 0,
+        };
         
         this.resizeObserver = new ResizeObserver(() => this.resize());
+
+        if (!this.isLoaded) {
+            window.addEventListener("load", () => {
+                this.isLoaded = true;
+            }, { once: true });
+        }
     }
 
     // LIFECYCLE
@@ -42,22 +87,85 @@ class Hero {
         this.canvas.height = Math.round(rect.height * dpr);
 
         this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        this.updateLayout(rect.width, rect.height);
+    }
 
-        const isMobile = this.mobileMediaQuery.matches;
-        const centerY = isMobile ? rect.height * 0.30 : rect.height / 2;
-        const centerRadius = isMobile
-            ? Math.min(rect.height * 0.2, rect.width * 0.46)
-            : Math.min(rect.height * 0.2, rect.width * 0.15);
+    updateLayout(width, height) {
+        if (!this.heroCopy || !this.heroTitle || !this.heroTagline) return;
 
-        const hero = this.canvas.closest(".hero");
-        if (hero) {
-            hero.style.setProperty(
-                "--hero-mobile-copy-top",
-                isMobile
-                    ? `${Math.round(centerY + centerRadius + rect.height * 0.035)}px`
-                    : "0px"
-            );
+        if (this.mobileMediaQuery.matches) {
+            this.setMobileCopyStyles(height);
+            return;
         }
+
+        this.setDesktopCopyStyles(width, height);
+    }
+
+    resetTextStyles() {
+        for (const element of [this.heroTitle, this.heroTagline]) {
+            element.style.position = "";
+            element.style.left = "";
+            element.style.top = "";
+            element.style.right = "";
+            element.style.transform = "";
+            element.style.margin = "";
+            element.style.width = "";
+            element.style.maxWidth = "";
+        }
+    }
+
+    setMobileCopyStyles(height) {
+        this.heroCopy.style.position = "absolute";
+        this.heroCopy.style.left = "0";
+        this.heroCopy.style.right = "0";
+        this.heroCopy.style.top = `${Math.round(height * 0.5)}px`;
+        this.heroCopy.style.width = "100%";
+        this.heroCopy.style.height = `${Math.round(height * 0.25)}px`;
+        this.heroCopy.style.display = "flex";
+        this.heroCopy.style.flexDirection = "column";
+        this.heroCopy.style.alignItems = "center";
+        this.heroCopy.style.justifyContent = "flex-start";
+        this.heroCopy.style.gap = "0.25rem";
+        this.heroCopy.style.pointerEvents = "none";
+
+        this.resetTextStyles();
+
+        this.heroTitle.style.position = "static";
+        this.heroTagline.style.position = "static";
+        this.heroTitle.style.margin = "0";
+        this.heroTagline.style.margin = "0";
+    }
+
+    setDesktopCopyStyles(width, height) {
+        const centerX = width / 2;
+        const centerY = height * 0.4;
+        const radius = height * 0.25;
+
+        this.heroCopy.style.position = "absolute";
+        this.heroCopy.style.inset = "0";
+        this.heroCopy.style.pointerEvents = "none";
+        this.heroCopy.style.display = "block";
+
+        this.resetTextStyles();
+
+        const titleRect = this.heroTitle.getBoundingClientRect();
+        const taglineRect = this.heroTagline.getBoundingClientRect();
+
+        this.heroTitle.style.position = "absolute";
+        this.heroTitle.style.left = "auto";
+        this.heroTitle.style.right = `${width - (centerX - radius)}px`;
+        this.heroTitle.style.top = `${centerY}px`;
+        this.heroTitle.style.transform = "translateY(-50%)";
+        this.heroTitle.style.margin = "0";
+
+        const taglineAnchorX = centerX + radius * SE_SQRT_2;
+        const taglineAnchorY = centerY + radius * SE_SQRT_2;
+
+        this.heroTagline.style.position = "absolute";
+        this.heroTagline.style.left = `${taglineAnchorX}px`;
+        this.heroTagline.style.top = `${taglineAnchorY}px`;
+        this.heroTagline.style.transform = "translateY(-50%)";
+        this.heroTagline.style.margin = "0";
     }
 
     // DRAWING
@@ -71,18 +179,104 @@ class Hero {
         ctx.stroke();
     }
 
-    diamond(x, y, radius) {
+    diamond(x, y, radius, openAmount = 1, startVertex = "left", direction = "clockwise") {
         const ctx = this.ctx;
+        const sideLength = radius * Math.SQRT2;
+        const totalLength = sideLength * 4;
+        const drawLength = totalLength * openAmount;
+        const points = {
+            left: [x - radius, y],
+            top: [x, y - radius],
+            right: [x + radius, y],
+            bottom: [x, y + radius],
+        };
+        const pathOrder = direction === "clockwise"
+            ? ["left", "bottom", "right", "top"]
+            : ["left", "top", "right", "bottom"];
+        const startIndex = pathOrder.indexOf(startVertex);
+        const orderedVertices = startIndex < 0
+            ? pathOrder
+            : pathOrder.slice(startIndex).concat(pathOrder.slice(0, startIndex));
 
+        ctx.save();
+        ctx.strokeStyle = this.inkColor;
+        ctx.setLineDash([drawLength, totalLength]);
         ctx.beginPath();
-        ctx.lineTo(x - radius, y);
-        ctx.lineTo(x, y + radius);
-        ctx.lineTo(x + radius, y);
-        ctx.lineTo(x, y - radius);
+        ctx.moveTo(...points[orderedVertices[0]]);
+        for (let i = 1; i < orderedVertices.length; i++) {
+            ctx.lineTo(...points[orderedVertices[i]]);
+        }
         ctx.closePath();
 
+        ctx.fillStyle = COLORS.black;
         ctx.fill();
         ctx.stroke();
+        ctx.restore();
+    }
+
+    drawOpeningArc(
+        time,
+        startAngle,
+        endAngle,
+        innerRadius,
+        outerRadius,
+        counterclockwise,
+        diamondRadius = 0,
+        tickIntervalDeg = 10,
+        tickCoverage = 0.75,
+        tickOffsetDeg = 0,
+        tickDirection = "clockwise",
+        diamondStartVertex = "left",
+        diamondDirection = "clockwise"
+    ) {
+        const ctx = this.ctx;
+        const centerX = this.geometry.centerX;
+        const centerY = this.geometry.centerY;
+
+        const arcLength = innerRadius * Math.abs(endAngle - startAngle);
+        const lineLength = outerRadius - innerRadius;
+        const totalLength = arcLength + lineLength;
+        const drawLength = totalLength * this.openAmount;
+
+        ctx.save();
+        ctx.strokeStyle = this.inkColor;
+        ctx.setLineDash([drawLength, totalLength]);
+
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, innerRadius, startAngle, endAngle, counterclockwise);
+        ctx.lineTo(
+            centerX + Math.cos(endAngle) * outerRadius,
+            centerY + Math.sin(endAngle) * outerRadius
+        );
+        ctx.stroke();
+
+        if (diamondRadius > 0) {
+            this.diamond(
+                centerX + Math.cos(startAngle) * innerRadius,
+                centerY + Math.sin(startAngle) * innerRadius,
+                diamondRadius,
+                this.openAmount,
+                diamondStartVertex,
+                diamondDirection
+            );
+        }
+
+        ctx.setLineDash([]);
+        this.drawTickMarksOnArc(
+            time,
+            centerX,
+            centerY,
+            innerRadius + 10 + 10 * this.openAmount,
+            innerRadius + 10,
+            startAngle,
+            endAngle,
+            tickIntervalDeg,
+            tickCoverage,
+            tickOffsetDeg,
+            tickDirection
+        );
+
+        ctx.restore();
     }
 
     horizon(time, horizonHeight) {
@@ -103,160 +297,126 @@ class Hero {
         }
     }
 
-    movingTickArc(time, x, y, outerRadius, innerRadius, startAngle, endAngle, ticks) {
+    drawTickMarksOnArc(time, x, y, outerRadius, innerRadius, startAngle, endAngle, tickIntervalDeg, tickCoverage, tickOffsetDeg, tickDirection) {
         const ctx = this.ctx;
 
-        startAngle = degToRad(startAngle);
-        endAngle = degToRad(endAngle);
-
-        const interval = 1 / (ticks - 1);
-        const offset = (time / 1000) % 1;
-        const threshold = degToRad(1);
+        const start = startAngle;
+        const end = endAngle;
+        const tickInterval = degToRad(tickIntervalDeg);
+        const tickStep = tickDirection === "counterclockwise" ? -tickInterval : tickInterval;
+        const phaseOffset = degToRad(tickOffsetDeg);
+        const sweepEnd = lerp(end, start, tickCoverage);
+        const sweepLength = Math.abs(sweepEnd - end);
         const centerRadius = (outerRadius + innerRadius) / 2;
 
-        for (let i = 0; i < ticks; i++) {
-            const angle = lerp(startAngle, endAngle, (i + offset) * interval);
+        if (sweepLength <= 0) return;
 
-            if (angle > endAngle) continue;
+        const sweepMin = Math.min(end, sweepEnd);
+        const sweepMax = Math.max(end, sweepEnd);
+        const tickPhase = phaseOffset + (tickDirection === "counterclockwise" ? -1 : 1) * ((time / 1000) % 1) * tickInterval;
+        const firstTick = tickDirection === "counterclockwise"
+            ? tickPhase + Math.floor((sweepMax - tickPhase) / tickInterval) * tickInterval
+            : tickPhase + Math.ceil((sweepMin - tickPhase) / tickInterval) * tickInterval;
 
-            const distToStart = Math.abs(angle - startAngle);
-            const distToEnd = Math.abs(angle - endAngle);
-            const minDist = Math.min(distToStart, distToEnd);
+        for (
+            let signedAngle = firstTick;
+            tickDirection === "counterclockwise" ? signedAngle >= sweepMin : signedAngle <= sweepMax;
+            signedAngle += tickStep
+        ) {
+            if (signedAngle < sweepMin || signedAngle > sweepMax) continue;
 
-            const factor = Math.max(0, 1 - minDist / threshold);
+            const progress = tickDirection === "counterclockwise"
+                ? (sweepMax - signedAngle) / sweepLength
+                : (signedAngle - sweepMin) / sweepLength;
+            const clamped = Math.max(0, Math.min(1, progress));
+            const factor = clamped < 0.05
+                ? 1 - (clamped / 0.05)
+                : (clamped - 0.05) / 0.95;
 
             const outer = lerp(outerRadius, centerRadius, factor);
             const inner = lerp(innerRadius, centerRadius, factor);
 
             ctx.beginPath();
-            ctx.lineTo(x + Math.cos(angle) * outer, y + Math.sin(angle) * outer);
-            ctx.lineTo(x + Math.cos(angle) * inner, y + Math.sin(angle) * inner);
+            ctx.lineTo(x + Math.cos(signedAngle) * outer, y + Math.sin(signedAngle) * outer);
+            ctx.lineTo(x + Math.cos(signedAngle) * inner, y + Math.sin(signedAngle) * inner);
             ctx.stroke();
         }
     }
 
-    decorator(time, centerX, centerY, radius) {
-        const ctx = this.ctx;
-
+    decorator(time, centerX, centerY) {
         const newModifier = this.modifier + Math.sin(time * 0.001) * 0.1;
         const smoothVal = variableSmoothstep(time / 700, 4);
-        const endAngleGauge = -135 * newModifier;
+        const radius = this.geometry.centerRadius;
+        const diamondRadius = radius * smoothVal * 0.1;
 
-        ctx.beginPath();
-        ctx.arc(
-            centerX,
-            centerY,
-            this.centerRadius * 0.8,
-            degToRad(0),
-            degToRad(endAngleGauge),
-            true
-        );
-        ctx.lineTo(
-            centerX + Math.cos(degToRad(endAngleGauge)) * (this.centerRadius * 1.0),
-            centerY + Math.sin(degToRad(endAngleGauge)) * (this.centerRadius * 1.0)
-        );
-        ctx.stroke();
-
-        const otherEnd = 90 + 45 * newModifier;
-
-        ctx.beginPath();
-        ctx.arc(
-            centerX,
-            centerY,
-            this.centerRadius * 0.8,
-            degToRad(90),
-            degToRad(otherEnd)
-        );
-        ctx.lineTo(
-            centerX + Math.cos(degToRad(otherEnd)) * (this.centerRadius * 1.0),
-            centerY + Math.sin(degToRad(otherEnd)) * (this.centerRadius * 1.0)
-        );
-        ctx.stroke();
-
-        this.diamond(centerX, centerY + this.centerRadius * 0.8, this.centerRadius * smoothVal * 0.1);
-
-        this.movingTickArc(
+        this.drawOpeningArc(
             time,
+            degToRad(0),
+            degToRad(-135 * newModifier),
+            radius * 0.8,
+            radius * 1.0,
+            true,
+            diamondRadius,
+            10,
+            0.75,
+            0,
+            "clockwise",
+            "top",
+            "counterclockwise"
+        );
+        this.drawOpeningArc(
+            time,
+            degToRad(90),
+            degToRad(135 * newModifier),
+            radius * 0.8,
+            radius * 1.0,
+            false,
+            diamondRadius,
+            10,
+            0.75,
+            0,
+            "counterclockwise",
+            "left",
+            "counterclockwise"
+        );
+    }
+
+    updateGeometry(width, height, isMobile, navbarHeight) {
+        const centerX = width / 2;
+        const centerY = isMobile ? (height / 2 + navbarHeight) / 2 : height * 0.4;
+        const centerRadius = isMobile ? (height / 2 - navbarHeight) / 2 : height * 0.25;
+
+        this.geometry = {
             centerX,
             centerY,
-            this.centerRadius * 0.9,
-            this.centerRadius * 0.83,
-            endAngleGauge,
-            -45,
-            10
-        );
-
-        this.diamond(centerX + this.centerRadius * 0.8, centerY, this.centerRadius * smoothVal * 0.1);
+            centerRadius,
+            horizonHeight: height * 0.75,
+        };
     }
 
     draw = () => {
         const ctx = this.ctx;
         const time = performance.now() - this.startTime;
-
-        const width = this.width;
-        const height = this.height;
+        const { width, height } = this;
 
         const isMobile = this.mobileMediaQuery.matches;
         const navbarHeight = 60;
-        const horizonHeight = height * 0.75;
 
-        const centerX = width / 2;
-        const centerY = isMobile ? (height / 2 + navbarHeight) / 2 : height / 2;
-
-        /*
-            The hero shoul have two modes:
-
-            MODE 1 (DESKTOP) this view should be composed as such:
-
-                25% height horizon on bottom.
-                Gauge ALWAYS perfectly centered on hero.
-                Gauge ALWAYS 50% height circumference (25% radius)
-
-                in this view, the hero copy container should have an absolute
-                position, to allow for positioning of the title and tagline as such
-
-                title: rightmost center point of the title should be EXACLTY on the West (180 degres)
-                point of the radius circle.
-
-                tagline: leftmost TOP point of the tagline should be EXACTLY on the SE (45 degrees)
-                point of the radius circle.
-
-            MODE 2 (MOBILE) This view should be composed as such:
-
-                25% height horizon on bottom.
-                Gauge ALWAYS perfectly centered BETWEEN: center of hero and bottom of navbar 
-                (not when navbar is moving, where it lies when you first open the page, so 60px)
-                Gauge ALWAYS 50% height MINUS navbar height for the circumference
-
-                In this view the hero copy should also have an absolute, but it should be positioned such that
-                it takes up the 100% width, 50% height to 75% height area. if you divided the hero into 4 equal height chunks of max width,
-                it should take the place of the third chunk.
-
-                the hero copy container should also be a flex column, alinging to the center and justify with flex start. there should be a gap between the title and tag.
-        */
-
-        this.centerRadius = isMobile
-            ? (height / 2 - navbarHeight) / 2
-            : height * 0.25
-
+        this.openAmount = lerp(this.openAmount, this.isLoaded ? 1 : 0, 0.01);
+        this.updateGeometry(width, height, isMobile, navbarHeight);
         this.modifier = lerp(this.modifier, 1, 0.02);
+        this.inkColor = mixColor(COLORS.black, COLORS.white, this.openAmount);
 
-        ctx.fillStyle = "black";
+        ctx.fillStyle = COLORS.black;
         ctx.fillRect(0, 0, width, height);
 
         ctx.lineCap = "round";
         ctx.lineWidth = this.lineWidth;
-        ctx.strokeStyle = "white";
-        ctx.fillStyle = "black";
+        ctx.strokeStyle = this.inkColor;
+        ctx.fillStyle = COLORS.black;
 
-        this.decorator(time, centerX, centerY, this.centerRadius)
-
-        this.horizon(time, horizonHeight);
-
-        ctx.strokeStyle = "red"
-
-        this.line(0, height / 2, width, height / 2);
-        this.line(0, 60, width, 60);
+        this.decorator(time, this.geometry.centerX, this.geometry.centerY);
+        this.horizon(time, this.geometry.horizonHeight);
 
         this.frameId = requestAnimationFrame(this.draw);
     };

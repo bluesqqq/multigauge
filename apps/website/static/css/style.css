@@ -51,6 +51,25 @@ select {
     padding: 0;
 }
 
+@media (min-width: 721px) {
+    .hero {
+        position: relative;
+        overflow: hidden;
+    }
+
+    .hero-copy {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+    }
+
+    .hero-title,
+    .hero-tagline {
+        position: absolute;
+        margin: 0;
+    }
+}
+
 
 .post-content {
     display: flex;

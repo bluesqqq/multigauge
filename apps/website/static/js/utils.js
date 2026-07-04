@@ -248,3 +248,17 @@ export function variableSmoothstep(x, k = 1) {
 
     return Math.pow(x, k) / (Math.pow(x, k) + Math.pow(1 - x, k));
 }
+
+export function clamp(value, min, max) {
+    return Math.min(Math.max(value, min), max);
+}
+
+export function inverseLerp(a, b, value) {
+    if (a === b) return 0; // prevents divide-by-zero
+    return (value - a) / (b - a);
+}
+
+export function mapRangeClamped(value, inMin, inMax, outMin, outMax) {
+    const t = inverseLerp(inMin, inMax, value);
+    return lerp(outMin, outMax, clamp(t, 0, 1));
+}
