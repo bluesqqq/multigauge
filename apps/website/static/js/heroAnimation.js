@@ -1,6 +1,6 @@
 import { lerp, variableSmoothstep, degToRad } from "/static/js/utils.js"
 
-const MOBILE_MEDIA_QUERY = "(max-width: 720px)";
+const MOBILE_MEDIA_QUERY = "(max-width: 768px)";
 
 class Hero {
     constructor(canvas) {
@@ -135,49 +135,25 @@ class Hero {
         }
     }
 
-    draw = () => {
+    decorator(time, centerX, centerY, radius) {
         const ctx = this.ctx;
-        const time = performance.now() - this.startTime;
-
-        const width = this.width;
-        const height = this.height;
-        const isMobile = this.mobileMediaQuery.matches;
-
-        const centerX = width / 2;
-        const centerY = isMobile ? height * 0.30 : height / 2;
-        const horizonHeight = height * 0.75;
-
-        this.centerRadius = isMobile
-            ? Math.min(height * 0.2, width * 0.46)
-            : Math.min(height * 0.2, width * 0.15);
-
-        this.modifier = lerp(this.modifier, 1, 0.02);
 
         const newModifier = this.modifier + Math.sin(time * 0.001) * 0.1;
         const smoothVal = variableSmoothstep(time / 700, 4);
-
-        ctx.fillStyle = "black";
-        ctx.fillRect(0, 0, width, height);
-
-        ctx.lineCap = "round";
-        ctx.lineWidth = this.lineWidth;
-        ctx.strokeStyle = "white";
-        ctx.fillStyle = "black";
-
         const endAngleGauge = -135 * newModifier;
 
         ctx.beginPath();
         ctx.arc(
             centerX,
             centerY,
-            this.centerRadius,
+            this.centerRadius * 0.8,
             degToRad(0),
             degToRad(endAngleGauge),
             true
         );
         ctx.lineTo(
-            centerX + Math.cos(degToRad(endAngleGauge)) * (this.centerRadius * 1.3),
-            centerY + Math.sin(degToRad(endAngleGauge)) * (this.centerRadius * 1.3)
+            centerX + Math.cos(degToRad(endAngleGauge)) * (this.centerRadius * 1.0),
+            centerY + Math.sin(degToRad(endAngleGauge)) * (this.centerRadius * 1.0)
         );
         ctx.stroke();
 
@@ -187,32 +163,100 @@ class Hero {
         ctx.arc(
             centerX,
             centerY,
-            this.centerRadius,
+            this.centerRadius * 0.8,
             degToRad(90),
             degToRad(otherEnd)
         );
         ctx.lineTo(
-            centerX + Math.cos(degToRad(otherEnd)) * (this.centerRadius * 1.3),
-            centerY + Math.sin(degToRad(otherEnd)) * (this.centerRadius * 1.3)
+            centerX + Math.cos(degToRad(otherEnd)) * (this.centerRadius * 1.0),
+            centerY + Math.sin(degToRad(otherEnd)) * (this.centerRadius * 1.0)
         );
         ctx.stroke();
 
-        this.diamond(centerX, centerY + this.centerRadius, this.centerRadius * smoothVal * 0.1);
+        this.diamond(centerX, centerY + this.centerRadius * 0.8, this.centerRadius * smoothVal * 0.1);
 
         this.movingTickArc(
             time,
             centerX,
             centerY,
-            this.centerRadius * 1.15,
-            this.centerRadius * 1.05,
+            this.centerRadius * 0.9,
+            this.centerRadius * 0.83,
             endAngleGauge,
             -45,
             10
         );
 
-        this.diamond(centerX + this.centerRadius, centerY, this.centerRadius * smoothVal * 0.1);
+        this.diamond(centerX + this.centerRadius * 0.8, centerY, this.centerRadius * smoothVal * 0.1);
+    }
+
+    draw = () => {
+        const ctx = this.ctx;
+        const time = performance.now() - this.startTime;
+
+        const width = this.width;
+        const height = this.height;
+
+        const isMobile = this.mobileMediaQuery.matches;
+        const navbarHeight = 60;
+        const horizonHeight = height * 0.75;
+
+        const centerX = width / 2;
+        const centerY = isMobile ? (height / 2 + navbarHeight) / 2 : height / 2;
+
+        /*
+            The hero shoul have two modes:
+
+            MODE 1 (DESKTOP) this view should be composed as such:
+
+                25% height horizon on bottom.
+                Gauge ALWAYS perfectly centered on hero.
+                Gauge ALWAYS 50% height circumference (25% radius)
+
+                in this view, the hero copy container should have an absolute
+                position, to allow for positioning of the title and tagline as such
+
+                title: rightmost center point of the title should be EXACLTY on the West (180 degres)
+                point of the radius circle.
+
+                tagline: leftmost TOP point of the tagline should be EXACTLY on the SE (45 degrees)
+                point of the radius circle.
+
+            MODE 2 (MOBILE) This view should be composed as such:
+
+                25% height horizon on bottom.
+                Gauge ALWAYS perfectly centered BETWEEN: center of hero and bottom of navbar 
+                (not when navbar is moving, where it lies when you first open the page, so 60px)
+                Gauge ALWAYS 50% height MINUS navbar height for the circumference
+
+                In this view the hero copy should also have an absolute, but it should be positioned such that
+                it takes up the 100% width, 50% height to 75% height area. if you divided the hero into 4 equal height chunks of max width,
+                it should take the place of the third chunk.
+
+                the hero copy container should also be a flex column, alinging to the center and justify with flex start. there should be a gap between the title and tag.
+        */
+
+        this.centerRadius = isMobile
+            ? (height / 2 - navbarHeight) / 2
+            : height * 0.25
+
+        this.modifier = lerp(this.modifier, 1, 0.02);
+
+        ctx.fillStyle = "black";
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.lineCap = "round";
+        ctx.lineWidth = this.lineWidth;
+        ctx.strokeStyle = "white";
+        ctx.fillStyle = "black";
+
+        this.decorator(time, centerX, centerY, this.centerRadius)
 
         this.horizon(time, horizonHeight);
+
+        ctx.strokeStyle = "red"
+
+        this.line(0, height / 2, width, height / 2);
+        this.line(0, 60, width, 60);
 
         this.frameId = requestAnimationFrame(this.draw);
     };

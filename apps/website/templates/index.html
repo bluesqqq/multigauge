@@ -4,29 +4,31 @@
 		<meta charset="UTF-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-		<link rel="stylesheet" href="/static/css/style.css" /> 
-		<link rel="stylesheet" href="/static/css/navbar.css" />
-		<link rel="stylesheet" href="/static/css/footer.css" />
-		<link rel="stylesheet" href="/static/css/post.css" /> 
-		<link rel="stylesheet" href="/static/css/load.css">
+		<!-- STYLESHEETS -->
+		<link rel="stylesheet" href="/static/css/base.css"/>
+		<link rel="stylesheet" href="/static/css/components.css"/>
+		<link rel="stylesheet" href="/static/css/utils.css"/>
 
+		<link rel="stylesheet" href="/static/css/pages/home.css"/>
+
+		<link rel="stylesheet" href="/static/css/navbar.css"/>
+		<link rel="stylesheet" href="/static/css/footer.css"/>
+		<link rel="stylesheet" href="/static/css/post.css"/> 
+		<link rel="stylesheet" href="/static/css/load.css"/>
+
+		<!-- FONTS -->
 		<link href="https://fonts.googleapis.com/css?family=Inter" rel="stylesheet">
 
-		<!-- Required for model-viewer-effects so model-viewer and effects share the same Three.js instance. -->
+		<!-- SCRIPTS -->
 		<script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
-
-		<script type="importmap">
-			{
-				"imports": {
-				"three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.min.js"
-				}
-			}
-		</script>
-
+		<script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.min.js" } }</script>
 		<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer-module.min.js"></script>
 		<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer-effects@1.5.0/dist/model-viewer-effects.min.js"></script>
 
-		<title>Home</title>
+		<!-- SEO -->
+		<title>Multigauge</title>
+		<meta name="description" content="SEO stuff here">
+		<link rel="canonical" href="https://www.multi-gauge.com"/>
 
 		<style>
 			#heroModel {
@@ -44,7 +46,7 @@
 		{% include 'navbar.html' %}
 
 		<!-- HERO -->
-		<div class="full-screen hero">
+		<div class="h-dvh-screen hero">
 			<canvas id="heroBackground"></canvas>
 
 			<div class="hero-copy">
@@ -85,9 +87,9 @@
 		</div>
 
 		<!-- PRODUCT -->
-		<div class="half-screen product-card">
-			<div class="page-container" style="display: flex; gap: 16px; padding-top: 32px; padding-bottom: 32px; min-height: inherit; box-sizing: border-box; align-items: center;">
-				<div style="flex: 1 1 0; min-width: 0; height: 100%;   display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+		<div class="page-content product-card">
+			<div class="page-container flex gap-md py-xl items-center" style="min-height: inherit;">
+				<div class="flex-1 min-w-0 h-full flex-col justify-center gap-md">
 					<h3>PRODUCT / 01</h3>
 					<h1>52MM GAUGE</h1>
 					<h3>compact digital instrument for custom auto telemetry.</h3>
@@ -99,7 +101,7 @@
 					<button class="cta-button">see product →</button>
 				</div>
 				
-				<div style="flex: 1 1 0; min-width: 0; height: 100%;   display: flex; flex-direction: column; justify-content: center; gap: 16px;">
+				<div class="flex-1 min-w-0 h-full flex-col justify-center gap-md">
 					<img src="/static/images/placeholder-gauge.png">
 				</div>
 			</div>
