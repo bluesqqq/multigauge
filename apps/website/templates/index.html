@@ -18,6 +18,7 @@
 
 		<!-- FONTS -->
 		<link href="https://fonts.googleapis.com/css?family=Inter" rel="stylesheet">
+		<link href="https://fonts.cdnfonts.com/css/ocr-a-bt" rel="stylesheet">
 
 		<!-- SCRIPTS -->
 		<script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
@@ -88,21 +89,48 @@
 
 		<!-- PRODUCT -->
 		<div class="page-content product-card">
-			<div class="page-container flex gap-md py-xl items-center" style="min-height: inherit;">
-				<div class="flex-1 min-w-0 h-full flex-col justify-center gap-md">
-					<h3>PRODUCT / 01</h3>
-					<h1>52MM GAUGE</h1>
-					<h3>compact digital instrument for custom auto telemetry.</h3>
-					<h3>
-						FITS / UNIVERSAL 52MM GAUGE PODS<br>
-						INPUT / OBD-II + EXTERNAL SENSORS<br>
-						FACE / FULLY CUSTOMIZABLE
-					</h3>
-					<button class="cta-button">see product →</button>
+			<div class="product-card-guides" aria-hidden="true">
+				<svg preserveAspectRatio="none">
+					<defs>
+						<g id="product-card-crosshair">
+							<line x1="-4" y1="0" x2="4" y2="0"></line>
+							<line x1="0" y1="-6" x2="0" y2="6"></line>
+						</g>
+					</defs>
+				</svg>
+			</div>
+			<div class="page-container product-card-inner">
+				<div class="product-card-panel product-card-info">
+					<h1 class="product-card-title">
+						<span>52MM</span>
+						<span>GAUGE</span>
+					</h1>
+					<p class="product-card-description">compact digital instrument for custom auto telemetry.</p>
+
+					<div class="product-card-specs" role="table" aria-label="Gauge specs">
+						<div class="product-card-spec-row" role="row">
+							<div class="product-card-spec-label" role="cell">FITS</div>
+							<div class="product-card-spec-value" role="cell">UNIVERSAL 52MM GAUGE PODS</div>
+						</div>
+						<div class="product-card-spec-row" role="row">
+							<div class="product-card-spec-label" role="cell">INPUT</div>
+							<div class="product-card-spec-value" role="cell">OBD-II + EXTERNAL SENSORS</div>
+						</div>
+						<div class="product-card-spec-row" role="row">
+							<div class="product-card-spec-label" role="cell">FACE</div>
+							<div class="product-card-spec-value" role="cell">FULLY CUSTOMIZABLE</div>
+						</div>
+						<div class="product-card-spec-row" role="row">
+							<div class="product-card-spec-label" role="cell">DISPLAY</div>
+							<div class="product-card-spec-value" role="cell">240 x 240 ROUND UI</div>
+						</div>
+					</div>
+
+					<button class="product-card-cta">VIEW PRODUCT &rarr;</button>
 				</div>
-				
-				<div class="flex-1 min-w-0 h-full flex-col justify-center gap-md">
-					<img src="/static/images/placeholder-gauge.png">
+
+				<div class="product-card-panel product-card-visual">
+					<img src="/static/images/placeholder-gauge.png" alt="52MM gauge preview">
 				</div>
 			</div>
 		</div>
@@ -162,6 +190,7 @@
 
 		<script src="/static/js/gaugePreview.js" type="module"></script>
 		<script type="module" src="/static/js/textScrambler.js"></script>
+		<script type="module" src="/static/js/productCardGuides.js"></script>
 		<script type="module" src="/static/js/heroAnimation.js"></script>
 
 		<script type="module">
@@ -187,3 +216,4 @@
 		</script>
 	</body> 
 </html>
+

@@ -53,8 +53,184 @@
 }
 
 .product-card {
+    position: relative;
+    isolation: isolate;
     background-color: var(--color-text);
-    color: var(--color-bg-900)
+    color: var(--color-bg-900);
+    font-family: "OCR-A BT", sans-serif;
+    min-height: 75vh;
+    min-height: 75dvh;
+    overflow: hidden;
+}
+
+.product-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: url("/static/images/textures/construction-paper.png");
+    background-repeat: repeat;
+    background-size: 900px auto;
+    opacity: 0.55;
+    pointer-events: none;
+    z-index: 0;
+}
+
+.product-card-inner {
+    position: relative;
+    z-index: 2;
+    width: min(100% - calc(var(--page-gutter) * 2), var(--page-max-width));
+    min-height: 75vh;
+    min-height: 75dvh;
+    margin-inline: auto;
+    margin-block: 32px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0;
+    align-items: stretch;
+    padding: 0;
+}
+
+.product-card-panel {
+    position: relative;
+    z-index: 2;
+    min-width: 0;
+    box-sizing: border-box;
+    min-height: 0;
+    height: calc(100% - 64px);
+    padding: 16px;
+}
+
+.product-card-guides {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    opacity: 0.35;
+}
+
+.product-card-guides svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+    shape-rendering: geometricPrecision;
+}
+
+.product-card-guides line {
+    stroke: rgba(0, 0, 0, 0.28);
+    stroke-width: 1;
+    stroke-linecap: square;
+    vector-effect: non-scaling-stroke;
+}
+
+.product-card-guides use {
+    stroke: rgba(0, 0, 0, 0.45);
+    stroke-width: 1;
+    stroke-linecap: square;
+    vector-effect: non-scaling-stroke;
+}
+
+.product-card-info {
+    display: flex;
+    flex-direction: column;
+    gap: clamp(0.75rem, 1.5vw, 1.25rem);
+    align-self: stretch;
+    justify-content: center;
+    max-width: none;
+}
+
+.product-card-title {
+    margin: 0;
+    font-size: clamp(4rem, 8vw, 7.5rem);
+    line-height: 0.86;
+    letter-spacing: -0.05em;
+    text-transform: uppercase;
+}
+
+.product-card-title span {
+    display: block;
+}
+
+.product-card-description {
+    margin: 0;
+    max-width: 28ch;
+    font-size: clamp(1rem, 1.4vw, 1.4rem);
+    line-height: 1.25;
+    text-transform: none;
+}
+
+.product-card-specs {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid rgba(0, 0, 0, 0.28);
+}
+
+.product-card-spec-row {
+    position: relative;
+    display: grid;
+    grid-template-columns: 7rem 1fr;
+    align-items: center;
+    min-height: 2.45rem;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.22);
+}
+
+.product-card-spec-row::before {
+    content: "";
+    position: absolute;
+    left: 7rem;
+    top: -1px;
+    bottom: -1px;
+    width: 1px;
+    background: rgba(0, 0, 0, 0.22);
+}
+
+.product-card-spec-label,
+.product-card-spec-value {
+    position: relative;
+    z-index: 1;
+    font-size: clamp(0.85rem, 1.1vw, 1.05rem);
+    letter-spacing: 0.08em;
+}
+
+.product-card-spec-label {
+    padding-left: 0.25rem;
+    font-weight: 600;
+}
+
+.product-card-spec-value {
+    padding-left: 1.25rem;
+}
+
+.product-card-cta {
+    position: relative;
+    align-self: flex-start;
+    padding: 0.95rem 2.5rem;
+    color: var(--color-accent);
+    background: transparent;
+    font-family: inherit;
+    font-size: clamp(1rem, 1.1vw, 1.15rem);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+}
+
+.product-card-cta::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border: 2px solid currentColor;
+    border-radius: inherit;
+}
+
+.product-card-visual {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-card-visual img {
+    width: min(100%, 34rem);
+    max-height: 100%;
+    object-fit: contain;
 }
 
 .cta-button {
@@ -120,5 +296,52 @@
 
     .hero > div[style*="flex: 1"] {
         display: none;
+    }
+
+    .product-card {
+        min-height: auto;
+    }
+
+    .product-card-inner {
+        width: min(100% - 2rem, var(--page-max-width));
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 0;
+    }
+
+    .product-card-guides {
+        display: none;
+    }
+
+    .product-card-info {
+        max-width: none;
+    }
+
+    .product-card-title {
+        font-size: clamp(3rem, 15vw, 5rem);
+    }
+
+    .product-card-description {
+        max-width: 100%;
+    }
+
+    .product-card-spec-row {
+        grid-template-columns: 5.5rem 1fr;
+    }
+
+    .product-card-spec-label {
+        padding-left: 0;
+    }
+
+    .product-card-spec-value {
+        padding-left: 0.75rem;
+    }
+
+    .product-card-visual {
+        padding-top: clamp(1rem, 4vw, 1.5rem);
+    }
+
+    .product-card-cta {
+        margin-top: 1rem;
     }
 }
