@@ -139,7 +139,9 @@
 		<section class="page-content designer-preview">
 			<div class="page-container designer-preview-inner">
 				<div class="designer-preview-visual" aria-hidden="true">
-					<div class="designer-preview-ring"></div>
+					<div class="designer-preview-ring">
+						<canvas id="designerPreviewCanvas" class="designer-preview-canvas"></canvas>
+					</div>
 				</div>
 
 				<div class="designer-preview-copy">
@@ -155,21 +157,21 @@
 					<div class="designer-preview-controls">
 						<div class="designer-preview-control-group">
 							<p class="designer-preview-label">GAUGE FACE</p>
-							<div class="designer-preview-tabs" role="tablist" aria-label="Gauge face options">
-								<button type="button" class="designer-preview-tab" aria-selected="true">RPM</button>
-								<button type="button" class="designer-preview-tab" aria-selected="false">BOOST</button>
-								<button type="button" class="designer-preview-tab" aria-selected="false">TEMP</button>
-								<button type="button" class="designer-preview-tab" aria-selected="false">AFR</button>
+							<div class="designer-preview-tabs" role="tablist" aria-label="Gauge face options" data-designer-group="face">
+								<button type="button" class="designer-preview-tab" data-face-key="RPM" aria-selected="true">RPM</button>
+								<button type="button" class="designer-preview-tab" data-face-key="BOOST" aria-selected="false">BOOST</button>
+								<button type="button" class="designer-preview-tab" data-face-key="TEMP" aria-selected="false">TEMP</button>
+								<button type="button" class="designer-preview-tab" data-face-key="OIL" aria-selected="false">OIL</button>
 							</div>
 						</div>
 
 						<div class="designer-preview-control-group">
 							<p class="designer-preview-label">COLOR</p>
-							<div class="designer-preview-tabs" role="tablist" aria-label="Color options">
-								<button type="button" class="designer-preview-tab" aria-selected="true">RED</button>
-								<button type="button" class="designer-preview-tab" aria-selected="false">YELLOW</button>
-								<button type="button" class="designer-preview-tab" aria-selected="false">GREEN</button>
-								<button type="button" class="designer-preview-tab" aria-selected="false">BLUE</button>
+							<div class="designer-preview-tabs" role="tablist" aria-label="Color options" data-designer-group="color">
+								<button type="button" class="designer-preview-tab" data-color-key="red" aria-selected="true">RED</button>
+								<button type="button" class="designer-preview-tab" data-color-key="yellow" aria-selected="false">YELLOW</button>
+								<button type="button" class="designer-preview-tab" data-color-key="green" aria-selected="false">GREEN</button>
+								<button type="button" class="designer-preview-tab" data-color-key="blue" aria-selected="false">BLUE</button>
 							</div>
 						</div>
 
