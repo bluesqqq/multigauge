@@ -5,70 +5,82 @@
 
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}" />
 {% endblock %}
 
 {% block content %}
-    <div class="page">
-        <div class="page-header">
-            <div class="page-header-content margined">
-                <div class="title">
-                    <h1>ORDER</h1>
+    <section class="secondary-page">
+        <div class="secondary-page-inner">
+            <div class="secondary-page-header">
+                <div>
+                    <p class="secondary-page-eyebrow">Admin order</p>
+                    <h1 class="secondary-page-title">ORDER</h1>
                 </div>
             </div>
-        </div>
 
-        <div class="page-content margined">
             {% if order %}
-                <div class="order-summary">
-                    <h2>Order #{{ order.id }}</h2>
-                    <p>Status: {{ order.status }}</p>
-                    <p>Placed on: {{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</p>
-                    <p>Stripe Session: {{ order.stripe_session_id }}</p>
-                    <p>Payment Intent: {{ order.stripe_payment_intent }}</p>
-                    {% if order.user %}
-                        <p>Placed by: {{ order.user.email }}</p>
-                    {% else %}
-                        <p>Guest order (no user attached)</p>
-                    {% endif %}
+                <div class="secondary-panel" style="display: grid; gap: 1rem; padding: 1.25rem;">
+                    <div class="secondary-card-grid cards-2">
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Order</span>
+                            <span class="secondary-stat-value">#{{ order.id }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Status</span>
+                            <span class="secondary-stat-value">{{ order.status }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Placed</span>
+                            <span class="secondary-stat-value">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Total</span>
+                            <span class="secondary-stat-value">${{ '%.2f'|format(order.total_price()) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="secondary-stat-list">
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Stripe Session</span>
+                            <span class="secondary-stat-value">{{ order.stripe_session_id }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Payment Intent</span>
+                            <span class="secondary-stat-value">{{ order.stripe_payment_intent }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Customer</span>
+                            <span class="secondary-stat-value">{{ order.customer_email or order.customer_name or 'Guest order' }}</span>
+                        </div>
+                    </div>
+
+                    <div class="secondary-panel-dark" style="padding: 1rem;">
+                        <h3 style="margin: 0 0 0.75rem; text-transform: uppercase;">Items</h3>
+                        <div style="display: grid; gap: 0.75rem;">
+                            {% for item in order.items %}
+                                <div class="secondary-stat" style="border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #f0f0ef;">
+                                    <span class="secondary-stat-label" style="color: rgba(240,240,239,0.72);">{{ item.product_name_snapshot or item.product.name }} x{{ item.quantity }}</span>
+                                    <span class="secondary-stat-value">${{ '%.2f'|format(item.total_price()) }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="secondary-stat-list">
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Shipping Address</span>
+                            <span class="secondary-stat-value">{{ order.get_shipping_address() }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Billing Address</span>
+                            <span class="secondary-stat-value">{{ order.get_billing_address() }}</span>
+                        </div>
+                    </div>
                 </div>
-
-                <hr>
-
-                <h3>Items</h3>
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Product</th>
-                            <th>Qty</th>
-                            <th>Unit Price</th>
-                            <th>Subtotal</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in order.items %}
-                            <tr>
-                                <td>{{ item.product_name_snapshot or item.product.name }}</td>
-                                <td>{{ item.quantity }}</td>
-                                <td>${{ '%.2f'|format(item.unit_price()) }}</td>
-                                <td>${{ '%.2f'|format(item.total_price()) }}</td>
-                            </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-
-                <p><strong>Total: ${{ '%.2f'|format(order.total_price()) }}</strong></p>
-
-                <hr>
-
-                <h3>Customer Info</h3>
-                <p>Name: {{ order.customer_name }}</p>
-                <p>Email: {{ order.customer_email }}</p>
-                <p>Shipping Address: {{ order.get_shipping_address() }}</p>
-                <p>Billing Address: {{ order.get_billing_address() }}</p>
             {% else %}
-                <h1>Order not found!</h1>
+                <div class="secondary-panel" style="padding: 1.25rem;">
+                    <h1>Order not found!</h1>
+                </div>
             {% endif %}
         </div>
-    </div>
+    </section>
 {% endblock %}

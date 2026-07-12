@@ -8,17 +8,24 @@
 {% endblock %}
 
 {% block content %}
-    <div class="login-container">
-        <h1>Thank You for Your Purchase!</h1>
-        <p>Your order has been received and is being processed.</p>
+    <section class="secondary-page">
+        <div class="auth-shell">
+            <div class="secondary-panel auth-card">
+                <p class="secondary-page-eyebrow">Order complete</p>
+                <h1 style="margin: 0 0 0.75rem; text-transform: uppercase;">Thank You for Your Purchase!</h1>
+                <p class="secondary-page-copy" style="max-width: none;">Your order has been received and is being processed.</p>
 
-        {% if order_id %}
-            <p><strong>Order #{{ order_id }}</strong></p>
-        {% endif %}
+                {% if order_id %}
+                    <p style="margin: 1rem 0 0;"><strong>Order #{{ order_id }}</strong></p>
+                {% endif %}
 
-        <p>You will receive a confirmation email shortly.</p>
+                <p class="secondary-page-copy" style="max-width: none; margin-top: 1rem;">You will receive a confirmation email shortly.</p>
 
-        <a href="/" class="btn">Return to Home</a>
-        <a href="/products" class="btn">Continue Shopping</a>
-    </div>
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;">
+                    <a href="/" class="workshop-upload-cta" style="text-decoration: none;">Return to Home</a>
+                    <a href="/products" class="workshop-upload-cta" style="text-decoration: none;">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </section>
 {% endblock %}

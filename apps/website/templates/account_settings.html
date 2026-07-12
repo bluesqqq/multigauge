@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% set navbar_background = true %}
+
+{% block title %}Account Settings{% endblock %}
+
+{% block content %}
+    <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
+        <div class="secondary-page-inner">
+            <div class="secondary-page-header">
+                <div>
+                    <p class="secondary-page-eyebrow">ACCOUNT</p>
+                    <h1 class="secondary-page-title">SETTINGS</h1>
+                </div>
+                <p class="secondary-page-copy">Update your profile, preferences, and security settings.</p>
+            </div>
+
+            {% import 'macros/account_nav.html' as account_nav %}
+            {{ account_nav.render_account_nav('settings') }}
+
+            <div class="secondary-card-grid cards-2">
+                <div class="secondary-panel account-panel">
+                    <div>
+                        <p class="secondary-page-eyebrow">Profile</p>
+                        <h2 class="account-section-title">Profile details</h2>
+                    </div>
+
+                    <form method="POST" class="account-form">
+                        {{ profile_form.hidden_tag() }}
+                        <input type="hidden" name="action" value="profile">
+
+                        <div class="account-form-grid">
+                            <div class="account-field account-field-full">
+                                <label for="{{ profile_form.avatar_url.id }}">Profile Picture (Avatar)</label>
+                                {{ profile_form.avatar_url() }}
+                                {% for error in profile_form.avatar_url.errors %}
+                                    <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+
+                            <div class="account-field">
+                                <label for="{{ profile_form.display_name.id }}">Display Name</label>
+                                {{ profile_form.display_name() }}
+                                {% for error in profile_form.display_name.errors %}
+                                    <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+
+                            <div class="account-field">
+                                <label for="{{ profile_form.username.id }}">Username</label>
+                                {{ profile_form.username() }}
+                                {% for error in profile_form.username.errors %}
+                                    <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+
+                            <div class="account-field account-field-full">
+                                <label for="{{ profile_form.bio.id }}">Description (Bio)</label>
+                                {{ profile_form.bio() }}
+                                {% for error in profile_form.bio.errors %}
+                                    <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+
+                            <div class="account-field">
+                                <label for="{{ profile_form.accent_color.id }}">Accent color</label>
+                                {{ profile_form.accent_color() }}
+                                {% for error in profile_form.accent_color.errors %}
+                                    <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="account-form-grid" style="margin-top: 0.25rem;">
+                            <label class="account-preference account-field-full">
+                                {{ profile_form.email_notifications() }}
+                                <span class="account-preference-copy">
+                                    <span class="account-preference-title">Email notification preferences</span>
+                                    <span class="account-preference-description">Master switch for product, order, and community emails.</span>
+                                </span>
+                            </label>
+
+                            <label class="account-preference">
+                                {{ profile_form.order_updates() }}
+                                <span class="account-preference-copy">
+                                    <span class="account-preference-title">Order updates</span>
+                                    <span class="account-preference-description">Shipping, fulfillment, and receipt notifications.</span>
+                                </span>
+                            </label>
+
+                            <label class="account-preference">
+                                {{ profile_form.community_digest() }}
+                                <span class="account-preference-copy">
+                                    <span class="account-preference-title">Community digest</span>
+                                    <span class="account-preference-description">A summary of new workshop activity.</span>
+                                </span>
+                            </label>
+
+                            <label class="account-preference account-field-full">
+                                {{ profile_form.product_announcements() }}
+                                <span class="account-preference-copy">
+                                    <span class="account-preference-title">Product announcements</span>
+                                    <span class="account-preference-description">Updates for new hardware and restocks.</span>
+                                </span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="workshop-upload-cta">Save changes</button>
+                    </form>
+                </div>
+
+                <div class="secondary-panel account-panel">
+                    <div>
+                        <p class="secondary-page-eyebrow">Security</p>
+                        <h2 class="account-section-title">Security details</h2>
+                    </div>
+
+                    <div class="account-security-grid">
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Email address</span>
+                            <span class="secondary-stat-value">{{ current_user.email }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Verification status</span>
+                            <span class="secondary-stat-value">{{ 'Verified' if profile.email_verified else 'Unverified' }}</span>
+                        </div>
+                    </div>
+
+                    <form method="POST" class="account-password-form">
+                        {{ password_form.hidden_tag() }}
+                        <input type="hidden" name="action" value="password">
+
+                        <div class="account-field">
+                            <label for="{{ password_form.current_password.id }}">Current password</label>
+                            {{ password_form.current_password() }}
+                            {% for error in password_form.current_password.errors %}
+                                <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="account-field">
+                            <label for="{{ password_form.new_password.id }}">New password</label>
+                            {{ password_form.new_password() }}
+                            {% for error in password_form.new_password.errors %}
+                                <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <div class="account-field">
+                            <label for="{{ password_form.confirm_password.id }}">Confirm new password</label>
+                            {{ password_form.confirm_password() }}
+                            {% for error in password_form.confirm_password.errors %}
+                                <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
+                            {% endfor %}
+                        </div>
+
+                        <button type="submit" class="workshop-upload-cta">Change password</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="account-danger-zone" style="margin-top: 1rem;">
+                <div>
+                    <p class="secondary-page-eyebrow">Danger Zone</p>
+                    <h2 class="account-section-title">Account removal</h2>
+                    <p class="account-section-copy">These actions are permanent and should only be used when you are sure.</p>
+                </div>
+
+                <div class="account-danger-grid">
+                    <form method="POST" class="account-danger-form">
+                        {{ danger_form.hidden_tag() }}
+                        <input type="hidden" name="action" value="delete_content">
+                        <button
+                            type="submit"
+                            class="workshop-upload-cta account-danger-button {% if not uploaded_content_count %}is-disabled{% endif %}"
+                            {% if not uploaded_content_count %}disabled aria-disabled="true"{% endif %}
+                            onclick="return confirm('Delete all of your uploaded workshop content?');"
+                        >
+                            Delete all uploaded content
+                        </button>
+                    </form>
+
+                    <form method="POST" class="account-danger-form">
+                        {{ danger_form.hidden_tag() }}
+                        <input type="hidden" name="action" value="delete_account">
+                        <button
+                            type="submit"
+                            class="workshop-upload-cta account-danger-button"
+                            onclick="return confirm('Delete your account and all related activity? This cannot be undone.');"
+                        >
+                            Delete account
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

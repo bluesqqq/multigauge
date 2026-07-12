@@ -1,63 +1,84 @@
 {% extends 'base.html' %}
 {% set navbar_background = true %}
 
-{% block title %}{{ user.username }}'s Page{% endblock %}
+{% block title %}{{ profile.display_name or user.username }}{% endblock %}
 
 {% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/post.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/home.css') }}" />
 {% endblock %}
 
 {% block content %}
-    <div class="page">
-        <div class="page-header">
-            <div class="page-header-content margined">
-                <div class="title">
-                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px;">
-                        <div>
-                            <img src="/static/images/gauge.png" width="100px" height="100px" alt="Profile">
-                        </div>
+    <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
+        <div class="secondary-page-inner">
+            <div class="secondary-page-header">
+                <div>
+                    <p class="secondary-page-eyebrow">PROFILE</p>
+                    <h1 class="secondary-page-title" style="text-transform: none;">{{ profile.display_name or user.username }}</h1>
+                </div>
+                <p class="secondary-page-copy">Public profile for @{{ user.username }} and the latest gauges they have shared.</p>
+            </div>
 
-                        <div>
-                            <h1>
-                                {% if user.role == "moderator" %}
-                                    [mod]
-                                {% elif user.role == "admin" %}
-                                    [admin]
-                                {% endif %}
-                                {{ user.username }}
-                            </h1>
-                        </div>
-                    </div>
+            <div class="secondary-panel account-hero">
+                <div class="account-avatar">
+                    {% if profile.avatar_url %}
+                        <img src="{{ profile.avatar_url }}" alt="{{ profile.display_name or user.username }} avatar">
+                    {% else %}
+                        <span class="account-avatar-fallback">{{ (profile.display_name or user.username)[:1]|upper }}</span>
+                    {% endif %}
+                </div>
 
-                    <div>
-                        <p>Total likes: {{ total_likes }}</p>
-                        <p>Joined: TEMP</p>
-                        <p>Total Posts: {{ post_count }}</p>
-                    </div>
+                <div class="account-hero-copy">
+                    <p class="secondary-page-eyebrow" style="margin: 0;">@{{ user.username }}</p>
+                    {% if user.role == "moderator" %}
+                        <p class="secondary-page-copy">Moderator profile</p>
+                    {% elif user.role == "admin" %}
+                        <p class="secondary-page-copy">Admin profile</p>
+                    {% endif %}
+                    {% if profile.bio %}
+                        <p class="account-hero-subtitle">{{ profile.bio }}</p>
+                    {% endif %}
+                    <span class="account-accent-swatch">Accent color</span>
                 </div>
             </div>
+
+            <div class="secondary-card-grid cards-3" style="margin-top: 1rem;">
+                <div class="secondary-panel secondary-card">
+                    <p class="secondary-stat-label">Posts</p>
+                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ post_count }}</p>
+                </div>
+                <div class="secondary-panel secondary-card">
+                    <p class="secondary-stat-label">Likes</p>
+                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ total_likes }}</p>
+                </div>
+                <div class="secondary-panel secondary-card">
+                    <p class="secondary-stat-label">Downloads</p>
+                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ total_downloads }}</p>
+                </div>
+            </div>
+
+            {% if user_posts %}
+                <div class="secondary-page-header" style="margin-top: 1.25rem; margin-bottom: 1rem;">
+                    <div>
+                        <p class="secondary-page-eyebrow">COMMUNITY</p>
+                        <h2 class="account-section-title">Newest posts</h2>
+                    </div>
+                    <a href="{{ url_for('workshop.workshop', user=user.id) }}" style="color: var(--color-accent); text-decoration: none;">See all</a>
+                </div>
+
+                <div class="community-post-grid">
+                    {% import 'macros/post_card.html' as post_macros %}
+
+                    {% for post in user_posts %}
+                        {{ post_macros.render_post(post) }}
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="secondary-panel account-empty-state">
+                    <p>No posts found.</p>
+                </div>
+            {% endif %}
         </div>
-    </div>
-
-    <div class="page-content margined">
-        {% if user_posts %}
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h1>Newest posts</h1>
-                <a href="{{ url_for('workshop.workshop', user=user.id) }}">See all</a>
-            </div>
-
-            <div class="post-grid">
-                {% import 'macros/post_card.html' as post_macros %}
-
-                {% for post in user_posts %}
-                    {{ post_macros.render_post(post, show_user=False) }}
-                {% endfor %}
-            </div>
-        {% else %}
-            <p>No posts found!</p>
-        {% endif %}
-    </div>
+    </section>
 {% endblock %}
 
 {% block scripts %}

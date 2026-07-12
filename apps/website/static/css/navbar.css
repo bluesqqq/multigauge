@@ -47,6 +47,83 @@
     gap: 16px;
 }
 
+.navbar-account {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-account-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    padding: 0.25rem 0.15rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.navbar-account-toggle:hover,
+.navbar-account-toggle:focus-visible {
+    opacity: 0.75;
+}
+
+.navbar-account-caret {
+    width: 14px;
+    height: 14px;
+    display: block;
+    filter: invert(1);
+}
+
+.navbar-account-menu {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    right: 0;
+    width: min(16rem, calc(100vw - 2rem));
+    padding: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.9rem;
+    background: rgba(17, 17, 20, 0.98);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    z-index: var(--z-dropdown);
+}
+
+.navbar-account-menu[hidden] {
+    display: none;
+}
+
+.navbar-account-header {
+    padding: 0.5rem 0.7rem 0.35rem;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.76rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.navbar-account-divider {
+    margin: 0.25rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.navbar-account-menu a {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 0.65rem;
+    color: var(--color-text);
+    font-size: 0.95rem;
+    text-decoration: none;
+}
+
+.navbar-account-menu a:hover,
+.navbar-account-menu a:focus-visible {
+    background: rgba(255, 255, 255, 0.06);
+    opacity: 1;
+}
+
 .navbar a {
     height: 100%;
 
@@ -165,6 +242,10 @@
         grid-column: 3;
         justify-self: end;
         gap: 12px;
+    }
+
+    .navbar-account-menu {
+        top: calc(100% + 0.5rem);
     }
 
     .navbar-links {

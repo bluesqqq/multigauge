@@ -1,7 +1,8 @@
 from flask import Blueprint, request, render_template
 from sqlalchemy.orm import selectinload
 
-from models import User, Post
+from models import User, Post, PostDownload
+from models.profile import ensure_user_profile
 
 users_bp = Blueprint('users', __name__)
 
@@ -14,6 +15,8 @@ def user(user_id):
     user = User.query.get(int(user_id))
 
     if user:
+        profile = ensure_user_profile(user)
+
         # Fetch only the first 4 posts by the user
         user_posts = (
             Post.query
@@ -30,10 +33,19 @@ def user(user_id):
         # Calculate total likes for those posts
         total_likes = sum(len(post.likes) for post in user_posts)
 
+        total_downloads = (
+            PostDownload.query
+            .join(Post, PostDownload.post_id == Post.id)
+            .filter(Post.posted_by == user_id)
+            .count()
+        )
+
         return render_template(
             'user.html',
             user_posts=user_posts,
             user=user,
+            profile=profile,
+            total_downloads=total_downloads,
             total_likes=total_likes,
             post_count=post_count
         )

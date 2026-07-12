@@ -1,0 +1,7 @@
+{% macro render_account_nav(active="account") %}
+    <nav class="account-subnav secondary-panel" aria-label="Account navigation">
+        <a href="{{ url_for('account.dashboard') }}" class="{{ 'is-active' if active == 'account' else '' }}">Overview</a>
+        <a href="{{ url_for('account.settings') }}" class="{{ 'is-active' if active == 'settings' else '' }}">Settings</a>
+        <a href="{{ url_for('account.orders') }}" class="{{ 'is-active' if active == 'orders' else '' }}">Orders</a>
+    </nav>
+{% endmacro %}

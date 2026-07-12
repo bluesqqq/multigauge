@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/utils.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/secondary.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/navbar.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/footer.css') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/load.css') }}">
@@ -41,6 +42,7 @@
         {% include 'footer.html' %}
     {% endif %}
 
+    <script src="{{ url_for('static', filename='js/navbar.js') }}"></script>
     {% block scripts %}{% endblock %}
 </body>
 </html>

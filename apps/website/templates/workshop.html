@@ -75,7 +75,7 @@
     <div class="workshop-post-grid">
       {% if posts %}
         {% for post in posts %}
-          {{ post_macros.render_post(post, variant='community') }}
+          {{ post_macros.render_post(post) }}
         {% endfor %}
       {% else %}
         <p>No posts found!</p>

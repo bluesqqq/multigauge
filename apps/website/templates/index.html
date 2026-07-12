@@ -206,7 +206,7 @@
             <div class="community-post-grid">
                 {% if community_posts %}
                     {% for post in community_posts %}
-                        {{ post_macros.render_post(post, variant='community') }}
+                        {{ post_macros.render_post(post) }}
                     {% endfor %}
                 {% else %}
                     <p>No community posts yet.</p>

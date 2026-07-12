@@ -20,6 +20,7 @@ from routes import (
     cart_bp,
     main_bp,
     admin_bp,
+    account_bp,
     users_bp,
     payment_bp,
     subscribers_bp,
@@ -72,6 +73,7 @@ def inject_cart_count():
 
 app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
+app.register_blueprint(account_bp)
 app.register_blueprint(cart_bp)
 app.register_blueprint(main_bp)
 app.register_blueprint(multigauge_web_bp)

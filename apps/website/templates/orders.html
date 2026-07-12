@@ -5,29 +5,40 @@
 
 {% block styles %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}" />
 {% endblock %}
 
 {% block content %}
-    <div class="page">
-        <div class="page-header">
-            <div class="page-header-content margined">
-                <div class="title">
-                    <h1>ORDERS</h1>
+    <section class="secondary-page">
+        <div class="secondary-page-inner">
+            <div class="secondary-page-header">
+                <div>
+                    <p class="secondary-page-eyebrow">Admin</p>
+                    <h1 class="secondary-page-title">ORDERS</h1>
                 </div>
             </div>
-        </div>
 
-        <div class="page-content margined">
-            {% for order in orders %}
-                <a href="/admin/orders/{{ order.id }}">
-                    <div class="order-summary">
-                        <h2>Order #{{ order.id }}</h2>
-                        <p>Status: {{ order.status }}</p>
-                        <p>Total: ${{ '%.2f'|format(order.total_price()) }}</p>
-                    </div>
-                </a>
-            {% endfor %}
+            {% if orders %}
+                <div class="secondary-card-grid cards-2">
+                    {% for order in orders %}
+                        <a href="/admin/orders/{{ order.id }}" class="secondary-panel" style="text-decoration: none; color: inherit; padding: 1rem;">
+                            <div style="display: grid; gap: 0.75rem;">
+                                <div style="display: flex; justify-content: space-between; gap: 1rem;">
+                                    <h2 style="margin: 0; text-transform: uppercase;">Order #{{ order.id }}</h2>
+                                    <span class="secondary-page-eyebrow" style="margin: 0;">{{ order.status }}</span>
+                                </div>
+                                <div class="secondary-stat">
+                                    <span class="secondary-stat-label">Total</span>
+                                    <span class="secondary-stat-value">${{ '%.2f'|format(order.total_price()) }}</span>
+                                </div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="secondary-panel" style="padding: 1.25rem;">
+                    <p>No orders yet.</p>
+                </div>
+            {% endif %}
         </div>
-    </div>
+    </section>
 {% endblock %}

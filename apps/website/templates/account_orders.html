@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+{% set navbar_background = true %}
+
+{% block title %}Order History{% endblock %}
+
+{% block content %}
+    <section class="secondary-page account-shell">
+        <div class="secondary-page-inner">
+            <div class="secondary-page-header">
+                <div>
+                    <p class="secondary-page-eyebrow">ACCOUNT</p>
+                    <h1 class="secondary-page-title">ORDERS</h1>
+                </div>
+                <p class="secondary-page-copy">A simple history of everything you have purchased on the site.</p>
+            </div>
+
+            {% import 'macros/account_nav.html' as account_nav %}
+            {{ account_nav.render_account_nav('orders') }}
+
+            {% if orders %}
+                <div class="account-orders-grid">
+                    {% for order in orders %}
+                        <div class="secondary-panel account-panel">
+                            <div class="account-order-meta">
+                                <strong>Order #{{ order.id }}</strong>
+                                <span class="secondary-page-eyebrow" style="margin: 0;">{{ order.status }}</span>
+                            </div>
+
+                            <div class="secondary-card-grid cards-3">
+                                <div class="secondary-stat">
+                                    <span class="secondary-stat-label">Placed</span>
+                                    <span class="secondary-stat-value">{{ order.created_at.strftime('%b %d, %Y') }}</span>
+                                </div>
+                                <div class="secondary-stat">
+                                    <span class="secondary-stat-label">Items</span>
+                                    <span class="secondary-stat-value">{{ order.items|length }}</span>
+                                </div>
+                                <div class="secondary-stat">
+                                    <span class="secondary-stat-label">Total</span>
+                                    <span class="secondary-stat-value">${{ '%.2f'|format(order.total_price()) }}</span>
+                                </div>
+                            </div>
+
+                            <div class="account-order-items">
+                                {% for item in order.items[:3] %}
+                                    <span>{{ item.product_name_snapshot or item.product.name }} x{{ item.quantity }}</span>
+                                {% endfor %}
+
+                                {% if order.items|length > 3 %}
+                                    <span>+ {{ order.items|length - 3 }} more item{{ 's' if order.items|length - 3 != 1 else '' }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="secondary-panel account-empty-state">
+                    <p>No orders yet. Start in the <a href="{{ url_for('products.products') }}">shop</a> and they will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

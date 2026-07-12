@@ -6,6 +6,7 @@ bcrypt = Bcrypt()
 
 from .post import Post, Package, PostLike, PostComment, PostFavorite, PostFeature, PostDownload
 from .user import User
+from .profile import UserProfile
 from .cart import Cart, CartItem
 from .subscriber import EmailSubscribers
 from .product import Product
