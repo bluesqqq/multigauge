@@ -33,9 +33,3 @@ def home():
 @main_bp.route("/editor")
 def editor():
     return render_template("editor.html")
-
-
-@main_bp.route("/new-editor")
-def editor_redirect():
-    return redirect(url_for("main.editor"))
-
