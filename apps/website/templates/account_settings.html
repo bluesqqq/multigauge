@@ -161,26 +161,24 @@
                 </div>
 
                 <div class="account-danger-grid">
-                    <form method="POST" class="account-danger-form">
+                    <form method="POST" class="account-danger-form" data-confirm="Delete all of your uploaded workshop content?">
                         {{ danger_form.hidden_tag() }}
                         <input type="hidden" name="action" value="delete_content">
                         <button
                             type="submit"
                             class="workshop-upload-cta account-danger-button {% if not uploaded_content_count %}is-disabled{% endif %}"
                             {% if not uploaded_content_count %}disabled aria-disabled="true"{% endif %}
-                            onclick="return confirm('Delete all of your uploaded workshop content?');"
                         >
                             Delete all uploaded content
                         </button>
                     </form>
 
-                    <form method="POST" class="account-danger-form">
+                    <form method="POST" class="account-danger-form" data-confirm="Delete your account and all related activity? This cannot be undone.">
                         {{ danger_form.hidden_tag() }}
                         <input type="hidden" name="action" value="delete_account">
                         <button
                             type="submit"
                             class="workshop-upload-cta account-danger-button"
-                            onclick="return confirm('Delete your account and all related activity? This cannot be undone.');"
                         >
                             Delete account
                         </button>
@@ -189,4 +187,8 @@
             </div>
         </div>
     </section>
+{% endblock %}
+
+{% block scripts %}
+    <script type="module" src="/static/js/accountSettings.js"></script>
 {% endblock %}

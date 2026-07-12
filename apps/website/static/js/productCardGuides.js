@@ -2,6 +2,7 @@ import {
     createBoxGuideLayer,
     createLineGuideLayer,
 } from "/static/js/guides.js";
+import { observeLayout } from "/static/js/observeLayout.js";
 
 export function initProductCardGuides() {
     const card = document.querySelector(".product-card");
@@ -52,11 +53,7 @@ export function initProductCardGuides() {
         });
     };
 
-    const observer = new ResizeObserver(update);
-    observer.observe(card);
-    observer.observe(inner);
-    window.addEventListener("load", update, { once: true });
-    update();
+    observeLayout([card, inner], update);
 }
 
 document.addEventListener("DOMContentLoaded", initProductCardGuides);

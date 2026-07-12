@@ -1,10 +1,10 @@
-import { getPageRenderer } from "/multigauge-web/js/pageRenderer.js";
+import { loadGaugeRenderer } from "/static/js/gaugeRenderer.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const canvases = [...document.querySelectorAll(".post-canvas, .community-post-canvas")];
     if (!canvases.length) return;
 
-    const renderer = await getPageRenderer((message) => console.info("[gaugePreview]", message));
+    const renderer = await loadGaugeRenderer("gaugePreview");
 
     for (const canvas of canvases) {
         const postId = String(canvas.id || "").replace(/^gaugeCanvas-/, "");

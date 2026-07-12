@@ -1,4 +1,5 @@
 import { createBoxGuideLayer } from "/static/js/guides.js";
+import { observeLayout } from "/static/js/observeLayout.js";
 
 export function initCommunitySectionGuides() {
     const section = document.querySelector(".community-section");
@@ -31,11 +32,7 @@ export function initCommunitySectionGuides() {
         });
     };
 
-    const observer = new ResizeObserver(update);
-    observer.observe(section);
-    observer.observe(inner);
-    window.addEventListener("load", update, { once: true });
-    update();
+    observeLayout([section, inner], update);
 }
 
 document.addEventListener("DOMContentLoaded", initCommunitySectionGuides);

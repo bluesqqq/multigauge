@@ -1,4 +1,4 @@
-import { getPageRenderer } from "/multigauge-web/js/pageRenderer.js";
+import { loadGaugeRenderer } from "/static/js/gaugeRenderer.js";
 
 const PREVIEW_PACKAGE_URL = "/static/json/designer-preview.package.json";
 
@@ -176,7 +176,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentViewId = 0;
     let renderStamp = 0;
 
-    const renderer = await getPageRenderer((message) => console.info("[designerPreview]", message));
+    const renderer = await loadGaugeRenderer("designerPreview");
 
     const renderCurrent = async () => {
         const faceEntry = facesByKey.get(activeFaceKey) ?? faces[0];

@@ -5,12 +5,7 @@ const SE_SQRT_2 = Math.SQRT1_2;
 const COLORS = {
     black: "#000000",
     white: "#ffffff",
-    red: "#ff0000",
 };
-
-function mixChannel(start, end, amount) {
-    return Math.round(lerp(start, end, amount));
-}
 
 function mixColor(start, end, amount) {
     const parse = (hex) => {
@@ -25,7 +20,7 @@ function mixColor(start, end, amount) {
     const [sr, sg, sb] = parse(start);
     const [er, eg, eb] = parse(end);
 
-    return `rgb(${mixChannel(sr, er, amount)}, ${mixChannel(sg, eg, amount)}, ${mixChannel(sb, eb, amount)})`;
+    return `rgb(${Math.round(lerp(sr, er, amount))}, ${Math.round(lerp(sg, eg, amount))}, ${Math.round(lerp(sb, eb, amount))})`;
 }
 
 class Hero {
@@ -35,10 +30,10 @@ class Hero {
         this.startTime = performance.now();
         this.modifier = 0;
         this.mobileMediaQuery = window.matchMedia(MOBILE_MEDIA_QUERY);
-        this.hero = canvas.closest(".hero");
-        this.heroCopy = this.hero?.querySelector(".hero-copy") ?? null;
-        this.heroTitle = this.hero?.querySelector(".hero-title") ?? null;
-        this.heroTagline = this.hero?.querySelector(".hero-tagline") ?? null;
+        const hero = canvas.closest(".hero");
+        this.heroCopy = hero?.querySelector(".hero-copy") ?? null;
+        this.heroTitle = hero?.querySelector(".hero-title") ?? null;
+        this.heroTagline = hero?.querySelector(".hero-tagline") ?? null;
 
         this.lineWidth = 2;
         this.width = 0;
@@ -147,9 +142,6 @@ class Hero {
         this.heroCopy.style.display = "block";
 
         this.resetTextStyles();
-
-        const titleRect = this.heroTitle.getBoundingClientRect();
-        const taglineRect = this.heroTagline.getBoundingClientRect();
 
         this.heroTitle.style.position = "absolute";
         this.heroTitle.style.left = "auto";
@@ -343,7 +335,7 @@ class Hero {
         }
     }
 
-    decorator(time, centerX, centerY) {
+    decorator(time) {
         const newModifier = this.modifier + Math.sin(time * 0.001) * 0.1;
         const smoothVal = variableSmoothstep(time / 700, 4);
         const radius = this.geometry.centerRadius;
@@ -415,7 +407,7 @@ class Hero {
         ctx.strokeStyle = this.inkColor;
         ctx.fillStyle = COLORS.black;
 
-        this.decorator(time, this.geometry.centerX, this.geometry.centerY);
+        this.decorator(time);
         this.horizon(time, this.geometry.horizonHeight);
 
         this.frameId = requestAnimationFrame(this.draw);

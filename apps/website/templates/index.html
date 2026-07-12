@@ -223,24 +223,5 @@
     <script type="module" src="/static/js/productCardGuides.js"></script>
     <script type="module" src="/static/js/communitySectionGuides.js"></script>
     <script type="module" src="/static/js/heroAnimation.js"></script>
-    <script type="module">
-        const heroModel = document.getElementById("heroModel");
-
-        if (heroModel) {
-            heroModel.addEventListener("load", () => {
-                const materials = heroModel.model?.materials ?? [];
-
-                for (const material of materials) {
-                    const pbr = material.pbrMetallicRoughness;
-                    pbr.setBaseColorFactor([0, 0, 0, 1]);
-                    pbr.setMetallicFactor(0);
-                    pbr.setRoughnessFactor(1);
-
-                    if (material.setEmissiveFactor) {
-                        material.setEmissiveFactor([0, 0, 0]);
-                    }
-                }
-            });
-        }
-    </script>
+    <script type="module" src="/static/js/indexPage.js"></script>
 {% endblock %}

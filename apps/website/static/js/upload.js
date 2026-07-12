@@ -1,4 +1,4 @@
-import { getPageRenderer } from "/multigauge-web/js/pageRenderer.js";
+import { loadGaugeRenderer } from "/static/js/gaugeRenderer.js";
 
 document.addEventListener("DOMContentLoaded", () => {
   const fileInput = document.querySelector('input[name="package"]');
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", () => {
         throw new Error("Package is missing face data.");
       }
 
-      const renderer = await getPageRenderer((message) => console.info("[upload]", message));
+      const renderer = await loadGaugeRenderer("upload");
       if (currentViewId) {
         renderer.removeView(currentViewId);
         currentViewId = 0;

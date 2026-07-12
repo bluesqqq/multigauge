@@ -1,15 +1,16 @@
-import { getPageRenderer } from "/multigauge-web/js/pageRenderer.js";
+import { loadGaugeRenderer } from "/static/js/gaugeRenderer.js";
 
 document.addEventListener("DOMContentLoaded", async () => {
     const canvas = document.getElementById("gaugeCanvas");
-    if (!canvas || typeof postData === "undefined") return;
+    const gaugeDataElement = document.getElementById("post-gauge-data");
+    if (!canvas || !gaugeDataElement) return;
 
     try {
-        const renderer = await getPageRenderer((message) => console.info("[gauge]", message));
+        const renderer = await loadGaugeRenderer("gauge");
         await renderer.renderGaugeJson({
             canvas,
             wasmPath: "/work/posts/post-current.package.json",
-            gaugeJson: postData,
+            gaugeJson: gaugeDataElement.textContent || "",
             name: "Post Preview",
         });
     } catch (error) {
