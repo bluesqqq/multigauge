@@ -35,7 +35,7 @@
 
         <div class="community-post-card-stat">
           <img src="{{ url_for('static', filename='images/icons/download.svg') }}" alt="" width="16" height="16" aria-hidden="true">
-          <span>{{ post.download_count if post.download_count is defined else post.total_downloads() }}</span>
+          <span>{{ post.total_downloads() }}</span>
         </div>
       </div>
     </div>

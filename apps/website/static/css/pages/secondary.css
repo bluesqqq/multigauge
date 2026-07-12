@@ -90,6 +90,32 @@
     padding: 1rem;
 }
 
+.secondary-metric-value {
+    margin-top: 0.35rem;
+    font-size: 2.4rem;
+}
+
+.secondary-info-card {
+    display: grid;
+    gap: 0.5rem;
+    padding: 1.25rem;
+    text-decoration: none;
+    color: inherit;
+}
+
+.secondary-info-card-title {
+    margin: 0;
+    font-size: 1.6rem;
+    letter-spacing: -0.03em;
+    text-transform: uppercase;
+}
+
+.secondary-info-card-copy {
+    margin: 0;
+    color: rgba(21, 21, 21, 0.72);
+    line-height: 1.45;
+}
+
 .discount-badge {
     position: absolute;
     top: 0.75rem;

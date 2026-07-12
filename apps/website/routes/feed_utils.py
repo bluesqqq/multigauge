@@ -46,7 +46,6 @@ def decorate_post_feed(posts, include_user_state=True):
     for post in posts:
         username = post.user.username if post.user else "Unknown"
         post.user_username = f"@{username}"
-        post.download_count = post.total_downloads()
 
         if include_user_state:
             post.liked = False

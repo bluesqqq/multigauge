@@ -3,19 +3,11 @@
 
 {% block title %}{{ product.name }}{% endblock %}
 
-{% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-{% endblock %}
-
 {% block content %}
     <section class="secondary-page">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">PRODUCT</p>
-                    <h1 class="secondary-page-title">{{ product.name }}</h1>
-                </div>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('PRODUCT', product.name) }}
 
             <div class="secondary-panel" style="display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 0; overflow: hidden;">
                 <div style="background: linear-gradient(180deg, #1a1b20 0%, #0f1014 100%); padding: 1rem; display: flex; align-items: center; justify-content: center;">

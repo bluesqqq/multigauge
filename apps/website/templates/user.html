@@ -10,13 +10,8 @@
 {% block content %}
     <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">PROFILE</p>
-                    <h1 class="secondary-page-title" style="text-transform: none;">{{ profile.display_name or user.username }}</h1>
-                </div>
-                <p class="secondary-page-copy">Public profile for @{{ user.username }} and the latest gauges they have shared.</p>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('PROFILE', profile.display_name or user.username, 'Public profile for @' ~ user.username ~ ' and the latest gauges they have shared.', title_style='text-transform: none;') }}
 
             <div class="secondary-panel account-hero">
                 <div class="account-avatar">
@@ -42,18 +37,9 @@
             </div>
 
             <div class="secondary-card-grid cards-3" style="margin-top: 1rem;">
-                <div class="secondary-panel secondary-card">
-                    <p class="secondary-stat-label">Posts</p>
-                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ post_count }}</p>
-                </div>
-                <div class="secondary-panel secondary-card">
-                    <p class="secondary-stat-label">Likes</p>
-                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ total_likes }}</p>
-                </div>
-                <div class="secondary-panel secondary-card">
-                    <p class="secondary-stat-label">Downloads</p>
-                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ total_downloads }}</p>
-                </div>
+                {{ secondary_macros.render_metric_card('Posts', post_count) }}
+                {{ secondary_macros.render_metric_card('Likes', total_likes) }}
+                {{ secondary_macros.render_metric_card('Downloads', total_downloads) }}
             </div>
 
             {% if user_posts %}

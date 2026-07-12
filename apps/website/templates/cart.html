@@ -3,20 +3,11 @@
 
 {% block title %}Cart{% endblock %}
 
-{% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-{% endblock %}
-
 {% block content %}
     <section class="secondary-page">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">Checkout</p>
-                    <h1 class="secondary-page-title">CART</h1>
-                </div>
-                <p class="secondary-page-copy">Review the items in your cart before heading to checkout.</p>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('Checkout', 'CART', 'Review the items in your cart before heading to checkout.') }}
 
             {% if cart and cart.items %}
                 <div class="secondary-panel" style="display: grid; gap: 0.75rem; padding: 1rem;">

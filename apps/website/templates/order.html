@@ -3,54 +3,25 @@
 
 {% block title %}Order{% endblock %}
 
-{% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-{% endblock %}
-
 {% block content %}
     <section class="secondary-page">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">Admin order</p>
-                    <h1 class="secondary-page-title">ORDER</h1>
-                </div>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('Admin order', 'ORDER') }}
 
             {% if order %}
                 <div class="secondary-panel" style="display: grid; gap: 1rem; padding: 1.25rem;">
                     <div class="secondary-card-grid cards-2">
-                        <div class="secondary-stat">
-                            <span class="secondary-stat-label">Order</span>
-                            <span class="secondary-stat-value">#{{ order.id }}</span>
-                        </div>
-                        <div class="secondary-stat">
-                            <span class="secondary-stat-label">Status</span>
-                            <span class="secondary-stat-value">{{ order.status }}</span>
-                        </div>
-                        <div class="secondary-stat">
-                            <span class="secondary-stat-label">Placed</span>
-                            <span class="secondary-stat-value">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
-                        </div>
-                        <div class="secondary-stat">
-                            <span class="secondary-stat-label">Total</span>
-                            <span class="secondary-stat-value">${{ '%.2f'|format(order.total_price()) }}</span>
-                        </div>
+                        {{ secondary_macros.render_stat('Order', '#' ~ order.id) }}
+                        {{ secondary_macros.render_stat('Status', order.status) }}
+                        {{ secondary_macros.render_stat('Placed', order.created_at.strftime('%Y-%m-%d %H:%M')) }}
+                        {{ secondary_macros.render_stat('Total', '$' ~ ('%.2f'|format(order.total_price()))) }}
                     </div>
 
                     <div class="secondary-stat-list">
-                        <div class="secondary-stat">
-                            <span class="secondary-stat-label">Stripe Session</span>
-                            <span class="secondary-stat-value">{{ order.stripe_session_id }}</span>
-                        </div>
-                        <div class="secondary-stat">
-                            <span class="secondary-stat-label">Payment Intent</span>
-                            <span class="secondary-stat-value">{{ order.stripe_payment_intent }}</span>
-                        </div>
-                        <div class="secondary-stat">
-                            <span class="secondary-stat-label">Customer</span>
-                            <span class="secondary-stat-value">{{ order.customer_email or order.customer_name or 'Guest order' }}</span>
-                        </div>
+                        {{ secondary_macros.render_stat('Stripe Session', order.stripe_session_id) }}
+                        {{ secondary_macros.render_stat('Payment Intent', order.stripe_payment_intent) }}
+                        {{ secondary_macros.render_stat('Customer', order.customer_email or order.customer_name or 'Guest order') }}
                     </div>
 
                     <div class="secondary-panel-dark" style="padding: 1rem;">

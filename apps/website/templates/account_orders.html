@@ -6,13 +6,8 @@
 {% block content %}
     <section class="secondary-page account-shell">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">ACCOUNT</p>
-                    <h1 class="secondary-page-title">ORDERS</h1>
-                </div>
-                <p class="secondary-page-copy">A simple history of everything you have purchased on the site.</p>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('ACCOUNT', 'ORDERS', 'A simple history of everything you have purchased on the site.') }}
 
             {% import 'macros/account_nav.html' as account_nav %}
             {{ account_nav.render_account_nav('orders') }}
@@ -27,18 +22,9 @@
                             </div>
 
                             <div class="secondary-card-grid cards-3">
-                                <div class="secondary-stat">
-                                    <span class="secondary-stat-label">Placed</span>
-                                    <span class="secondary-stat-value">{{ order.created_at.strftime('%b %d, %Y') }}</span>
-                                </div>
-                                <div class="secondary-stat">
-                                    <span class="secondary-stat-label">Items</span>
-                                    <span class="secondary-stat-value">{{ order.items|length }}</span>
-                                </div>
-                                <div class="secondary-stat">
-                                    <span class="secondary-stat-label">Total</span>
-                                    <span class="secondary-stat-value">${{ '%.2f'|format(order.total_price()) }}</span>
-                                </div>
+                                {{ secondary_macros.render_stat('Placed', order.created_at.strftime('%b %d, %Y')) }}
+                                {{ secondary_macros.render_stat('Items', order.items|length) }}
+                                {{ secondary_macros.render_stat('Total', '$' ~ ('%.2f'|format(order.total_price()))) }}
                             </div>
 
                             <div class="account-order-items">

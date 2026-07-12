@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload
 
 from models import db, Post, PostComment, PostFeature, PostDownload, Package
 from routes.feed_utils import build_post_query, decorate_post_feed, normalize_sort_option
+from services.package_validation import validate_package_payload
 
 workshop_bp = Blueprint('workshop', __name__)
 
@@ -17,40 +18,6 @@ POSTS_PER_PAGE = 20
 def _safe_filename(value, fallback="package"):
     slug = re.sub(r"[^A-Za-z0-9._-]+", "_", (value or "").strip()).strip("_")
     return slug or fallback
-
-
-def _validate_package_payload(package_data):
-    if not isinstance(package_data, dict):
-        return "Package JSON must be an object."
-
-    required_keys = {"name", "author", "description", "faces"}
-    if set(package_data.keys()) != required_keys:
-        return "Package JSON must contain only name, author, description, and faces."
-
-    if not isinstance(package_data["name"], str) or not package_data["name"].strip():
-        return "Package name must be a non-empty string."
-
-    if not isinstance(package_data["author"], str) or not package_data["author"].strip():
-        return "Package author must be a non-empty string."
-
-    if not isinstance(package_data["description"], str):
-        return "Package description must be a string."
-
-    faces = package_data["faces"]
-    if not isinstance(faces, list) or not faces:
-        return "Package must contain at least one face."
-
-    for face_entry in faces:
-        if not isinstance(face_entry, dict):
-            return "Face entries must be objects."
-        if set(face_entry.keys()) != {"name", "face"}:
-            return "Face entries must contain only name and face."
-        if not isinstance(face_entry["name"], str) or not face_entry["name"].strip():
-            return "Face name must be a non-empty string."
-        if not isinstance(face_entry["face"], dict):
-            return "Face payload must be an object."
-
-    return None
 
 
 @workshop_bp.route("/workshop/")
@@ -138,7 +105,7 @@ def workshop_upload():
             flash("Invalid package JSON.", "danger")
             return render_template('upload-gaugeface.html'), 400
 
-        validation_error = _validate_package_payload(package_data)
+        validation_error = validate_package_payload(package_data)
         if validation_error:
             flash(validation_error, "danger")
             return render_template('upload-gaugeface.html'), 400

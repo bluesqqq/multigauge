@@ -6,13 +6,8 @@
 {% block content %}
     <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">ACCOUNT</p>
-                    <h1 class="secondary-page-title">DASHBOARD</h1>
-                </div>
-                <p class="secondary-page-copy">Keep an eye on your profile, uploads, and order history from one place.</p>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('ACCOUNT', 'DASHBOARD', 'Keep an eye on your profile, uploads, and order history from one place.') }}
 
             {% import 'macros/account_nav.html' as account_nav %}
             {{ account_nav.render_account_nav('account') }}
@@ -38,18 +33,9 @@
             </div>
 
             <div class="secondary-card-grid cards-3" style="margin-top: 1rem;">
-                <div class="secondary-panel secondary-card">
-                    <p class="secondary-stat-label">Uploads</p>
-                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ post_count }}</p>
-                </div>
-                <div class="secondary-panel secondary-card">
-                    <p class="secondary-stat-label">Downloads</p>
-                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ download_count }}</p>
-                </div>
-                <div class="secondary-panel secondary-card">
-                    <p class="secondary-stat-label">Orders</p>
-                    <p class="secondary-page-title" style="font-size: 2.4rem; margin-top: 0.35rem;">{{ order_count }}</p>
-                </div>
+                {{ secondary_macros.render_metric_card('Uploads', post_count) }}
+                {{ secondary_macros.render_metric_card('Downloads', download_count) }}
+                {{ secondary_macros.render_metric_card('Orders', order_count) }}
             </div>
 
             <div class="secondary-card-grid cards-2" style="margin-top: 1rem;">

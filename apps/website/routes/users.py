@@ -1,4 +1,4 @@
-from flask import Blueprint, request, render_template
+from flask import Blueprint, render_template
 from sqlalchemy.orm import selectinload
 
 from models import User, Post, PostDownload
@@ -9,8 +9,6 @@ users_bp = Blueprint('users', __name__)
 # User Profile page route
 @users_bp.route("/user/<int:user_id>")
 def user(user_id):
-    page = request.args.get('page', 1, type=int)
-
     # Fetch the user
     user = User.query.get(int(user_id))
 
@@ -20,7 +18,12 @@ def user(user_id):
         # Fetch only the first 4 posts by the user
         user_posts = (
             Post.query
-            .options(selectinload(Post.user), selectinload(Post.package))
+            .options(
+                selectinload(Post.user),
+                selectinload(Post.package),
+                selectinload(Post.likes),
+                selectinload(Post.downloads),
+            )
             .filter_by(posted_by=user_id)
             .order_by(Post.posted_at.desc())
             .limit(4)

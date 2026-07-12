@@ -3,20 +3,11 @@
 
 {% block title %}Products{% endblock %}
 
-{% block styles %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
-{% endblock %}
-
 {% block content %}
     <section class="secondary-page">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">SHOP</p>
-                    <h1 class="secondary-page-title">PRODUCTS</h1>
-                </div>
-                <p class="secondary-page-copy">Browse the hardware that drives the gauge, then add what you need to your cart.</p>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('SHOP', 'PRODUCTS', 'Browse the hardware that drives the gauge, then add what you need to your cart.') }}
 
             {% if products %}
                 <div class="secondary-card-grid cards-2">

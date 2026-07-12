@@ -3,51 +3,16 @@
 
 {% block title %}Admin{% endblock %}
 
-{% block styles %}
-    <style>
-        .admin-summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, minmax(0, 1fr));
-            gap: 1rem;
-        }
-
-        @media (max-width: 768px) {
-            .admin-summary-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-    </style>
-{% endblock %}
-
 {% block content %}
     <section class="secondary-page">
         <div class="secondary-page-inner">
-            <div class="secondary-page-header">
-                <div>
-                    <p class="secondary-page-eyebrow">CONTROL</p>
-                    <h1 class="secondary-page-title">ADMIN</h1>
-                </div>
-                <p class="secondary-page-copy">Moderator tools, order management, and platform controls.</p>
-            </div>
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('CONTROL', 'ADMIN', 'Moderator tools, order management, and platform controls.') }}
 
-            <div class="admin-summary-grid">
-                <a class="secondary-panel" href="{{ url_for('admin.orders') }}" style="text-decoration: none; color: inherit; padding: 1.25rem;">
-                    <p class="secondary-page-eyebrow">Commerce</p>
-                    <h2 style="margin: 0; font-size: 1.6rem; text-transform: uppercase;">Orders</h2>
-                    <p style="margin-top: 0.5rem; color: rgba(21,21,21,0.72);">Review order history and payment records.</p>
-                </a>
-
-                <div class="secondary-panel" style="padding: 1.25rem;">
-                    <p class="secondary-page-eyebrow">Content</p>
-                    <h2 style="margin: 0; font-size: 1.6rem; text-transform: uppercase;">Workshop</h2>
-                    <p style="margin-top: 0.5rem; color: rgba(21,21,21,0.72);">Keep an eye on featured posts and community uploads.</p>
-                </div>
-
-                <div class="secondary-panel" style="padding: 1.25rem;">
-                    <p class="secondary-page-eyebrow">Users</p>
-                    <h2 style="margin: 0; font-size: 1.6rem; text-transform: uppercase;">Accounts</h2>
-                    <p style="margin-top: 0.5rem; color: rgba(21,21,21,0.72);">Manage authors, moderators, and user profiles.</p>
-                </div>
+            <div class="secondary-card-grid cards-3">
+                {{ secondary_macros.render_info_card('Commerce', 'Orders', 'Review order history and payment records.', url_for('admin.orders')) }}
+                {{ secondary_macros.render_info_card('Content', 'Workshop', 'Keep an eye on featured posts and community uploads.') }}
+                {{ secondary_macros.render_info_card('Users', 'Accounts', 'Manage authors, moderators, and user profiles.') }}
             </div>
         </div>
     </section>

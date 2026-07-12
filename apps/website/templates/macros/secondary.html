@@ -1,0 +1,45 @@
+{% macro render_page_header(eyebrow, title, copy=None, title_tag="h1", title_style=None) %}
+<div class="secondary-page-header">
+    <div>
+        <p class="secondary-page-eyebrow">{{ eyebrow }}</p>
+        {% if title_tag == "h2" %}
+            <h2 class="secondary-page-title"{% if title_style %} style="{{ title_style }}"{% endif %}>{{ title }}</h2>
+        {% else %}
+            <h1 class="secondary-page-title"{% if title_style %} style="{{ title_style }}"{% endif %}>{{ title }}</h1>
+        {% endif %}
+    </div>
+    {% if copy %}
+        <p class="secondary-page-copy">{{ copy }}</p>
+    {% endif %}
+</div>
+{% endmacro %}
+
+{% macro render_metric_card(label, value) %}
+<div class="secondary-panel secondary-card">
+    <p class="secondary-stat-label">{{ label }}</p>
+    <p class="secondary-metric-value">{{ value }}</p>
+</div>
+{% endmacro %}
+
+{% macro render_stat(label, value) %}
+<div class="secondary-stat">
+    <span class="secondary-stat-label">{{ label }}</span>
+    <span class="secondary-stat-value">{{ value }}</span>
+</div>
+{% endmacro %}
+
+{% macro render_info_card(eyebrow, title, copy, href=None) %}
+{% if href %}
+<a class="secondary-panel secondary-info-card" href="{{ href }}">
+{% else %}
+<div class="secondary-panel secondary-info-card">
+{% endif %}
+    <p class="secondary-page-eyebrow">{{ eyebrow }}</p>
+    <h2 class="secondary-info-card-title">{{ title }}</h2>
+    <p class="secondary-info-card-copy">{{ copy }}</p>
+{% if href %}
+</a>
+{% else %}
+</div>
+{% endif %}
+{% endmacro %}
