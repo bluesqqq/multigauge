@@ -72,6 +72,7 @@
     width: 24px;
     height: 24px;
     display: block;
+    filter: invert(1);
 }
 
 .navbar-cart {
@@ -91,6 +92,7 @@
     width: 28px;
     height: 28px;
     display: block;
+    filter: invert(1);
 }
 
 .navbar-background-spacer {
@@ -204,6 +206,7 @@
     .navbar-icon {
         width: 24px;
         height: 24px;
+        filter: invert(1);
     }
 
     .navbar-cart-count {

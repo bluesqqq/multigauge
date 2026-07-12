@@ -42,26 +42,26 @@
                     <div style="display: flex; gap: 10px; padding-top: 10px; padding-bottom: 10px;">
                         <form id="like-form" action="/workshop/{{ post.id }}/like" method="post" onsubmit="handleLike(event)">
                             <button type="submit" id="like-button" style="border: none; background: none; padding: 0;">
-                                <img id="like-image" src="{{ url_for('static', filename='images/liked.png' if has_liked else 'images/not_liked.png') }}" alt="Like" width="25" height="25">
+                                <img id="like-image" src="{{ url_for('static', filename='images/icons/like-filled.svg' if has_liked else 'images/icons/like.svg') }}" alt="Like" width="25" height="25">
                             </button>
                         </form>
                         <p id="like-count">{{ likes }} likes</p>
 
                         <form id="favorite-form" action="/workshop/{{ post.id }}/favorite" method="post" onsubmit="handleFavorite(event)">
                             <button type="submit" id="favorite-button" style="border: none; background: none; padding: 0;">
-                                <img id="favorite-image" src="{{ url_for('static', filename='images/favorited.png' if has_favorited else 'images/not_favorited.png') }}" alt="Favorite" width="25" height="25">
+                                <img id="favorite-image" src="{{ url_for('static', filename='images/icons/bookmark-filled.svg' if has_favorited else 'images/icons/bookmark.svg') }}" alt="Favorite" width="25" height="25">
                             </button>
                         </form>
                         <p id="favorite-count">{{ favorites }} favorites</p>
 
                         <a href="/workshop/{{ post.id }}/download" class="button">
-                            <img src="/static/images/download.png" alt="Download" width="25" height="25">
+                            <img src="{{ url_for('static', filename='images/icons/download.svg') }}" alt="Download" width="25" height="25">
                         </a>
 
                         {% if current_user.is_authenticated and current_user.is_moderator() %}
                             <form id="feature-form" action="/workshop/{{ post.id }}/feature" method="post" onsubmit="handleFeature(event)">
                                 <button type="submit" id="feature-button" style="border: none; background: none; padding: 0;">
-                                    <img id="feature-image" src="{{ url_for('static', filename='images/featured.png' if post.is_featured() else 'images/not_featured.png') }}" alt="Feature" width="25" height="25">
+                                    <img id="feature-image" src="{{ url_for('static', filename='images/icons/star-filled.svg' if post.is_featured() else 'images/icons/star.svg') }}" alt="Feature" width="25" height="25">
                                 </button>
                             </form>
                         {% endif %}
@@ -88,7 +88,7 @@
                                 <div>{{ comment['content'] }}</div>
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <div style="display: flex; align-items: center;">
-                                        <img src="/static/images/not_liked.png" style="width: 25px; height: 25px;">
+                                        <img src="{{ url_for('static', filename='images/icons/like.svg') }}" style="width: 25px; height: 25px;">
                                         <p>0</p>
                                     </div>
                                     <button>Reply</button>
@@ -125,9 +125,9 @@
                 const likeCount = document.getElementById('like-count');
 
                 if (data.liked) {
-                    likeImage.src = "{{ url_for('static', filename='images/liked.png') }}";
+                    likeImage.src = "{{ url_for('static', filename='images/icons/like-filled.svg') }}";
                 } else {
-                    likeImage.src = "{{ url_for('static', filename='images/not_liked.png') }}";
+                    likeImage.src = "{{ url_for('static', filename='images/icons/like.svg') }}";
                 }
 
                 likeCount.textContent = `${data.total_likes} likes`;
@@ -154,9 +154,9 @@
                 const favoriteCount = document.getElementById('favorite-count');
 
                 if (data.favorited) {
-                    favoriteImage.src = "{{ url_for('static', filename='images/favorited.png') }}";
+                    favoriteImage.src = "{{ url_for('static', filename='images/icons/bookmark-filled.svg') }}";
                 } else {
-                    favoriteImage.src = "{{ url_for('static', filename='images/not_favorited.png') }}";
+                    favoriteImage.src = "{{ url_for('static', filename='images/icons/bookmark.svg') }}";
                 }
 
                 favoriteCount.textContent = `${data.total_favorites} favorites`;
@@ -181,8 +181,8 @@
             .then(data => {
                 const featureImage = document.getElementById('feature-image');
                 featureImage.src = data.featured
-                    ? "{{ url_for('static', filename='images/featured.png') }}"
-                    : "{{ url_for('static', filename='images/not_featured.png') }}";
+                    ? "{{ url_for('static', filename='images/icons/star-filled.svg') }}"
+                    : "{{ url_for('static', filename='images/icons/star.svg') }}";
             })
             .catch(error => console.error('Feature Error:', error));
         }

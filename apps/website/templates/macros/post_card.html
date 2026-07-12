@@ -30,12 +30,12 @@
 
       <div class="community-post-card-stats" aria-label="Post stats">
         <div class="community-post-card-stat">
-          <img src="/static/images/liked.png" alt="" width="16" height="16" aria-hidden="true">
+          <img src="{{ url_for('static', filename='images/icons/like-filled.svg') }}" alt="" width="16" height="16" aria-hidden="true">
           <span>{{ post.total_likes() }}</span>
         </div>
 
         <div class="community-post-card-stat">
-          <img src="/static/images/download.png" alt="" width="16" height="16" aria-hidden="true">
+          <img src="{{ url_for('static', filename='images/icons/download.svg') }}" alt="" width="16" height="16" aria-hidden="true">
           <span>{{ post.download_count if post.download_count is defined else post.total_downloads() }}</span>
         </div>
       </div>
@@ -48,7 +48,7 @@
     {% if post.is_featured() %}
     <div class="featured-banner"></div>
     {% if show_feature_star %}
-    <img class="featured-star" src="/static/images/featured.png">
+    <img class="featured-star" src="{{ url_for('static', filename='images/icons/star-filled.svg') }}">
     {% endif %}
     {% endif %}
 
@@ -78,7 +78,7 @@
         <div style="display: flex; gap: 10px;">
           {% if post.total_likes() > 0 %}
           <div class="post-stat">
-            <img src="/static/images/liked.png" width="25" height="25">
+            <img src="{{ url_for('static', filename='images/icons/like-filled.svg') }}" width="25" height="25">
             <h5>{{ post.total_likes() }}</h5>
           </div>
           {% endif %}
@@ -91,7 +91,7 @@
 
           {% if post.is_featured() %}
           <div class="post-stat">
-            <img src="/static/images/featured.png" width="25" height="25">
+            <img src="{{ url_for('static', filename='images/icons/star-filled.svg') }}" width="25" height="25">
             <h5>{{ post.total_features() }}</h5>
           </div>
           {% endif %}
@@ -100,19 +100,19 @@
 
       <form class="favorite-form" data-id="{{ post.id }}" data-action="favorite" onsubmit="event.preventDefault();">
         <button type="submit" class="post-favorite" style="border: none; background: none; padding: 0;">
-          <img src="{{ url_for('static', filename='images/favorited.png') if post.favorited else url_for('static', filename='images/not_favorited.png') }}" alt="Favorite" width="25" height="25"/>
+          <img src="{{ url_for('static', filename='images/icons/bookmark-filled.svg') if post.favorited else url_for('static', filename='images/icons/bookmark.svg') }}" alt="Favorite" width="25" height="25"/>
         </button>
       </form>
 
       <form class="like-form" data-id="{{ post.id }}" data-action="like" onsubmit="event.preventDefault();">
         <button type="submit" class="post-like" style="border: none; background: none; padding: 0;">
-          <img src="{{ url_for('static', filename='images/liked.png') if post.liked else url_for('static', filename='images/not_liked.png') }}" alt="Like" width="25" height="25"/>
+          <img src="{{ url_for('static', filename='images/icons/like-filled.svg') if post.liked else url_for('static', filename='images/icons/like.svg') }}" alt="Like" width="25" height="25"/>
         </button>
       </form>
 
       <form action="/workshop/{{ post.id }}/download" method="get" onsubmit="event.stopPropagation()">
         <button type="submit" class="post-download" style="border: none; background: none; padding: 0;">
-          <img src="/static/images/download.png" width="25" height="25">
+          <img src="{{ url_for('static', filename='images/icons/download.svg') }}" width="25" height="25">
         </button>
       </form>
     </div>

@@ -51,7 +51,7 @@
                                     <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
                                         <input type="hidden" name="action" value="remove">
                                         <button type="submit" style="background: none; border: none;">
-                                            <img src="/static/images/trash.png" style="height: 25px; aspect-ratio: 1;">
+                                            <img src="{{ url_for('static', filename='images/icons/cart-remove.svg') }}" style="height: 25px; aspect-ratio: 1;">
                                         </button>
                                     </form>
                                 </div>
