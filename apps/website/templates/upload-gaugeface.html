@@ -1,69 +1,58 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/css/footer.css" /> 
-        <link rel="stylesheet" href="/static/css/navbar.css" /> 
-        <link rel="stylesheet" href="/static/css/style.css" /> 
-        <link rel="stylesheet" href="/static/css/utilities.css" /> 
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+{% block title %}Upload Package{% endblock %}
 
-        <title>Upload Package</title>
-    </head>
-    <body>
-        <!-- Navigation bar -->
-        {% include 'navbar.html' %}
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/utilities.css') }}" />
+{% endblock %}
 
-        <div class="page">
-            <div class="page-header">
-                <div class = "page-header-content margined">
-                    <!-- Title and action-->
-                    <div class="title">
-                        <h1>UPLOAD PACKAGE</h1>
+{% block content %}
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-content margined">
+                <div class="title">
+                    <h1>UPLOAD PACKAGE</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-content margined">
+        <div class="flex-row">
+            <div class="flex-col flex-2 justify-center">
+                <form action="/workshop/upload" method="POST" enctype="multipart/form-data" class="flex-col gap-common">
+                    <div class="flex-row items-center form-row">
+                        <label class="p-common">Post Title:</label>
+                        <textarea name="title" rows="1" required></textarea>
                     </div>
-                </div>
+
+                    <div class="flex-row items-center form-row">
+                        <label class="p-common">Package File:</label>
+                        <input name="package" type="file" accept=".json,.package,application/json" required></input>
+                    </div>
+
+                    <div class="flex-row items-center form-row">
+                        <label class="p-common">Post Description:</label>
+                        <textarea name="description" rows="5" required></textarea>
+                    </div>
+
+                    <div class="flex-row items-center form-row">
+                        <p class="p-common">Upload a package JSON with <code>name</code>, <code>author</code>, <code>description</code>, and <code>faces</code>.</p>
+                    </div>
+
+                    <button class="p-common w-full" type="submit">Upload</button>
+                </form>
+            </div>
+
+            <div class="flex-1 p-common">
+                <canvas id="gaugeCanvas" class="w-full square" style="background-color: var(--color-bg-800);"></canvas>
             </div>
         </div>
+    </div>
+{% endblock %}
 
-        <div class="page-content margined">
-            <div class="flex-row">
-                <div class="flex-col flex-2 justify-center">
-                    <form action="/workshop/upload" method="POST" enctype="multipart/form-data" class="flex-col gap-common">
-                        <div class="flex-row items-center form-row">
-                            <label class="p-common">Post Title:</label>
-                            <textarea name="title" rows="1" required></textarea>
-                        </div>
-
-                        <div class="flex-row items-center form-row">
-                            <label class="p-common">Package File:</label>
-                            <input name="package" type="file" accept=".json,.package,application/json" required></input>
-                        </div>
-
-                        <div class="flex-row items-center form-row">
-                            <label class="p-common">Post Description:</label>
-                            <textarea name="description" rows="5" required></textarea>
-                        </div>
-
-                        <div class="flex-row items-center form-row">
-                            <p class="p-common">Upload a package JSON with <code>name</code>, <code>author</code>, <code>description</code>, and <code>faces</code>.</p>
-                        </div>
-
-                        <!-- Submit button-->
-                        <button class="p-common w-full" type="submit">Upload</button>
-                    </form>
-                </div>
-
-                <div class="flex-1 p-common">
-                    <canvas id="gaugeCanvas" class="w-full square" style="background-color: var(--color-bg-800);"></canvas>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        {% include 'footer.html' %}
-
-        <script type="module" src="/static/js/upload.js"></script>
-    </body>
-</html> 
+{% block scripts %}
+    <script type="module" src="/static/js/upload.js"></script>
+{% endblock %}

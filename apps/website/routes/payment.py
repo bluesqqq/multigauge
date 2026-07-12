@@ -123,7 +123,7 @@ def success():
     session_id = request.args.get('session_id')
     if not session_id:
         flash("Missing session ID.")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.home'))
 
     stripe_session = stripe.checkout.Session.retrieve(session_id, expand=['payment_intent'])
     payment_intent = stripe_session.payment_intent
@@ -133,7 +133,7 @@ def success():
 
     if not order:
         flash("Order not found.")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.home'))
 
     order.stripe_session_id = stripe_session.id
     order.stripe_payment_intent = payment_intent.id

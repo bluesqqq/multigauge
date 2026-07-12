@@ -272,6 +272,7 @@
 .bg-900 { background-color: var(--color-bg-900); }
 
 .bg-accent { background-color: var(--color-accent); }
+.bg-text { background-color: var(--color-text); }
 
 /* OPACITY */
 .opacity-0 { opacity: 0; }

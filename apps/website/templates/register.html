@@ -1,35 +1,32 @@
-<!DOCTYPE html>
-<html> 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/css/navbar.css" /> 
-        <link rel="stylesheet" href="/static/css/login.css" /> 
-        <title>Sign Up</title>
-    </head>
-    <body>
-        {% include 'navbar.html' %}
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-        <div class="login-container">
-            <form method="POST">
-                <fieldset class="login">
-                    <legend>Sign Up</legend>
-                    {{ form.hidden_tag() }}
+{% block title %}Sign Up{% endblock %}
 
-                    <span>Already have an account? <a href="/login">Log in</a></span>
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+{% endblock %}
 
-                    <label for="username">Username</label>
-                    {{ form.username() }}
+{% block content %}
+    <div class="login-container">
+        <form method="POST">
+            <fieldset class="login">
+                <legend>Sign Up</legend>
+                {{ form.hidden_tag() }}
 
-                    <label for="email">Email</label>
-                    {{ form.email() }}
-                    
-                    <label for="password">Password</label>
-                    {{ form.password() }}
-                    
-                    <button type="submit">Register</button>
-                </fieldset>
-            </form>
-        </div>
-    </body>
-</html>
+                <span>Already have an account? <a href="/login">Log in</a></span>
+
+                <label for="username">Username</label>
+                {{ form.username() }}
+
+                <label for="email">Email</label>
+                {{ form.email() }}
+
+                <label for="password">Password</label>
+                {{ form.password() }}
+
+                <button type="submit">Register</button>
+            </fieldset>
+        </form>
+    </div>
+{% endblock %}

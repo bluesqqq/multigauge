@@ -1,27 +1,19 @@
-<!DOCTYPE html>
-<html> 
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-    <link rel="stylesheet" href="/static/css/style.css" /> 
-    <link rel="stylesheet" href="/static/css/navbar.css" /> 
+{% block title %}{{ product.name }}{% endblock %}
 
-    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+{% endblock %}
 
-    <title>Home</title>
-  </head>
-  <body> 
-    {% include 'navbar.html' %}
+{% block content %}
+    <div class="page-content margined">
+        <h1>{{ product.name }}</h1>
+        <h3>{{ product.description }}</h3>
 
-    <h1>{{product.name}}</h1> 
-
-    <h3>{{product.description}}</h3> 
-
-    <form action="/create-checkout-session" method="POST">
-      <button type="submit">Test Checkout button</button>
-    </form>
-
-    {% include 'footer.html' %}
-  </body> 
-</html> 
+        <form action="/create-checkout-session" method="POST">
+            <button type="submit">Test Checkout button</button>
+        </form>
+    </div>
+{% endblock %}

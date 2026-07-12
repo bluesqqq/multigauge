@@ -15,6 +15,8 @@ html {
 body {
     margin: 0;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 
     color: var(--color-text);
     background-color: var(--color-bg-700);
@@ -30,6 +32,14 @@ img, svg, canvas, video { display: block; max-width: 100%; }
 button, input, textarea, select { font: inherit; }
 
 button { border: 0; background: none; color: inherit; cursor: pointer; }
+
+.site-main {
+    flex: 1 0 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
 
 @media (prefers-reduced-motion: reduce) {
     html { scroll-behavior: auto; }

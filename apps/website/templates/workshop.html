@@ -1,164 +1,105 @@
-<html> 
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/style.css" /> 
-    <link rel="stylesheet" href="/static/css/post.css" /> 
+{% extends 'base.html' %}
 
-    <link rel="stylesheet" href="/static/css/navbar.css"/> 
-    <link rel="stylesheet" href="/static/css/footer.css"/> 
+{% block title %}Workshop{% endblock %}
 
-    <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
+{% block styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/pages/home.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/post.css') }}">
+<style>
+  .site-main {
+    min-height: calc(100dvh - var(--navbar-height) - var(--footer-height));
+    display: flex;
+    flex-direction: column;
+  }
 
-    <title>Workshop</title>
-  </head>
-  <body> 
-    <!-- Navigation bar -->
-    {% include 'navbar.html' %}
+  .workshop-section {
+    flex: 1;
+    min-height: 0;
+  }
 
-    <div class="page">
-      <div class="page-header">
-        <div class = "page-header-content margined">
-          <!-- Title and action-->
-            <div class="title">
-              <h1>WORKSHOP</h1>
+  .workshop-section-inner {
+    min-height: 0;
+    margin-block: 0;
+    padding-block: 24px 32px;
+  }
+</style>
+{% endblock %}
 
-              <a href="/workshop/upload" style="height:100%;">
-                <button class="upload-button">
-                Upload a Package
-                </button>
-              </a>
-            </div>
+{% block content %}
+{% import 'macros/post_card.html' as post_macros %}
 
-          <!-- Sorting options for posts -->
-          <div class="post-filters">
-            <div class="filter">
-              <h3> Sort By: </h3>
-              <div class="sort-options">
-                  <select id="sortDropdown">
-                    <option value="sort=new">New</option>
-                    <option value="sort=top">Top</option>
-                    <option value="featured=true">Featured</option>
-                    <option value="sort=trending">Trending</option>
-                  </select>
-                </div>
-              </div>
-          </div>
-        </div>
+<section class="page-content community-section workshop-section">
+  <div class="community-section-guides" aria-hidden="true">
+    <svg preserveAspectRatio="none">
+      <defs>
+        <g id="community-section-crosshair">
+          <line x1="-4" y1="0" x2="4" y2="0"></line>
+          <line x1="0" y1="-6" x2="0" y2="6"></line>
+        </g>
+      </defs>
+    </svg>
+  </div>
+
+  <div class="page-container community-section-inner workshop-section-inner">
+    <div class="workshop-section-header">
+      <div class="workshop-section-copy">
+        <h1 class="workshop-section-title">WORKSHOP</h1>
       </div>
 
-      <div class="page-content margined">
-        <!-- Display posts -->
-        {% if posts %}
-
-          <div class="post-grid">
-
-            {% import 'macros/post_card.html' as post_macros %}
-
-            {% for post in posts %}
-              {{ post_macros.render_post(post, show_user=True, show_feature_star=True) }}
-            {% endfor %}
-
-          </div>
-
-        {% else %}
-
-          <p>No posts found!</p>
-
-        {% endif %}
-
-        {% if pagination.pages > 1 %}
-          <div class="pagination">
-            {% if pagination.has_prev %}
-              <a href="{{ url_for('workshop.workshop', page=pagination.prev_num, sort=sort_option, featured=request.args.get('featured')) }}">Previous</a>
-            {% endif %}
-
-            Page {{ pagination.page }} of {{ pagination.pages }}
-
-            {% if pagination.has_next %}
-              <a href="{{ url_for('workshop.workshop', page=pagination.next_num, sort=sort_option, featured=request.args.get('featured')) }}">Next</a>
-            {% endif %}
-          </div>
-        {% endif %}
-
-      </div>
-
-      <br>
-
+      <a class="workshop-upload-cta" href="{{ url_for('workshop.workshop_upload') }}">UPLOAD A PACKAGE &rarr;</a>
     </div>
 
-    <!-- Footer -->
-    {% include 'footer.html' %}
+    <div class="community-section-tabs" role="tablist" aria-label="Workshop filters">
+      <a
+        class="community-section-tab{% if active_filter == 'recent' %} is-active{% endif %}"
+        aria-selected="{{ 'true' if active_filter == 'recent' else 'false' }}"
+        href="{{ filter_links.recent }}"
+      >RECENT</a>
+      <a
+        class="community-section-tab{% if active_filter == 'top' %} is-active{% endif %}"
+        aria-selected="{{ 'true' if active_filter == 'top' else 'false' }}"
+        href="{{ filter_links.top }}"
+      >TOP</a>
+      <a
+        class="community-section-tab{% if active_filter == 'featured' %} is-active{% endif %}"
+        aria-selected="{{ 'true' if active_filter == 'featured' else 'false' }}"
+        href="{{ filter_links.featured }}"
+      >FEATURED</a>
+      <a
+        class="community-section-tab{% if active_filter == 'trending' %} is-active{% endif %}"
+        aria-selected="{{ 'true' if active_filter == 'trending' else 'false' }}"
+        href="{{ filter_links.trending }}"
+      >TRENDING</a>
+    </div>
 
-    <script src="/static/js/gaugePreview.js" type="module"></script>
+    <div class="workshop-post-grid">
+      {% if posts %}
+        {% for post in posts %}
+          {{ post_macros.render_post(post, variant='community') }}
+        {% endfor %}
+      {% else %}
+        <p>No posts found!</p>
+      {% endif %}
+    </div>
 
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        document.querySelectorAll('.like-form, .favorite-form').forEach(form => {
-          form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+    {% if pagination.pages > 1 %}
+      <div class="workshop-pagination">
+        {% if pagination.has_prev %}
+          <a href="{{ prev_page_url }}">Previous</a>
+        {% endif %}
 
-            const postId = form.dataset.id;
-            const action = form.dataset.action; // "like" or "favorite"
-            const url = `/workshop/${postId}/${action}`;
+        <span>Page {{ pagination.page }} of {{ pagination.pages }}</span>
 
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: {
-                'X-Requested-With': 'XMLHttpRequest' // Optional: helps distinguish AJAX
-              }
-            });
+        {% if pagination.has_next %}
+          <a href="{{ next_page_url }}">Next</a>
+        {% endif %}
+      </div>
+    {% endif %}
+  </div>
+</section>
+{% endblock %}
 
-            if (response.ok) {
-              const data = await response.json();
-              console.log(`Post ${postId} ${action} response:`, data);
-
-              // You can now update the UI, for example toggle icon
-              const icon = form.querySelector('img');
-              if (data.liked !== undefined) {
-                icon.src = data.liked ? '/static/images/liked.png' : '/static/images/not_liked.png';
-              } else if (data.favorited !== undefined) {
-                icon.src = data.favorited ? '/static/images/favorited.png' : '/static/images/not_favorited.png';
-              }
-
-            } else {
-              console.error(`Failed to ${action} post ${postId}`);
-            }
-          });
-        });
-      });
-    </script>
-
-    <script>
-      window.addEventListener('DOMContentLoaded', () => {
-        const params = new URLSearchParams(window.location.search);
-    
-        const sortDropdown = document.getElementById('sortDropdown');
-      const activeParams = new Set();
-      for (const [key, value] of params.entries()) {
-        activeParams.add(`${key}=${value}`);
-      }
-
-        // Match sort dropdown based on full key=value
-        for (const option of sortDropdown.options) {
-          if (activeParams.has(option.value)) {
-            option.selected = true;
-            break;
-          }
-        }
-
-        function updateURL() {
-          const sortValue = sortDropdown.value; // e.g., "sort=new"
-          const featuredValue = sortValue === "featured=true" ? "featured=true" : "";
-          const queryParams = featuredValue ? [featuredValue].join("&") : sortValue;
-
-          // Navigate to the new URL
-          window.location.href = "/workshop?" + queryParams;
-        }
-
-        sortDropdown.addEventListener("change", updateURL);
-      });
-    </script>
-  </body> 
-  
-</html>
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/gaugePreview.js') }}" type="module"></script>
+<script type="module" src="{{ url_for('static', filename='js/communitySectionGuides.js') }}"></script>
+{% endblock %}

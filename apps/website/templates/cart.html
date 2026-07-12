@@ -1,70 +1,65 @@
-<html> 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/css/style.css" /> 
-        <link rel="stylesheet" href="/static/css/cart.css" /> 
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-        <link rel="stylesheet" href="/static/css/navbar.css" /> 
-        <link rel="stylesheet" href="/static/css/footer.css" /> 
+{% block title %}Cart{% endblock %}
 
-        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
-        <title>Cart</title>
-    </head>
-    <body> 
-        {% include 'navbar.html' %}
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}" />
+{% endblock %}
 
-        <div class="page">
-            <div class="page-header">
-                <div class="page-header-content margined">
-                    <div class="title">
-                        <h1>CART</h1>
-                    </div>
+{% block content %}
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-content margined">
+                <div class="title">
+                    <h1>CART</h1>
                 </div>
             </div>
+        </div>
 
-            <div class="page-content margined">
+        <div class="page-content margined">
             {% if cart and cart.items %}
                 <div class="cart-items">
-                {% for item in cart.items %}
-                    <div class="cart-item">
-                        <div class="product-image-container">
-                            <img src="{{ item.product.image_url }}" />
-                        </div>
-
-                        <div class="product-info-container">
-                            <div style="display: flex; justify-content: space-between;">
-                                <h2>{{ item.product.name }}</h2>
-                                <h2>${{ '%.2f'|format(item.unit_price()) }}</h2>
+                    {% for item in cart.items %}
+                        <div class="cart-item">
+                            <div class="product-image-container">
+                                <img src="{{ item.product.image_url }}" />
                             </div>
 
-                            <div style="display: flex; justify-content: space-between;">
-                                <div class="item-quantity-widget">
-                                    <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
-                                        <input type="hidden" name="action" value="decrement">
-                                        <button type="submit">-</button>
-                                    </form>
-
-                                    <span>{{ item.quantity }}</span>
-
-                                    <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
-                                        <input type="hidden" name="action" value="increment">
-                                        <button type="submit">+</button>
-                                    </form>
+                            <div class="product-info-container">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <h2>{{ item.product.name }}</h2>
+                                    <h2>${{ '%.2f'|format(item.unit_price()) }}</h2>
                                 </div>
 
-                                <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
-                                    <input type="hidden" name="action" value="remove">
-                                    <button type="submit" style="background: none; border: none;">
-                                        <img src="/static/images/trash.png" style="height: 25px; aspect-ratio: 1;">
-                                    </button>
-                                </form>
+                                <div style="display: flex; justify-content: space-between;">
+                                    <div class="item-quantity-widget">
+                                        <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                            <input type="hidden" name="action" value="decrement">
+                                            <button type="submit">-</button>
+                                        </form>
+
+                                        <span>{{ item.quantity }}</span>
+
+                                        <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                            <input type="hidden" name="action" value="increment">
+                                            <button type="submit">+</button>
+                                        </form>
+                                    </div>
+
+                                    <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                        <input type="hidden" name="action" value="remove">
+                                        <button type="submit" style="background: none; border: none;">
+                                            <img src="/static/images/trash.png" style="height: 25px; aspect-ratio: 1;">
+                                        </button>
+                                    </form>
+                                </div>
                             </div>
                         </div>
-                    </div>
 
-                    <hr style="width: 100%;">
-                {% endfor %}
+                        <hr style="width: 100%;">
+                    {% endfor %}
                 </div>
                 <div style="display: flex; justify-content: end;">
                     <div style="text-align: right;">
@@ -78,10 +73,6 @@
             {% else %}
                 <p>Your cart is empty!</p>
             {% endif %}
-            </div>
         </div>
-
-        {% include 'footer.html' %}
-    </body> 
-
-</html>
+    </div>
+{% endblock %}

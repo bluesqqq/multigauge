@@ -1,33 +1,23 @@
-<html> 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/css/style.css" /> 
-        <link rel="stylesheet" href="/static/css/cart.css" /> 
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-        <link rel="stylesheet" href="/static/css/navbar.css" /> 
-        <link rel="stylesheet" href="/static/css/footer.css" /> 
+{% block title %}Admin{% endblock %}
 
-        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
-        <title>Workshop</title>
-    </head>
-    <body> 
-        <!-- Navigation bar -->
-        {% include 'navbar.html' %}
+{% block styles %}
+    <style>
+        .admin-page {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding: 32px 0;
+        }
+    </style>
+{% endblock %}
 
-        <div class="page">
-            <div class="page-header">
-                <div class = "page-header-content margined">
-                    <!-- Title and action-->
-                    <div class="title">
-                        <h1>ADMIN</h1>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        {% include 'footer.html' %}
-    </body> 
-
-</html>
+{% block content %}
+    <div class="page-content margined admin-page">
+        <h1>ADMIN</h1>
+        <p>Moderator tools live here.</p>
+        <a href="{{ url_for('admin.orders') }}">View orders</a>
+    </div>
+{% endblock %}

@@ -1,68 +1,71 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Editor</title>
-    <link href="https://fonts.googleapis.com/css?family=Inter" rel="stylesheet" />
+{% extends 'base.html' %}
+{% set show_navbar = false %}
+{% set show_footer = false %}
+
+{% block title %}Editor{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter" />
     <link rel="stylesheet" href="/static/css/new-editor.css" />
-  </head>
-  <body>
+{% endblock %}
+
+{% block content %}
     <div id="topbar">
-      <div id="menuWrap">
-        <button id="menuButton" class="toolbarButton" type="button">Menu</button>
-      </div>
-      <div id="historyWrap">
-        <button id="historyButton" class="toolbarButton" type="button">History</button>
-        <div id="historyPanel" class="hidden" aria-label="History">
-          <div id="historyList" class="historyList"></div>
+        <div id="menuWrap">
+            <button id="menuButton" class="toolbarButton" type="button">Menu</button>
         </div>
-      </div>
-      <button id="undoButton" class="toolbarButton" type="button">Undo</button>
-      <button id="redoButton" class="toolbarButton" type="button">Redo</button>
-      <button id="resetViewButton" class="toolbarButton" type="button">Reset View</button>
-      <input id="openInput" type="file" accept=".gauge,.json,application/json" class="hidden" />
-      <div id="status" class="toolbarStatus">Loading editor...</div>
+        <div id="historyWrap">
+            <button id="historyButton" class="toolbarButton" type="button">History</button>
+            <div id="historyPanel" class="hidden" aria-label="History">
+                <div id="historyList" class="historyList"></div>
+            </div>
+        </div>
+        <button id="undoButton" class="toolbarButton" type="button">Undo</button>
+        <button id="redoButton" class="toolbarButton" type="button">Redo</button>
+        <button id="resetViewButton" class="toolbarButton" type="button">Reset View</button>
+        <input id="openInput" type="file" accept=".gauge,.json,application/json" class="hidden" />
+        <div id="status" class="toolbarStatus">Loading editor...</div>
     </div>
 
     <div id="app">
-      <aside id="hierarchyPanel" class="panel">
-        <div class="panelHeader">Hierarchy</div>
-        <div id="hierarchy" class="panelBody"></div>
-      </aside>
+        <aside id="hierarchyPanel" class="panel">
+            <div class="panelHeader">Hierarchy</div>
+            <div id="hierarchy" class="panelBody"></div>
+        </aside>
 
-      <main id="viewPanel" class="panel">
-        <div class="panelHeader panelHeaderStack">
-          <span>Gauge View</span>
-          <div class="viewHeaderControls">
-            <div class="viewControlGroup">
-              <label class="viewField">
-                <span>Width</span>
-                <input id="viewRenderWidth" type="number" min="1" step="1" value="250" />
-              </label>
-              <label class="viewField">
-                <span>Height</span>
-                <input id="viewRenderHeight" type="number" min="1" step="1" value="240" />
-              </label>
-              <label class="viewField viewFieldInline">
-                <input id="viewCircular" type="checkbox" />
-                <span>Circular</span>
-              </label>
+        <main id="viewPanel" class="panel">
+            <div class="panelHeader panelHeaderStack">
+                <span>Gauge View</span>
+                <div class="viewHeaderControls">
+                    <div class="viewControlGroup">
+                        <label class="viewField">
+                            <span>Width</span>
+                            <input id="viewRenderWidth" type="number" min="1" step="1" value="250" />
+                        </label>
+                        <label class="viewField">
+                            <span>Height</span>
+                            <input id="viewRenderHeight" type="number" min="1" step="1" value="240" />
+                        </label>
+                        <label class="viewField viewFieldInline">
+                            <input id="viewCircular" type="checkbox" />
+                            <span>Circular</span>
+                        </label>
+                    </div>
+                </div>
             </div>
-          </div>
-        </div>
-        <div id="viewViewport">
-          <div id="viewWorkspace"></div>
-        </div>
-      </main>
+            <div id="viewViewport">
+                <div id="viewWorkspace"></div>
+            </div>
+        </main>
 
-      <aside id="propertiesPanel" class="panel">
-        <div class="panelHeader">Properties</div>
-        <div id="properties" class="panelBody"></div>
-      </aside>
+        <aside id="propertiesPanel" class="panel">
+            <div class="panelHeader">Properties</div>
+            <div id="properties" class="panelBody"></div>
+        </aside>
     </div>
+{% endblock %}
 
+{% block scripts %}
     <script type="module" src="/multigauge-web/js/pageRenderer.js"></script>
     <script type="module" src="/static/js/editor/main.js"></script>
-  </body>
-</html>
+{% endblock %}

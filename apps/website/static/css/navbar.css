@@ -93,8 +93,19 @@
     display: block;
 }
 
+.navbar-background-spacer {
+    width: 100%;
+    height: var(--navbar-height);
+    flex: 0 0 var(--navbar-height);
+    background-color: var(--color-text);
+}
+
 /* Mobile */
 @media (max-width: 768px) {
+    :root {
+        --navbar-height: 64px;
+    }
+
     .navbar {
         height: 64px;
     }

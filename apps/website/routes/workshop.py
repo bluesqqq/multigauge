@@ -1,15 +1,17 @@
 import json
+import hashlib
 import re
 
 from flask import Blueprint, request, render_template, redirect, url_for, jsonify, flash, current_app
 from flask_login import login_required, current_user
 from sqlalchemy.orm import selectinload
 
-from models import db, Post, PostComment, PostFeature, PostLike, Package
+from models import db, Post, PostComment, PostFeature, PostDownload, Package
+from routes.feed_utils import build_post_query, decorate_post_feed, normalize_sort_option
 
 workshop_bp = Blueprint('workshop', __name__)
 
-POSTS_PER_PAGE = 12
+POSTS_PER_PAGE = 20
 
 
 def _safe_filename(value, fallback="package"):
@@ -51,51 +53,65 @@ def _validate_package_payload(package_data):
     return None
 
 
-def _decorate_posts(posts):
-    for post in posts:
-        post.user_username = post.user.username if post.user else "Unknown"
-        post.liked = False
-        post.favorited = False
-        if current_user.is_authenticated:
-            post.liked = current_user.liked_post(post)
-            post.favorited = current_user.favorited_post(post)
-
-
 @workshop_bp.route("/workshop/")
 def workshop():
-    sort_option = request.args.get('sort', 'recent')
-    featured = request.args.get('featured', 'false') == 'true'
+    requested_sort = normalize_sort_option(request.args.get('sort', 'recent'))
+    featured = request.args.get('featured', 'false').lower() == 'true'
+    featured_active = featured or requested_sort == 'featured'
     user_id = request.args.get('user', type=int)
     page = request.args.get('page', 1, type=int)
 
-    query = Post.query.options(selectinload(Post.user), selectinload(Post.package))
-
-    if featured:
-        query = query.filter(Post.features.any())
-
-    if user_id is not None:
-        query = query.filter(Post.posted_by == user_id)
-
-    if sort_option == 'top':
-        query = (
-            query.outerjoin(Post.likes)
-            .group_by(Post.id)
-            .order_by(db.func.count(PostLike.id).desc(), Post.posted_at.desc())
-        )
-    elif sort_option == 'trending':
-        query = (
-            query.outerjoin(Post.likes)
-            .group_by(Post.id)
-            .order_by(db.func.count(PostLike.id).desc(), Post.posted_at.desc())
-        )
-    else:
-        query = query.order_by(Post.posted_at.desc())
+    query, sort_option = build_post_query(requested_sort, featured=featured, user_id=user_id)
 
     pagination = query.paginate(page=page, per_page=POSTS_PER_PAGE, error_out=False)
     posts = pagination.items
-    _decorate_posts(posts)
+    decorate_post_feed(posts, include_user_state=False)
 
-    return render_template('workshop.html', posts=posts, pagination=pagination, sort_option=sort_option)
+    active_filter = 'featured' if featured_active else sort_option
+    feed_kwargs = {"user": user_id} if user_id is not None else {}
+    filter_links = {
+        "recent": url_for("workshop.workshop", sort="recent", **feed_kwargs),
+        "top": url_for("workshop.workshop", sort="top", **feed_kwargs),
+        "featured": url_for("workshop.workshop", featured="true", **feed_kwargs),
+        "trending": url_for("workshop.workshop", sort="trending", **feed_kwargs),
+    }
+
+    page_kwargs = {"user": user_id} if user_id is not None else {}
+    if active_filter == "featured":
+        prev_page_url = (
+            url_for("workshop.workshop", page=pagination.prev_num, featured="true", **page_kwargs)
+            if pagination.has_prev
+            else None
+        )
+        next_page_url = (
+            url_for("workshop.workshop", page=pagination.next_num, featured="true", **page_kwargs)
+            if pagination.has_next
+            else None
+        )
+    else:
+        prev_page_url = (
+            url_for("workshop.workshop", page=pagination.prev_num, sort=sort_option, **page_kwargs)
+            if pagination.has_prev
+            else None
+        )
+        next_page_url = (
+            url_for("workshop.workshop", page=pagination.next_num, sort=sort_option, **page_kwargs)
+            if pagination.has_next
+            else None
+        )
+
+    return render_template(
+        'workshop.html',
+        posts=posts,
+        pagination=pagination,
+        sort_option=sort_option,
+        active_filter=active_filter,
+        user_id=user_id,
+        filter_links=filter_links,
+        prev_page_url=prev_page_url,
+        next_page_url=next_page_url,
+        navbar_background=True,
+    )
 
 
 @workshop_bp.route("/workshop/upload", methods=['GET', 'POST'])
@@ -127,7 +143,10 @@ def workshop_upload():
             flash(validation_error, "danger")
             return render_template('upload-gaugeface.html'), 400
 
-        package = Package(package_json=file_content)
+        package = Package(
+            package_json=file_content,
+            package_hash=hashlib.sha256(file_content.encode("utf-8")).hexdigest(),
+        )
         new_post = Post(
             title=title,
             description=description,
@@ -175,6 +194,13 @@ def download_package(post_id):
     post = Post.query.options(selectinload(Post.package)).filter_by(id=post_id).first()
     if not post or not post.package:
         return "Package not found!", 404
+
+    download = PostDownload(
+        post_id=post.id,
+        user_id=current_user.id if current_user.is_authenticated else None,
+    )
+    db.session.add(download)
+    db.session.commit()
 
     response = current_app.response_class(
         response=post.package.package_json,

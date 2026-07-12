@@ -1,33 +1,27 @@
-<html> 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/css/style.css" /> 
-        <link rel="stylesheet" href="/static/css/product.css" /> 
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-        <link rel="stylesheet" href="/static/css/navbar.css" />
-        <link rel="stylesheet" href="/static/css/footer.css" />
+{% block title %}Products{% endblock %}
 
-        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
-        <title>Workshop</title>
-    </head>
-    <body> 
-        <!-- Navigation bar -->
-        {% include 'navbar.html' %}
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/product.css') }}" />
+{% endblock %}
 
-        <div class="page">
-            <div class="page-header">
-                <div class = "page-header-content margined">
-                    <div class="title">
-                        <h1>PRODUCTS</h1>
-                    </div>
+{% block content %}
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-content margined">
+                <div class="title">
+                    <h1>PRODUCTS</h1>
                 </div>
             </div>
+        </div>
 
-            <div class="page-content margined">
-                {% if products %}
-                    <div class="product-grid">
-                        {% for product in products %}
+        <div class="page-content margined">
+            {% if products %}
+                <div class="product-grid">
+                    {% for product in products %}
                         <a href="/products/{{ product.slug }}">
                             <div class="product">
                                 <div class="product-image-container">
@@ -44,19 +38,19 @@
 
                                 <div class="product-info-container">
                                     <div class="product-info">
-                                        <h2>{{product.name}}</h2>
+                                        <h2>{{ product.name }}</h2>
                                         <div class="price-row">
                                             {% if product.is_discounted() %}
                                                 <s><h4 style="font-weight: normal;">${{ product.price }}</h4></s>
                                                 <h4>${{ product.discount_price }}</h4>
                                             {% else %}
-                                                <h4>${{ product.price }}</h3>
+                                                <h4>${{ product.price }}</h4>
                                             {% endif %}
                                             {% if product.is_low_stock() %}
-                                                <p class="low-stock-warning">Only {{product.stock}} left!</p>            
+                                                <p class="low-stock-warning">Only {{ product.stock }} left!</p>
                                             {% endif %}
                                         </div>
-                                        <h4>{{product.description}}</h4>
+                                        <h4>{{ product.description }}</h4>
                                     </div>
 
                                     <form action="{{ url_for('cart.add_to_cart', product_id=product.id) }}" method="POST">
@@ -65,19 +59,11 @@
                                 </div>
                             </div>
                         </a>
-                        {% endfor %}
-                    </div>
-                {% else %}
-                    <p>No products found, come back later!</p>
-                {% endif %}
-            </div>
-
-            <br>
-
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p>No products found, come back later!</p>
+            {% endif %}
         </div>
-
-        <!-- Footer -->
-        {% include 'footer.html' %}
-    </body> 
-
-</html>
+    </div>
+{% endblock %}

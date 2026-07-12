@@ -1,26 +1,19 @@
-<html> 
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/static/css/style.css" /> 
-        <link rel="stylesheet" href="/static/css/cart.css" /> 
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-        <link rel="stylesheet" href="/static/css/navbar.css" /> 
-        <link rel="stylesheet" href="/static/css/footer.css" /> 
+{% block title %}Orders{% endblock %}
 
-        <link href='https://fonts.googleapis.com/css?family=Inter' rel='stylesheet'>
-        <title>Orders</title>
-    </head>
-    <body> 
-        <!-- Navigation bar -->
-        {% include 'navbar.html' %}
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cart.css') }}" />
+{% endblock %}
 
-        <div class="page">
-            <div class="page-header">
-                <div class = "page-header-content margined">
-                    <div class="title">
-                        <h1>ORDERS</h1>
-                    </div>
+{% block content %}
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-content margined">
+                <div class="title">
+                    <h1>ORDERS</h1>
                 </div>
             </div>
         </div>
@@ -36,9 +29,5 @@
                 </a>
             {% endfor %}
         </div>
-
-        <!-- Footer -->
-        {% include 'footer.html' %}
-    </body> 
-
-</html>
+    </div>
+{% endblock %}

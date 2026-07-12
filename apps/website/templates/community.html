@@ -1,15 +1,21 @@
-<html> 
-  <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/static/css/navbar.css" /> 
-    <link rel="stylesheet" href="/static/css/style.css" /> 
-    <title>Community</title>
-  </head>
-  <body> 
-    <!-- Navigation bar -->
-    {% include 'navbar.html' %}
+{% extends 'base.html' %}
+{% set navbar_background = true %}
 
-    <a href="/workshop">Workshop</a>
-  </body> 
-</html> 
+{% block title %}Community{% endblock %}
+
+{% block styles %}
+    <style>
+        .community-page {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40vh;
+        }
+    </style>
+{% endblock %}
+
+{% block content %}
+    <div class="page-content community-page">
+        <a href="/workshop">Workshop</a>
+    </div>
+{% endblock %}

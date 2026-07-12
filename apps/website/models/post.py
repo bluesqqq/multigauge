@@ -53,6 +53,9 @@ class Post(db.Model):
     def total_features(self):
         return len(self.features)
 
+    def total_downloads(self):
+        return len(self.downloads)
+
     def is_featured(self):
         return len(self.features) > 0
 
@@ -161,6 +164,27 @@ class PostFeature(db.Model):
 
     def __repr__(self):
         return f"<PostFeature post_id={self.post_id}, moderator_id={self.moderator_id}>"
+
+
+class PostDownload(db.Model):
+    __tablename__ = "post_downloads"
+
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    post_id = db.Column(db.Integer, db.ForeignKey("posts.id"), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow, nullable=False)
+
+    post = db.relationship("Post", backref=db.backref("downloads", lazy=True))
+    user = db.relationship("User", backref=db.backref("post_downloads", lazy=True))
+
+    __table_args__ = (
+        db.Index("ix_post_downloads_post_id", "post_id"),
+        db.Index("ix_post_downloads_user_id", "user_id"),
+        db.Index("ix_post_downloads_created_at", "created_at"),
+    )
+
+    def __repr__(self):
+        return f"<PostDownload post_id={self.post_id}, user_id={self.user_id}>"
 
 
 class Package(db.Model):

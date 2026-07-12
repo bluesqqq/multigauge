@@ -4,7 +4,7 @@ from flask_bcrypt import Bcrypt
 db = SQLAlchemy()
 bcrypt = Bcrypt()
 
-from .post import Post, Package, PostLike, PostComment, PostFavorite, PostFeature
+from .post import Post, Package, PostLike, PostComment, PostFavorite, PostFeature, PostDownload
 from .user import User
 from .cart import Cart, CartItem
 from .subscriber import EmailSubscribers

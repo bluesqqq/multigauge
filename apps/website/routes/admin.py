@@ -11,7 +11,7 @@ def admin_dashboard():
     # Check if the user is a moderator
     if not current_user.is_moderator():
         flash("You do not have permission to view this page.", "danger")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.home'))
     
     return render_template("admin.html")
 
@@ -21,7 +21,7 @@ def orders():
     # Check if the user is a moderator
     if not current_user.is_moderator():
         flash("You do not have permission to view this page.", "danger")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.home'))
     
     orders = Order.query.all()
     
@@ -34,7 +34,7 @@ def view_order(order_id):
     # Check if the user is a moderator
     if not current_user.is_moderator():
         flash("You do not have permission to view this page.", "danger")
-        return redirect(url_for('main.index'))
+        return redirect(url_for('main.home'))
     
     order = Order.query.get(order_id)
     
