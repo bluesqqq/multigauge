@@ -40,86 +40,85 @@ Below is a list of all routes on the website and a brief description of their pu
 ## admin
 
 - ### GET /admin
-Administrative dashboard showing operational metrics and items requiring attention.
+  Administrative dashboard showing operational metrics and items requiring attention.
 
 - ### GET /admin/analytics
-
-Analytics for commerce, Workshop activity, editor usage, devices, and support.
+  Analytics for commerce, Workshop activity, editor usage, devices, and support.
 
 - ### GET /admin/audit-log
-Immutable history of administrative actions and configuration changes.
+  Immutable history of administrative actions and configuration changes.
 
 - ### GET /admin/comments
-Moderation interface for Workshop comments.
+  Moderation interface for Workshop comments.
 
 - ### GET /admin/compatibility
-Management interface for vehicle, sensor, adapter, and accessory compatibility records.
+  Management interface for vehicle, sensor, adapter, and accessory compatibility records.
 
 - ### GET /admin/content
-Management interface for documentation, FAQs, announcements, roadmap entries, and changelogs.
+  Management interface for documentation, FAQs, announcements, roadmap entries, and changelogs.
 
 - ### GET /admin/devices
-Searchable table of registered and manufactured devices.
+  Searchable table of registered and manufactured devices.
 
 - ### GET /admin/devices/<device_id>
-Device ownership, hardware revision, firmware history, warranty, and diagnostic details.
+  Device ownership, hardware revision, firmware history, warranty, and diagnostic details.
 
 - ### GET /admin/discounts
-Management interface for coupons, promotions, automatic discounts, and free-shipping rules.
+  Management interface for coupons, promotions, automatic discounts, and free-shipping rules.
 
 - ### GET /admin/firmware
-Firmware release list with channels, rollout status, adoption, and failure metrics.
+  Firmware release list with channels, rollout status, adoption, and failure metrics.
 
 - ### GET /admin/firmware/<release_id>
-Firmware release details, files, compatibility, release notes, and rollout controls.
+  Firmware release details, files, compatibility, release notes, and rollout controls.
 
 - ### GET /admin/inventory
-Inventory overview showing stock, reserved units, incoming units, damage, and adjustments.
+  Inventory overview showing stock, reserved units, incoming units, damage, and adjustments.
 
 - ### GET /admin/orders
-Searchable order-management table.
+  Searchable order-management table.
 
 - ### GET /admin/orders/<order_id>
-Order details, payment history, fulfillment timeline, tracking, refunds, and internal notes.
+  Order details, payment history, fulfillment timeline, tracking, refunds, and internal notes.
 
 - ### GET /admin/posts
-Management and moderation interface for Workshop posts.
+  Management and moderation interface for Workshop posts.
 
 - ### GET /admin/posts/<post_id>
-Detailed post moderation page with metadata, files, reports, revisions, and actions.
+  Detailed post moderation page with metadata, files, reports, revisions, and actions.
 
 - ### GET /admin/products
-Product catalog management interface.
+  Product catalog management interface.
 
 - ### GET /admin/products/<product_id>
-Product editing page for pricing, inventory, media, specifications, shipping, and SEO.
+  Product editing page for pricing, inventory, media, specifications, shipping, and SEO.
 
 - ### GET /admin/reports
-Central queue for reported posts, comments, users, and files.
+  Central queue for reported posts, comments, users, and files.
 
 - ### GET /admin/returns
-Return request queue with approval, inspection, restocking, and refund controls.
+  Return request queue with approval, inspection, restocking, and refund controls.
 
 - ### GET /admin/returns/<return_id>
-Return request details, inspection results, refund status, and administrative actions.
+  Return request details, inspection results, refund status, and administrative actions.
 
 - ### GET /admin/settings
-Administrative settings for the store, Workshop, editor, firmware, email, and security.
+  Administrative settings for the store, Workshop, editor, firmware, email, and security.
 
 - ### GET /admin/support
-Support ticket queue with assignment, status, priority, and category filters.
+  Support ticket queue with assignment, status, priority, and category filters.
 
 - ### GET /admin/support/<ticket_id>
-Support ticket conversation, attachments, linked orders, devices, and internal notes.
+  Support ticket conversation, attachments, linked orders, devices, and internal notes.
 
 - ### GET /admin/users
-Searchable user table with account, commerce, moderation, and device information.
+  Searchable user table with account, commerce, moderation, and device information.
 
 - ### GET /admin/users/<user_id>
-Detailed user page with account status, orders, posts, devices, support history, and notes.
+  Detailed user page with account status, orders, posts, devices, support history, and notes.
 
 - ### GET /admin/warranty
-Warranty claim queue with diagnosis, approval, replacement, repair, and rejection controls.
+  Warranty claim queue with diagnosis, approval, replacement, repair, and rejection controls.
 
 - ### GET /admin/warranty/<claim_id>
   Warranty claim details, diagnostics, evidence, repair, replacement, and resolution history.
