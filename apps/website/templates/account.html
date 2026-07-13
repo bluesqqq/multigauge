@@ -7,7 +7,7 @@
     <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
         <div class="secondary-page-inner">
             {% import 'macros/secondary.html' as secondary_macros %}
-            {{ secondary_macros.render_page_header('ACCOUNT', 'DASHBOARD', 'Keep an eye on your profile, uploads, and order history from one place.') }}
+            {{ secondary_macros.render_page_header('DASHBOARD') }}
 
             {% import 'macros/account_nav.html' as account_nav %}
             {{ account_nav.render_account_nav('account') }}
@@ -28,7 +28,6 @@
                     {% if profile.bio %}
                         <p class="account-hero-subtitle">{{ profile.bio }}</p>
                     {% endif %}
-                    <span class="account-accent-swatch">Accent color</span>
                 </div>
             </div>
 

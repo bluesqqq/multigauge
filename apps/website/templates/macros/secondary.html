@@ -1,16 +1,12 @@
-{% macro render_page_header(eyebrow, title, copy=None, title_tag="h1", title_style=None) %}
+{% macro render_page_header(title, title_tag="h1", title_style=None) %}
 <div class="secondary-page-header">
     <div>
-        <p class="secondary-page-eyebrow">{{ eyebrow }}</p>
         {% if title_tag == "h2" %}
             <h2 class="secondary-page-title"{% if title_style %} style="{{ title_style }}"{% endif %}>{{ title }}</h2>
         {% else %}
             <h1 class="secondary-page-title"{% if title_style %} style="{{ title_style }}"{% endif %}>{{ title }}</h1>
         {% endif %}
     </div>
-    {% if copy %}
-        <p class="secondary-page-copy">{{ copy }}</p>
-    {% endif %}
 </div>
 {% endmacro %}
 

@@ -11,7 +11,7 @@
     <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
         <div class="secondary-page-inner">
             {% import 'macros/secondary.html' as secondary_macros %}
-            {{ secondary_macros.render_page_header('PROFILE', profile.display_name or user.username, 'Public profile for @' ~ user.username ~ ' and the latest gauges they have shared.', title_style='text-transform: none;') }}
+            {{ secondary_macros.render_page_header(profile.display_name or user.username, title_style='text-transform: none;') }}
 
             <div class="secondary-panel account-hero">
                 <div class="account-avatar">
@@ -32,7 +32,6 @@
                     {% if profile.bio %}
                         <p class="account-hero-subtitle">{{ profile.bio }}</p>
                     {% endif %}
-                    <span class="account-accent-swatch">Accent color</span>
                 </div>
             </div>
 

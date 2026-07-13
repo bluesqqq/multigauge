@@ -1,6 +1,10 @@
+from pathlib import Path
+from uuid import uuid4
+
 from flask import Blueprint, flash, redirect, render_template, request, url_for
 from flask_login import current_user, login_required, logout_user
 from sqlalchemy.orm import selectinload
+from werkzeug.utils import secure_filename
 
 from forms import AccountSettingsForm, ChangePasswordForm, DangerActionForm
 from models import (
@@ -19,6 +23,8 @@ from models import (
 from models.profile import ensure_user_profile
 
 account_bp = Blueprint("account", __name__)
+AVATAR_UPLOAD_DIR = Path("static") / "uploads" / "avatars"
+AVATAR_URL_PREFIX = "/static/uploads/avatars"
 
 
 def _recent_posts_for_user(user_id, limit=4):
@@ -74,6 +80,22 @@ def _delete_user_cart(user_id):
         db.session.delete(cart)
 
 
+def _save_avatar_upload(file_storage):
+    if not file_storage or not file_storage.filename:
+        return None
+
+    original_name = secure_filename(file_storage.filename)
+    suffix = Path(original_name).suffix.lower()
+    if suffix not in {".jpg", ".jpeg", ".png", ".gif", ".webp"}:
+        return None
+
+    AVATAR_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    file_name = f"{uuid4().hex}{suffix}"
+    file_path = AVATAR_UPLOAD_DIR / file_name
+    file_storage.save(file_path)
+    return f"{AVATAR_URL_PREFIX}/{file_name}"
+
+
 @account_bp.route("/account")
 @login_required
 def dashboard():
@@ -121,7 +143,13 @@ def settings():
             current_user.username = profile_form.username.data.strip()
             profile.display_name = profile_form.display_name.data.strip() or None
             profile.bio = profile_form.bio.data.strip() or None
-            profile.avatar_url = profile_form.avatar_url.data.strip() or None
+            avatar_upload = request.files.get("avatar_file")
+            if avatar_upload and avatar_upload.filename:
+                avatar_url = _save_avatar_upload(avatar_upload)
+                if not avatar_url:
+                    flash("Please upload a valid image file for your profile picture.", "danger")
+                    return redirect(url_for("account.settings"))
+                profile.avatar_url = avatar_url
             profile.accent_color = profile_form.accent_color.data
             profile.email_notifications = bool(profile_form.email_notifications.data)
             profile.order_updates = bool(profile_form.order_updates.data)
@@ -161,7 +189,6 @@ def settings():
             return redirect(url_for("auth.login"))
 
     if request.method == "GET":
-        profile_form.avatar_url.data = profile.avatar_url or ""
         profile_form.display_name.data = profile.display_name or ""
         profile_form.username.data = current_user.username
         profile_form.bio.data = profile.bio or ""

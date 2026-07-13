@@ -7,7 +7,7 @@
     <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
         <div class="secondary-page-inner">
             {% import 'macros/secondary.html' as secondary_macros %}
-            {{ secondary_macros.render_page_header('ACCOUNT', 'SETTINGS', 'Update your profile, preferences, and security settings.') }}
+            {{ secondary_macros.render_page_header('SETTINGS') }}
 
             {% import 'macros/account_nav.html' as account_nav %}
             {{ account_nav.render_account_nav('settings') }}
@@ -19,15 +19,16 @@
                         <h2 class="account-section-title">Profile details</h2>
                     </div>
 
-                    <form method="POST" class="account-form">
+                    <form method="POST" class="account-form" enctype="multipart/form-data">
                         {{ profile_form.hidden_tag() }}
                         <input type="hidden" name="action" value="profile">
 
                         <div class="account-form-grid">
                             <div class="account-field account-field-full">
-                                <label for="{{ profile_form.avatar_url.id }}">Profile Picture (Avatar)</label>
-                                {{ profile_form.avatar_url() }}
-                                {% for error in profile_form.avatar_url.errors %}
+                                <label for="{{ profile_form.avatar_file.id }}">Profile Picture (Avatar)</label>
+                                {{ profile_form.avatar_file() }}
+                                <p class="account-section-copy">Upload a square image for the cleanest fit. PNG, JPG, GIF, and WEBP are supported.</p>
+                                {% for error in profile_form.avatar_file.errors %}
                                     <p class="account-section-copy" style="color: var(--color-accent);">{{ error }}</p>
                                 {% endfor %}
                             </div>

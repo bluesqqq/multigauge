@@ -7,7 +7,7 @@
     <section class="secondary-page">
         <div class="secondary-page-inner">
             {% import 'macros/secondary.html' as secondary_macros %}
-            {{ secondary_macros.render_page_header('PRODUCT', product.name) }}
+            {{ secondary_macros.render_page_header(product.name) }}
 
             <div class="secondary-panel" style="display: grid; grid-template-columns: minmax(0, 1.05fr) minmax(0, 0.95fr); gap: 0; overflow: hidden;">
                 <div style="background: linear-gradient(180deg, #1a1b20 0%, #0f1014 100%); padding: 1rem; display: flex; align-items: center; justify-content: center;">

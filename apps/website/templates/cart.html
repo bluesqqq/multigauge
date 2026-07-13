@@ -7,7 +7,7 @@
     <section class="secondary-page">
         <div class="secondary-page-inner">
             {% import 'macros/secondary.html' as secondary_macros %}
-            {{ secondary_macros.render_page_header('Checkout', 'CART', 'Review the items in your cart before heading to checkout.') }}
+            {{ secondary_macros.render_page_header('CART') }}
 
             {% if cart and cart.items %}
                 <div class="secondary-panel" style="display: grid; gap: 0.75rem; padding: 1rem;">

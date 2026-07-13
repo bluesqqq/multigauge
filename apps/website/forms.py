@@ -1,4 +1,5 @@
 from flask_wtf import FlaskForm
+from flask_wtf.file import FileAllowed, FileField
 from wtforms import (
     BooleanField,
     PasswordField,
@@ -32,7 +33,10 @@ class LoginForm(FlaskForm):
 
 
 class AccountSettingsForm(FlaskForm):
-    avatar_url = StringField("Profile Picture (Avatar)", validators=[Length(max=255)])
+    avatar_file = FileField(
+        "Profile Picture (Avatar)",
+        validators=[FileAllowed(["jpg", "jpeg", "png", "gif", "webp"], "Please upload an image file.")],
+    )
     display_name = StringField("Display Name", validators=[Length(max=150)])
     username = StringField("Username", validators=[DataRequired(), Length(min=4, max=20)])
     bio = TextAreaField("Description (Bio)", validators=[Length(max=500)])
