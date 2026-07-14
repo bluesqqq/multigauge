@@ -5,6 +5,7 @@ project(multigauge LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 # ------------------------------------------------------------
 # Third-party sources (Declarations)
@@ -12,6 +13,10 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(FetchContent)
 
 # rapidjson
+set(RAPIDJSON_BUILD_DOC OFF CACHE BOOL "Build rapidjson documentation." FORCE)
+set(RAPIDJSON_BUILD_EXAMPLES OFF CACHE BOOL "Build rapidjson examples." FORCE)
+set(RAPIDJSON_BUILD_TESTS OFF CACHE BOOL "Build rapidjson perftests and unittests." FORCE)
+set(RAPIDJSON_BUILD_THIRDPARTY_GTEST OFF CACHE BOOL "Use gtest installation in `thirdparty/gtest` by default if available" FORCE)
 FetchContent_Declare(
   rapidjson
   GIT_REPOSITORY https://github.com/Tencent/rapidjson.git
@@ -29,7 +34,7 @@ FetchContent_Declare(
 FetchContent_Declare(
   lodepng
   URL      https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.cpp
-  URL_HASH SHA256=4842d03e91122be58fffa16bf248d9be70afbfb093156cfd7be1315b746c1ef5
+  URL_HASH SHA256=d98e1f40d303c1038a096ebf93b413a565a91cf2c72b9d2fa5c625c4279c3cb6
   DOWNLOAD_NO_EXTRACT TRUE
 )
 
@@ -43,7 +48,13 @@ FetchContent_Declare(
 # ------------------------------------------------------------
 # Process & Populate Dependencies
 # ------------------------------------------------------------
-FetchContent_MakeAvailable(rapidjson yoga)
+FetchContent_MakeAvailable(rapidjson)
+
+FetchContent_GetProperties(yoga)
+if(NOT yoga_POPULATED)
+  FetchContent_Populate(yoga)
+  add_subdirectory("${yoga_SOURCE_DIR}/yoga" "${yoga_BINARY_DIR}/yoga")
+endif()
 
 FetchContent_GetProperties(lodepng)
 if(NOT lodepng_POPULATED)
@@ -64,7 +75,14 @@ if(NOT tjpgd_POPULATED)
     "${tjpgd_SOURCE_DIR}/tjpgd.h"
   )
   add_library(tjpgd STATIC "${tjpgd_SOURCE_DIR}/tjpgd.c")
-  target_include_directories(tjpgd PUBLIC "${tjpgd_SOURCE_DIR}")
+  target_compile_options(tjpgd PRIVATE
+    $<$<C_COMPILER_ID:MSVC>:/U_WIN32>
+    $<$<NOT:$<C_COMPILER_ID:MSVC>>:-U_WIN32>
+  )
+  target_include_directories(tjpgd PUBLIC
+    "${tjpgd_SOURCE_DIR}"
+    "${CMAKE_CURRENT_SOURCE_DIR}/lib/tjpgd"
+  )
 endif()
 
 # ------------------------------------------------------------
@@ -83,6 +101,12 @@ target_include_directories(multigauge PUBLIC
 target_include_directories(multigauge PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
+FetchContent_GetProperties(rapidjson)
+if(rapidjson_POPULATED)
+  target_include_directories(multigauge PUBLIC
+    "${rapidjson_SOURCE_DIR}/include"
+  )
+endif()
 
 # ------------------------------------------------------------
 # Link Dependencies

@@ -5,7 +5,16 @@
 #include <multigauge/utils/Binary.h>
 
 #include "lodepng.h"
+#ifdef _WIN32
+#pragma push_macro("_WIN32")
+#undef _WIN32
+#define MG_TJPGD_RESTORE_WIN32 1
+#endif
 #include "tjpgd.h"
+#ifdef MG_TJPGD_RESTORE_WIN32
+#pragma pop_macro("_WIN32")
+#undef MG_TJPGD_RESTORE_WIN32
+#endif
 
 #include <cstdint>
 #include <cstddef>
