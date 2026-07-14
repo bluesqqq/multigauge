@@ -4,6 +4,13 @@ project(multigauge_web LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+if(NOT EMSCRIPTEN)
+  message(FATAL_ERROR
+    "multigauge_web requires the Emscripten toolchain.\n"
+    "Configure with EMSDK set or use the wasm presets from ports/web."
+  )
+endif()
+
 set(WEB_DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/web/dist")
 set(MULTIGAUGE_CORE_DIR
   "${CMAKE_CURRENT_SOURCE_DIR}/../../core"
@@ -47,7 +54,7 @@ set(MG_WASM_EXPORTED_FUNCTIONS
 string(JOIN "," MG_WASM_EXPORTED_FUNCTIONS_JSON ${MG_WASM_EXPORTED_FUNCTIONS})
 
 add_executable(multigauge_wasm ${MG_WASM_SOURCES})
-target_link_libraries(multigauge_wasm PRIVATE multigauge_core)
+target_link_libraries(multigauge_wasm PRIVATE multigauge)
 
 set_target_properties(multigauge_wasm PROPERTIES
   OUTPUT_NAME "multigauge"
@@ -65,11 +72,6 @@ if (NOT MSVC)
     -Wno-deprecated-declarations
   )
 endif()
-
-target_include_directories(multigauge_core
-  SYSTEM PRIVATE
-  "${MULTIGAUGE_CORE_DIR}/lib/rapidjson/src"
-)
 
 if (EMSCRIPTEN)
   set_target_properties(multigauge_wasm PROPERTIES SUFFIX ".js")

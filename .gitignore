@@ -14,3 +14,8 @@ __pycache__/
 
 # Flask app local state
 apps/website/instance/
+
+# Generated web build outputs
+ports/web/web/dist/Debug/
+ports/web/web/dist/lib*.a
+ports/web/web/dist/wasm/

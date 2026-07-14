@@ -50,6 +50,24 @@ FetchContent_Declare(
 # ------------------------------------------------------------
 FetchContent_MakeAvailable(rapidjson)
 
+set(RAPIDJSON_DOCUMENT_HEADER "${rapidjson_SOURCE_DIR}/include/rapidjson/document.h")
+if(EXISTS "${RAPIDJSON_DOCUMENT_HEADER}")
+  file(READ "${RAPIDJSON_DOCUMENT_HEADER}" RAPIDJSON_DOCUMENT_CONTENT)
+  set(RAPIDJSON_STRINGREF_ASSIGNMENT
+    "GenericStringRef& operator=(const GenericStringRef& rhs) { s = rhs.s; length = rhs.length; }"
+  )
+  string(FIND "${RAPIDJSON_DOCUMENT_CONTENT}" "${RAPIDJSON_STRINGREF_ASSIGNMENT}" RAPIDJSON_STRINGREF_ASSIGNMENT_INDEX)
+  if(NOT RAPIDJSON_STRINGREF_ASSIGNMENT_INDEX EQUAL -1)
+    string(REPLACE
+      "${RAPIDJSON_STRINGREF_ASSIGNMENT}"
+      "GenericStringRef& operator=(const GenericStringRef& rhs) = delete;"
+      RAPIDJSON_DOCUMENT_CONTENT
+      "${RAPIDJSON_DOCUMENT_CONTENT}"
+    )
+    file(WRITE "${RAPIDJSON_DOCUMENT_HEADER}" "${RAPIDJSON_DOCUMENT_CONTENT}")
+  endif()
+endif()
+
 FetchContent_GetProperties(yoga)
 if(NOT yoga_POPULATED)
   FetchContent_Populate(yoga)
@@ -74,6 +92,10 @@ if(NOT tjpgd_POPULATED)
     https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgd.h
     "${tjpgd_SOURCE_DIR}/tjpgd.h"
   )
+  file(DOWNLOAD
+    https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgdcnf.h
+    "${tjpgd_SOURCE_DIR}/tjpgdcnf.h"
+  )
   add_library(tjpgd STATIC "${tjpgd_SOURCE_DIR}/tjpgd.c")
   target_compile_options(tjpgd PRIVATE
     $<$<C_COMPILER_ID:MSVC>:/U_WIN32>
@@ -81,7 +103,6 @@ if(NOT tjpgd_POPULATED)
   )
   target_include_directories(tjpgd PUBLIC
     "${tjpgd_SOURCE_DIR}"
-    "${CMAKE_CURRENT_SOURCE_DIR}/lib/tjpgd"
   )
 endif()
 
@@ -101,17 +122,13 @@ target_include_directories(multigauge PUBLIC
 target_include_directories(multigauge PRIVATE
   "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )
-FetchContent_GetProperties(rapidjson)
-if(rapidjson_POPULATED)
-  target_include_directories(multigauge PUBLIC
-    "${rapidjson_SOURCE_DIR}/include"
-  )
-endif()
+target_include_directories(multigauge PUBLIC
+  "${rapidjson_SOURCE_DIR}/include"
+)
 
 # ------------------------------------------------------------
 # Link Dependencies
 # ------------------------------------------------------------
-target_link_libraries(multigauge PRIVATE yogacore)
-target_link_libraries(multigauge PRIVATE rapidjson)
+target_link_libraries(multigauge PUBLIC yogacore)
 target_link_libraries(multigauge PRIVATE lodepng)
 target_link_libraries(multigauge PRIVATE tjpgd)
