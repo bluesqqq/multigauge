@@ -5,6 +5,7 @@
     "@changesets/cli": "^2.27.0"
   },
   "workspaces": [
+    "core",
     "ports/*",
     "apps/*"
   ]
