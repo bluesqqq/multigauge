@@ -75,6 +75,9 @@ jobs:
       - name: Build
         run: cmake --build build --config Debug --target multigauge_ci -j 24
 
+      - name: Publish web bundle
+        run: .\scripts\publish-web-assets.ps1
+
       - name: Verify published web bundle
         run: |
           if (-not (Test-Path "apps/website/static/multigauge-web/js/pageRenderer.js")) {

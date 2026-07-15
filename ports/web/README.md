@@ -73,6 +73,12 @@ The generated artifacts will be written to [`dist/`](./dist/):
 - [`dist/wasm/multigauge.wasm`](./dist/wasm/multigauge.wasm)
 - [`dist/wasm/multigauge.wasm.map`](./dist/wasm/multigauge.wasm.map)
 
+If you want to publish the bundle for the website, run the repo-level publish script after the build:
+
+```powershell
+.\scripts\publish-web-assets.ps1
+```
+
 ## Manual Build
 
 If you prefer to build without the helper scripts, you can use the CMake presets directly:
@@ -102,7 +108,7 @@ cmake --build --preset wasm-release
 ## Notes
 
 - The build output is intentionally written into [`dist/`](./dist/) rather than the CMake build directory.
-- The build also publishes the browser bundle into [`../../apps/website/static/multigauge-web/`](../../apps/website/static/multigauge-web/) so the website can serve the same assets.
+- The repo-level publish script copies the verified browser bundle into [`../../apps/website/static/multigauge-web/`](../../apps/website/static/multigauge-web/) so the website can serve the same assets.
 - The helper scripts are convenience wrappers around the same preset-based CMake flow used for manual builds.
 - This repo currently targets the browser/WebAssembly build. Native desktop or server targets would need separate platform wiring.
 

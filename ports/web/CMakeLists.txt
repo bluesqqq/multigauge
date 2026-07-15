@@ -13,7 +13,6 @@ endif()
 
 set(WEB_RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/runtime")
 set(WEB_DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist")
-set(WEB_PUBLISH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../apps/website/static/multigauge-web")
 set(MULTIGAUGE_CORE_DIR
   "${CMAKE_CURRENT_SOURCE_DIR}/../../core"
   CACHE PATH "Path to the multigauge-core checkout"
@@ -86,23 +85,9 @@ if (EMSCRIPTEN)
   add_custom_command(TARGET multigauge_wasm POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E make_directory
       "${WEB_DIST_DIR}/js"
-      "${WEB_PUBLISH_DIR}/js"
-      "${WEB_PUBLISH_DIR}/wasm"
     COMMAND ${CMAKE_COMMAND} -E copy_if_different
       "${WEB_RUNTIME_DIR}/js/pageRenderer.js"
       "${WEB_DIST_DIR}/js/pageRenderer.js"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      "${WEB_RUNTIME_DIR}/js/pageRenderer.js"
-      "${WEB_PUBLISH_DIR}/js/pageRenderer.js"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      "$<TARGET_FILE:multigauge_wasm>"
-      "${WEB_PUBLISH_DIR}/wasm/$<TARGET_FILE_NAME:multigauge_wasm>"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      "$<TARGET_FILE_DIR:multigauge_wasm>/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm"
-      "${WEB_PUBLISH_DIR}/wasm/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm"
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different
-      "$<TARGET_FILE_DIR:multigauge_wasm>/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm.map"
-      "${WEB_PUBLISH_DIR}/wasm/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm.map"
     VERBATIM
   )
 endif()
