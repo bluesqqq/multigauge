@@ -37,8 +37,9 @@
       <canvas id="screen"></canvas>
     </div>
   </main>
-  <script src="../../web/dist/mg.js"></script>
-  <script>
+  <script type="module">
+    import "../../dist/js/pageRenderer.js";
+
     (async function() {
       const mg = await Multigauge.init();
       const canvas = document.getElementById("screen");

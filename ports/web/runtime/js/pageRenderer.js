@@ -1,5 +1,5 @@
-const RUNTIME_SCRIPT_URL = "/multigauge-web/wasm/multigauge.js";
-const RUNTIME_WASM_URL = "/multigauge-web/wasm/multigauge.wasm";
+const RUNTIME_SCRIPT_URL = new URL("../wasm/multigauge.js", import.meta.url).href;
+const RUNTIME_WASM_URL = new URL("../wasm/multigauge.wasm", import.meta.url).href;
 
 const RENDER_MODES = new Map([
   ["intrinsic", 0],

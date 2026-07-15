@@ -10,7 +10,7 @@
 
 `multigauge-web` is the WebAssembly/browser target for the shared `multigauge-core` engine in this monorepo.
 
-This target builds the Multigauge runtime for the web and outputs the generated browser artifacts into [`web/dist/`](./web/dist/).
+This target builds the Multigauge runtime for the web and outputs the generated browser artifacts into [`dist/`](./dist/).
 
 ## Quick Start
 
@@ -66,15 +66,12 @@ Release build:
 
 ### 5. Done
 
-The generated artifacts will be written to [`web/dist/`](./web/dist/):
+The generated artifacts will be written to [`dist/`](./dist/):
 
-- [`web/dist/multigauge.js`](./web/dist/multigauge.js)
-- [`web/dist/multigauge.wasm`](./web/dist/multigauge.wasm)
-- [`web/dist/multigauge.wasm.map`](./web/dist/multigauge.wasm.map)
-- [`web/dist/mg.js`](./web/dist/mg.js)
-- [`web/dist/wasm/multigauge.js`](./web/dist/wasm/multigauge.js)
-- [`web/dist/wasm/multigauge.wasm`](./web/dist/wasm/multigauge.wasm)
-- [`web/dist/wasm/multigauge.wasm.map`](./web/dist/wasm/multigauge.wasm.map)
+- [`dist/js/pageRenderer.js`](./dist/js/pageRenderer.js)
+- [`dist/wasm/multigauge.js`](./dist/wasm/multigauge.js)
+- [`dist/wasm/multigauge.wasm`](./dist/wasm/multigauge.wasm)
+- [`dist/wasm/multigauge.wasm.map`](./dist/wasm/multigauge.wasm.map)
 
 ## Manual Build
 
@@ -94,16 +91,18 @@ cmake --build --preset wasm-release
 
 ## Project Layout
 
-- [`web/src/`](./web/src/) contains the web target sources and Emscripten-specific platform bindings
-- [`web/bindings/`](./web/bindings/) contains the JS/WASM bindings
+- [`runtime/src/`](./runtime/src/) contains the web target sources and Emscripten-specific platform bindings
+- [`runtime/bindings/`](./runtime/bindings/) contains the JS/WASM bindings
+- [`runtime/js/pageRenderer.js`](./runtime/js/pageRenderer.js) is the browser loader shared by the examples and website
 - [`../../core/`](../../core/) is the shared core renderer/editor library
-- [`web/dist/`](./web/dist/) contains the generated browser build outputs and `mg.js`
+- [`dist/`](./dist/) contains the generated browser build outputs
 - [`CMakeLists.txt`](./CMakeLists.txt) defines the wasm target and output paths
 - [`CMakePresets.json`](./CMakePresets.json) defines the standard debug and release configure/build presets
 
 ## Notes
 
-- The build output is intentionally written into [`web/dist/`](./web/dist/) rather than the CMake build directory.
+- The build output is intentionally written into [`dist/`](./dist/) rather than the CMake build directory.
+- The build also publishes the browser bundle into [`../../apps/website/static/multigauge-web/`](../../apps/website/static/multigauge-web/) so the website can serve the same assets.
 - The helper scripts are convenience wrappers around the same preset-based CMake flow used for manual builds.
 - This repo currently targets the browser/WebAssembly build. Native desktop or server targets would need separate platform wiring.
 

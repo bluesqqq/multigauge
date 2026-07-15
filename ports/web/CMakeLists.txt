@@ -11,17 +11,13 @@ if(NOT EMSCRIPTEN)
   )
 endif()
 
-set(WEB_DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/web/dist")
+set(WEB_RUNTIME_DIR "${CMAKE_CURRENT_SOURCE_DIR}/runtime")
+set(WEB_DIST_DIR "${CMAKE_CURRENT_SOURCE_DIR}/dist")
+set(WEB_PUBLISH_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../../apps/website/static/multigauge-web")
 set(MULTIGAUGE_CORE_DIR
   "${CMAKE_CURRENT_SOURCE_DIR}/../../core"
   CACHE PATH "Path to the multigauge-core checkout"
 )
-
-file(MAKE_DIRECTORY "${WEB_DIST_DIR}")
-
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${WEB_DIST_DIR}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${WEB_DIST_DIR}")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${WEB_DIST_DIR}")
 
 if (NOT EXISTS "${MULTIGAUGE_CORE_DIR}/CMakeLists.txt")
   message(FATAL_ERROR
@@ -34,14 +30,14 @@ endif()
 add_subdirectory("${MULTIGAUGE_CORE_DIR}" multigauge-core-build)
 
 set(MG_WASM_SOURCES
-  web/src/main.cpp
-  web/bindings/ApiBindings.cpp
-  web/bindings/EditorApi.cpp
-  web/bindings/RuntimeApi.cpp
-  web/src/platform/FileSystemEmscripten.cpp
-  web/src/platform/GraphicsContextCanvas.cpp
-  web/src/platform/LoggerWebConsole.cpp
-  web/src/platform/TimeWeb.cpp
+  runtime/src/main.cpp
+  runtime/bindings/ApiBindings.cpp
+  runtime/bindings/EditorApi.cpp
+  runtime/bindings/RuntimeApi.cpp
+  runtime/src/platform/FileSystemEmscripten.cpp
+  runtime/src/platform/GraphicsContextCanvas.cpp
+  runtime/src/platform/LoggerWebConsole.cpp
+  runtime/src/platform/TimeWeb.cpp
 )
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/EditorApi.cmake")
@@ -58,12 +54,12 @@ target_link_libraries(multigauge_wasm PRIVATE multigauge)
 
 set_target_properties(multigauge_wasm PROPERTIES
   OUTPUT_NAME "multigauge"
-  RUNTIME_OUTPUT_DIRECTORY "${WEB_DIST_DIR}"
+  RUNTIME_OUTPUT_DIRECTORY "${WEB_DIST_DIR}/wasm"
 )
 
 target_include_directories(multigauge_wasm PRIVATE
-  ${CMAKE_CURRENT_SOURCE_DIR}/web/bindings
-  ${CMAKE_CURRENT_SOURCE_DIR}/web/src
+  ${WEB_RUNTIME_DIR}/bindings
+  ${WEB_RUNTIME_DIR}/src
 )
 
 if (NOT MSVC)
@@ -75,9 +71,6 @@ endif()
 
 if (EMSCRIPTEN)
   set_target_properties(multigauge_wasm PROPERTIES SUFFIX ".js")
-  set_target_properties(multigauge_wasm PROPERTIES
-    RUNTIME_OUTPUT_DIRECTORY "${WEB_DIST_DIR}/wasm"
-  )
 
   target_link_options(multigauge_wasm PRIVATE
     "SHELL:-sWASM=1"
@@ -91,7 +84,25 @@ if (EMSCRIPTEN)
   )
 
   add_custom_command(TARGET multigauge_wasm POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E make_directory "${WEB_DIST_DIR}/wasm"
+    COMMAND ${CMAKE_COMMAND} -E make_directory
+      "${WEB_DIST_DIR}/js"
+      "${WEB_PUBLISH_DIR}/js"
+      "${WEB_PUBLISH_DIR}/wasm"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${WEB_RUNTIME_DIR}/js/pageRenderer.js"
+      "${WEB_DIST_DIR}/js/pageRenderer.js"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "${WEB_RUNTIME_DIR}/js/pageRenderer.js"
+      "${WEB_PUBLISH_DIR}/js/pageRenderer.js"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "$<TARGET_FILE:multigauge_wasm>"
+      "${WEB_PUBLISH_DIR}/wasm/$<TARGET_FILE_NAME:multigauge_wasm>"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "$<TARGET_FILE_DIR:multigauge_wasm>/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm"
+      "${WEB_PUBLISH_DIR}/wasm/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm"
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different
+      "$<TARGET_FILE_DIR:multigauge_wasm>/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm.map"
+      "${WEB_PUBLISH_DIR}/wasm/$<TARGET_FILE_BASE_NAME:multigauge_wasm>.wasm.map"
     VERBATIM
   )
 endif()

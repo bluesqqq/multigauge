@@ -230,8 +230,9 @@
     </div>
   </main>
 
-  <script src="../../web/dist/mg.js"></script>
-  <script>
+  <script type="module">
+    import "../../dist/js/pageRenderer.js";
+
     (async function() {
       const sizeOptions = [
         { label: "240x240", width: 240, height: 240 },

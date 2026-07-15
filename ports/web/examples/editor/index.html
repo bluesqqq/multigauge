@@ -320,12 +320,14 @@
       </div>
     </div>
   </section>
-  <script src="../../web/dist/mg.js"></script>
-  <script src="state.js"></script>
-  <script src="actions.js"></script>
-  <script src="canvas.js"></script>
-  <script src="hierarchy.js"></script>
-  <script src="properties.js"></script>
-  <script src="main.js"></script>
+  <script type="module">
+    import "../../dist/js/pageRenderer.js";
+    import "./state.js";
+    import "./actions.js";
+    import "./canvas.js";
+    import "./hierarchy.js";
+    import "./properties.js";
+    import "./main.js";
+  </script>
 </body>
 </html>
