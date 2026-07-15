@@ -18,3 +18,5 @@ apps/website/instance/
 # Generated web build outputs
 ports/web/dist/
 apps/website/static/multigauge-web/
+
+node_modules
