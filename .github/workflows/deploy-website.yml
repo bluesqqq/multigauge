@@ -42,27 +42,11 @@ jobs:
           if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.js")) { throw "Missing multigauge.js" }
           if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.wasm")) { throw "Missing multigauge.wasm" }
 
-      - name: Update firmware.json Metadata with Latest Release
-        run: |
-          git fetch --tags --force
-          $latestTag = git tag -l "ports-esp32@*" | Sort-Object -Descending | Select-Object -First 1
-
-          if ($latestTag) {
-            $cleanVersion = $latestTag.Split("@")[1]
-            $metadataFile = "apps/website/static/firmware.json"
-            $jsonContent = @{
-              esp32 = @{
-                version = $cleanVersion
-                url = "https://github.com/${{ github.repository }}/releases/download/$($latestTag)/firmware.bin"
-              }
-            } | ConvertTo-Json -Compress
-
-            New-Item -ItemType Directory -Force -Path "apps/website/static"
-            Set-Content -Path $metadataFile -Value $jsonContent -Encoding utf8
-            Write-Host "Successfully generated metadata linking to $latestTag"
-          } else {
-            Write-Warning "No ESP32 release tag found. Skipping firmware.json generation."
-          }
+      - name: Sync firmware manifest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: .\scripts\sync-firmware-manifest.ps1
 
       - name: Deploy to Raspberry Pi via SSH
         uses: appleboy/scp-action@master
@@ -71,5 +55,5 @@ jobs:
           username: ${{ secrets.RPI_USER }}
           key: ${{ secrets.RPI_SSH_KEY }}
           port: 22
-          source: "apps/website/static/multigauge-web/*,apps/website/static/firmware.json"
+          source: "apps/website/static/multigauge-web/*,apps/website/static/firmware/multigauge/*"
           target: "/var/www/multigauge"

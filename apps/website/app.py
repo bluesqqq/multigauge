@@ -18,6 +18,7 @@ from models import db, User, Cart
 from routes import (
     auth_bp,
     cart_bp,
+    downloads_bp,
     main_bp,
     admin_bp,
     account_bp,
@@ -75,6 +76,7 @@ app.register_blueprint(auth_bp)
 app.register_blueprint(admin_bp)
 app.register_blueprint(account_bp)
 app.register_blueprint(cart_bp)
+app.register_blueprint(downloads_bp)
 app.register_blueprint(main_bp)
 app.register_blueprint(multigauge_web_bp)
 app.register_blueprint(payment_bp)

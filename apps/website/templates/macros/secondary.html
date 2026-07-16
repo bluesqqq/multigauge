@@ -39,3 +39,35 @@
 </div>
 {% endif %}
 {% endmacro %}
+
+{% macro render_release_card(release) %}
+<div class="secondary-panel secondary-info-card downloads-release-card">
+    <div class="downloads-release-header">
+        <div>
+            <p class="secondary-page-eyebrow">RELEASE</p>
+            <h2 class="secondary-info-card-title">{{ release.display_name }} {{ release.version }}</h2>
+        </div>
+        <a class="downloads-release-link" href="{{ release.html_url }}" target="_blank" rel="noreferrer">View on GitHub</a>
+    </div>
+
+    <p class="secondary-info-card-copy">
+        {{ release.tag_name }}
+        {% if release.published_at %}
+            · {{ release.published_at[:10] }}
+        {% endif %}
+    </p>
+
+    {% if release.assets %}
+        <div class="downloads-asset-list">
+            {% for asset in release.assets %}
+                <a class="downloads-asset-item" href="{{ asset.download_url }}">
+                    <span>{{ asset.name }}</span>
+                    <img src="{{ url_for('static', filename='images/icons/download.svg') }}" alt="" width="16" height="16" aria-hidden="true">
+                </a>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="secondary-page-copy">No downloadable assets were attached to this release.</p>
+    {% endif %}
+</div>
+{% endmacro %}

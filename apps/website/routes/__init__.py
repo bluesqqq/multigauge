@@ -1,6 +1,7 @@
 from .admin import admin_bp
 from .auth import auth_bp
 from .cart import cart_bp
+from .downloads import downloads_bp
 from .main import main_bp
 from .multigauge_web import multigauge_web_bp
 from .account import account_bp
