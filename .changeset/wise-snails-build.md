@@ -5,4 +5,4 @@
 "multigauge-core": patch
 ---
 
-Testing changesets release coordinator
+Testing changesets release coordinator (Try 2)
