@@ -3,7 +3,7 @@ name: Release Coordinator
 on:
   push:
     branches:
-      - main
+      - fix/failing-release-coordinator
 
 permissions:
   contents: write
