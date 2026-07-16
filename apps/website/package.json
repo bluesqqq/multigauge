@@ -3,6 +3,6 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "ports-web": "0.1.1"
+    "ports-web": "0.1.2"
   }
 }
