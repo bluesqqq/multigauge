@@ -11,7 +11,7 @@ permissions:
 jobs:
   deploy-web:
     name: Build & Deploy Web Target
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: pwsh
@@ -22,19 +22,29 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Install Emscripten SDK
-        uses: mymindstorm/setup-emsdk@v14
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.job }}-${{ runner.os }}
+
+      - name: Setup Emscripten
+        uses: emscripten-core/setup-emsdk@v15
         with:
           version: latest
 
       - name: Configure CMake
-        run: cmake -S . -B build -DMULTIGAUGE_BUILD_WEB=ON -DMULTIGAUGE_REQUIRE_WEB=ON
+        run: |
+          cmake -S . -B build `
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache `
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache `
+            -DMULTIGAUGE_BUILD_WEB=ON `
+            -DMULTIGAUGE_REQUIRE_WEB=ON
 
       - name: Build WASM Target
-        run: cmake --build build --config Release --target multigauge_ci -j 24
+        run: cmake --build build --config Release --target multigauge_ci -j $(nproc)
 
       - name: Publish Web Bundle
-        run: .\scripts\publish-web-assets.ps1
+        run: ./scripts/publish-web-assets.ps1
 
       - name: Verify Web Bundle
         run: |
