@@ -9,35 +9,37 @@
 </p>
 
 <p align="center">
-  <em> <a href="https://www.multi-gauge.com/"><b>Multigauge</b></a> is a platform-agnostic <b>automotive gauge rendering engine</b> for building highly customizable, data-driven digital dashboards. It aims to make custom instrumentation both <b>powerful</b> and <b>aesthetically pleasing.</b></em>
+  <em>
+    <a href="https://www.multi-gauge.com/"><b>Multigauge</b></a> is a platform-agnostic
+    <b>automotive gauge rendering engine</b> for building highly customizable, data-driven digital dashboards.
+    It aims to make custom instrumentation both <b>powerful</b> and <b>aesthetically pleasing</b>.
+  </em>
 </p>
 
-## Repository Structure
+## Repository Layout
 
-```
+```text
 multigauge/
-├─ core/ # Shared platform-agnostic C++ engine
-├─ ports/ # Platform-specific implementations
-│ ├─ esp32/ # ESP32 embedded target
-│ └─ web/ # WebAssembly/web target
-├─ apps/ # Applications built on top of Multigauge
-├─ docs/ # Project documentation
+|-- core/             shared C++ engine
+|-- ports/            platform targets
+|   |-- esp32/        embedded firmware target
+|   `-- web/          standalone web/WASM target
+|-- apps/             product apps built on top of Multigauge
+|   `-- website/      public website and community/workshop app
+|-- .changeset/       release notes used by Changesets
+`-- .github/workflows/ CI/CD workflows
 ```
 
-## Core
+## What Lives Where
 
-The core engine is designed to be portable and independent of any specific display, OS, or hardware platform.
-
-```core/``` contains the shared C++ code for:
-
-- JSON-defined gauge layout
-- Gauge elements and styling
-- Layout calculation
-- Rendering abstractions
-- Editor-facing metadata
-- Serialization support
-- Asset loading interfaces
-- Timing, logging, and platform service interfaces
+- `core/` contains the portable gauge engine and shared rendering logic.
+- `ports/esp32/` contains the firmware target.
+- `ports/web/` contains the standalone local web build for the WASM target.
+- `apps/website/` contains the Flask website, including:
+  - the homepage
+  - workshop/community pages
+  - account pages
+  - the firmware downloads page at `/downloads`
 
 ## Ports
 
@@ -55,22 +57,17 @@ Roughly in order of priority:
 - Arduino
 - Windows
 
-## Demos
-
-I should put some demos here...
-
 ## Status
 
-`multigauge` and its targets are actively under development. The core architecture is in
-place, but breaking changes may still occur as the project evolves.
+`multigauge` and its targets are actively under development. The core architecture is in place,
+but breaking changes may still occur as the project evolves.
 
-APIs, file formats, target integrations, and editor-facing metadata are likely to change.
+APIs, file formats, target integrations, website routes, and editor-facing metadata are likely to change.
 
 ## License
 
 This project is free to use for personal, educational, and non-commercial purposes.
 
-You may not use this code in any product or service that is sold or monetized
-without permission.
+You may not use this code in any product or service that is sold or monetized without permission.
 
 If you're unsure whether your use case is allowed, feel free to reach out.
