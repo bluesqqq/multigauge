@@ -1,6 +1,6 @@
 {
   "name": "ports-esp32",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "dependencies": {
     "multigauge-core": "0.1.0"
