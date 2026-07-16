@@ -6,7 +6,8 @@
   },
   "workspaces": [
     "core",
-    "ports/*",
-    "apps/*"
+    "ports/esp32",
+    "ports/web",
+    "apps/website"
   ]
 }
