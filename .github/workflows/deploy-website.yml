@@ -1,0 +1,59 @@
+name: Deploy Website
+
+on:
+  push:
+    tags:
+      - 'apps-website@*'
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-web:
+    name: Build & Deploy Web Target
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout Code with Full Git History
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Emscripten SDK
+        uses: mymindstorm/setup-emsdk@v14
+        with:
+          version: latest
+
+      - name: Configure CMake
+        run: cmake -S . -B build -DMULTIGAUGE_BUILD_WEB=ON -DMULTIGAUGE_REQUIRE_WEB=ON
+
+      - name: Build WASM Target
+        run: cmake --build build --config Release --target multigauge_ci -j 24
+
+      - name: Publish Web Bundle
+        run: .\scripts\publish-web-assets.ps1
+
+      - name: Verify Web Bundle
+        run: |
+          if (-not (Test-Path "apps/website/static/multigauge-web/js/pageRenderer.js")) { throw "Missing pageRenderer.js" }
+          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.js")) { throw "Missing multigauge.js" }
+          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.wasm")) { throw "Missing multigauge.wasm" }
+
+      - name: Sync firmware manifest
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+        run: .\scripts\sync-firmware-manifest.ps1
+
+      - name: Deploy to Raspberry Pi via SSH
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.RPI_HOST }}
+          username: ${{ secrets.RPI_USER }}
+          key: ${{ secrets.RPI_SSH_KEY }}
+          port: 22
+          source: "apps/website/static/multigauge-web/*,apps/website/static/firmware/multigauge/*"
+          target: "/var/www/multigauge"

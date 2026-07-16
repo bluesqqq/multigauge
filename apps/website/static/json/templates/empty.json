@@ -1,0 +1,18 @@
+{
+  "$schema": "../../multigauge-core/docs/schemas/gauge.schema.json",
+  "bgColor": "#05080DFF",
+  "layout": {
+    "flex-container": {
+      "direction": "column",
+      "justify": "center",
+      "align-items": "center"
+    },
+    "padding": {
+      "left": 0,
+      "right": 0,
+      "top": 0,
+      "bottom": 0
+    }
+  },
+  "children": []
+}

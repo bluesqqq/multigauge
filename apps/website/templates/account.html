@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+{% set navbar_background = true %}
+
+{% block title %}Account Dashboard{% endblock %}
+
+{% block content %}
+    <section class="secondary-page account-shell" style="--profile-accent: {{ profile.accent_color or '#ed1c24' }};">
+        <div class="secondary-page-inner">
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('DASHBOARD') }}
+
+            {% import 'macros/account_nav.html' as account_nav %}
+            {{ account_nav.render_account_nav('account') }}
+
+            <div class="secondary-panel account-hero">
+                <div class="account-avatar">
+                    {% if profile.avatar_url %}
+                        <img src="{{ profile.avatar_url }}" alt="{{ profile.display_name or current_user.username }} avatar">
+                    {% else %}
+                        <span class="account-avatar-fallback">{{ (profile.display_name or current_user.username)[:1]|upper }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="account-hero-copy">
+                    <p class="secondary-page-eyebrow" style="margin: 0;">{{ current_user.email }}</p>
+                    <h2 class="account-hero-title">{{ profile.display_name or current_user.username }}</h2>
+                    <p class="account-hero-subtitle">@{{ current_user.username }}</p>
+                    {% if profile.bio %}
+                        <p class="account-hero-subtitle">{{ profile.bio }}</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="secondary-card-grid cards-3" style="margin-top: 1rem;">
+                {{ secondary_macros.render_metric_card('Uploads', post_count) }}
+                {{ secondary_macros.render_metric_card('Downloads', download_count) }}
+                {{ secondary_macros.render_metric_card('Orders', order_count) }}
+            </div>
+
+            <div class="secondary-card-grid cards-2" style="margin-top: 1rem;">
+                <div class="secondary-panel account-panel">
+                    <div>
+                        <p class="secondary-page-eyebrow">Recent uploads</p>
+                        <h2 class="account-section-title">Latest posts</h2>
+                    </div>
+
+                    {% if recent_posts %}
+                        <div class="account-orders-grid">
+                            {% for post in recent_posts %}
+                                <a class="secondary-panel account-order-card" href="{{ url_for('workshop.view_post', post_id=post.id) }}">
+                                    <div class="account-order-meta">
+                                        <strong>{{ post.title }}</strong>
+                                        <span class="secondary-page-eyebrow" style="margin: 0;">{{ post.posted_how_long_ago() }}</span>
+                                    </div>
+                                    <div class="account-order-items">
+                                        <span>{{ post.description }}</span>
+                                        <span>{{ post.total_downloads() }} downloads</span>
+                                    </div>
+                                </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="secondary-panel account-empty-state">
+                            <p>No uploads yet. Your workshop posts will appear here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="secondary-panel account-panel">
+                    <div>
+                        <p class="secondary-page-eyebrow">Recent orders</p>
+                        <h2 class="account-section-title">Latest purchases</h2>
+                    </div>
+
+                    {% if recent_orders %}
+                        <div class="account-orders-grid">
+                            {% for order in recent_orders %}
+                                <div class="secondary-panel account-order-card">
+                                    <div class="account-order-meta">
+                                        <strong>Order #{{ order.id }}</strong>
+                                        <span class="secondary-page-eyebrow" style="margin: 0;">{{ order.status }}</span>
+                                    </div>
+                                    <div class="account-order-items">
+                                        <span>{{ order.created_at.strftime('%b %d, %Y') }}</span>
+                                        <span>${{ '%.2f'|format(order.total_price()) }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="secondary-panel account-empty-state">
+                            <p>No orders yet. When you check out, your order history will show up here.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}

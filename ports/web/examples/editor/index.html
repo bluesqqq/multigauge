@@ -1,0 +1,333 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Multigauge Editor Example</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #0b0f14;
+      color: #e5e7eb;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      display: grid;
+      grid-template-columns: 320px 1fr 360px;
+      grid-template-rows: auto 1fr;
+      grid-template-areas:
+        "toolbar toolbar toolbar"
+        "hierarchy canvas properties";
+      gap: 0;
+    }
+
+    #toolbar {
+      grid-area: toolbar;
+      display: flex;
+      gap: 8px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #243041;
+      background: #0f172a;
+    }
+
+    #hierarchy-panel {
+      grid-area: hierarchy;
+      box-sizing: border-box;
+      border-right: 1px solid #243041;
+      border-bottom: 1px solid #243041;
+      background: #111827;
+      overflow: hidden;
+      padding: 12px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #canvas-panel {
+      grid-area: canvas;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      box-sizing: border-box;
+      border-bottom: 1px solid #243041;
+      background: #0b0f14;
+    }
+
+    #properties-panel {
+      grid-area: properties;
+      box-sizing: border-box;
+      background: #111827;
+      overflow: hidden;
+      padding: 12px 12px 10px;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    h2 {
+      margin: 0 0 10px;
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: #9ca3af;
+    }
+
+    #hierarchy ul {
+      list-style: none;
+      margin: 0;
+      padding-left: 14px;
+    }
+
+    #hierarchy li {
+      margin: 4px 0;
+    }
+
+    .hier-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .hier-label {
+      flex: 1 1 auto;
+      width: auto;
+    }
+
+    .hier-actions {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    #hierarchy button {
+      width: 100%;
+      border: 1px solid transparent;
+      background: #1f2937;
+      color: #e5e7eb;
+      border-radius: 6px;
+      padding: 6px 8px;
+      text-align: left;
+      cursor: pointer;
+    }
+
+    #hierarchy button.hier-action {
+      width: auto;
+      padding: 4px 6px;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    #hierarchy button.selected {
+      border-color: #60a5fa;
+      background: #1d4ed8;
+    }
+
+    #hierarchy-split {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .hierarchy-pane {
+      flex: 1 1 0;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hierarchy-tree {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      padding: 0 4px 0 0;
+      background: transparent;
+    }
+
+    .hierarchy-json-wrap {
+      flex: 1 1 auto;
+      min-height: 0;
+      overflow: auto;
+      border: 1px solid #243041;
+      border-radius: 8px;
+      background: #060b14;
+      padding: 10px;
+    }
+
+    #hierarchy-json {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      border: 0;
+      outline: 0;
+      resize: none;
+      background: transparent;
+      white-space: pre;
+      word-break: normal;
+      font: 12px/1.5 "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: #cbd5e1;
+      padding: 0;
+    }
+
+    #properties fieldset {
+      border: 1px solid #243041;
+      border-radius: 8px;
+      margin: 0 0 10px;
+      padding: 10px;
+    }
+
+    #properties legend {
+      padding: 0 6px;
+      color: #93c5fd;
+      font-size: 13px;
+    }
+
+    .prop-row {
+      margin-bottom: 10px;
+    }
+
+    .prop-row label {
+      display: block;
+      font-size: 12px;
+      color: #cbd5e1;
+      margin-bottom: 4px;
+    }
+
+    .prop-row input,
+    .prop-row select,
+    .prop-row textarea {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 6px 8px;
+      background: #0f172a;
+      color: #e5e7eb;
+      font: inherit;
+    }
+
+    .prop-row textarea {
+      min-height: 72px;
+      resize: vertical;
+    }
+
+    #properties-split {
+      flex: 1 1 auto;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .properties-form {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .properties-json-wrap {
+      flex: 1 1 0;
+      min-height: 0;
+      overflow: auto;
+      border: 1px solid #243041;
+      border-radius: 8px;
+      background: #060b14;
+      padding: 10px;
+    }
+
+    #properties-json {
+      width: 100%;
+      height: 100%;
+      box-sizing: border-box;
+      margin: 0;
+      border: 0;
+      outline: 0;
+      resize: none;
+      background: transparent;
+      white-space: pre;
+      word-break: normal;
+      font: 12px/1.5 "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      color: #cbd5e1;
+      padding: 0;
+    }
+
+    #canvas-wrap {
+      flex: 1 1 auto;
+      min-width: 0;
+      min-height: 0;
+      display: flex;
+      background: #0b0f14;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    #toolbar button {
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 6px 10px;
+      background: #1f2937;
+      color: #e5e7eb;
+      cursor: pointer;
+    }
+
+    #toolbar button:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+  </style>
+  <link rel="stylesheet" href="../shared.css">
+</head>
+<body>
+  <div id="toolbar">
+    <button id="undo-btn" type="button">Undo</button>
+    <button id="redo-btn" type="button">Redo</button>
+  </div>
+  <aside id="hierarchy-panel">
+    <h2>Hierarchy</h2>
+    <div id="hierarchy-split">
+      <section class="hierarchy-pane">
+        <div id="hierarchy" class="hierarchy-tree"></div>
+      </section>
+      <section class="hierarchy-pane">
+        <div class="hierarchy-json-wrap">
+          <textarea id="hierarchy-json" readonly spellcheck="false"></textarea>
+        </div>
+      </section>
+    </div>
+  </aside>
+  <main id="canvas-panel">
+    <div id="canvas-wrap">
+      <canvas id="screen"></canvas>
+    </div>
+  </main>
+  <section id="properties-panel">
+    <h2>Properties</h2>
+    <div id="properties-split">
+      <div id="properties" class="properties-form"></div>
+      <div class="properties-json-wrap">
+        <textarea id="properties-json" readonly spellcheck="false"></textarea>
+      </div>
+    </div>
+  </section>
+  <script type="module">
+    import "../../dist/js/pageRenderer.js";
+    import "./state.js";
+    import "./actions.js";
+    import "./canvas.js";
+    import "./hierarchy.js";
+    import "./properties.js";
+    import "./main.js";
+  </script>
+</body>
+</html>

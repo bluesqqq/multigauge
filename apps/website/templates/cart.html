@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% set navbar_background = true %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+    <section class="secondary-page">
+        <div class="secondary-page-inner">
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('CART') }}
+
+            {% if cart and cart.items %}
+                <div class="secondary-panel" style="display: grid; gap: 0.75rem; padding: 1rem;">
+                    {% for item in cart.items %}
+                        <div style="display: grid; grid-template-columns: 96px minmax(0, 1fr); gap: 1rem; align-items: center; padding: 0.75rem 0; border-bottom: 1px solid rgba(21,21,21,0.12);">
+                            <div style="aspect-ratio: 1; overflow: hidden; background: linear-gradient(180deg, #1a1b20 0%, #0f1014 100%);">
+                                <img src="{{ item.product.image_url }}" alt="{{ item.product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            </div>
+
+                            <div style="display: grid; gap: 0.65rem;">
+                                <div style="display: flex; justify-content: space-between; gap: 1rem;">
+                                    <h2 style="margin: 0; font-size: 1.2rem; text-transform: uppercase;">{{ item.product.name }}</h2>
+                                    <h2 style="margin: 0;">${{ '%.2f'|format(item.unit_price()) }}</h2>
+                                </div>
+
+                                <div style="display: flex; justify-content: space-between; gap: 1rem; align-items: center;">
+                                    <div class="item-quantity-widget" style="width: auto;">
+                                        <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                            <input type="hidden" name="action" value="decrement">
+                                            <button type="submit">-</button>
+                                        </form>
+                                        <span>{{ item.quantity }}</span>
+                                        <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                            <input type="hidden" name="action" value="increment">
+                                            <button type="submit">+</button>
+                                        </form>
+                                    </div>
+
+                                    <form action="{{ url_for('cart.update_cart_quantity', item_id=item.id) }}" method="POST">
+                                        <input type="hidden" name="action" value="remove">
+                                        <button type="submit" style="background: none; border: none; padding: 0;">
+                                            <img src="{{ url_for('static', filename='images/icons/cart-remove.svg') }}" style="height: 25px; aspect-ratio: 1;">
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <div style="display: flex; justify-content: end; margin-top: 1rem;">
+                    <div class="secondary-panel" style="padding: 1rem 1.25rem; min-width: min(100%, 20rem); text-align: right;">
+                        <p class="secondary-page-eyebrow">Summary</p>
+                        <h2 style="margin: 0 0 0.35rem;">Subtotal: ${{ '%.2f'|format(cart.get_subtotal()) }}</h2>
+                        <p class="secondary-page-copy" style="margin-left: auto;">Shipping, taxes, and discount codes calculated at checkout.</p>
+                        <form action="/create-checkout-session" method="POST" style="margin-top: 1rem;">
+                            <button type="submit" class="workshop-upload-cta" style="width: 100%;">Check Out</button>
+                        </form>
+                    </div>
+                </div>
+            {% else %}
+                <div class="secondary-panel" style="padding: 1.25rem;">
+                    <p>Your cart is empty!</p>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

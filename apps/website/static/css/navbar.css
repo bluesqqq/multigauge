@@ -1,0 +1,296 @@
+@import url("variables.css");
+
+.navbar {
+    position: fixed;
+    inset: 0 0 auto 0;
+    width: 100%;
+    height: 60px;
+    z-index: 1000;
+
+    background: transparent;
+    color: var(--color-text);
+    font-size: 16px;
+
+    mix-blend-mode: difference;
+}
+
+.navbar-inner {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.navbar-brand {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+}
+
+.navbar-links {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    margin-right: auto;
+}
+
+.navbar-actions {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.navbar-account {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.navbar-account-toggle {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+
+    padding: 0.25rem 0.15rem;
+    border: 0;
+    background: transparent;
+    color: inherit;
+    cursor: pointer;
+}
+
+.navbar-account-toggle:hover,
+.navbar-account-toggle:focus-visible {
+    opacity: 0.75;
+}
+
+.navbar-account-caret {
+    width: 14px;
+    height: 14px;
+    display: block;
+    filter: invert(1);
+}
+
+.navbar-account-menu {
+    position: absolute;
+    top: calc(100% + 0.75rem);
+    right: 0;
+    width: min(16rem, calc(100vw - 2rem));
+    padding: 0.4rem;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.9rem;
+    background: rgba(17, 17, 20, 0.98);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+    z-index: var(--z-dropdown);
+}
+
+.navbar-account-menu[hidden] {
+    display: none;
+}
+
+.navbar-account-header {
+    padding: 0.5rem 0.7rem 0.35rem;
+    color: rgba(255, 255, 255, 0.72);
+    font-size: 0.76rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+}
+
+.navbar-account-divider {
+    margin: 0.25rem 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.navbar-account-menu a {
+    display: flex;
+    align-items: center;
+    min-height: 2.75rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 0.65rem;
+    color: var(--color-text);
+    font-size: 0.95rem;
+    text-decoration: none;
+}
+
+.navbar-account-menu a:hover,
+.navbar-account-menu a:focus-visible {
+    background: rgba(255, 255, 255, 0.06);
+    opacity: 1;
+}
+
+.navbar a {
+    height: 100%;
+
+    display: flex;
+    align-items: center;
+
+    line-height: 1;
+    text-decoration: none;
+    color: inherit;
+}
+
+.navbar a:hover {
+    opacity: 0.75;
+}
+
+.navbar-logo {
+    width: 40px;
+    height: 40px;
+    display: block;
+}
+
+.navbar-icon {
+    width: 24px;
+    height: 24px;
+    display: block;
+    filter: invert(1);
+}
+
+.navbar-cart {
+    gap: 4px;
+}
+
+.navbar-cart-count {
+    font-size: 14px;
+    line-height: 1;
+}
+
+.navbar-menu-button {
+    display: none;
+}
+
+.navbar-menu-icon {
+    width: 28px;
+    height: 28px;
+    display: block;
+    filter: invert(1);
+}
+
+.navbar-background-spacer {
+    width: 100%;
+    height: var(--navbar-height);
+    flex: 0 0 var(--navbar-height);
+    background-color: var(--color-text);
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+    :root {
+        --navbar-height: 64px;
+    }
+
+    .navbar {
+        height: 64px;
+    }
+
+    .navbar.is-open {
+        background: var(--color-bg-700);
+        mix-blend-mode: normal;
+    }
+
+    .navbar-inner {
+        display: grid;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .navbar-menu-button {
+        grid-column: 1;
+        justify-self: start;
+
+        width: 40px;
+        height: 40px;
+
+        display: flex;
+        justify-content: center;
+        align-items: center;
+
+        padding: 0;
+        margin: 0;
+        border: 0;
+        background: transparent;
+        color: inherit;
+        cursor: pointer;
+        box-sizing: border-box;
+    }
+
+    .navbar-menu-button:hover,
+    .navbar-menu-button:active {
+        padding: 0;
+        border: 0;
+        background: transparent;
+    }
+
+    .navbar-brand {
+        grid-column: 2;
+        justify-self: center;
+    }
+
+    .navbar-logo {
+        width: 36px;
+        height: 36px;
+    }
+
+    .navbar-actions {
+        grid-column: 3;
+        justify-self: end;
+        gap: 12px;
+    }
+
+    .navbar-account-menu {
+        top: calc(100% + 0.5rem);
+    }
+
+    .navbar-links {
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+
+        height: auto;
+        margin-right: 0;
+
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0;
+
+        padding: 8px 24px 24px;
+
+        background: var(--color-bg-700);
+        border-bottom: 1px solid var(--color-text);
+    }
+
+    .navbar.is-open .navbar-links {
+        display: flex;
+    }
+
+    .navbar-links a {
+        height: auto;
+        padding: 18px 0;
+
+        font-size: 20px;
+        border-bottom: 1px solid color-mix(in srgb, var(--color-text) 20%, transparent);
+    }
+
+    .navbar-links a:last-child {
+        border-bottom: 0;
+    }
+
+    .navbar-icon {
+        width: 24px;
+        height: 24px;
+        filter: invert(1);
+    }
+
+    .navbar-cart-count {
+        font-size: 12px;
+    }
+}

@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% set navbar_background = true %}
+
+{% block title %}{{ post.title }}{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/comments.css') }}">
+{% endblock %}
+
+{% block content %}
+    <div class="page">
+        <div class="page-header">
+            <div class="page-header-content margined">
+                <div class="title">
+                    <h1>{{ post.title }}</h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-content margined">
+            <div style="display: flex; justify-content: center; padding-top: 10px; padding-bottom: 10px;">
+                <canvas style="display: block; width: 600px; height: 600px; max-width: 100%; border-radius: var(--border-radius); box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);" id="gaugeCanvas" width="600" height="600"></canvas>
+            </div>
+        </div>
+
+        <div class="page-content post-content" style="background-color: var(--color-bg-600);">
+            <div class="margined">
+                <div class="post-info-block">
+                    <div style="padding-top: 10px; padding-bottom: 10px; display: flex; justify-content: space-between;">
+                        <div>
+                            <h2 style="margin: 0;">{{ post.title }}</h2>
+                            <h3 style="margin: 0;">by <a href="/user/{{ post.posted_by }}">{{ posted_by_username }}</a></h3>
+                            {% if post.package %}
+                                <p style="margin: 6px 0 0 0;">Package: <strong>{{ post.package.name or 'Untitled package' }}</strong></p>
+                                <p style="margin: 4px 0 0 0;">{{ post.package.description }}</p>
+                            {% endif %}
+                        </div>
+                        <h3 style="margin: 0;">Posted: {{ post.posted_at }}</h3>
+                    </div>
+
+                    <div style="display: flex; gap: 10px; padding-top: 10px; padding-bottom: 10px;">
+                        <form id="like-form" action="/workshop/{{ post.id }}/like" method="post">
+                            <button type="submit" id="like-button" style="border: none; background: none; padding: 0;">
+                                <img
+                                    id="like-image"
+                                    src="{{ url_for('static', filename='images/icons/like-filled.svg' if has_liked else 'images/icons/like.svg') }}"
+                                    data-active-src="{{ url_for('static', filename='images/icons/like-filled.svg') }}"
+                                    data-inactive-src="{{ url_for('static', filename='images/icons/like.svg') }}"
+                                    alt="Like"
+                                    width="25"
+                                    height="25"
+                                >
+                            </button>
+                        </form>
+                        <p id="like-count">{{ likes }} likes</p>
+
+                        <form id="favorite-form" action="/workshop/{{ post.id }}/favorite" method="post">
+                            <button type="submit" id="favorite-button" style="border: none; background: none; padding: 0;">
+                                <img
+                                    id="favorite-image"
+                                    src="{{ url_for('static', filename='images/icons/bookmark-filled.svg' if has_favorited else 'images/icons/bookmark.svg') }}"
+                                    data-active-src="{{ url_for('static', filename='images/icons/bookmark-filled.svg') }}"
+                                    data-inactive-src="{{ url_for('static', filename='images/icons/bookmark.svg') }}"
+                                    alt="Favorite"
+                                    width="25"
+                                    height="25"
+                                >
+                            </button>
+                        </form>
+                        <p id="favorite-count">{{ favorites }} favorites</p>
+
+                        <a href="/workshop/{{ post.id }}/download" class="button">
+                            <img src="{{ url_for('static', filename='images/icons/download.svg') }}" alt="Download" width="25" height="25">
+                        </a>
+
+                        {% if current_user.is_authenticated and current_user.is_moderator() %}
+                            <form id="feature-form" action="/workshop/{{ post.id }}/feature" method="post">
+                                <button type="submit" id="feature-button" style="border: none; background: none; padding: 0;">
+                                    <img
+                                        id="feature-image"
+                                        src="{{ url_for('static', filename='images/icons/star-filled.svg' if post.is_featured() else 'images/icons/star.svg') }}"
+                                        data-active-src="{{ url_for('static', filename='images/icons/star-filled.svg') }}"
+                                        data-inactive-src="{{ url_for('static', filename='images/icons/star.svg') }}"
+                                        alt="Feature"
+                                        width="25"
+                                        height="25"
+                                    >
+                                </button>
+                            </form>
+                        {% endif %}
+                    </div>
+
+                    <p>{{ post.description }}</p>
+                </div>
+
+                <div class="post-comment-block" id="comments-section">
+                    <form class="comment-form" id="comment-form" action="/workshop/{{ post['id'] }}/comment" method="post">
+                        <textarea class="comment-box" name="content" placeholder="Add a comment" id="comment-text"></textarea>
+                        <div style="display: flex; justify-content: right;">
+                            <button class="comment-button" type="submit">Comment</button>
+                        </div>
+                    </form>
+
+                    <div id="comments-list">
+                        {% for comment in comments %}
+                            <div class="comment">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <p><strong><a href="/user/{{ comment.user.id }}">{{ comment.user.username }}</a></strong></p>
+                                    <p>{{ comment.how_long_ago() }}</p>
+                                </div>
+                                <div>{{ comment['content'] }}</div>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <div style="display: flex; align-items: center;">
+                                        <img src="{{ url_for('static', filename='images/icons/like.svg') }}" style="width: 25px; height: 25px;">
+                                        <p>0</p>
+                                    </div>
+                                    <button>Reply</button>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script type="application/json" id="post-gauge-data">{% if post.package %}{{ post.package.first_face_json() | safe }}{% else %}{}{% endif %}</script>
+    <script type="module" src="/static/js/postPage.js"></script>
+    <script type="module" src="/static/js/gauge.js"></script>
+{% endblock %}

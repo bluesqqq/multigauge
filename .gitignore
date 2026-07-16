@@ -1,2 +1,22 @@
 build/
 .vscode/
+
+# Environment
+.env
+**/.env
+
+# Python
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Flask app local state
+apps/website/instance/
+
+# Generated web build outputs
+ports/web/dist/
+apps/website/static/multigauge-web/
+
+node_modules

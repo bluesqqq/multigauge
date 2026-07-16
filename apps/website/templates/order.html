@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% set navbar_background = true %}
+
+{% block title %}Order{% endblock %}
+
+{% block content %}
+    <section class="secondary-page">
+        <div class="secondary-page-inner">
+            {% import 'macros/secondary.html' as secondary_macros %}
+            {{ secondary_macros.render_page_header('ORDER') }}
+
+            {% if order %}
+                <div class="secondary-panel" style="display: grid; gap: 1rem; padding: 1.25rem;">
+                    <div class="secondary-card-grid cards-2">
+                        {{ secondary_macros.render_stat('Order', '#' ~ order.id) }}
+                        {{ secondary_macros.render_stat('Status', order.status) }}
+                        {{ secondary_macros.render_stat('Placed', order.created_at.strftime('%Y-%m-%d %H:%M')) }}
+                        {{ secondary_macros.render_stat('Total', '$' ~ ('%.2f'|format(order.total_price()))) }}
+                    </div>
+
+                    <div class="secondary-stat-list">
+                        {{ secondary_macros.render_stat('Stripe Session', order.stripe_session_id) }}
+                        {{ secondary_macros.render_stat('Payment Intent', order.stripe_payment_intent) }}
+                        {{ secondary_macros.render_stat('Customer', order.customer_email or order.customer_name or 'Guest order') }}
+                    </div>
+
+                    <div class="secondary-panel-dark" style="padding: 1rem;">
+                        <h3 style="margin: 0 0 0.75rem; text-transform: uppercase;">Items</h3>
+                        <div style="display: grid; gap: 0.75rem;">
+                            {% for item in order.items %}
+                                <div class="secondary-stat" style="border-color: rgba(255,255,255,0.08); background: rgba(255,255,255,0.04); color: #f0f0ef;">
+                                    <span class="secondary-stat-label" style="color: rgba(240,240,239,0.72);">{{ item.product_name_snapshot or item.product.name }} x{{ item.quantity }}</span>
+                                    <span class="secondary-stat-value">${{ '%.2f'|format(item.total_price()) }}</span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="secondary-stat-list">
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Shipping Address</span>
+                            <span class="secondary-stat-value">{{ order.get_shipping_address() }}</span>
+                        </div>
+                        <div class="secondary-stat">
+                            <span class="secondary-stat-label">Billing Address</span>
+                            <span class="secondary-stat-value">{{ order.get_billing_address() }}</span>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="secondary-panel" style="padding: 1.25rem;">
+                    <h1>Order not found!</h1>
+                </div>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}

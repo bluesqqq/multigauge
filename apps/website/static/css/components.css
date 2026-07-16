@@ -1,0 +1,14 @@
+/*
+    components.css - reusable site-wide UI classes
+*/
+
+.page-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.page-container {
+    width: min(100% - calc(var(--page-gutter) * 2), var(--page-max-width));
+    margin-inline: auto;
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "../../../../docs/schemas/gauge.schema.json",
+  "type": "rectangle",
+  "style": {
+    "width": "60%",
+    "height": 220,
+    "flex-container": {
+      "direction": "column",
+      "justify": "center",
+      "align-items": "center"
+    }
+  },
+  "paint": {
+    "fill": "#22c55e"
+  },
+  "radius": 14,
+  "children": []
+}

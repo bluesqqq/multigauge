@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Multigauge{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/pages/home.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/post.css') }}"/>
+    <style>
+        #heroModel {
+            width: 300px;
+            height: 300px;
+            background: transparent;
+            --poster-color: transparent;
+        }
+    </style>
+{% endblock %}
+
+{% block head_extra %}
+    <meta name="description" content="SEO stuff here">
+    <link rel="canonical" href="https://www.multi-gauge.com"/>
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+    <script type="importmap">{ "imports": { "three": "https://cdn.jsdelivr.net/npm/three@0.174.0/build/three.module.min.js" } }</script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@4.1.0/dist/model-viewer-module.min.js"></script>
+    <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer-effects@1.5.0/dist/model-viewer-effects.min.js"></script>
+{% endblock %}
+
+{% block content %}
+    {% import 'macros/post_card.html' as post_macros %}
+
+    <div class="h-dvh-screen hero">
+        <canvas id="heroBackground"></canvas>
+
+        <div class="hero-copy">
+            <h1 class="hero-title">
+                MULTIGAUGE
+            </h1>
+
+            <h2 class="hero-tagline">
+                one gauge,<br>infinite faces
+            </h2>
+        </div>
+
+        <div style="flex: 1; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; justify-content: center;">
+            <!--
+            <model-viewer
+                id="heroModel"
+                alt="Multi-Gauge"
+                src="/static/models/placeholder.glb"
+                camera-controls
+                interaction-prompt="none"
+                touch-action="none"
+                disable-zoom
+                disable-pan
+                ar>
+
+                <effect-composer render-mode="quality" msaa="4">
+                    <outline-effect
+                    color="#ffffff"
+                    strength="2.5"
+                    smoothing="1">
+                    </outline-effect>
+
+                    <smaa-effect quality="high"></smaa-effect>
+                </effect-composer>
+            </model-viewer>
+            -->
+        </div>
+    </div>
+
+    <div class="page-content product-card">
+        <div class="product-card-guides" aria-hidden="true">
+            <svg preserveAspectRatio="none">
+                <defs>
+                    <g id="product-card-crosshair">
+                        <line x1="-4" y1="0" x2="4" y2="0"></line>
+                        <line x1="0" y1="-6" x2="0" y2="6"></line>
+                    </g>
+                </defs>
+            </svg>
+        </div>
+        <div class="page-container product-card-inner">
+            <div class="product-card-panel product-card-info">
+                <h1 class="product-card-title">
+                    <span>52MM</span>
+                    <span>GAUGE</span>
+                </h1>
+                <p class="product-card-description">compact digital instrument for custom auto telemetry.</p>
+
+                <div class="product-card-specs" role="table" aria-label="Gauge specs">
+                    <div class="product-card-spec-row" role="row">
+                        <div class="product-card-spec-label" role="cell">FITS</div>
+                        <div class="product-card-spec-value" role="cell">UNIVERSAL 52MM GAUGE PODS</div>
+                    </div>
+                    <div class="product-card-spec-row" role="row">
+                        <div class="product-card-spec-label" role="cell">INPUT</div>
+                        <div class="product-card-spec-value" role="cell">OBD-II + EXTERNAL SENSORS</div>
+                    </div>
+                    <div class="product-card-spec-row" role="row">
+                        <div class="product-card-spec-label" role="cell">FACE</div>
+                        <div class="product-card-spec-value" role="cell">FULLY CUSTOMIZABLE</div>
+                    </div>
+                    <div class="product-card-spec-row" role="row">
+                        <div class="product-card-spec-label" role="cell">DISPLAY</div>
+                        <div class="product-card-spec-value" role="cell">240 x 240 ROUND UI</div>
+                    </div>
+                </div>
+
+                <button class="product-card-cta">VIEW PRODUCT &rarr;</button>
+            </div>
+
+            <div class="product-card-panel product-card-visual">
+                <img src="/static/images/placeholder-gauge.png" alt="52MM gauge preview">
+            </div>
+        </div>
+    </div>
+
+    <section class="page-content designer-preview">
+        <div class="page-container designer-preview-inner">
+            <div class="designer-preview-visual" aria-hidden="true">
+                <div class="designer-preview-ring">
+                    <canvas id="designerPreviewCanvas" class="designer-preview-canvas"></canvas>
+                </div>
+            </div>
+
+            <div class="designer-preview-copy">
+                <h2 class="designer-preview-title">
+                    ONE GAUGE,<br>
+                    INFINITE FACES
+                </h2>
+
+                <p class="designer-preview-description">
+                    design the gauge you actually want. change the look, choose the data, and build a display that fits your car.
+                </p>
+
+                <div class="designer-preview-controls">
+                    <div class="designer-preview-control-group">
+                        <p class="designer-preview-label">GAUGE FACE</p>
+                        <div class="designer-preview-tabs" role="tablist" aria-label="Gauge face options" data-designer-group="face">
+                            <button type="button" class="designer-preview-tab" data-face-key="RPM" aria-selected="true">RPM</button>
+                            <button type="button" class="designer-preview-tab" data-face-key="BOOST" aria-selected="false">BOOST</button>
+                            <button type="button" class="designer-preview-tab" data-face-key="TEMP" aria-selected="false">TEMP</button>
+                            <button type="button" class="designer-preview-tab" data-face-key="OIL" aria-selected="false">OIL</button>
+                        </div>
+                    </div>
+
+                    <div class="designer-preview-control-group">
+                        <p class="designer-preview-label">COLOR</p>
+                        <div class="designer-preview-tabs" role="tablist" aria-label="Color options" data-designer-group="color">
+                            <button type="button" class="designer-preview-tab" data-color-key="red" aria-selected="true">RED</button>
+                            <button type="button" class="designer-preview-tab" data-color-key="yellow" aria-selected="false">YELLOW</button>
+                            <button type="button" class="designer-preview-tab" data-color-key="green" aria-selected="false">GREEN</button>
+                            <button type="button" class="designer-preview-tab" data-color-key="blue" aria-selected="false">BLUE</button>
+                        </div>
+                    </div>
+
+                    <button type="button" class="designer-preview-cta">START DESIGNING &rarr;</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="page-content community-section">
+        <div class="community-section-guides" aria-hidden="true">
+            <svg preserveAspectRatio="none">
+                <defs>
+                    <g id="community-section-crosshair">
+                        <line x1="-4" y1="0" x2="4" y2="0"></line>
+                        <line x1="0" y1="-6" x2="0" y2="6"></line>
+                    </g>
+                </defs>
+            </svg>
+        </div>
+
+        <div class="page-container community-section-inner">
+            <div class="community-section-header">
+                <h2 class="community-section-title">
+                    SEE WHAT THE<br>
+                    COMMUNITY IS MAKING
+                </h2>
+
+                <p class="community-section-description">
+                    real gauge faces built in the editor.<br>
+                    copy one, download it, or start from scratch.
+                </p>
+            </div>
+
+            <div class="community-section-tabs" role="tablist" aria-label="Community filters">
+                <a
+                    class="community-section-tab{% if active_filter == 'featured' %} is-active{% endif %}"
+                    aria-selected="{{ 'true' if active_filter == 'featured' else 'false' }}"
+                    href="{{ url_for('main.home', featured='true') }}"
+                >FEATURED</a>
+                <a
+                    class="community-section-tab{% if active_filter == 'trending' %} is-active{% endif %}"
+                    aria-selected="{{ 'true' if active_filter == 'trending' else 'false' }}"
+                    href="{{ url_for('main.home', sort='trending') }}"
+                >TRENDING</a>
+                <a
+                    class="community-section-tab{% if active_filter == 'recent' %} is-active{% endif %}"
+                    aria-selected="{{ 'true' if active_filter == 'recent' else 'false' }}"
+                    href="{{ url_for('main.home', sort='recent') }}"
+                >RECENT</a>
+                <a class="community-section-tab community-section-tab-link" href="{{ view_all_url }}">VIEW ALL &rarr;</a>
+            </div>
+
+            <div class="community-post-grid">
+                {% if community_posts %}
+                    {% for post in community_posts %}
+                        {{ post_macros.render_post(post) }}
+                    {% endfor %}
+                {% else %}
+                    <p>No community posts yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block scripts %}
+    <script src="/static/js/gaugePreview.js" type="module"></script>
+    <script type="module" src="/static/js/textScrambler.js"></script>
+    <script type="module" src="/static/js/designerPreview.js"></script>
+    <script type="module" src="/static/js/productCardGuides.js"></script>
+    <script type="module" src="/static/js/communitySectionGuides.js"></script>
+    <script type="module" src="/static/js/heroAnimation.js"></script>
+    <script type="module" src="/static/js/indexPage.js"></script>
+{% endblock %}

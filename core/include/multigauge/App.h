@@ -1,0 +1,67 @@
+#pragma once
+
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
+
+#include <rapidjson/document.h>
+
+#include <multigauge/editor/Api.h>
+#include <multigauge/runtime/PackageManager.h>
+#include <yoga/Yoga.h>
+
+#include <multigauge/io/FileSystem.h>
+#include <multigauge/io/Time.h>
+#include <multigauge/io/Logger.h>
+
+namespace mg {
+
+class Screen;
+
+namespace graphics {
+class GraphicsContext;
+}
+
+using ContextId = uint32_t;
+
+struct AppConfig {
+    std::string dataRoot = "/multigauge";
+};
+
+//----------[ LIFETIME ]----------//
+
+bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config = AppConfig{}, io::Logger* logger = nullptr);
+void shutdown();
+void frame();
+YGConfigRef getYogaConfig();
+
+//----------[ CONTEXT ]----------//
+
+ContextId addContext(graphics::GraphicsContext& graphics);
+bool removeContext(ContextId id);
+bool hasContext(ContextId id);
+std::size_t contextCount();
+
+//----------[ SCREEN ]----------//
+
+bool setScreen(ContextId, std::unique_ptr<Screen> screen);
+bool clearScreen(ContextId id);
+bool hasScreen(ContextId id);
+
+bool setGaugeScreen(ContextId id, const std::string& json);
+bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId);
+bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId);
+
+//----------[ PACKAGES ]----------//
+
+bool listPackages(std::vector<PackageSummary>& out);
+bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out);
+
+Result getPackage(const std::string& packageId);
+Result importPackage(const std::string& json);
+Result importPackage(const rapidjson::Value& package);
+Result exportPackage(const std::string& packageId);
+Result removePackage(const std::string& packageId);
+
+}

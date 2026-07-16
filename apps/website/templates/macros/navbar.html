@@ -1,0 +1,100 @@
+{% macro render_navbar(with_background=false) %}
+    {% if with_background %}
+        <div class="navbar-background-spacer" aria-hidden="true"></div>
+    {% endif %}
+
+    <nav class="navbar">
+        <div class="navbar-inner page-container">
+            <button
+                class="navbar-menu-button"
+                type="button"
+                aria-label="Open navigation menu"
+                aria-expanded="false"
+                aria-controls="navbar-links"
+            >
+                <img
+                    src="/static/images/icons/more-horizontal.svg"
+                    data-menu-src="/static/images/icons/more-horizontal.svg"
+                    data-close-src="/static/images/icons/close.svg"
+                    class="navbar-menu-icon"
+                    alt=""
+                >
+            </button>
+
+            <a href="/" class="navbar-brand" aria-label="Multigauge home">
+                <img
+                    src="/static/images/multigauge-brandmark-light.svg"
+                    class="navbar-logo"
+                    alt="Multigauge"
+                >
+            </a>
+
+            <div class="navbar-links" id="navbar-links">
+                <a href="/products">PRODUCTS</a>
+                <a href="/workshop">WORKSHOP</a>
+                <a href="/downloads">DOWNLOADS</a>
+                <a href="/editor">EDITOR</a>
+
+                {% if current_user.is_authenticated and current_user.is_admin() %}
+                    <a href="/admin">ADMIN</a>
+                {% endif %}
+            </div>
+
+            <div class="navbar-actions">
+                {% if current_user.is_authenticated %}
+                    {# Notifications here #}
+                {% endif %}
+
+                <div class="navbar-account">
+                    <button
+                        class="navbar-account-toggle"
+                        type="button"
+                        aria-label="Open account menu"
+                        aria-haspopup="true"
+                        aria-expanded="false"
+                        data-account-toggle
+                    >
+                        <img
+                            src="/static/images/icons/profile.svg"
+                            class="navbar-icon"
+                            alt=""
+                            aria-hidden="true"
+                        >
+                        <img
+                            src="/static/images/icons/chevron-down.svg"
+                            class="navbar-account-caret"
+                            alt=""
+                            aria-hidden="true"
+                        >
+                    </button>
+
+                    <div class="navbar-account-menu" data-account-menu hidden>
+                        {% if current_user.is_authenticated %}
+                            <div class="navbar-account-header">
+                                @{{ current_user.username }}
+                            </div>
+                            <div class="navbar-account-divider" aria-hidden="true"></div>
+                            <a href="{{ url_for('users.user', user_id=current_user.id) }}">View profile</a>
+                            <a href="{{ url_for('account.dashboard') }}">Account</a>
+                            <a href="{{ url_for('account.orders') }}">Orders</a>
+                            <div class="navbar-account-divider" aria-hidden="true"></div>
+                            <a href="{{ url_for('auth.logout') }}">Sign out</a>
+                        {% else %}
+                            <a href="{{ url_for('auth.login') }}">Sign in</a>
+                            <a href="{{ url_for('auth.register') }}">Create account</a>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <a href="/cart" class="navbar-cart" aria-label="Cart">
+                    <img
+                        src="/static/images/icons/cart.svg"
+                        class="navbar-icon"
+                        alt="Cart"
+                    >
+                    <span class="navbar-cart-count">{{ cart_count }}</span>
+                </a>
+            </div>
+        </div>
+    </nav>
+{% endmacro %}

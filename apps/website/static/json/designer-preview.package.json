@@ -1,0 +1,416 @@
+{
+  "name": "Designer Preview Pack",
+  "author": "Multigauge",
+  "description": "Homepage gauge preview presets for the designer section.",
+  "faces": [
+    {
+      "name": "RPM",
+      "face": {
+        "bgColor": "#0b0f14",
+        "layout": {
+          "flex-container": {
+            "direction": "column",
+            "justify": "center",
+            "align-items": "center"
+          },
+          "padding": {
+            "left": 10,
+            "right": 10,
+            "top": 10,
+            "bottom": 10
+          }
+        },
+        "children": [
+          {
+            "type": "circular-element",
+            "style": {
+              "width": "100%",
+              "height": "100%"
+            },
+            "startAngle": 150,
+            "endAngle": 390,
+            "value": {
+              "id": "engineRPM",
+              "min": 0,
+              "max": 8000
+            },
+            "children": [
+              {
+                "type": "circular-scale",
+                "style": {
+                  "position": {
+                    "type": "absolute",
+                    "left": 0,
+                    "right": 0,
+                    "top": 0,
+                    "bottom": 0
+                  }
+                },
+                "radius": 1,
+                "ticks": {
+                  "root": {
+                    "interval": 1000,
+                    "useDivisions": false,
+                    "length": 12,
+                    "thickness": 3,
+                    "paint": {
+                      "fill": {
+                        "type": "static",
+                        "color": "#ff4d2e"
+                      },
+                      "stroke": {
+                        "keyframes": []
+                      },
+                      "thickness": 1
+                    }
+                  },
+                  "subs": [
+                    {
+                      "divisions": 4,
+                      "length": 6,
+                      "thickness": 2,
+                      "paint": {
+                        "fill": {
+                          "type": "static",
+                          "color": "#6b7280"
+                        },
+                        "stroke": {
+                          "keyframes": []
+                        },
+                        "thickness": 1
+                      }
+                    }
+                  ],
+                  "offset": 0
+                }
+              },
+              {
+                "type": "circular-needle",
+                "style": {
+                  "position": {
+                    "type": "absolute",
+                    "left": 0,
+                    "right": 0,
+                    "top": 0,
+                    "bottom": 0
+                  }
+                },
+                "radius": 0.63,
+                "paint": {
+                  "fill": {
+                    "type": "static",
+                    "color": "#ff4d2e"
+                  },
+                  "stroke": {
+                    "type": "static",
+                    "color": "#ffd8a8"
+                  },
+                  "thickness": 2
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "BOOST",
+      "face": {
+        "bgColor": "#0b0f14",
+        "layout": {
+          "flex-container": {
+            "direction": "column",
+            "justify": "center",
+            "align-items": "center"
+          },
+          "padding": {
+            "left": 16,
+            "right": 16,
+            "top": 16,
+            "bottom": 16
+          }
+        },
+        "children": [
+          {
+            "type": "graph",
+            "style": {
+              "width": "100%",
+              "height": "100%"
+            },
+            "value": {
+              "id": "boostPressure",
+              "min": 0,
+              "max": 100
+            },
+            "seconds": 10,
+            "graphColor": {
+              "type": "static",
+              "color": "#ff4d2e"
+            },
+            "secondsColor": {
+              "type": "static",
+              "color": "#6b7280"
+            },
+            "valueColor": {
+              "type": "static",
+              "color": "#ffffff"
+            },
+            "borderColor": {
+              "type": "static",
+              "color": "#ff4d2e"
+            },
+            "bgColor": {
+              "type": "static",
+              "color": "#07111b"
+            },
+            "groundColor": {
+              "type": "static",
+              "color": "#0f172a"
+            },
+            "children": []
+          }
+        ]
+      }
+    },
+    {
+      "name": "TEMP",
+      "face": {
+        "bgColor": "#0b0f14",
+        "layout": {
+          "flex-container": {
+            "direction": "column",
+            "justify": "center",
+            "align-items": "center"
+          },
+          "padding": {
+            "left": 12,
+            "right": 12,
+            "top": 12,
+            "bottom": 12
+          }
+        },
+        "children": [
+          {
+            "type": "circle",
+            "style": {
+              "width": "100%",
+              "height": "100%"
+            },
+            "paint": {
+              "fill": {
+                "type": "static",
+                "color": "#111114"
+              },
+              "stroke": {
+                "type": "static",
+                "color": "#1f2937"
+              },
+              "thickness": 10
+            }
+          },
+          {
+            "type": "circular-element",
+            "style": {
+              "width": "100%",
+              "height": "100%"
+            },
+            "startAngle": 180,
+            "endAngle": 420,
+            "value": {
+              "id": "engineCoolantTemp",
+              "min": -40,
+              "max": 120
+            },
+            "children": [
+              {
+                "type": "circular-scale",
+                "style": {
+                  "position": {
+                    "type": "absolute",
+                    "left": 0,
+                    "right": 0,
+                    "top": 0,
+                    "bottom": 0
+                  }
+                },
+                "radius": 0.92,
+                "ticks": {
+                  "root": {
+                    "interval": 20,
+                    "useDivisions": false,
+                    "length": 10,
+                    "thickness": 3,
+                    "paint": {
+                      "fill": {
+                        "type": "static",
+                        "color": "#ff4d2e"
+                      },
+                      "stroke": {
+                        "keyframes": []
+                      },
+                      "thickness": 1
+                    }
+                  },
+                  "subs": [],
+                  "offset": 0
+                }
+              },
+              {
+                "type": "circular-needle",
+                "style": {
+                  "position": {
+                    "type": "absolute",
+                    "left": 0,
+                    "right": 0,
+                    "top": 0,
+                    "bottom": 0
+                  }
+                },
+                "radius": 0.68,
+                "paint": {
+                  "fill": {
+                    "type": "static",
+                    "color": "#ffb39a"
+                  },
+                  "stroke": {
+                    "type": "static",
+                    "color": "#ff4d2e"
+                  },
+                  "thickness": 2
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "name": "OIL",
+      "face": {
+        "bgColor": "#0b0f14",
+        "layout": {
+          "flex-container": {
+            "direction": "column",
+            "justify": "center",
+            "align-items": "center"
+          },
+          "padding": {
+            "left": 14,
+            "right": 14,
+            "top": 14,
+            "bottom": 14
+          }
+        },
+        "children": [
+          {
+            "type": "circle",
+            "style": {
+              "width": "100%",
+              "height": "100%"
+            },
+            "paint": {
+              "fill": {
+                "type": "static",
+                "color": "#111114"
+              },
+              "stroke": {
+                "type": "static",
+                "color": "#1f2937"
+              },
+              "thickness": 12
+            }
+          },
+          {
+            "type": "circular-element",
+            "style": {
+              "width": "100%",
+              "height": "100%"
+            },
+            "startAngle": 220,
+            "endAngle": 400,
+            "value": {
+              "id": "engineOilPressure",
+              "min": 0,
+              "max": 100
+            },
+            "children": [
+              {
+                "type": "circular-scale",
+                "style": {
+                  "position": {
+                    "type": "absolute",
+                    "left": 0,
+                    "right": 0,
+                    "top": 0,
+                    "bottom": 0
+                  }
+                },
+                "radius": 0.86,
+                "ticks": {
+                  "root": {
+                    "interval": 20,
+                    "useDivisions": false,
+                    "length": 9,
+                    "thickness": 3,
+                    "paint": {
+                      "fill": {
+                        "type": "static",
+                        "color": "#ff4d2e"
+                      },
+                      "stroke": {
+                        "keyframes": []
+                      },
+                      "thickness": 1
+                    }
+                  },
+                  "subs": [
+                    {
+                      "divisions": 4,
+                      "length": 4,
+                      "thickness": 1,
+                      "paint": {
+                        "fill": {
+                          "type": "static",
+                          "color": "#6b7280"
+                        },
+                        "stroke": {
+                          "keyframes": []
+                        },
+                        "thickness": 1
+                      }
+                    }
+                  ],
+                  "offset": 0
+                }
+              },
+              {
+                "type": "circular-needle",
+                "style": {
+                  "position": {
+                    "type": "absolute",
+                    "left": 0,
+                    "right": 0,
+                    "top": 0,
+                    "bottom": 0
+                  }
+                },
+                "radius": 0.56,
+                "paint": {
+                  "fill": {
+                    "type": "static",
+                    "color": "#ff4d2e"
+                  },
+                  "stroke": {
+                    "type": "static",
+                    "color": "#ffffff"
+                  },
+                  "thickness": 2
+                }
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

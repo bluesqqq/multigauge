@@ -1,0 +1,34 @@
+@import url("variables.css");
+
+.footer {
+    width: 100%;
+    height: 100px;
+
+    background: var(--color-text);
+    color: var(--color-bg-900);
+    font-size: 16px;
+}
+
+.footer-inner {
+    height: 100%;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.footer-group {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+}
+
+.footer a {
+    height: 100%;
+    display: flex;
+    align-items: center;
+
+    line-height: 1;
+    text-decoration: none;
+    color: inherit;
+}

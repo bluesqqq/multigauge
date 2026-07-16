@@ -1,0 +1,52 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": {
+    "major": 3,
+    "minor": 25,
+    "patch": 0
+  },
+  "configurePresets": [
+    {
+      "name": "ninja-base",
+      "hidden": true,
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/${presetName}"
+    },
+    {
+      "name": "emscripten-base",
+      "hidden": true,
+      "inherits": "ninja-base",
+      "cacheVariables": {
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+      }
+    },
+    {
+      "name": "wasm-debug",
+      "inherits": "emscripten-base",
+      "displayName": "WASM Debug",
+      "description": "Configure a Debug WebAssembly build with Emscripten",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      }
+    },
+    {
+      "name": "wasm-release",
+      "inherits": "emscripten-base",
+      "displayName": "WASM Release",
+      "description": "Configure a Release WebAssembly build with Emscripten",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "wasm-debug",
+      "configurePreset": "wasm-debug"
+    },
+    {
+      "name": "wasm-release",
+      "configurePreset": "wasm-release"
+    }
+  ]
+}

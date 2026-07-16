@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  native:
+    name: Native build
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure
+        run: cmake -S . -B build -DMULTIGAUGE_BUILD_WEB=OFF
+
+      - name: Build
+        run: cmake --build build --config Debug --target multigauge_ci -j 24
+
+  web:
+    name: Web build
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install emsdk
+        run: |
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git emsdk
+          & .\emsdk\emsdk.bat install latest
+          & .\emsdk\emsdk.bat activate latest
+          . .\emsdk\emsdk_env.ps1
+          $emsdkRoot = (Resolve-Path .\emsdk).Path
+          $emscriptenDir = Join-Path $emsdkRoot "upstream\emscripten"
+          Add-Content $env:GITHUB_PATH $emsdkRoot
+          Add-Content $env:GITHUB_PATH $emscriptenDir
+          if (Test-Path (Join-Path $emsdkRoot "node")) {
+            $nodeDir = Get-ChildItem (Join-Path $emsdkRoot "node") -Directory | Sort-Object Name -Descending | Select-Object -First 1
+            if ($nodeDir) {
+              Add-Content $env:GITHUB_PATH (Join-Path $nodeDir.FullName "bin")
+              $nodeExe = Join-Path $nodeDir.FullName "bin\node.exe"
+              if (Test-Path $nodeExe) {
+                "EMSDK_NODE=$nodeExe" | Out-File -FilePath $env:GITHUB_ENV -Append
+              }
+            }
+          }
+          if (Test-Path (Join-Path $emsdkRoot "python")) {
+            $pythonDir = Get-ChildItem (Join-Path $emsdkRoot "python") -Directory | Sort-Object Name -Descending | Select-Object -First 1
+            if ($pythonDir) {
+              Add-Content $env:GITHUB_PATH $pythonDir.FullName
+              $pythonExe = Join-Path $pythonDir.FullName "python.exe"
+              if (Test-Path $pythonExe) {
+                "EMSDK_PYTHON=$pythonExe" | Out-File -FilePath $env:GITHUB_ENV -Append
+              }
+            }
+          }
+          "EMSDK=$emsdkRoot" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Configure
+        run: cmake -S . -B build -DMULTIGAUGE_BUILD_WEB=ON -DMULTIGAUGE_REQUIRE_WEB=ON
+
+      - name: Build
+        run: cmake --build build --config Debug --target multigauge_ci -j 24
+
+      - name: Publish web bundle
+        run: .\scripts\publish-web-assets.ps1
+
+      - name: Verify published web bundle
+        run: |
+          if (-not (Test-Path "apps/website/static/multigauge-web/js/pageRenderer.js")) {
+            throw "Missing published pageRenderer.js"
+          }
+          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.js")) {
+            throw "Missing published multigauge.js"
+          }
+          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.wasm")) {
+            throw "Missing published multigauge.wasm"
+          }
+
+      - name: Upload web bundle
+        uses: actions/upload-artifact@v4
+        with:
+          name: multigauge-web
+          path: apps/website/static/multigauge-web

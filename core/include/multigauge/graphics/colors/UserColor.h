@@ -1,0 +1,49 @@
+#pragma once
+
+#include <multigauge/graphics/colors/Color.h>
+
+namespace mg::graphics {
+
+class UserColor : public Color {
+    MG_EDITOR_NAME("User Color")
+    MG_TYPE_ID("user")
+
+    public:
+        enum class Slot : uint8_t {
+            Primary,
+            Secondary,
+            Background,
+        };
+
+    private:
+        Slot slot;
+        
+        static rgba userColors[3];
+    
+    public:
+        UserColor(Slot slot = Slot::Primary);
+        
+        OwnedColor clone() const override;
+        
+        /// @brief Gets the user-defined color value.
+        /// @return The 16-bit color value
+        rgba getColor() const override;
+
+        /// @brief Gets the type of this color.
+        /// @return Type::User
+        Type getType() const override;
+
+        /// @brief Blends this color with a static color value.
+        /// @param color The 16-bit color value to blend with
+        /// @param alpha The blend amount (0.0 = this color, 1.0 = blend color)
+        /// @return A new StaticColor object with the blended result
+        OwnedColor blended(rgba color, float alpha) const override;
+
+        /// @brief Blends this color with another Color object.
+        /// @param color The Color object to blend with
+        /// @param alpha The blend amount (0.0 = this color, 1.0 = other color)
+        /// @return A new Color object of the same derived type as the input (e.g., blending with a TimeColor returns a TimeColor)
+        OwnedColor blended(const Color& other, float alpha) const override;
+};
+
+} // namespace mg::graphics

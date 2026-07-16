@@ -1,0 +1,44 @@
+{% macro render_post(post, href=None) %}
+{% set card_href = href or post.href or url_for('workshop.view_post', post_id=post.id) %}
+{% set author_href = url_for('users.user', user_id=post.posted_by) %}
+{% set gauge_json = post.package.first_face_json() if post.package else '{}' %}
+<article class="community-post-card">
+  <a class="community-post-card-link" href="{{ card_href }}" aria-label="Open {{ post.title }}"></a>
+
+  <div class="community-post-card-shell">
+    <div class="community-post-card-media">
+      <canvas
+        id="gaugeCanvas-{{ post.id }}"
+        class="community-post-canvas"
+        width="512"
+        height="512"
+        aria-label="{{ post.title }} gauge preview"
+      ></canvas>
+      <script type="application/json" id="gaugeData-{{ post.id }}">{{ gauge_json | safe }}</script>
+    </div>
+
+    <div class="community-post-card-body">
+      <p class="community-post-card-index">{{ post.badge or ('#' ~ post.id) }}</p>
+      <h3 class="community-post-card-title">{{ post.title }}</h3>
+
+      <p class="community-post-card-author">
+        by <a class="community-post-card-author-link" href="{{ author_href }}">{{ post.user_username or ('@' ~ (post.user.username if post.user else 'Unknown')) }}</a>
+      </p>
+
+      <div class="community-post-card-divider" aria-hidden="true"></div>
+
+      <div class="community-post-card-stats" aria-label="Post stats">
+        <div class="community-post-card-stat">
+          <img src="{{ url_for('static', filename='images/icons/like-filled.svg') }}" alt="" width="16" height="16" aria-hidden="true">
+          <span>{{ post.total_likes() }}</span>
+        </div>
+
+        <div class="community-post-card-stat">
+          <img src="{{ url_for('static', filename='images/icons/download.svg') }}" alt="" width="16" height="16" aria-hidden="true">
+          <span>{{ post.total_downloads() }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</article>
+{% endmacro %}

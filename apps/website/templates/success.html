@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% set navbar_background = true %}
+
+{% block title %}Order Complete{% endblock %}
+
+{% block styles %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/login.css') }}" />
+{% endblock %}
+
+{% block content %}
+    <section class="secondary-page">
+        <div class="auth-shell">
+            <div class="secondary-panel auth-card">
+                {% import 'macros/secondary.html' as secondary_macros %}
+                {{ secondary_macros.render_page_header('Thank You for Your Purchase!') }}
+                <p class="secondary-page-copy" style="max-width: none;">Your order has been received and is being processed.</p>
+
+                {% if order_id %}
+                    <p style="margin: 1rem 0 0;"><strong>Order #{{ order_id }}</strong></p>
+                {% endif %}
+
+                <p class="secondary-page-copy" style="max-width: none; margin-top: 1rem;">You will receive a confirmation email shortly.</p>
+
+                <div style="display: flex; gap: 0.75rem; margin-top: 1.25rem; flex-wrap: wrap;">
+                    <a href="/" class="workshop-upload-cta" style="text-decoration: none;">Return to Home</a>
+                    <a href="/products" class="workshop-upload-cta" style="text-decoration: none;">Continue Shopping</a>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
