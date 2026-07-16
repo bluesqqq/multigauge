@@ -3,10 +3,10 @@ name: Deploy Website
 on:
   push:
     tags:
-      - 'apps-website@*'
+      - 'ports-web@*'
 
 permissions:
-  contents: read
+  contents: write
 
 jobs:
   deploy-web:
@@ -42,18 +42,13 @@ jobs:
           if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.js")) { throw "Missing multigauge.js" }
           if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.wasm")) { throw "Missing multigauge.wasm" }
 
-      - name: Sync firmware manifest
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          GITHUB_REPOSITORY: ${{ github.repository }}
-        run: .\scripts\sync-firmware-manifest.ps1
+      - name: Package Web Bundle into a ZIP
+        run: |
+          Compress-Archive -Path "apps/website/static/multigauge-web/*" -DestinationPath "ports-web-dist.zip" -Force
 
-      - name: Deploy to Raspberry Pi via SSH
-        uses: appleboy/scp-action@master
+      - name: Upload Web WASM Zip to GitHub Release
+        uses: softprops/action-gh-release@v2
         with:
-          host: ${{ secrets.RPI_HOST }}
-          username: ${{ secrets.RPI_USER }}
-          key: ${{ secrets.RPI_SSH_KEY }}
-          port: 22
-          source: "apps/website/static/multigauge-web/*,apps/website/static/firmware/multigauge/*"
-          target: "/var/www/multigauge"
+          files: ports-web-dist.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
