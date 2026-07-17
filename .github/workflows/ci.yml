@@ -1,0 +1,58 @@
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - main
+
+  push:
+    branches:
+      - main
+
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  core:
+    name: Core
+    uses: ./.github/workflows/build-core.yml
+    with:
+      fetch_depth: 1
+      build_type: Debug
+      build_target: multigauge_ci
+
+  firmware:
+    name: Firmware
+    needs: core
+    uses: ./.github/workflows/build-firmware.yml
+    with:
+      fetch_depth: 1
+      upload_artifact: true
+
+  web:
+    name: Web
+    needs: core
+    uses: ./.github/workflows/build-web.yml
+    with:
+      fetch_depth: 1
+      build_type: Debug
+      upload_artifact: true
+
+  release:
+    name: Release
+    needs:
+      - core
+      - firmware
+      - web
+
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+
+    uses: ./.github/workflows/cd.yml
+    secrets: inherit
