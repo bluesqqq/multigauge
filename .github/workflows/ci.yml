@@ -50,7 +50,7 @@ jobs:
       - firmware
       - web
 
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/fix/failing-release-coordinator' }}
 
     uses: ./.github/workflows/cd.yml
     secrets: inherit
