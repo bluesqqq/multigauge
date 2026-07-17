@@ -9,52 +9,31 @@ permissions:
   contents: write
 
 jobs:
-  deploy-web:
-    name: Build & Deploy Web Target
+  build:
+    uses: ./.github/workflows/build-web.yml
+    with:
+      fetch_depth: 0
+      build_type: Release
+      upload_artifact: true
+
+  publish:
+    name: Package and Upload Web Bundle
+    needs: build
     runs-on: ubuntu-latest
     defaults:
       run:
         shell: pwsh
 
     steps:
-      - name: Checkout Code with Full Git History
-        uses: actions/checkout@v4
+      - name: Download Web Artifact
+        uses: actions/download-artifact@v4
         with:
-          fetch-depth: 0
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ github.job }}-${{ runner.os }}
-
-      - name: Setup Emscripten
-        uses: emscripten-core/setup-emsdk@v15
-        with:
-          version: latest
-
-      - name: Configure CMake
-        run: |
-          cmake -S . -B build `
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache `
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache `
-            -DMULTIGAUGE_BUILD_WEB=ON `
-            -DMULTIGAUGE_REQUIRE_WEB=ON
-
-      - name: Build WASM Target
-        run: cmake --build build --config Release --target multigauge_ci -j $(nproc)
-
-      - name: Publish Web Bundle
-        run: ./scripts/publish-web-assets.ps1
-
-      - name: Verify Web Bundle
-        run: |
-          if (-not (Test-Path "apps/website/static/multigauge-web/js/pageRenderer.js")) { throw "Missing pageRenderer.js" }
-          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.js")) { throw "Missing multigauge.js" }
-          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.wasm")) { throw "Missing multigauge.wasm" }
+          name: multigauge-web
+          path: web-artifact
 
       - name: Package Web Bundle into a ZIP
         run: |
-          Compress-Archive -Path "apps/website/static/multigauge-web/*" -DestinationPath "ports-web-dist.zip" -Force
+          Compress-Archive -Path "web-artifact/*" -DestinationPath "ports-web-dist.zip" -Force
 
       - name: Upload Web WASM Zip to GitHub Release
         uses: softprops/action-gh-release@v2

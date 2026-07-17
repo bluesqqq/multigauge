@@ -10,121 +10,23 @@ permissions:
 
 jobs:
   core:
-    name: Core build
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: pwsh
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ github.job }}-${{ runner.os }}
-
-      - name: Configure
-        run: |
-          cmake -S . -B build `
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache `
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache `
-            -DMULTIGAUGE_BUILD_WEB=OFF
-
-      - name: Build
-        run: cmake --build build --config Debug --target multigauge_ci -j $(nproc)
+    uses: ./.github/workflows/build-core.yml
+    with:
+      fetch_depth: 1
+      build_type: Debug
+      build_target: multigauge_ci
 
   firmware:
-    name: Firmware build
-    runs-on: ubuntu-latest
     needs: core
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.10'
-
-      - name: Install System Dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ccache
-
-      - name: Cache PlatformIO, Pip & ccache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/pip
-            ~/.platformio
-            ~/.cache/ccache
-          key: ${{ runner.os }}-pio-${{ hashFiles('**/platformio.ini') }}
-          restore-keys: |
-            ${{ runner.os }}-pio-
-
-      - name: Install PlatformIO
-        run: |
-          python -m pip install --upgrade pip
-          pip install --upgrade platformio
-
-      - name: Build Firmware
-        env:
-          PLATFORMIO_BUILD_CACHE_DIR: ~/.cache/ccache
-        run: pio run -d ports/esp32 -e esp32-s3-devkitc-1
+    uses: ./.github/workflows/build-firmware.yml
+    with:
+      fetch_depth: 1
+      upload_artifact: false
 
   web:
-    name: Web build
-    runs-on: ubuntu-latest
     needs: core
-    defaults:
-      run:
-        shell: pwsh
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup ccache
-        uses: hendrikmuhs/ccache-action@v1.2
-        with:
-          key: ${{ github.job }}-${{ runner.os }}
-
-      - name: Setup Emscripten
-        uses: emscripten-core/setup-emsdk@v15
-        with:
-          version: latest
-
-      - name: Configure
-        run: |
-          cmake -S . -B build `
-            -DCMAKE_C_COMPILER_LAUNCHER=ccache `
-            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache `
-            -DMULTIGAUGE_BUILD_WEB=ON `
-            -DMULTIGAUGE_REQUIRE_WEB=ON
-
-      - name: Build
-        run: cmake --build build --config Debug --target multigauge_ci -j $(nproc)
-
-      - name: Publish web bundle
-        run: ./scripts/publish-web-assets.ps1
-
-      - name: Verify published web bundle
-        run: |
-          if (-not (Test-Path "apps/website/static/multigauge-web/js/pageRenderer.js")) {
-            throw "Missing published pageRenderer.js"
-          }
-          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.js")) {
-            throw "Missing published multigauge.js"
-          }
-          if (-not (Test-Path "apps/website/static/multigauge-web/wasm/multigauge.wasm")) {
-            throw "Missing published multigauge.wasm"
-          }
-
-      - name: Upload web bundle
-        uses: actions/upload-artifact@v4
-        with:
-          name: multigauge-web
-          path: apps/website/static/multigauge-web
+    uses: ./.github/workflows/build-web.yml
+    with:
+      fetch_depth: 1
+      build_type: Debug
+      upload_artifact: true
