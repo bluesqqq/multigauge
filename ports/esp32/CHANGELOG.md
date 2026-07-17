@@ -1,5 +1,11 @@
 # ports-esp32
 
+## 0.0.1
+
+### Patch Changes
+
+- f59ca05: Test!
+
 ## 0.1.2
 
 ### Patch Changes
