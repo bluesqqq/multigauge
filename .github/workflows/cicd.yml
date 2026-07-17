@@ -41,7 +41,7 @@ jobs:
       - core
       - firmware
       - web
-    if: ${{ github.event_name == 'push' && github.ref_name == 'fix/failing-release-coordinator' }}
+    if: ${{ github.event_name == 'push' && github.ref_name == 'fix/failing-release-coordinator' && (contains(join(github.event.commits.*.added, ','), '.changeset/') || contains(join(github.event.commits.*.modified, ','), '.changeset/')) }}
     runs-on: ubuntu-latest
     outputs:
       firmware_tag: ${{ steps.detect-tags.outputs.firmware_tag }}
