@@ -35,13 +35,40 @@ jobs:
       build_type: Debug
       upload_artifact: true
 
+  release_gate:
+    name: Release Gate
+    needs:
+      - core
+      - firmware
+      - web
+    if: ${{ github.event_name == 'push' && github.ref_name == 'fix/failing-release-coordinator' }}
+    runs-on: ubuntu-latest
+    outputs:
+      has_changeset: ${{ steps.check.outputs.has_changeset }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Check for Changeset
+        id: check
+        shell: bash
+        run: |
+          if compgen -G ".changeset/*.md" > /dev/null; then
+            echo "has_changeset=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_changeset=false" >> "$GITHUB_OUTPUT"
+          fi
+
   release:
     name: Release
     needs:
       - core
       - firmware
       - web
-    if: ${{ github.event_name == 'push' && github.ref_name == 'fix/failing-release-coordinator' && (contains(join(github.event.commits.*.added, ','), '.changeset/') || contains(join(github.event.commits.*.modified, ','), '.changeset/')) }}
+      - release_gate
+    if: ${{ needs.release_gate.outputs.has_changeset == 'true' }}
     runs-on: ubuntu-latest
     outputs:
       firmware_tag: ${{ steps.detect-tags.outputs.firmware_tag }}
