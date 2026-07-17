@@ -1,5 +1,11 @@
 # ports-esp32
 
+## 0.0.2
+
+### Patch Changes
+
+- d13fac5: Trying another bump...
+
 ## 0.0.1
 
 ### Patch Changes
