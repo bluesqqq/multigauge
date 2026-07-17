@@ -1,5 +1,11 @@
 # ports-esp32
 
+## 0.0.2
+
+### Patch Changes
+
+- 873fa99: Testing...
+
 ## 0.0.1
 
 ### Patch Changes
