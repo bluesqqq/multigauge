@@ -13,6 +13,9 @@ jobs:
   coordinate:
     name: Manage Release PRs & Tags
     runs-on: ubuntu-latest
+    outputs:
+      firmware_tag: ${{ steps.detect-tags.outputs.firmware_tag }}
+      website_tag: ${{ steps.detect-tags.outputs.website_tag }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -37,3 +40,34 @@ jobs:
           publish: npx changeset tag
         env:
           GITHUB_TOKEN: ${{ secrets.MULTIGAUGE_RELEASE_TOKEN }}
+
+      - name: Detect Created Release Tags
+        id: detect-tags
+        shell: bash
+        run: |
+          firmware_tag="$(git tag --points-at HEAD | grep -E '^ports-esp32@' | head -n 1 || true)"
+          website_tag="$(git tag --points-at HEAD | grep -E '^ports-web@' | head -n 1 || true)"
+
+          echo "firmware_tag=$firmware_tag" >> "$GITHUB_OUTPUT"
+          echo "website_tag=$website_tag" >> "$GITHUB_OUTPUT"
+
+  firmware:
+    name: Deploy Firmware Release Assets
+    needs: coordinate
+    if: needs.coordinate.outputs.firmware_tag != ''
+    uses: ./.github/workflows/deploy-firmware.yml
+    with:
+      tag_name: ${{ needs.coordinate.outputs.firmware_tag }}
+      fetch_depth: 1
+      upload_artifact: true
+
+  website:
+    name: Deploy Website Release Assets
+    needs: coordinate
+    if: needs.coordinate.outputs.website_tag != ''
+    uses: ./.github/workflows/deploy-website.yml
+    with:
+      tag_name: ${{ needs.coordinate.outputs.website_tag }}
+      fetch_depth: 0
+      build_type: Release
+      upload_artifact: true
