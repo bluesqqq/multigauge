@@ -1,4 +1,4 @@
-name: Release Coordinator
+name: CD
 
 on:
   push:
@@ -11,7 +11,6 @@ permissions:
 
 jobs:
   coordinate:
-    name: Manage Release PRs & Tags
     runs-on: ubuntu-latest
     outputs:
       firmware_tag: ${{ steps.detect-tags.outputs.firmware_tag }}
@@ -52,7 +51,6 @@ jobs:
           echo "website_tag=$website_tag" >> "$GITHUB_OUTPUT"
 
   firmware:
-    name: Deploy Firmware Release Assets
     needs: coordinate
     if: needs.coordinate.outputs.firmware_tag != ''
     uses: ./.github/workflows/deploy-firmware.yml
@@ -62,7 +60,6 @@ jobs:
       upload_artifact: true
 
   website:
-    name: Deploy Website Release Assets
     needs: coordinate
     if: needs.coordinate.outputs.website_tag != ''
     uses: ./.github/workflows/deploy-website.yml

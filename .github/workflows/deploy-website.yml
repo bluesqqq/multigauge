@@ -28,7 +28,6 @@ jobs:
       upload_artifact: ${{ inputs.upload_artifact }}
 
   publish:
-    name: Package and Upload Web Bundle
     needs: build
     runs-on: ubuntu-latest
     defaults:

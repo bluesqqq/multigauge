@@ -24,7 +24,6 @@ jobs:
       upload_artifact: ${{ inputs.upload_artifact }}
 
   publish:
-    name: Upload ESP32 Firmware to GitHub Release
     needs: build
     runs-on: ubuntu-latest
 
