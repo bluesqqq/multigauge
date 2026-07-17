@@ -1,16 +1,22 @@
 name: CD
 
 on:
-  push:
+  workflow_run:
+    workflows:
+      - CI
+    types:
+      - completed
     branches:
       - fix/failing-release-coordinator
 
 permissions:
+  actions: read
   contents: write
   pull-requests: write
 
 jobs:
   coordinate:
+    if: ${{ github.event.workflow_run.event == 'push' && github.event.workflow_run.conclusion == 'success' }}
     runs-on: ubuntu-latest
     outputs:
       firmware_tag: ${{ steps.detect-tags.outputs.firmware_tag }}
@@ -20,6 +26,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.event.workflow_run.head_sha }}
           token: ${{ secrets.MULTIGAUGE_RELEASE_TOKEN }}
 
       - name: Setup Node.js
@@ -53,18 +60,48 @@ jobs:
   firmware:
     needs: coordinate
     if: needs.coordinate.outputs.firmware_tag != ''
-    uses: ./.github/workflows/deploy-firmware.yml
-    with:
-      tag_name: ${{ needs.coordinate.outputs.firmware_tag }}
-      fetch_depth: 1
-      upload_artifact: true
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Firmware Artifact From CI
+        uses: actions/download-artifact@v4
+        with:
+          name: multigauge-firmware
+          path: firmware-artifact
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.MULTIGAUGE_RELEASE_TOKEN }}
+
+      - name: Upload Firmware Bin to GitHub Release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ needs.coordinate.outputs.firmware_tag }}
+          files: firmware-artifact/firmware.bin
+        env:
+          GITHUB_TOKEN: ${{ secrets.MULTIGAUGE_RELEASE_TOKEN }}
 
   website:
     needs: coordinate
     if: needs.coordinate.outputs.website_tag != ''
-    uses: ./.github/workflows/deploy-website.yml
-    with:
-      tag_name: ${{ needs.coordinate.outputs.website_tag }}
-      fetch_depth: 0
-      build_type: Release
-      upload_artifact: true
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
+    steps:
+      - name: Download Web Artifact From CI
+        uses: actions/download-artifact@v4
+        with:
+          name: multigauge-web
+          path: web-artifact
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.MULTIGAUGE_RELEASE_TOKEN }}
+
+      - name: Package Web Bundle into a ZIP
+        run: |
+          Compress-Archive -Path "web-artifact/*" -DestinationPath "ports-web-dist.zip" -Force
+
+      - name: Upload Web WASM Zip to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.coordinate.outputs.website_tag }}
+          files: ports-web-dist.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.MULTIGAUGE_RELEASE_TOKEN }}

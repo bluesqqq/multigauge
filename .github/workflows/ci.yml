@@ -21,7 +21,7 @@ jobs:
     uses: ./.github/workflows/build-firmware.yml
     with:
       fetch_depth: 1
-      upload_artifact: false
+      upload_artifact: true
 
   web:
     needs: core
