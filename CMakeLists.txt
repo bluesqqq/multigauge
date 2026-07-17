@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.16)
 project(multigauge_superbuild LANGUAGES NONE)
 
 include(ExternalProject)
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/MultigaugeDependencies.cmake")
 
 option(MULTIGAUGE_BUILD_CORE "Build the native core library" ON)
 option(MULTIGAUGE_BUILD_WEB "Build the web port" ON)
@@ -44,6 +45,7 @@ if(MULTIGAUGE_BUILD_CORE)
     BINARY_DIR "${CMAKE_BINARY_DIR}/core"
     CMAKE_ARGS
       ${MULTIGAUGE_CORE_CMAKE_ARGS}
+      "-DMULTIGAUGE_DEPS_DIR:PATH=${MULTIGAUGE_DEPS_DIR}"
     INSTALL_COMMAND ""
   )
 endif()
@@ -65,6 +67,7 @@ if(MULTIGAUGE_BUILD_WEB)
         ${MULTIGAUGE_WEB_CMAKE_ARGS}
         "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${MULTIGAUGE_WEB_TOOLCHAIN_FILE}"
         "-DMULTIGAUGE_CORE_DIR:PATH=${MULTIGAUGE_SOURCE_DIR}/core"
+        "-DMULTIGAUGE_DEPS_DIR:PATH=${MULTIGAUGE_DEPS_DIR}"
       INSTALL_COMMAND ""
       DEPENDS multigauge_external
     )
