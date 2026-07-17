@@ -18,7 +18,7 @@ permissions:
 
 jobs:
   build:
-    name: Core build
+    name: build
     runs-on: ubuntu-latest
     defaults:
       run:
