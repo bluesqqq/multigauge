@@ -9,7 +9,7 @@ from typing import Any
 
 
 _MANIFEST_PATH = Path(__file__).resolve().parents[1] / "static" / "firmware" / "multigauge" / "manifest.json"
-_RELEASE_TAG_PATTERN = re.compile(r"^(?P<product>[^@]+)@(?P<version>.+)$")
+_RELEASE_TAG_PATTERN = re.compile(r"^(?:(?P<product>[^@]+)@)?v?(?P<version>\d+\.\d+\.\d+(?:[.-][0-9A-Za-z.-]+)?)$")
 _CACHE_TTL_SECONDS = 300
 _CACHE = {"loaded_at": None, "payload": None}
 
@@ -48,6 +48,7 @@ def _fetch_github_releases(repository: str) -> list[dict[str, Any]]:
         match = _RELEASE_TAG_PATTERN.match(tag_name)
         if not match:
             continue
+        product = match.group("product") or "multigauge"
 
         assets = [
             {
@@ -60,8 +61,8 @@ def _fetch_github_releases(repository: str) -> list[dict[str, Any]]:
 
         releases.append(
             {
-                "product": match.group("product"),
-                "display_name": match.group("product").replace("ports-", "").replace("-", " ").upper(),
+                "product": product,
+                "display_name": product.replace("ports-", "").replace("-", " ").upper(),
                 "version": match.group("version"),
                 "tag_name": tag_name,
                 "name": release.get("name") or tag_name,
@@ -79,7 +80,7 @@ def _normalize_manifest(manifest: dict[str, Any] | None) -> dict[str, Any]:
     for release in (manifest or {}).get("releases") or []:
         normalized_release = dict(release)
         if not normalized_release.get("display_name"):
-            product = normalized_release.get("product", "")
+            product = normalized_release.get("product", "multigauge")
             normalized_release["display_name"] = product.replace("ports-", "").replace("-", " ").upper() or product.upper()
         releases.append(normalized_release)
 

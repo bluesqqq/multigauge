@@ -1,8 +1,0 @@
-{
-    "name": "ports-esp32",
-    "version": "1.0.0",
-    "private": true,
-    "dependencies": {
-        "multigauge-core": "workspace:*"
-    }
-}

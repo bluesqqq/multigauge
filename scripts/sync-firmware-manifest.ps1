@@ -22,13 +22,15 @@ $uri = "https://api.github.com/repos/$Repository/releases?per_page=100"
 $releases = Invoke-RestMethod -Uri $uri -Headers $headers -Method Get
 
 $parsed = foreach ($release in $releases) {
-    if ($release.tag_name -notmatch '^(?<product>[^@]+)@(?<version>.+)$') {
+    if ($release.tag_name -notmatch '^(?:(?<product>[^@]+)@)?v?(?<version>\d+\.\d+\.\d+(?:[.-][0-9A-Za-z.-]+)?)$') {
         continue
     }
 
+    $product = if ($Matches.product) { $Matches.product } else { "multigauge" }
+
     [ordered]@{
-        product = $Matches.product
-        display_name = $Matches.product.Replace("ports-", "").Replace("-", " ").ToUpperInvariant()
+        product = $product
+        display_name = $product.Replace("ports-", "").Replace("-", " ").ToUpperInvariant()
         version = $Matches.version
         tag_name = $release.tag_name
         name = $(if ($release.name) { $release.name } else { $release.tag_name })

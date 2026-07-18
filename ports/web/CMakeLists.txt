@@ -4,6 +4,8 @@ project(multigauge_web LANGUAGES C CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MultigaugeDependencies.cmake")
+
 if(NOT EMSCRIPTEN)
   message(FATAL_ERROR
     "multigauge_web requires the Emscripten toolchain.\n"
