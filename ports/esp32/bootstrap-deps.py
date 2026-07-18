@@ -3,8 +3,9 @@ import subprocess
 
 Import("env")  # noqa: F821
 
-root = Path(env["PROJECT_DIR"]).resolve().parents[1]
-script = root / "cmake" / "MultigaugeDependencies.cmake"
+port_dir = Path(env["PROJECT_DIR"]).resolve()
+root = port_dir.parents[1]
+script = port_dir / "cmake" / "BootstrapDependencies.cmake"
 
 subprocess.check_call(
     ["cmake", "-P", str(script)],

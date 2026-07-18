@@ -7,7 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-include("${CMAKE_CURRENT_LIST_DIR}/../cmake/MultigaugeDependencies.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/Dependencies.cmake")
+multigauge_bootstrap_core_dependencies()
 
 set(MULTIGAUGE_RAPIDJSON_INCLUDE_DIR "${MULTIGAUGE_DEPS_DIR}/rapidjson/include")
 set(MULTIGAUGE_YOGA_SOURCE_DIR "${MULTIGAUGE_DEPS_DIR}/yoga/yoga")
