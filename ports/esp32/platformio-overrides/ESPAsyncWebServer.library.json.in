@@ -1,0 +1,28 @@
+{
+  "name": "ESPAsyncWebServer",
+  "version": "@MULTIGAUGE_DEP_ESPASYNCWEBSERVER_VERSION@",
+  "description": "Asynchronous HTTP and WebSocket Server Library for ESP32.",
+  "keywords": "http,async,websocket,webserver",
+  "homepage": "https://github.com/ESP32Async/ESPAsyncWebServer",
+  "repository": {
+    "type": "git",
+    "url": "@MULTIGAUGE_DEP_ESPASYNCWEBSERVER_URL@"
+  },
+  "authors": {
+    "name": "ESP32Async",
+    "maintainer": true
+  },
+  "license": "LGPL-3.0",
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "export": {
+    "include": [
+      "examples",
+      "src",
+      "library.json",
+      "library.properties",
+      "LICENSE",
+      "README.md"
+    ]
+  }
+}

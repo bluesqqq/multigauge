@@ -1,12 +1,6 @@
 build/
 .vscode/
 .deps/
-core/lib/
-core/include/rapidjson/
-core/include/yoga/
-core/include/lodepng.h
-core/include/tjpgd.h
-core/include/tjpgdcnf.h
 ports/esp32/lib/
 ports/esp32/.pio/
 

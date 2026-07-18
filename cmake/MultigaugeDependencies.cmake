@@ -11,8 +11,36 @@ if(NOT DEFINED MULTIGAUGE_DEPS_DIR)
   set(MULTIGAUGE_DEPS_DIR "${MULTIGAUGE_SOURCE_DIR}/.deps")
 endif()
 
-set(MULTIGAUGE_CORE_LIB_DIR "${MULTIGAUGE_SOURCE_DIR}/core/lib")
-set(MULTIGAUGE_ESP32_LIB_DIR "${MULTIGAUGE_SOURCE_DIR}/ports/esp32/lib")
+# Single source of truth for third-party dependency locations and versions.
+set(MULTIGAUGE_DEP_RAPIDJSON_URL "https://github.com/Tencent/rapidjson.git")
+set(MULTIGAUGE_DEP_RAPIDJSON_TAG "v1.1.0")
+set(MULTIGAUGE_DEP_RAPIDJSON_DIR "${MULTIGAUGE_DEPS_DIR}/rapidjson")
+
+set(MULTIGAUGE_DEP_YOGA_URL "https://github.com/facebook/yoga.git")
+set(MULTIGAUGE_DEP_YOGA_TAG "v2.0.0")
+set(MULTIGAUGE_DEP_YOGA_DIR "${MULTIGAUGE_DEPS_DIR}/yoga")
+
+set(MULTIGAUGE_DEP_LODEPNG_DIR "${MULTIGAUGE_DEPS_DIR}/lodepng")
+set(MULTIGAUGE_DEP_LODEPNG_CPP_URL "https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.cpp")
+set(MULTIGAUGE_DEP_LODEPNG_H_URL "https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.h")
+
+set(MULTIGAUGE_DEP_TJPGD_DIR "${MULTIGAUGE_DEPS_DIR}/tjpgd")
+set(MULTIGAUGE_DEP_TJPGD_C_URL "https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgd.c")
+set(MULTIGAUGE_DEP_TJPGD_H_URL "https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgd.h")
+set(MULTIGAUGE_DEP_TJPGD_CONFIG_URL "https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgdcnf.h")
+
+set(MULTIGAUGE_DEP_ASYNCTCP_URL "https://github.com/me-no-dev/AsyncTCP.git")
+set(MULTIGAUGE_DEP_ASYNCTCP_TAG "master")
+set(MULTIGAUGE_DEP_ASYNCTCP_DIR "${MULTIGAUGE_DEPS_DIR}/AsyncTCP")
+
+set(MULTIGAUGE_DEP_ESPASYNCWEBSERVER_URL "https://github.com/me-no-dev/ESPAsyncWebServer.git")
+set(MULTIGAUGE_DEP_ESPASYNCWEBSERVER_TAG "master")
+set(MULTIGAUGE_DEP_ESPASYNCWEBSERVER_VERSION "3.6.0")
+set(MULTIGAUGE_DEP_ESPASYNCWEBSERVER_DIR "${MULTIGAUGE_DEPS_DIR}/ESPAsyncWebServer")
+
+set(MULTIGAUGE_DEP_LOVYANGFX_URL "https://github.com/lovyan03/LovyanGFX.git")
+set(MULTIGAUGE_DEP_LOVYANGFX_TAG "1.2.0")
+set(MULTIGAUGE_DEP_LOVYANGFX_DIR "${MULTIGAUGE_DEPS_DIR}/LovyanGFX")
 
 function(multigauge_download_file url destination)
   if(EXISTS "${destination}")
@@ -65,6 +93,18 @@ function(multigauge_clone_repo url tag destination)
   endif()
 
   file(WRITE "${destination}/.multigauge-ready" "ok\n")
+endfunction()
+
+function(multigauge_clone_dependency name)
+  set(url_var "MULTIGAUGE_DEP_${name}_URL")
+  set(tag_var "MULTIGAUGE_DEP_${name}_TAG")
+  set(dir_var "MULTIGAUGE_DEP_${name}_DIR")
+
+  if(NOT DEFINED ${url_var} OR NOT DEFINED ${tag_var} OR NOT DEFINED ${dir_var})
+    message(FATAL_ERROR "Unknown multigauge dependency '${name}'")
+  endif()
+
+  multigauge_clone_repo("${${url_var}}" "${${tag_var}}" "${${dir_var}}")
 endfunction()
 
 function(multigauge_copy_or_link_directory target link)
@@ -134,79 +174,3 @@ function(multigauge_patch_rapidjson rapidjson_include_dir)
     file(WRITE "${document_header}" "${patched_content}")
   endif()
 endfunction()
-
-function(multigauge_bootstrap_dependencies)
-  file(MAKE_DIRECTORY "${MULTIGAUGE_DEPS_DIR}")
-
-  # Shared core dependencies.
-  multigauge_clone_repo(
-    "https://github.com/Tencent/rapidjson.git"
-    "v1.1.0"
-    "${MULTIGAUGE_DEPS_DIR}/rapidjson"
-  )
-  multigauge_patch_rapidjson("${MULTIGAUGE_DEPS_DIR}/rapidjson/include")
-
-  multigauge_clone_repo(
-    "https://github.com/facebook/yoga.git"
-    "v2.0.0"
-    "${MULTIGAUGE_DEPS_DIR}/yoga"
-  )
-
-  multigauge_download_file(
-    "https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.cpp"
-    "${MULTIGAUGE_DEPS_DIR}/lodepng/lodepng.cpp"
-  )
-  multigauge_download_file(
-    "https://raw.githubusercontent.com/lvandeve/lodepng/master/lodepng.h"
-    "${MULTIGAUGE_DEPS_DIR}/lodepng/lodepng.h"
-  )
-
-  multigauge_download_file(
-    "https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgd.c"
-    "${MULTIGAUGE_DEPS_DIR}/tjpgd/tjpgd.c"
-  )
-  multigauge_download_file(
-    "https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgd.h"
-    "${MULTIGAUGE_DEPS_DIR}/tjpgd/tjpgd.h"
-  )
-  multigauge_download_file(
-    "https://raw.githubusercontent.com/cmumford/TJpgDec/master/src/tjpgdcnf.h"
-    "${MULTIGAUGE_DEPS_DIR}/tjpgd/tjpgdcnf.h"
-  )
-
-  # ESP32-specific dependencies.
-  multigauge_clone_repo(
-    "https://github.com/me-no-dev/AsyncTCP.git"
-    "master"
-    "${MULTIGAUGE_DEPS_DIR}/AsyncTCP"
-  )
-  multigauge_clone_repo(
-    "https://github.com/me-no-dev/ESPAsyncWebServer.git"
-    "master"
-    "${MULTIGAUGE_DEPS_DIR}/ESPAsyncWebServer"
-  )
-  multigauge_clone_repo(
-    "https://github.com/lovyan03/LovyanGFX.git"
-    "1.2.0"
-    "${MULTIGAUGE_DEPS_DIR}/LovyanGFX"
-  )
-
-  # Legacy build-system compatibility directories.
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/rapidjson/include" "${MULTIGAUGE_CORE_LIB_DIR}/rapidjson/src")
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/yoga/yoga" "${MULTIGAUGE_CORE_LIB_DIR}/yoga/src")
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/lodepng" "${MULTIGAUGE_CORE_LIB_DIR}/lodepng/src")
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/tjpgd" "${MULTIGAUGE_CORE_LIB_DIR}/tjpgd/src")
-
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/rapidjson/include/rapidjson" "${MULTIGAUGE_SOURCE_DIR}/core/include/rapidjson")
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/yoga/yoga" "${MULTIGAUGE_SOURCE_DIR}/core/include/yoga")
-  multigauge_copy_file("${MULTIGAUGE_DEPS_DIR}/lodepng/lodepng.h" "${MULTIGAUGE_SOURCE_DIR}/core/include/lodepng.h")
-  multigauge_copy_file("${MULTIGAUGE_DEPS_DIR}/tjpgd/tjpgd.h" "${MULTIGAUGE_SOURCE_DIR}/core/include/tjpgd.h")
-  multigauge_copy_file("${MULTIGAUGE_DEPS_DIR}/tjpgd/tjpgdcnf.h" "${MULTIGAUGE_SOURCE_DIR}/core/include/tjpgdcnf.h")
-
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/AsyncTCP" "${MULTIGAUGE_ESP32_LIB_DIR}/AsyncTCP-master")
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/ESPAsyncWebServer" "${MULTIGAUGE_ESP32_LIB_DIR}/ESPAsyncWebServer-master")
-  multigauge_copy_or_link_directory("${MULTIGAUGE_DEPS_DIR}/LovyanGFX" "${MULTIGAUGE_ESP32_LIB_DIR}/LovyanGFX")
-  multigauge_copy_or_link_directory("${MULTIGAUGE_SOURCE_DIR}/core" "${MULTIGAUGE_ESP32_LIB_DIR}/multigauge-core")
-endfunction()
-
-multigauge_bootstrap_dependencies()

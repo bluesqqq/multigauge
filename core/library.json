@@ -4,16 +4,24 @@
     "srcDir": ".",
     "includeDir": "include",
     "srcFilter": [
-      "+<src/**>",
-      "+<lib/yoga/src/**>",
-      "+<*>",
-      "+<lib/lodepng/src/lodepng.cpp>"
+      "+<src/**>"
     ],
     "flags": [
-      "-Ilib/rapidjson/src",
-      "-Ilib/lodepng/src",
-      "-Ilib/tjpgd/src",
-      "-Ilib/yoga/src"
+      "-I../.deps/rapidjson/include",
+      "-I../.deps/lodepng",
+      "-I../.deps/tjpgd",
+      "-I../.deps/yoga"
     ]
-  }
+  },
+  "dependencies": [
+    {
+      "name": "multigauge-yoga"
+    },
+    {
+      "name": "multigauge-lodepng"
+    },
+    {
+      "name": "multigauge-tjpgd"
+    }
+  ]
 }
