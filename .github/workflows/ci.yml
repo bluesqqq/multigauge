@@ -12,8 +12,7 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -45,14 +44,3 @@ jobs:
       build_type: Debug
       upload_artifact: true
 
-  release:
-    name: Release
-    needs:
-      - core
-      - firmware
-      - web
-
-    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/fix/failing-release-coordinator' }}
-
-    uses: ./.github/workflows/cd.yml
-    secrets: inherit

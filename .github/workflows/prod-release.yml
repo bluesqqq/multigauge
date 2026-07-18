@@ -1,0 +1,110 @@
+name: Production Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: production-release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  validate:
+    name: Validate release tag
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Validate tag and VERSION
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ ! "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "Invalid release tag: $GITHUB_REF_NAME" >&2
+            exit 1
+          fi
+
+          version="$(tr -d '[:space:]' < VERSION)"
+          if [[ "$GITHUB_REF_NAME" != "v${version}" ]]; then
+            echo "Release tag $GITHUB_REF_NAME does not match VERSION $version" >&2
+            exit 1
+          fi
+
+  firmware:
+    name: Firmware
+    needs: validate
+    uses: ./.github/workflows/build-firmware.yml
+    with:
+      fetch_depth: 0
+      upload_artifact: true
+
+  web:
+    name: Web
+    needs: validate
+    uses: ./.github/workflows/build-web.yml
+    with:
+      fetch_depth: 0
+      build_type: Release
+      upload_artifact: true
+
+  github_release:
+    name: GitHub Release
+    needs:
+      - firmware
+      - web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Download firmware artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: multigauge-firmware
+          path: release-artifacts/firmware
+
+      - name: Download web artifact
+        uses: actions/download-artifact@v5
+        with:
+          name: multigauge-web
+          path: release-artifacts/web
+
+      - name: Package web distribution
+        shell: pwsh
+        run: |
+          Compress-Archive `
+            -Path "release-artifacts/web/*" `
+            -DestinationPath "release-artifacts/multigauge-web-dist.zip" `
+            -Force
+
+      - name: Extract release notes
+        shell: bash
+        run: |
+          set -euo pipefail
+          git tag -l "$GITHUB_REF_NAME" --format='%(contents)' > release-notes.md
+          if [[ ! -s release-notes.md ]]; then
+            echo "Release $GITHUB_REF_NAME" > release-notes.md
+          fi
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.MULTIGAUGE_RELEASE_TOKEN || github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            --verify-tag \
+            --title "multigauge $GITHUB_REF_NAME" \
+            --notes-file release-notes.md \
+            release-artifacts/firmware/firmware.bin \
+            release-artifacts/multigauge-web-dist.zip

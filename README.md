@@ -26,9 +26,11 @@ multigauge/
 |   `-- web/          standalone web/WASM target
 |-- apps/             product apps built on top of Multigauge
 |   `-- website/      public website and community/workshop app
-|-- .changeset/       release notes used by Changesets
+|-- VERSION           current repository-wide release version
 `-- .github/workflows/ CI/CD workflows
 ```
+
+Release process details are in [`docs/releasing.md`](docs/releasing.md).
 
 ## What Lives Where
 
