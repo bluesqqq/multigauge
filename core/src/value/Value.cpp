@@ -76,7 +76,7 @@ Measurement Value::maximumBase() const noexcept { return maximum_; }
 
 Measurement Value::value(UnitIndex index) const noexcept { return unitType_.convertFromBase(value_, index); }
 
-void Value::setValue(Measurement newValue, UnitIndex index) {
+void Value::setValue(Measurement newValue, UnitIndex index) noexcept {
     value_ = std::clamp(unitType_.convertToBase(newValue, index), minimum_, maximum_);
 }
 
@@ -90,11 +90,14 @@ std::string_view Value::name() const noexcept { return name_; }
 
 const UnitType& Value::unitType() const noexcept { return unitType_; }
 
-float Value::interpolationValue() const noexcept { return (value_ - minimum_) / (maximum_ - minimum_); }
+float Value::interpolationValue() const noexcept {
+    const Measurement range = maximum_ - minimum_;
+    return range == 0.0F ? 0.5F : (value_ - minimum_) / range;
+}
 
-std::string Value::valueString(UnitIndex index, bool abbreviation) const noexcept { return unitType_.formatValue(value(index), index, abbreviation); }
+std::string Value::valueString(UnitIndex index, bool abbreviation) const { return unitType_.formatValue(value(index), index, abbreviation); }
 
-std::string Value::longestValueString(UnitIndex index, bool abbreviation) const noexcept {
+std::string Value::longestValueString(UnitIndex index, bool abbreviation) const {
     std::string minimumString = unitType_.formatValue(minimum(index), index, abbreviation);
     std::string maximumString = unitType_.formatValue(maximum(index), index, abbreviation);
     return (maximumString.length() > minimumString.length()) ? maximumString : minimumString;

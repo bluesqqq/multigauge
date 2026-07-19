@@ -10,7 +10,7 @@ DisplayValue::DisplayValue(const char *newId) : value(newId) {}
 
 float DisplayValue::getValueBase() const {
     if (!value) return 0.0f;
-    float result = value->getValueBase();
+    float result = value->valueBase();
     if (minimum.has_value()) result = std::max(minimum.value(), result);
     if (maximum.has_value()) result = std::min(maximum.value(), result);
     return result;
@@ -18,7 +18,7 @@ float DisplayValue::getValueBase() const {
 
 float DisplayValue::getValue() const {
     if (!value) return 0.0f;
-    return value->getValue(getUnitIndex());
+    return value->value(static_cast<UnitIndex>(getUnitIndex()));
 }
 
 float DisplayValue::getInterpolationValue() const {
@@ -28,17 +28,17 @@ float DisplayValue::getInterpolationValue() const {
 
     if (minimum == maximum) return 0.5f;
 
-    return (value->getValueBase() - minimum) / (maximum - minimum);
+    return (value->valueBase() - minimum) / (maximum - minimum);
 }
 
 float DisplayValue::getMinimumBase() const {
     if (!value) return 0.0f;
-    return minimum.has_value() ? minimum.value() : value->getMinimumBase();
+    return minimum.has_value() ? minimum.value() : value->minimumBase();
 }
 
 float DisplayValue::getMaximumBase() const {
     if (!value) return 1.0f;
-    return maximum.has_value() ? maximum.value() : value->getMaximumBase(); }
+    return maximum.has_value() ? maximum.value() : value->maximumBase(); }
 
 float DisplayValue::getMinimum() const {
     if (!value) return 0.0f;
@@ -61,7 +61,7 @@ const ::mg::Unit *DisplayValue::getUnit() const {
 }
 
 std::string DisplayValue::getValueString(bool abbreviation) const {
-    return value ? value->getValueString(getUnitIndex(), abbreviation) : "n/a";
+    return value ? value->valueString(static_cast<UnitIndex>(getUnitIndex()), abbreviation) : "n/a";
 }
 
 const char *DisplayValue::getName() const {

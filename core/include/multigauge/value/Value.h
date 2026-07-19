@@ -103,14 +103,14 @@ public:
     /// @param abbreviation If true, appends the unit abbreviation to the string.
     /// @return The value, in the specified unit, as a string.
     [[nodiscard]]
-    std::string valueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const noexcept;
+    std::string valueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const;
     
     /// @brief Returns the longest string representation of the value's range (minimum or maximum) for a specific unit
     /// @param index The index of the unit.
     /// @param abbreviation If true, appends the unit abbreviation to the string.
     /// @return The longer of the minimum or maximum value, in the specified unit, as a string.
     [[nodiscard]]
-    std::string longestValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const noexcept;
+    std::string longestValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const;
     
 private:
     std::string_view id_;

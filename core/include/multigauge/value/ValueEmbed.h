@@ -4,6 +4,7 @@
 #include <string_view>
 #include <cstdint>
 #include <cstdio>
+#include <limits>
 
 #include <multigauge/value/Value.h>
 #include <multigauge/value/UnitType.h>
@@ -14,6 +15,8 @@ namespace mg::values::embed {
 
 using ::mg::utils::parseUnsignedInt;
 using ::mg::utils::splitOnce;
+using ::mg::BASE_UNIT;
+using ::mg::UnitIndex;
 
 // --------------------[ Flags + Spec ]--------------------
 
@@ -42,7 +45,7 @@ enum class ParseError : uint8_t {
 /// @brief Parsed representation of "{...}" inner text. Holds string_views into the source.
 struct EmbedSpec {
     std::string_view valueName;   ///< required identifier
-    int16_t unitIndex  = -1;      ///< optional, after '=' (>=0). -1 means unspecified.
+    UnitIndex unitIndex = BASE_UNIT; ///< optional, after '='. Unspecified means base unit.
     int8_t  decimals   = -1;      ///< optional, after '.' (>=0). -1 means unspecified.
     uint8_t flags      = FLAG_NONE;
 
@@ -128,7 +131,11 @@ static inline EmbedSpec parseEmbedInnerTight(std::string_view s) {
         i++;
         int v = 0;
         if (!parseUnsignedInt(lhs, i, v)) { spec.error = ParseError::BadUnitIndex; return spec; }
-        spec.unitIndex = (v > 32767) ? 32767 : (int16_t)v;
+        if (v > static_cast<int>(std::numeric_limits<UnitIndex>::max())) {
+            spec.error = ParseError::BadUnitIndex;
+            return spec;
+        }
+        spec.unitIndex = static_cast<UnitIndex>(v);
     }
 
     if (i < lhs.size() && lhs[i] == '.') {
@@ -154,7 +161,6 @@ static inline EmbedSpec parseEmbedInnerTight(std::string_view s) {
 
 namespace mg::values::embed_render {
 
-using ::mg::BASE_UNIT;
 using ::mg::Unit;
 using ::mg::UnitType;
 using ::mg::Value;
@@ -172,7 +178,7 @@ static inline void appendFloat(std::string& out, float v, uint8_t decimals) {
     if (len) out.append(buf, len);
 }
 
-static inline std::string getUnitString(const UnitType& ut, int unitIndex, bool abbreviation) {
+static inline std::string getUnitString(const UnitType& ut, UnitIndex unitIndex, bool abbreviation) {
     const Unit& u = ut.unit(unitIndex);
     const std::string_view s = abbreviation ? u.abbreviation : u.name;
     return s.empty() ? std::string() : std::string(s);
@@ -202,7 +208,7 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
 
     const bool useAbbrev = !flagNA;
 
-    int unitIndex = (spec.unitIndex >= 0) ? spec.unitIndex : BASE_UNIT;
+    const UnitIndex unitIndex = spec.unitIndex;
 
     if (flagPCT) { // PERCENTAGE
         if (flagU) {
@@ -210,7 +216,7 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
             return true;
         }
 
-        float pct = v->getInterpolationValue() * 100.0f;
+        float pct = v->interpolationValue() * 100.0f;
         uint8_t decimals = (spec.decimals >= 0) ? (uint8_t)spec.decimals : 0;
 
         appendFloat(out, pct, decimals);
@@ -225,9 +231,9 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
 
     // choose which numeric value to show
     double shown = 0.0;
-    if (flagMIN)      shown = v->getMinimum(unitIndex);
-    else if (flagMAX) shown = v->getMaximum(unitIndex);
-    else              shown = v->getValue(unitIndex);
+    if (flagMIN)      shown = v->minimum(unitIndex);
+    else if (flagMAX) shown = v->maximum(unitIndex);
+    else              shown = v->value(unitIndex);
 
     // choose decimals
     int decimals = 0;

@@ -38,7 +38,7 @@ OwnedColor ValueColor::blended(const Color &other, float alpha) const{
 
 OwnedColor ValueColor::clone() const { return std::make_unique<ValueColor>(*this); }
 
-rgba ValueColor::getColor() const { return value ? timeline.getColor(value->getValueBase()) : rgba(); }
+rgba ValueColor::getColor() const { return value ? timeline.getColor(value->valueBase()) : rgba(); }
 
 Color::Type ValueColor::getType() const { return Type::Value; }
 
