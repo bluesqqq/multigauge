@@ -81,9 +81,9 @@ public:
 
     /// @brief Returns a unit by index.
     /// @param index Index of the unit.
-    /// @return The requested unit, or the base unit when the index is invalid.
+    /// @return The requested unit, or nullptr when the index is invalid.
     [[nodiscard]]
-    const Unit& unit(UnitIndex index) const noexcept;
+    const Unit* unit(UnitIndex index) const noexcept;
 
     /// @brief Returns all units belonging to this unit type.
     /// @return A read-only view of the unit table.
@@ -117,6 +117,9 @@ private:
     static constexpr bool isValidIndex(UnitIndex index, std::size_t unitCount) noexcept {
         return index >= 0 && static_cast<std::size_t>(index) < unitCount;
     }
+
+    [[nodiscard]]
+    const Unit& unitOrBase(UnitIndex index) const noexcept;
 
     std::string_view name_;          ///< Stable name identifying the unit type.
     std::span<const Unit> units_;    ///< Non-owning view of the unit table.

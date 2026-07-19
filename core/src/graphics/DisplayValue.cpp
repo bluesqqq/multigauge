@@ -57,7 +57,11 @@ const ::mg::Unit *DisplayValue::getUnit() const {
 
     auto& unitType = value->unitType();
 
-    return &unitType.unit(getUnitIndex());
+    if (const Unit* selectedUnit = unitType.unit(getUnitIndex())) {
+        return selectedUnit;
+    }
+
+    return &unitType.baseUnit();
 }
 
 std::string DisplayValue::getValueString(bool abbreviation) const {

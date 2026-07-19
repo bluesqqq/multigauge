@@ -179,7 +179,8 @@ static inline void appendFloat(std::string& out, float v, uint8_t decimals) {
 }
 
 static inline std::string getUnitString(const UnitType& ut, UnitIndex unitIndex, bool abbreviation) {
-    const Unit& u = ut.unit(unitIndex);
+    const Unit* selectedUnit = ut.unit(unitIndex);
+    const Unit& u = selectedUnit ? *selectedUnit : ut.baseUnit();
     const std::string_view s = abbreviation ? u.abbreviation : u.name;
     return s.empty() ? std::string() : std::string(s);
 }
@@ -238,16 +239,21 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
     // choose decimals
     int decimals = 0;
     if (spec.decimals >= 0) decimals = spec.decimals;
-    else decimals = (int)v->unitType().unit(unitIndex).decimalPlaces;
+    else {
+        const Unit* selectedUnit = v->unitType().unit(unitIndex);
+        decimals = (int)(selectedUnit ? *selectedUnit : v->unitType().baseUnit()).decimalPlaces;
+    }
 
     appendFloat(out, shown, decimals);
 
     // append unit if present
     if (useAbbrev) {
-        const std::string_view ab = v->unitType().unit(unitIndex).abbreviation;
+        const Unit* selectedUnit = v->unitType().unit(unitIndex);
+        const std::string_view ab = (selectedUnit ? *selectedUnit : v->unitType().baseUnit()).abbreviation;
         if (!ab.empty()) out.append(ab.data(), ab.size()); // no space
     } else {
-        const std::string_view nm = v->unitType().unit(unitIndex).name;
+        const Unit* selectedUnit = v->unitType().unit(unitIndex);
+        const std::string_view nm = (selectedUnit ? *selectedUnit : v->unitType().baseUnit()).name;
         if (!nm.empty()) {
             out += " ";
             out.append(nm.data(), nm.size());

@@ -123,7 +123,7 @@ Measurement UnitType::convertToBase(
     Measurement value,
     UnitIndex index
 ) const noexcept {
-    const Unit& inUnit = unit(index);
+    const Unit& inUnit = unitOrBase(index);
     return inUnit.factor == 0.0F ? value : (value - inUnit.offset) / inUnit.factor;
 }
 
@@ -131,7 +131,7 @@ Measurement UnitType::convertFromBase(
     Measurement value,
     UnitIndex index
 ) const noexcept {
-    const Unit& outUnit = unit(index);
+    const Unit& outUnit = unitOrBase(index);
     return (value * outUnit.factor) + outUnit.offset;
 }
 
@@ -141,8 +141,8 @@ std::string_view UnitType::name() const noexcept {
     return name_;
 }
 
-const Unit& UnitType::unit(UnitIndex index) const noexcept {
-    return isValidIndex(index, units_.size()) ? units_[static_cast<std::size_t>(index)] : baseUnit();
+const Unit* UnitType::unit(UnitIndex index) const noexcept {
+    return isValidIndex(index, units_.size()) ? &units_[static_cast<std::size_t>(index)] : nullptr;
 }
 
 std::span<const Unit> UnitType::units() const noexcept {
@@ -160,7 +160,7 @@ std::string UnitType::formatValue(
     UnitIndex index,
     bool includeAbbreviation
 ) const {
-    const Unit& formatUnit = unit(index);
+    const Unit& formatUnit = unitOrBase(index);
     std::string result = ::mg::utils::floatToString(value, formatUnit.decimalPlaces);
 
     if (includeAbbreviation && !formatUnit.abbreviation.empty()) {
@@ -168,6 +168,16 @@ std::string UnitType::formatValue(
     }
 
     return result;
+}
+
+/* ----- PRIVATE ----- */
+
+const Unit& UnitType::unitOrBase(UnitIndex index) const noexcept {
+    if (const Unit* selectedUnit = unit(index)) {
+        return *selectedUnit;
+    }
+
+    return baseUnit();
 }
 
 /* ----- UNIT TYPES ----- */
