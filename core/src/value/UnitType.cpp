@@ -35,7 +35,7 @@ UnitType::UnitType(
 
 /* ----- LOOKUP ----- */
 
-const UnitType* UnitType::find(std::string_view name) {
+const UnitType* UnitType::find(std::string_view name) noexcept {
     if (name == "temperature")   return &temperature;
     if (name == "distance")      return &distance;
     if (name == "pressure")      return &pressure;
@@ -52,7 +52,7 @@ const UnitType* UnitType::find(std::string_view name) {
 
 /* ----- CONFIGURATION ----- */
 
-void UnitType::setDefaultUnit(UnitIndex index) {
+void UnitType::setDefaultUnit(UnitIndex index) noexcept {
     defaultUnit = isValidIndex(index) ? index : 0;
 }
 
@@ -62,7 +62,7 @@ float UnitType::convert(
     float value,
     UnitIndex fromIndex,
     UnitIndex toIndex
-) const {
+) const noexcept {
     if (fromIndex == toIndex) return value;
     float baseValue = convertToBase(value, fromIndex);
     return convertFromBase(baseValue, toIndex);
@@ -71,7 +71,7 @@ float UnitType::convert(
 float UnitType::convertToBase(
     float value,
     UnitIndex index
-) const {
+) const noexcept {
     const Unit& unit = getUnit(index);
     return (value - unit.offset) / unit.factor;
 }
@@ -79,28 +79,28 @@ float UnitType::convertToBase(
 float UnitType::convertFromBase(
     float value, 
     UnitIndex index
-) const {
+) const noexcept {
     const Unit& unit = getUnit(index);
     return (value * unit.factor) + unit.offset;
 }
 
 /* ----- UNIT ACCESS ----- */
 
-const Unit &UnitType::getUnit(UnitIndex index) const {
+const Unit &UnitType::getUnit(UnitIndex index) const noexcept {
     return (isValidIndex(index))
                 ? units[index]
                 : getDefaultUnit();
 }
 
-const std::vector<Unit> &UnitType::getUnits() const {
+const std::vector<Unit> &UnitType::getUnits() const noexcept {
     return units;
 }
 
-const Unit &UnitType::getBaseUnit() const {
+const Unit &UnitType::getBaseUnit() const noexcept {
     return units[0];
 }
 
-const Unit &UnitType::getDefaultUnit() const {
+const Unit &UnitType::getDefaultUnit() const noexcept {
     return units[defaultUnit];
 }
 

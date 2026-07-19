@@ -174,8 +174,8 @@ static inline void appendFloat(std::string& out, float v, uint8_t decimals) {
 
 static inline std::string getUnitString(const UnitType& ut, int unitIndex, bool abbreviation) {
     const Unit& u = ut.getUnit(unitIndex);
-    const char* s = abbreviation ? u.abbreviation : u.name;
-    return (s && *s) ? std::string(s) : std::string();
+    const std::string_view s = abbreviation ? u.abbreviation : u.name;
+    return s.empty() ? std::string() : std::string(s);
 }
 
 // --------------------[ render one embed ]--------------------
@@ -238,11 +238,14 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
 
     // append unit if present
     if (useAbbrev) {
-        const char* ab = v->getUnitType().getUnit(unitIndex).abbreviation;
-        if (ab && *ab) out += ab; // no space
+        const std::string_view ab = v->getUnitType().getUnit(unitIndex).abbreviation;
+        if (!ab.empty()) out.append(ab.data(), ab.size()); // no space
     } else {
-        const char* nm = v->getUnitType().getUnit(unitIndex).name;
-        if (nm && *nm) { out += " "; out += nm; }
+        const std::string_view nm = v->getUnitType().getUnit(unitIndex).name;
+        if (!nm.empty()) {
+            out += " ";
+            out.append(nm.data(), nm.size());
+        }
     }
 
     return true;

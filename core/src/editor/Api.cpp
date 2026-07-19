@@ -2,6 +2,8 @@
 #include <multigauge/editor/Clipboard.h>
 #include <multigauge/editor/Editor.h>
 
+#include <cstdint>
+
 #include <multigauge/HandlePool.h>
 
 namespace mg::editor {
@@ -37,10 +39,14 @@ Result packageInfoResult(const Editor::PackageInfo& info) {
     return result;
 }
 
+rapidjson::Value nodeIdValue(NodeId id) {
+    return rapidjson::Value(static_cast<std::uint64_t>(id));
+}
+
 Result faceNameResult(NodeId faceId, const std::string& name) {
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", faceId, allocator);
+    result.data.AddMember("id", nodeIdValue(faceId), allocator);
     result.data.AddMember("name", rapidjson::Value(name.c_str(), allocator), allocator);
     return result;
 }

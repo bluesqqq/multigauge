@@ -9,6 +9,9 @@
 namespace {
 
 constexpr float kEpsilon = 0.001f;
+constexpr mg::UnitIndex kFahrenheit = 1;
+constexpr mg::UnitIndex kKelvin = 2;
+constexpr mg::UnitIndex kKilopascal = 3;
 
 mg::Value& identityValue() {
   static mg::Value value("test.identity", "Test Identity", mg::percentage, 10.0f, 90.0f);
@@ -92,30 +95,21 @@ TEST_CASE("Value clamps base assignments to its configured range") {
 TEST_CASE("Value converts to and from non-base units") {
   auto& value = temperatureValue();
 
-  const int fahrenheit = mg::temperature.getIndexFromAbbreviation("F");
-  const int kelvin = mg::temperature.getIndexFromAbbreviation("K");
-
-  REQUIRE(fahrenheit != mg::DEFAULT_UNIT);
-  REQUIRE(kelvin != mg::DEFAULT_UNIT);
-
-  value.setValue(212.0f, fahrenheit);
+  value.setValue(212.0f, kFahrenheit);
 
   CHECK(value.getValueBase() == doctest::Approx(100.0f).epsilon(kEpsilon));
-  CHECK(value.getValue(fahrenheit) == doctest::Approx(212.0f).epsilon(kEpsilon));
-  CHECK(value.getValue(kelvin) == doctest::Approx(373.15f).epsilon(kEpsilon));
-  CHECK(value.getMinimum(fahrenheit) == doctest::Approx(-40.0f).epsilon(kEpsilon));
-  CHECK(value.getMaximum(fahrenheit) == doctest::Approx(248.0f).epsilon(kEpsilon));
+  CHECK(value.getValue(kFahrenheit) == doctest::Approx(212.0f).epsilon(kEpsilon));
+  CHECK(value.getValue(kKelvin) == doctest::Approx(373.15f).epsilon(kEpsilon));
+  CHECK(value.getMinimum(kFahrenheit) == doctest::Approx(-40.0f).epsilon(kEpsilon));
+  CHECK(value.getMaximum(kFahrenheit) == doctest::Approx(248.0f).epsilon(kEpsilon));
 }
 
 TEST_CASE("Value clamps after converting from a non-base unit") {
   auto& value = convertedClampValue();
 
-  const int fahrenheit = mg::temperature.getIndexFromAbbreviation("F");
-  REQUIRE(fahrenheit != mg::DEFAULT_UNIT);
-
-  value.setValue(500.0f, fahrenheit);
+  value.setValue(500.0f, kFahrenheit);
   CHECK(value.getValueBase() == doctest::Approx(120.0f));
-  CHECK(value.getValue(fahrenheit) == doctest::Approx(248.0f).epsilon(kEpsilon));
+  CHECK(value.getValue(kFahrenheit) == doctest::Approx(248.0f).epsilon(kEpsilon));
 }
 
 TEST_CASE("Value invokes onChange with the stored base value") {
@@ -140,14 +134,11 @@ TEST_CASE("Value invokes onChange with the stored base value") {
 TEST_CASE("Value formats values through its unit type") {
   auto& value = formatValue();
 
-  const int kpa = mg::pressure.getIndexFromAbbreviation("kpa");
-  REQUIRE(kpa != mg::DEFAULT_UNIT);
-
   value.setValueBase(10.0f);
 
   CHECK(value.getValueString(mg::DEFAULT_UNIT, true) == "10.0psi");
   CHECK(value.getValueString(mg::DEFAULT_UNIT, false) == "10.0");
-  CHECK(value.getValueString(kpa, true) == "68.9kpa");
+  CHECK(value.getValueString(kKilopascal, true) == "68.9kPa");
   CHECK(value.getLongestValueString(mg::DEFAULT_UNIT, true) == "100.0psi");
 }
 

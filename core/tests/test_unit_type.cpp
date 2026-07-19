@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
+#include <array>
 #include <string>
-#include <vector>
 
 #include <multigauge/value/UnitType.h>
 
@@ -9,16 +9,38 @@ namespace {
 
 constexpr float kEpsilon = 0.001f;
 
+constexpr std::array torqueConversions{
+  mg::Unit{"foot-pound", "ft-lb", 0.737562f, 0.0f, 2},
+};
+
+constexpr std::array distanceConversions{
+  mg::Unit{"foot", "ft", 3.28084f, 0.0f, 2},
+  mg::Unit{"mile", "mi", 0.00062137f, 0.0f, 1},
+};
+
+constexpr std::array temperatureConversions{
+  mg::Unit{"fahrenheit", "F", 1.8f, 32.0f, 2},
+  mg::Unit{"kelvin", "K", 1.0f, 273.15f, 2},
+};
+
+constexpr std::array pressureConversions{
+  mg::Unit{"kpa", "kpa", 6.89476f, 0.0f, 1},
+  mg::Unit{"bar", "bar", 0.0689476f, 0.0f, 4},
+};
+
+constexpr std::array speedConversions{
+  mg::Unit{"mile-per-hour", "mph", 0.621371f, 0.0f, 1},
+};
+
 } // namespace
 
 TEST_CASE("UnitType always includes the base unit first") {
   mg::UnitType torque(
+    "torque",
     "newton-meter",
     "Nm",
     1,
-    {
-      {"foot-pound", "ft-lb", 0.737562f, 0.0f, 2},
-    }
+    torqueConversions
   );
 
   const auto& units = torque.getUnits();
@@ -34,13 +56,11 @@ TEST_CASE("UnitType always includes the base unit first") {
 
 TEST_CASE("UnitType resolves the configured default unit") {
   mg::UnitType distanceLike(
+    "distance-like",
     "meter",
     "m",
     2,
-    {
-      {"foot", "ft", 3.28084f, 0.0f, 2},
-      {"mile", "mi", 0.00062137f, 0.0f, 1},
-    },
+    distanceConversions,
     2
   );
 
@@ -58,18 +78,16 @@ TEST_CASE("UnitType resolves the configured default unit") {
 
 TEST_CASE("UnitType converts between base and conversion units") {
   mg::UnitType temperatureLike(
+    "temperature-like",
     "celsius",
     "C",
     2,
-    {
-      {"fahrenheit", "F", 1.8f, 32.0f, 2},
-      {"kelvin", "K", 1.0f, 273.15f, 2},
-    }
+    temperatureConversions
   );
 
-  const int celsius = 0;
-  const int fahrenheit = 1;
-  const int kelvin = 2;
+  const mg::UnitIndex celsius = 0;
+  const mg::UnitIndex fahrenheit = 1;
+  const mg::UnitIndex kelvin = 2;
 
   CHECK(temperatureLike.convertFromBase(100.0f, fahrenheit) == doctest::Approx(212.0f).epsilon(kEpsilon));
   CHECK(temperatureLike.convertToBase(212.0f, fahrenheit) == doctest::Approx(100.0f).epsilon(kEpsilon));
@@ -79,12 +97,11 @@ TEST_CASE("UnitType converts between base and conversion units") {
 
 TEST_CASE("UnitType falls back to default unit for invalid conversion indexes") {
   mg::UnitType distanceLike(
+    "distance-like",
     "meter",
     "m",
     2,
-    {
-      {"foot", "ft", 3.28084f, 0.0f, 2},
-    },
+    std::span<const mg::Unit>(distanceConversions.data(), 1),
     1
   );
 
@@ -94,13 +111,11 @@ TEST_CASE("UnitType falls back to default unit for invalid conversion indexes") 
 
 TEST_CASE("UnitType formats values with unit decimal places and optional abbreviation") {
   mg::UnitType pressureLike(
+    "pressure-like",
     "psi",
     "psi",
     1,
-    {
-      {"kpa", "kpa", 6.89476f, 0.0f, 1},
-      {"bar", "bar", 0.0689476f, 0.0f, 4},
-    }
+    pressureConversions
   );
 
   CHECK(pressureLike.getValueString(10.0f, 0, true) == "10.0psi");
@@ -109,52 +124,27 @@ TEST_CASE("UnitType formats values with unit decimal places and optional abbrevi
   CHECK(pressureLike.getValueString(0.689476f, 2, true) == "0.6895bar");
 }
 
-TEST_CASE("UnitType lists unit names and abbreviations in index order") {
+TEST_CASE("UnitType exposes unit names and abbreviations in index order") {
   mg::UnitType speedLike(
+    "speed-like",
     "kilometer-per-hour",
     "km/h",
     2,
-    {
-      {"mile-per-hour", "mph", 0.621371f, 0.0f, 1},
-    }
+    speedConversions
   );
 
-  const std::vector<const char*> names = speedLike.listUnitStrings(false);
-  const std::vector<const char*> abbreviations = speedLike.listUnitStrings(true);
+  const auto& units = speedLike.getUnits();
 
-  REQUIRE(names.size() == 2);
-  REQUIRE(abbreviations.size() == 2);
-  CHECK(std::string(names[0]) == "kilometer-per-hour");
-  CHECK(std::string(names[1]) == "mile-per-hour");
-  CHECK(std::string(abbreviations[0]) == "km/h");
-  CHECK(std::string(abbreviations[1]) == "mph");
+  REQUIRE(units.size() == 2);
+  CHECK(std::string(units[0].name) == "kilometer-per-hour");
+  CHECK(std::string(units[1].name) == "mile-per-hour");
+  CHECK(std::string(units[0].abbreviation) == "km/h");
+  CHECK(std::string(units[1].abbreviation) == "mph");
 }
 
-TEST_CASE("UnitType finds units by name and abbreviation") {
-  mg::UnitType speedLike(
-    "kilometer-per-hour",
-    "km/h",
-    2,
-    {
-      {"mile-per-hour", "mph", 0.621371f, 0.0f, 1},
-    }
-  );
-
-  CHECK(speedLike.getIndexFromName("kilometer-per-hour") == 0);
-  CHECK(speedLike.getIndexFromName("mile-per-hour") == 1);
-  CHECK(speedLike.getIndexFromName("missing") == mg::DEFAULT_UNIT);
-  CHECK(speedLike.getIndexFromName(nullptr) == mg::DEFAULT_UNIT);
-
-  CHECK(speedLike.getIndexFromAbbreviation("km/h") == 0);
-  CHECK(speedLike.getIndexFromAbbreviation("mph") == 1);
-  CHECK(speedLike.getIndexFromAbbreviation("missing") == mg::DEFAULT_UNIT);
-  CHECK(speedLike.getIndexFromAbbreviation(nullptr) == mg::DEFAULT_UNIT);
-}
-
-TEST_CASE("UnitType find resolves known global unit types and falls back to percentage") {
-  CHECK(&mg::UnitType::find("temperature") == &mg::temperature);
-  CHECK(&mg::UnitType::find("pressure") == &mg::pressure);
-  CHECK(&mg::UnitType::find("velocity") == &mg::velocity);
-  CHECK(&mg::UnitType::find(nullptr) == &mg::percentage);
-  CHECK(&mg::UnitType::find("missing") == &mg::percentage);
+TEST_CASE("UnitType find resolves known global unit types and returns nullptr for missing names") {
+  CHECK(mg::UnitType::find("temperature") == &mg::temperature);
+  CHECK(mg::UnitType::find("pressure") == &mg::pressure);
+  CHECK(mg::UnitType::find("velocity") == &mg::velocity);
+  CHECK(mg::UnitType::find("missing") == nullptr);
 }
