@@ -6,14 +6,15 @@
 namespace mg {
 
 using UnitIndex = std::int8_t;
+using Measurement = float; ///< How "data" is stored.
 
 inline constexpr UnitIndex BASE_UNIT = 0;
 
 struct Unit {
     std::string_view name = "";
     std::string_view abbreviation = "";
-    float factor = 1.0F;
-    float offset = 0.0F;
+    Measurement factor = 1.0F;
+    Measurement offset = 0.0F;
     std::uint8_t decimalPlaces = 0;
 };
 

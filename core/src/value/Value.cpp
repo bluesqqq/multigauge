@@ -36,14 +36,14 @@ Value::Value(
     std::string_view id,
     std::string_view name,
     const UnitType& unitType,
-    float minimumValue,
-    float maximumValue
+    Measurement minimum,
+    Measurement maximum
 ) noexcept : id_(id),
              name_(name),
              unitType_(unitType),
-             value(minimumValue),
-             minimumValue(minimumValue),
-             maximumValue(maximumValue) {}
+             value_(minimum),
+             minimum_(minimum),
+             maximum_(maximum) {}
 
 Value *Value::find(std::string_view id) noexcept {
     for (auto& value : values) {
@@ -64,34 +64,25 @@ std::span<const Value> Value::list() noexcept {
     return values;
 }
 
-Value::operator float() const {
-    return getValueBase();
+Measurement Value::valueBase() const noexcept { return value_; }
+
+void Value::setValueBase(Measurement newValue) noexcept { 
+    value_ = std::clamp(newValue, minimum_, maximum_);
 }
 
-Value &Value::operator=(float newValue) {
-    setValueBase(newValue);
-    return *this;
+Measurement Value::minimumBase() const noexcept { return minimum_; }
+
+Measurement Value::maximumBase() const noexcept { return maximum_; }
+
+Measurement Value::value(UnitIndex index) const { return unitType_.convertFromBase(value_, index); }
+
+void Value::setValue(Measurement newValue, UnitIndex index) {
+    value_ = std::clamp(unitType_.convertToBase(newValue, index), minimum_, maximum_);
 }
 
-float Value::getValueBase() const noexcept { return value; }
+Measurement Value::minimum(UnitIndex index) const { return unitType_.convertFromBase(minimum_, index); }
 
-void Value::setValueBase(float newValue) noexcept { 
-    value = std::clamp(newValue, minimumValue, maximumValue);
-}
-
-float Value::getMinimumBase() const noexcept { return minimumValue; }
-
-float Value::getMaximumBase() const noexcept { return maximumValue; }
-
-float Value::getValue(int index) const { return unitType_.convertFromBase(value, index); }
-
-void Value::setValue(float newValue, int index) {
-    value = std::clamp(unitType_.convertToBase(newValue, index), minimumValue, maximumValue);
-}
-
-float Value::getMinimum(int index) const { return unitType_.convertFromBase(minimumValue, index); }
-
-float Value::getMaximum(int index) const { return unitType_.convertFromBase(maximumValue, index); }
+Measurement Value::maximum(UnitIndex index) const { return unitType_.convertFromBase(maximum_, index); }
 
 std::string_view Value::id() const { return id_; }
 
@@ -99,13 +90,13 @@ std::string_view Value::name() const { return name_; }
 
 const UnitType& Value::unitType() const noexcept { return unitType_; }
 
-float Value::getInterpolationValue() const { return (value - minimumValue) / (maximumValue - minimumValue); }
+float Value::interpolationValue() const { return (value_ - minimum_) / (maximum_ - minimum_); }
 
-std::string Value::getValueString(int index, bool abbreviation) const { return unitType_.formatValue(getValue(index), index, abbreviation); }
+std::string Value::getValueString(UnitIndex index, bool abbreviation) const { return unitType_.formatValue(value(index), index, abbreviation); }
 
-std::string Value::getLongestValueString(int index, bool abbreviation) {
-    std::string minimumString = unitType_.formatValue(getMinimum(index), index, abbreviation);
-    std::string maximumString = unitType_.formatValue(getMaximum(index), index, abbreviation);
+std::string Value::getLongestValueString(UnitIndex index, bool abbreviation) {
+    std::string minimumString = unitType_.formatValue(minimum(index), index, abbreviation);
+    std::string maximumString = unitType_.formatValue(maximum(index), index, abbreviation);
     return (maximumString.length() > minimumString.length()) ? maximumString : minimumString;
 }
 

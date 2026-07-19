@@ -1,9 +1,10 @@
 #pragma once
 
+#include <span>
 #include <string>
-#include <vector>
+#include <string_view>
+
 #include <multigauge/value/UnitType.h>
-#include <unordered_map>
 
 namespace mg {
 
@@ -16,8 +17,8 @@ public:
         std::string_view id,
         std::string_view name,
         const UnitType& unitType,
-        float minimumValue,
-        float maximumValue
+        Measurement minimum,
+        Measurement maximum
     ) noexcept;
     
     /* ----- LOOKUP ----- */
@@ -33,50 +34,48 @@ public:
     [[nodiscard]]
     static std::span<const Value> list() noexcept;
 
-    /* ----- ASSIGNMENT ----- */
-
-    Value& operator=(float newValue);
-
-    operator float() const;
-
     /* ----- VALUE ----- */
 
+    /// @brief Gets the value in base units.
+    /// @return The value in base units.
     [[nodiscard]]
-    float getValueBase() const noexcept;
+    Measurement valueBase() const noexcept;
 
-    void  setValueBase(float newValue) noexcept;
+    /// @brief Sets the value in base units.
+    /// @param newValue The value (in base units) to set.
+    void setValueBase(Measurement newValue) noexcept;
 
     /// @brief Gets the value in the specified unit.
     /// @param index The index of the unit in the associated UnitType.
     /// @return The value converted to the specified unit.
     [[nodiscard]]
-    float getValue(int index = BASE_UNIT) const;
+    Measurement value(UnitIndex index = BASE_UNIT) const;
 
     /// @brief Sets the value in the specified unit.
     /// @param newValue The value (in the source unit) to set.
     /// @param index The index of the source unit.
-    void setValue(float newValue, int index = BASE_UNIT);
+    void setValue(Measurement newValue, UnitIndex index = BASE_UNIT);
 
     /* ----- RANGE ----- */
 
     [[nodiscard]]
-    float getMinimumBase() const noexcept;
+    Measurement minimumBase() const noexcept;
     
-    float getMaximumBase() const noexcept;
+    Measurement maximumBase() const noexcept;
 
     /// @brief Gets the minimum value in the specified unit
     /// @param index The index of the specified unit.
     /// @return The minimum value converted to the specified unit.
-    float getMinimum(int index = BASE_UNIT) const;
+    Measurement minimum(UnitIndex index = BASE_UNIT) const;
 
     /// @brief Gets the maximum value in the specified unit
     /// @param index The index of the specified unit.
     /// @return The maximum value converted to the specified unit.
-    float getMaximum(int index = BASE_UNIT) const;
+    Measurement maximum(UnitIndex index = BASE_UNIT) const;
 
     /// @brief Returns the normalized position of the current value between its minimum and maximum.
     /// @return A float between 0.0 and 1.0 representing the value's relative position: 0.0 corresponds to the minimum, 1.0 corresponds to the maximum.
-    float getInterpolationValue() const;
+    float interpolationValue() const;
 
     /* ----- METADATA ----- */
 
@@ -95,21 +94,21 @@ public:
     /// @param index The index of the unit.
     /// @param abbreviation If true, appends the unit abbreviation to the string.
     /// @return The value, in the specified unit, as a string.
-    std::string getValueString(int index = BASE_UNIT, bool abbreviation = true) const;
+    std::string getValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const;
     
     /// @brief Returns the longest string representation of the value's range (minimum or maximum) for a specific unit
     /// @param index The index of the unit.
     /// @param abbreviation If true, appends the unit abbreviation to the string.
     /// @return The longer of the minimum or maximum value, in the specified unit, as a string.
-    std::string getLongestValueString(int index = BASE_UNIT, bool abbreviation = true);
+    std::string getLongestValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true);
     
 private:
     std::string_view id_;
     std::string_view name_;
 
-    float value;
-    const float minimumValue;
-    const float maximumValue;
+    float value_;
+    const float minimum_;
+    const float maximum_;
 
     const UnitType& unitType_;
 

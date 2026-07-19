@@ -108,27 +108,27 @@ const UnitType* UnitType::find(std::string_view name) noexcept {
 
 /* ----- CONVERSION ----- */
 
-float UnitType::convert(
-    float value,
+Measurement UnitType::convert(
+    Measurement value,
     UnitIndex fromIndex,
     UnitIndex toIndex
 ) const noexcept {
     if (fromIndex == toIndex) return value;
 
-    const float baseValue = convertToBase(value, fromIndex);
+    const Measurement baseValue = convertToBase(value, fromIndex);
     return convertFromBase(baseValue, toIndex);
 }
 
-float UnitType::convertToBase(
-    float value,
+Measurement UnitType::convertToBase(
+    Measurement value,
     UnitIndex index
 ) const noexcept {
     const Unit& inUnit = unit(index);
     return inUnit.factor == 0.0F ? value : (value - inUnit.offset) / inUnit.factor;
 }
 
-float UnitType::convertFromBase(
-    float value,
+Measurement UnitType::convertFromBase(
+    Measurement value,
     UnitIndex index
 ) const noexcept {
     const Unit& outUnit = unit(index);

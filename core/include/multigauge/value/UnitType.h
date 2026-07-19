@@ -39,8 +39,8 @@ public:
     /// @param toIndex The index of the target unit.
     /// @return The converted value in the target unit.
     [[nodiscard]]
-    float convert(
-        float value,
+    Measurement convert(
+        Measurement value,
         UnitIndex fromIndex,
         UnitIndex toIndex
     ) const noexcept;
@@ -50,8 +50,8 @@ public:
     /// @param index The index of the specified unit.
     /// @return The converted value in the base unit.
     [[nodiscard]]
-    float convertToBase(
-        float value,
+    Measurement convertToBase(
+        Measurement value,
         UnitIndex index
     ) const noexcept;
 
@@ -60,8 +60,8 @@ public:
     /// @param index The index of the target unit.
     /// @return The converted value in the target unit.
     [[nodiscard]]
-    float convertFromBase(
-        float value,
+    Measurement convertFromBase(
+        Measurement value,
         UnitIndex index
     ) const noexcept;
 
@@ -99,7 +99,7 @@ public:
     /// @return The value, in the specified unit, as a string.
     [[nodiscard]]
     std::string formatValue(
-        float value,
+        Measurement value,
         UnitIndex index,
         bool includeAbbreviation = true
     ) const;
