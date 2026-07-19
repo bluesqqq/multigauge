@@ -1,14 +1,14 @@
-#include <multigauge/graphics/DisplayValue.h>
+#include <multigauge/value/ValueView.h>
 
 namespace mg::graphics {
 
-int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : BASE_UNIT; }
+int ValueView::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : BASE_UNIT; }
 
-DisplayValue::DisplayValue() {}
+ValueView::ValueView() {}
 
-DisplayValue::DisplayValue(const char *newId) : value(newId) {}
+ValueView::ValueView(const char *newId) : value(newId) {}
 
-float DisplayValue::getValueBase() const {
+float ValueView::getValueBase() const {
     if (!value) return 0.0f;
     float result = value->valueBase();
     if (minimum.has_value()) result = std::max(minimum.value(), result);
@@ -16,12 +16,12 @@ float DisplayValue::getValueBase() const {
     return result;
 }
 
-float DisplayValue::getValue() const {
+float ValueView::getValue() const {
     if (!value) return 0.0f;
     return value->value(static_cast<UnitIndex>(getUnitIndex()));
 }
 
-float DisplayValue::getInterpolationValue() const {
+float ValueView::getInterpolationValue() const {
     if (!value) return 0.5f;
     float minimum = getMinimumBase();
     float maximum = getMaximumBase();
@@ -31,28 +31,28 @@ float DisplayValue::getInterpolationValue() const {
     return (value->valueBase() - minimum) / (maximum - minimum);
 }
 
-float DisplayValue::getMinimumBase() const {
+float ValueView::getMinimumBase() const {
     if (!value) return 0.0f;
     return minimum.has_value() ? minimum.value() : value->minimumBase();
 }
 
-float DisplayValue::getMaximumBase() const {
+float ValueView::getMaximumBase() const {
     if (!value) return 1.0f;
     return maximum.has_value() ? maximum.value() : value->maximumBase(); }
 
-float DisplayValue::getMinimum() const {
+float ValueView::getMinimum() const {
     if (!value) return 0.0f;
     auto& unitType = value->unitType();
     return unitType.convertFromBase(getMinimumBase(), getUnitIndex());
 }
 
-float DisplayValue::getMaximum() const {
+float ValueView::getMaximum() const {
     if (!value) return 1.0f;
     auto& unitType = value->unitType();
     return unitType.convertFromBase(getMaximumBase(), getUnitIndex());
 }
 
-const ::mg::Unit *DisplayValue::getUnit() const {
+const ::mg::Unit *ValueView::getUnit() const {
     if (!value) return nullptr;
 
     auto& unitType = value->unitType();
@@ -64,11 +64,11 @@ const ::mg::Unit *DisplayValue::getUnit() const {
     return &unitType.baseUnit();
 }
 
-std::string DisplayValue::getValueString(bool abbreviation) const {
+std::string ValueView::getValueString(bool abbreviation) const {
     return value ? value->valueString(static_cast<UnitIndex>(getUnitIndex()), abbreviation) : "n/a";
 }
 
-const char *DisplayValue::getName() const {
+const char *ValueView::getName() const {
     return value ? value->name().data() : "n/a";
 }
 

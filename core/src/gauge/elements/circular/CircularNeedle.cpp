@@ -19,7 +19,7 @@ void CircularNeedle::draw(Graphics &g) const {
     const float cx = b.x + w * 0.5f;
     const float cy = b.y + h * 0.5f;
 
-    const DisplayValue& value = resolvedDisplayValue();
+    const ValueView& value = resolvedValueView();
     float startAngle = resolvedStartAngle() * DEG2RAD;
     float endAngle = resolvedEndAngle() * DEG2RAD;
 

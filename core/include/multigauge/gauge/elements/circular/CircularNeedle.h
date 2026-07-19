@@ -6,7 +6,7 @@
 namespace mg::gauge {
 
 using ::mg::Line;
-using ::mg::graphics::DisplayValue;
+using ::mg::graphics::ValueView;
 using ::mg::graphics::Paint;
 
 class CircularNeedle : public CircularElement {

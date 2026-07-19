@@ -531,7 +531,7 @@
       "additionalProperties": true
     },
     "displayValue": {
-      "description": "DisplayValue accepts either a string shorthand or an object. Null is not a valid top-level DisplayValue payload, but object.id may be null.",
+      "description": "ValueView accepts either a string shorthand or an object. Null is not a valid top-level ValueView payload, but object.id may be null.",
       "anyOf": [
         {
           "$ref": "#/$defs/valueId"

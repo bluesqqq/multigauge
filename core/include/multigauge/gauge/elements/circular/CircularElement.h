@@ -3,17 +3,17 @@
 #include <optional>
 
 #include <multigauge/gauge/Element.h>
-#include <multigauge/graphics/DisplayValue.h>
+#include <multigauge/value/ValueView.h>
 
 namespace mg::gauge {
 
-using ::mg::graphics::DisplayValue;
+using ::mg::graphics::ValueView;
 
 class CircularElement : public Element {
         MG_EDITOR_NAME("Circular Element")
     MG_TYPE_ID("circular-element")
     protected:
-        std::optional<DisplayValue> value;
+        std::optional<ValueView> value;
         std::optional<float> startAngle;
         std::optional<float> endAngle;
 
@@ -32,10 +32,10 @@ class CircularElement : public Element {
             return static_cast<const CircularElement*>(p);
         }
 
-        DisplayValue resolvedDisplayValue() const {
+        ValueView resolvedValueView() const {
             if (value) return *value;
             if (auto p = parentCircular(); p && p->value) return *p->value;
-            return DisplayValue{};
+            return ValueView{};
         }
 
         float resolvedStartAngle() const {

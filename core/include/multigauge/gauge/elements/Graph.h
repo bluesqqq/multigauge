@@ -1,12 +1,12 @@
 #pragma once
 
 #include <multigauge/gauge/Element.h>
-#include <multigauge/graphics/DisplayValue.h>
+#include <multigauge/value/ValueView.h>
 #include <multigauge/utils/Math.h>
 
 namespace mg::gauge {
 
-using ::mg::graphics::DisplayValue;
+using ::mg::graphics::ValueView;
 using ::mg::graphics::OwnedColor;
 using ::mg::graphics::rgb;
 using ::mg::utils::lerp;
@@ -31,7 +31,7 @@ class Graph : public Element {
         OwnedColor graphColor;
         OwnedColor borderColor;
 
-        DisplayValue value;
+        ValueView value;
         std::vector<TimeValue> valueMemory = {};
 
         enum Style { Line, Bars, Dots };

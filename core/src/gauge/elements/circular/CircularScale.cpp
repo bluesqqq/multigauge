@@ -13,7 +13,7 @@ void CircularScale::draw(Graphics &g) const {
     const float cx = b.x + w * 0.5f;
     const float cy = b.y + h * 0.5f;
 
-    DisplayValue value = resolvedDisplayValue();
+    ValueView value = resolvedValueView();
     float startAngle = resolvedStartAngle();
     float endAngle = resolvedEndAngle();
     
@@ -21,9 +21,9 @@ void CircularScale::draw(Graphics &g) const {
 }
 
 void CircularScale::update(int deltaTime) {
-    DisplayValue value = resolvedDisplayValue();
+    ValueView value = resolvedValueView();
 
-    ticks.setDisplayValue(value.getValueBase());
+    ticks.setValueView(value.getValueBase());
 }
 
 } // namespace mg::gauge
