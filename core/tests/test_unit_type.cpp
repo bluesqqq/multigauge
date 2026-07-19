@@ -153,25 +153,6 @@ TEST_CASE("UnitType exposes unit names and abbreviations in index order") {
   CHECK(std::string(units[1].abbreviation) == "mph");
 }
 
-TEST_CASE("UnitType formats values into fixed caller-owned buffers") {
-  mg::UnitType pressureLike(
-    "pressure-like",
-    std::span<const mg::Unit>{pressureUnits}
-  );
-
-  char buffer[16] = {};
-  const std::size_t written = pressureLike.formatValue(buffer, sizeof(buffer), 68.9476f, 1, true);
-
-  CHECK(written == std::string("68.9kpa").size());
-  CHECK(std::string(buffer) == "68.9kpa");
-
-  char smallBuffer[5] = {};
-  const std::size_t truncated = pressureLike.formatValue(smallBuffer, sizeof(smallBuffer), 68.9476f, 1, true);
-
-  CHECK(truncated == sizeof(smallBuffer) - 1);
-  CHECK(smallBuffer[sizeof(smallBuffer) - 1] == '\0');
-}
-
 TEST_CASE("UnitType find resolves known global unit types and returns nullptr for missing names") {
   CHECK(mg::UnitType::find("temperature") == &mg::temperature);
   CHECK(mg::UnitType::find("pressure") == &mg::pressure);

@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <utility>
 
 namespace mg {
@@ -68,6 +69,21 @@ constexpr Unit percentageUnits[] = {
 constexpr Unit invalidUnit = {"", "", 1.0F, 0.0F, 0};
 
 } // namespace
+
+/* ----- CONSTRUCTOR ----- */
+
+UnitType::UnitType(
+    std::string_view name,
+    std::span<const Unit> units,
+    UnitIndex defaultUnit
+) noexcept
+    : name(name),
+      units(units),
+      defaultUnit(isValidUnitIndex(defaultUnit, units.size()) ? defaultUnit : 0) {
+    assert(!units.empty());
+    assert(units[0].factor == 1.0F);
+    assert(units[0].offset == 0.0F);
+}
 
 /* ----- LOOKUP ----- */
 

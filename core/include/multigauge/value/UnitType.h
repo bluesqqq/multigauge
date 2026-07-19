@@ -20,14 +20,11 @@ class UnitType {
         /// @param units Units for this type. Index 0 is the base unit.
         /// @param defaultUnit Index returned when DEFAULT_UNIT or an invalid index is requested.
         /// @note The unit table must outlive this UnitType.
-        constexpr UnitType(
+        UnitType(
             std::string_view name,
             std::span<const Unit> units,
             UnitIndex defaultUnit = 0
-        ) noexcept
-            : name(name),
-              units(units),
-              defaultUnit(isValidUnitIndex(defaultUnit, units.size()) ? defaultUnit : 0) {}
+        ) noexcept;
 
         /* ----- LOOKUP ----- */
 
