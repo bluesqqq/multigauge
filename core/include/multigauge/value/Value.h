@@ -58,19 +58,23 @@ public:
 
     /* ----- RANGE ----- */
 
+    /// @brief Gets the minimum value in base units.
+    /// @return The minimum value in base units.
     [[nodiscard]]
     Measurement minimumBase() const noexcept;
     
+    /// @brief Gets the maximum value in base units.
+    /// @return The maximum value in base units.
     [[nodiscard]]
     Measurement maximumBase() const noexcept;
 
-    /// @brief Gets the minimum value in the specified unit
+    /// @brief Gets the minimum value in the specified unit.
     /// @param index The index of the specified unit.
     /// @return The minimum value converted to the specified unit.
     [[nodiscard]]
     Measurement minimum(UnitIndex index = BASE_UNIT) const noexcept;
 
-    /// @brief Gets the maximum value in the specified unit
+    /// @brief Gets the maximum value in the specified unit.
     /// @param index The index of the specified unit.
     /// @return The maximum value converted to the specified unit.
     [[nodiscard]]
