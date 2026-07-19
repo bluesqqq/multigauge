@@ -2,7 +2,7 @@
 
 namespace mg::graphics {
 
-int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : DEFAULT_UNIT; }
+int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : BASE_UNIT; }
 
 DisplayValue::DisplayValue() {}
 
@@ -18,7 +18,7 @@ float DisplayValue::getValueBase() const {
 
 float DisplayValue::getValue() const {
     if (!value) return 0.0f;
-    return 0.0f;
+    return value->getValue(getUnitIndex());
 }
 
 float DisplayValue::getInterpolationValue() const {
@@ -57,7 +57,7 @@ const ::mg::Unit *DisplayValue::getUnit() const {
 
     auto& unitType = value->getUnitType();
 
-    return unitIndex.has_value() ? &unitType.getUnit(unitIndex.value()) : &unitType.getDefaultUnit();
+    return &unitType.unit(getUnitIndex());
 }
 
 std::string DisplayValue::getValueString(bool abbreviation) const {

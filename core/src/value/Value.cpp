@@ -77,11 +77,11 @@ const UnitType& Value::getUnitType() const { return unitType; }
 
 float Value::getInterpolationValue() const { return (value - minimumValue) / (maximumValue - minimumValue); }
 
-std::string Value::getValueString(int index, bool abbreviation) const { return unitType.getValueString(getValue(index), index, abbreviation); }
+std::string Value::getValueString(int index, bool abbreviation) const { return unitType.formatValue(getValue(index), index, abbreviation); }
 
 std::string Value::getLongestValueString(int index, bool abbreviation) {
-    std::string minimumString = unitType.getValueString(getMinimum(index), index, abbreviation);
-    std::string maximumString = unitType.getValueString(getMaximum(index), index, abbreviation);
+    std::string minimumString = unitType.formatValue(getMinimum(index), index, abbreviation);
+    std::string maximumString = unitType.formatValue(getMaximum(index), index, abbreviation);
     return (maximumString.length() > minimumString.length()) ? maximumString : minimumString;
 }
 

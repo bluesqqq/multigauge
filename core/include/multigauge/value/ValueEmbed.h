@@ -154,7 +154,7 @@ static inline EmbedSpec parseEmbedInnerTight(std::string_view s) {
 
 namespace mg::values::embed_render {
 
-using ::mg::DEFAULT_UNIT;
+using ::mg::BASE_UNIT;
 using ::mg::Unit;
 using ::mg::UnitType;
 using ::mg::Value;
@@ -173,7 +173,7 @@ static inline void appendFloat(std::string& out, float v, uint8_t decimals) {
 }
 
 static inline std::string getUnitString(const UnitType& ut, int unitIndex, bool abbreviation) {
-    const Unit& u = ut.getUnit(unitIndex);
+    const Unit& u = ut.unit(unitIndex);
     const std::string_view s = abbreviation ? u.abbreviation : u.name;
     return s.empty() ? std::string() : std::string(s);
 }
@@ -202,7 +202,7 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
 
     const bool useAbbrev = !flagNA;
 
-    int unitIndex = (spec.unitIndex >= 0) ? spec.unitIndex : DEFAULT_UNIT;
+    int unitIndex = (spec.unitIndex >= 0) ? spec.unitIndex : BASE_UNIT;
 
     if (flagPCT) { // PERCENTAGE
         if (flagU) {
@@ -232,16 +232,16 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
     // choose decimals
     int decimals = 0;
     if (spec.decimals >= 0) decimals = spec.decimals;
-    else decimals = (int)v->getUnitType().getUnit(unitIndex).decimalPlaces;
+    else decimals = (int)v->getUnitType().unit(unitIndex).decimalPlaces;
 
     appendFloat(out, shown, decimals);
 
     // append unit if present
     if (useAbbrev) {
-        const std::string_view ab = v->getUnitType().getUnit(unitIndex).abbreviation;
+        const std::string_view ab = v->getUnitType().unit(unitIndex).abbreviation;
         if (!ab.empty()) out.append(ab.data(), ab.size()); // no space
     } else {
-        const std::string_view nm = v->getUnitType().getUnit(unitIndex).name;
+        const std::string_view nm = v->getUnitType().unit(unitIndex).name;
         if (!nm.empty()) {
             out += " ";
             out.append(nm.data(), nm.size());

@@ -40,22 +40,22 @@ class Value {
         /// @brief Gets the value in the specified unit.
         /// @param index The index of the unit in the associated UnitType.
         /// @return The value converted to the specified unit.
-        float getValue(int index = DEFAULT_UNIT) const;
+        float getValue(int index = BASE_UNIT) const;
 
         /// @brief Sets the value in the specified unit.
         /// @param newValue The value (in the source unit) to set.
         /// @param index The index of the source unit.
-        void setValue(float newValue, int index = DEFAULT_UNIT);
+        void setValue(float newValue, int index = BASE_UNIT);
 
         /// @brief Gets the minimum value in the specified unit
         /// @param index The index of the specified unit.
         /// @return The minimum value converted to the specified unit.
-        float getMinimum(int index = DEFAULT_UNIT) const;
+        float getMinimum(int index = BASE_UNIT) const;
 
         /// @brief Gets the maximum value in the specified unit
         /// @param index The index of the specified unit.
         /// @return The maximum value converted to the specified unit.
-        float getMaximum(int index = DEFAULT_UNIT) const;
+        float getMaximum(int index = BASE_UNIT) const;
 
         const char* getId() const;
         const char* getName() const;
@@ -70,13 +70,13 @@ class Value {
         /// @param index The index of the unit.
         /// @param abbreviation If true, appends the unit abbreviation to the string.
         /// @return The value, in the specified unit, as a string.
-        std::string getValueString(int index = DEFAULT_UNIT, bool abbreviation = true) const;
+        std::string getValueString(int index = BASE_UNIT, bool abbreviation = true) const;
         
         /// @brief Returns the longest string representation of the value's range (minimum or maximum) for a specific unit
         /// @param index The index of the unit.
         /// @param abbreviation If true, appends the unit abbreviation to the string.
         /// @return The longer of the minimum or maximum value, in the specified unit, as a string.
-        std::string getLongestValueString(int index = DEFAULT_UNIT, bool abbreviation = true);
+        std::string getLongestValueString(int index = BASE_UNIT, bool abbreviation = true);
 };
 
 extern Value dummy;

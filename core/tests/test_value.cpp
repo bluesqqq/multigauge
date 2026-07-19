@@ -136,10 +136,10 @@ TEST_CASE("Value formats values through its unit type") {
 
   value.setValueBase(10.0f);
 
-  CHECK(value.getValueString(mg::DEFAULT_UNIT, true) == "10.0psi");
-  CHECK(value.getValueString(mg::DEFAULT_UNIT, false) == "10.0");
+  CHECK(value.getValueString(mg::BASE_UNIT, true) == "10.0psi");
+  CHECK(value.getValueString(mg::BASE_UNIT, false) == "10.0");
   CHECK(value.getValueString(kKilopascal, true) == "68.9kPa");
-  CHECK(value.getLongestValueString(mg::DEFAULT_UNIT, true) == "100.0psi");
+  CHECK(value.getLongestValueString(mg::BASE_UNIT, true) == "100.0psi");
 }
 
 TEST_CASE("Value registry can find values and returns a sorted list") {

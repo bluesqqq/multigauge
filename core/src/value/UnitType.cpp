@@ -74,12 +74,10 @@ constexpr Unit invalidUnit = {"", "", 1.0F, 0.0F, 0};
 
 UnitType::UnitType(
     std::string_view name,
-    std::span<const Unit> units,
-    UnitIndex defaultUnit
+    std::span<const Unit> units
 ) noexcept
-    : name(name),
-      units(units),
-      defaultUnit(isValidUnitIndex(defaultUnit, units.size()) ? defaultUnit : 0) {
+    : name_(name),
+      units_(units) {
     assert(!units.empty());
     assert(units[0].factor == 1.0F);
     assert(units[0].offset == 0.0F);
@@ -87,7 +85,7 @@ UnitType::UnitType(
 
 /* ----- LOOKUP ----- */
 
-UnitType* UnitType::find(std::string_view name) noexcept {
+const UnitType* UnitType::find(std::string_view name) noexcept {
     static const std::array registry{
         std::pair{std::string_view("temperature"), &temperature},
         std::pair{std::string_view("distance"), &distance},
@@ -108,12 +106,6 @@ UnitType* UnitType::find(std::string_view name) noexcept {
     return found == registry.end() ? nullptr : found->second;
 }
 
-/* ----- CONFIGURATION ----- */
-
-void UnitType::setDefaultUnit(UnitIndex index) noexcept {
-    defaultUnit = isValidIndex(index) ? index : 0;
-}
-
 /* ----- CONVERSION ----- */
 
 float UnitType::convert(
@@ -131,82 +123,64 @@ float UnitType::convertToBase(
     float value,
     UnitIndex index
 ) const noexcept {
-    const Unit& unit = getUnit(index);
-    return unit.factor == 0.0F ? value : (value - unit.offset) / unit.factor;
+    const Unit& inUnit = unit(index);
+    return inUnit.factor == 0.0F ? value : (value - inUnit.offset) / inUnit.factor;
 }
 
 float UnitType::convertFromBase(
     float value,
     UnitIndex index
 ) const noexcept {
-    const Unit& unit = getUnit(index);
-    return (value * unit.factor) + unit.offset;
+    const Unit& outUnit = unit(index);
+    return (value * outUnit.factor) + outUnit.offset;
 }
 
 /* ----- UNIT ACCESS ----- */
 
-std::string_view UnitType::getName() const noexcept {
-    return name;
+std::string_view UnitType::name() const noexcept {
+    return name_;
 }
 
-const Unit& UnitType::getUnit(UnitIndex index) const noexcept {
-    return isValidIndex(index) ? units[static_cast<std::size_t>(index)] : getDefaultUnit();
+const Unit& UnitType::unit(UnitIndex index) const noexcept {
+    return isValidIndex(index, units_.size()) ? units_[static_cast<std::size_t>(index)] : baseUnit();
 }
 
-std::span<const Unit> UnitType::getUnits() const noexcept {
-    return units;
+std::span<const Unit> UnitType::units() const noexcept {
+    return units_;
 }
 
-std::size_t UnitType::getUnitCount() const noexcept {
-    return units.size();
-}
-
-const Unit& UnitType::getBaseUnit() const noexcept {
-    return units.empty() ? invalidUnit : units[0];
-}
-
-const Unit& UnitType::getDefaultUnit() const noexcept {
-    return isValidIndex(defaultUnit) ? units[static_cast<std::size_t>(defaultUnit)] : getBaseUnit();
-}
-
-UnitIndex UnitType::getDefaultUnitIndex() const noexcept {
-    return defaultUnit;
+const Unit& UnitType::baseUnit() const noexcept {
+    return units_.empty() ? invalidUnit : units_[0];
 }
 
 /* ----- FORMATTING ----- */
 
-std::string UnitType::getValueString(
+std::string UnitType::formatValue(
     float value,
     UnitIndex index,
-    bool abbreviation
+    bool includeAbbreviation
 ) const {
-    const Unit& unit = getUnit(index);
-    std::string result = ::mg::utils::floatToString(value, unit.decimalPlaces);
+    const Unit& formatUnit = unit(index);
+    std::string result = ::mg::utils::floatToString(value, formatUnit.decimalPlaces);
 
-    if (abbreviation && !unit.abbreviation.empty()) {
-        result.append(unit.abbreviation.data(), unit.abbreviation.size());
+    if (includeAbbreviation && !formatUnit.abbreviation.empty()) {
+        result.append(formatUnit.abbreviation.data(), formatUnit.abbreviation.size());
     }
 
     return result;
 }
 
-/* ----- PRIVATE ----- */
-
-bool UnitType::isValidIndex(UnitIndex index) const noexcept {
-    return isValidUnitIndex(index, units.size());
-}
-
 /* ----- UNIT TYPES ----- */
 
-UnitType temperature{"temperature", std::span<const Unit>{temperatureUnits}};
-UnitType distance{"distance", std::span<const Unit>{distanceUnits}};
-UnitType pressure{"pressure", std::span<const Unit>{pressureUnits}};
-UnitType velocity{"velocity", std::span<const Unit>{velocityUnits}};
-UnitType acceleration{"acceleration", std::span<const Unit>{accelerationUnits}};
-UnitType volume{"volume", std::span<const Unit>{volumeUnits}};
-UnitType volumePerTime{"volumePerTime", std::span<const Unit>{volumePerTimeUnits}};
-UnitType revolutions{"revolutions", std::span<const Unit>{revolutionsUnits}};
-UnitType angle{"angle", std::span<const Unit>{angleUnits}};
-UnitType percentage{"percentage", std::span<const Unit>{percentageUnits}};
+const UnitType temperature{"temperature", std::span<const Unit>{temperatureUnits}};
+const UnitType distance{"distance", std::span<const Unit>{distanceUnits}};
+const UnitType pressure{"pressure", std::span<const Unit>{pressureUnits}};
+const UnitType velocity{"velocity", std::span<const Unit>{velocityUnits}};
+const UnitType acceleration{"acceleration", std::span<const Unit>{accelerationUnits}};
+const UnitType volume{"volume", std::span<const Unit>{volumeUnits}};
+const UnitType volumePerTime{"volumePerTime", std::span<const Unit>{volumePerTimeUnits}};
+const UnitType revolutions{"revolutions", std::span<const Unit>{revolutionsUnits}};
+const UnitType angle{"angle", std::span<const Unit>{angleUnits}};
+const UnitType percentage{"percentage", std::span<const Unit>{percentageUnits}};
 
 } // namespace mg

@@ -7,7 +7,7 @@ namespace mg {
 
 using UnitIndex = std::int8_t;
 
-inline constexpr UnitIndex DEFAULT_UNIT = -1;
+inline constexpr UnitIndex BASE_UNIT = 0;
 
 struct Unit {
     std::string_view name = "";
