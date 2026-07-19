@@ -92,9 +92,9 @@ const UnitType& Value::unitType() const noexcept { return unitType_; }
 
 float Value::interpolationValue() const { return (value_ - minimum_) / (maximum_ - minimum_); }
 
-std::string Value::getValueString(UnitIndex index, bool abbreviation) const { return unitType_.formatValue(value(index), index, abbreviation); }
+std::string Value::valueString(UnitIndex index, bool abbreviation) const { return unitType_.formatValue(value(index), index, abbreviation); }
 
-std::string Value::getLongestValueString(UnitIndex index, bool abbreviation) {
+std::string Value::longestValueString(UnitIndex index, bool abbreviation) {
     std::string minimumString = unitType_.formatValue(minimum(index), index, abbreviation);
     std::string maximumString = unitType_.formatValue(maximum(index), index, abbreviation);
     return (maximumString.length() > minimumString.length()) ? maximumString : minimumString;

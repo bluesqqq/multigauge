@@ -61,21 +61,25 @@ public:
     [[nodiscard]]
     Measurement minimumBase() const noexcept;
     
+    [[nodiscard]]
     Measurement maximumBase() const noexcept;
 
     /// @brief Gets the minimum value in the specified unit
     /// @param index The index of the specified unit.
     /// @return The minimum value converted to the specified unit.
+    [[nodiscard]]
     Measurement minimum(UnitIndex index = BASE_UNIT) const;
 
     /// @brief Gets the maximum value in the specified unit
     /// @param index The index of the specified unit.
     /// @return The maximum value converted to the specified unit.
+    [[nodiscard]]
     Measurement maximum(UnitIndex index = BASE_UNIT) const;
 
     /// @brief Returns the normalized position of the current value between its minimum and maximum.
-    /// @return A float between 0.0 and 1.0 representing the value's relative position: 0.0 corresponds to the minimum, 1.0 corresponds to the maximum.
-    float interpolationValue() const;
+    /// @return A `Measurement` between 0.0 and 1.0 representing the value's relative position: 0.0 corresponds to the minimum, 1.0 corresponds to the maximum.
+    [[nodiscard]]
+    Measurement interpolationValue() const;
 
     /* ----- METADATA ----- */
 
@@ -94,21 +98,23 @@ public:
     /// @param index The index of the unit.
     /// @param abbreviation If true, appends the unit abbreviation to the string.
     /// @return The value, in the specified unit, as a string.
-    std::string getValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const;
+    [[nodiscard]]
+    std::string valueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const;
     
     /// @brief Returns the longest string representation of the value's range (minimum or maximum) for a specific unit
     /// @param index The index of the unit.
     /// @param abbreviation If true, appends the unit abbreviation to the string.
     /// @return The longer of the minimum or maximum value, in the specified unit, as a string.
-    std::string getLongestValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true);
+    [[nodiscard]]
+    std::string longestValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true);
     
 private:
     std::string_view id_;
     std::string_view name_;
 
-    float value_;
-    const float minimum_;
-    const float maximum_;
+    Measurement value_;
+    const Measurement minimum_;
+    const Measurement maximum_;
 
     const UnitType& unitType_;
 
