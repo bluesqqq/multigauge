@@ -2,6 +2,8 @@
 
 #include <rapidjson/document.h>
 
+#include <cstdint>
+#include <limits>
 #include <string>
 #include <optional>
 #include <type_traits>
@@ -92,6 +94,24 @@ CODEC_BEGIN(int)
 
     ENCODE() {
         out.SetInt(v);
+        return true;
+    }
+CODEC_END()
+
+CODEC_BEGIN(std::int8_t)
+    DECODE() {
+        if (!v.IsInt()) return false;
+        const int value = v.GetInt();
+        if (value < std::numeric_limits<std::int8_t>::min() || value > std::numeric_limits<std::int8_t>::max()) {
+            return false;
+        }
+
+        out = static_cast<std::int8_t>(value);
+        return true;
+    }
+
+    ENCODE() {
+        out.SetInt(static_cast<int>(v));
         return true;
     }
 CODEC_END()
