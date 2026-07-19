@@ -20,7 +20,7 @@ class ValueRef {
         ValueRef() noexcept = default;
 
         explicit ValueRef(std::string_view id) : id_(id) { resolve(); }
-        explicit ValueRef(Value* value) noexcept : id_(value ? std::string(value->id()) : ""), value_(value) {}
+        explicit ValueRef(Value* value) : id_(value ? std::string(value->id()) : ""), value_(value) {}
 
         bool resolve() noexcept {
             value_ = id_.empty() ? nullptr : Value::find(id_);
