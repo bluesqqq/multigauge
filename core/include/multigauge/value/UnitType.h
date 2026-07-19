@@ -16,7 +16,7 @@ namespace mg {
 /// should be stored outside this class.
 class UnitType {
 public:
-    
+
     /* ----- CONSTRUCTOR ----- */
 
     /// @brief Constructs a unit type backed by an immutable unit table.

@@ -59,7 +59,7 @@ std::span<const Value> Value::list() noexcept {
 
 Measurement Value::valueBase() const noexcept { return value_; }
 
-void Value::setValueBase(Measurement newValue) noexcept { 
+void Value::setValueBase(Measurement newValue) noexcept {
     value_ = std::clamp(newValue, minimum_, maximum_);
 }
 
