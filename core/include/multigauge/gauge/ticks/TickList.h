@@ -144,7 +144,7 @@ class TickList : public ::mg::PropertyObject {
             }
         }
 
-        void setDisplayValue(float newValue) { displayValue = newValue; }
+        void setValueView(float newValue) { displayValue = newValue; }
 };
 
 } // namespace mg::gauge
