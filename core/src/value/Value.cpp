@@ -45,7 +45,7 @@ Value::Value(
              minimum_(minimum),
              maximum_(maximum) {}
 
-Value *Value::find(std::string_view id) const noexcept {
+Value *Value::find(std::string_view id) noexcept {
     for (auto& value : values) {
         if (value.id() == id) return &value;
     }
@@ -64,7 +64,7 @@ std::span<const Value> Value::list() noexcept {
     return values;
 }
 
-Measurement Value::valueBase() noexcept { return value_; }
+Measurement Value::valueBase() const noexcept { return value_; }
 
 void Value::setValueBase(Measurement newValue) noexcept { 
     value_ = std::clamp(newValue, minimum_, maximum_);
