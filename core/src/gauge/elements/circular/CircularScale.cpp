@@ -17,13 +17,13 @@ void CircularScale::draw(Graphics &g) const {
     float startAngle = resolvedStartAngle();
     float endAngle = resolvedEndAngle();
     
-    ticks.drawCircular(g, {cx, cy}, radius, startAngle, endAngle, value.getMinimumBase(), value.getMaximumBase());
+    ticks.drawCircular(g, {cx, cy}, radius, startAngle, endAngle, value.minimumBase(), value.maximumBase());
 }
 
 void CircularScale::update(int deltaTime) {
     ValueView value = resolvedValueView();
 
-    ticks.setValueView(value.getValueBase());
+    ticks.setValueView(value.valueBase());
 }
 
 } // namespace mg::gauge

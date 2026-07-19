@@ -7,7 +7,7 @@
 
 namespace mg::gauge {
 
-using ::mg::graphics::ValueView;
+using ::mg::ValueView;
 
 class CircularElement : public Element {
         MG_EDITOR_NAME("Circular Element")

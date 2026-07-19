@@ -1,61 +1,64 @@
 #include <multigauge/value/ValueView.h>
 
-namespace mg::graphics {
+#include <algorithm>
 
-int ValueView::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : BASE_UNIT; }
+namespace mg {
+
+UnitIndex ValueView::getUnitIndex() const { return unitIndex_.has_value() ? unitIndex_.value() : BASE_UNIT; }
 
 ValueView::ValueView() {}
 
-ValueView::ValueView(const char *newId) : value(newId) {}
+ValueView::ValueView(const char *newId) : value_(newId) {}
 
-float ValueView::getValueBase() const {
-    if (!value) return 0.0f;
-    float result = value->valueBase();
-    if (minimum.has_value()) result = std::max(minimum.value(), result);
-    if (maximum.has_value()) result = std::min(maximum.value(), result);
+Measurement ValueView::valueBase() const {
+    if (!value_) return 0.0f;
+    Measurement result = value_->valueBase();
+    if (minimum_.has_value()) result = std::max(minimum_.value(), result);
+    if (maximum_.has_value()) result = std::min(maximum_.value(), result);
     return result;
 }
 
-float ValueView::getValue() const {
-    if (!value) return 0.0f;
-    return value->value(static_cast<UnitIndex>(getUnitIndex()));
+Measurement ValueView::value() const {
+    if (!value_) return 0.0f;
+    return value_->value(getUnitIndex());
 }
 
-float ValueView::getInterpolationValue() const {
-    if (!value) return 0.5f;
-    float minimum = getMinimumBase();
-    float maximum = getMaximumBase();
+Measurement ValueView::interpolatedValue() const {
+    if (!value_) return 0.5f;
+    Measurement minimum = minimumBase();
+    Measurement maximum = maximumBase();
 
     if (minimum == maximum) return 0.5f;
 
-    return (value->valueBase() - minimum) / (maximum - minimum);
+    return (value_->valueBase() - minimum) / (maximum - minimum);
 }
 
-float ValueView::getMinimumBase() const {
-    if (!value) return 0.0f;
-    return minimum.has_value() ? minimum.value() : value->minimumBase();
+Measurement ValueView::minimumBase() const {
+    if (!value_) return 0.0f;
+    return minimum_.has_value() ? minimum_.value() : value_->minimumBase();
 }
 
-float ValueView::getMaximumBase() const {
-    if (!value) return 1.0f;
-    return maximum.has_value() ? maximum.value() : value->maximumBase(); }
-
-float ValueView::getMinimum() const {
-    if (!value) return 0.0f;
-    auto& unitType = value->unitType();
-    return unitType.convertFromBase(getMinimumBase(), getUnitIndex());
+Measurement ValueView::maximumBase() const {
+    if (!value_) return 1.0f;
+    return maximum_.has_value() ? maximum_.value() : value_->maximumBase();
 }
 
-float ValueView::getMaximum() const {
-    if (!value) return 1.0f;
-    auto& unitType = value->unitType();
-    return unitType.convertFromBase(getMaximumBase(), getUnitIndex());
+Measurement ValueView::minimum() const {
+    if (!value_) return 0.0f;
+    auto& unitType = value_->unitType();
+    return unitType.convertFromBase(minimumBase(), getUnitIndex());
 }
 
-const ::mg::Unit *ValueView::getUnit() const {
-    if (!value) return nullptr;
+Measurement ValueView::maximum() const {
+    if (!value_) return 1.0f;
+    auto& unitType = value_->unitType();
+    return unitType.convertFromBase(maximumBase(), getUnitIndex());
+}
 
-    auto& unitType = value->unitType();
+const Unit* ValueView::unit() const {
+    if (!value_) return nullptr;
+
+    auto& unitType = value_->unitType();
 
     if (const Unit* selectedUnit = unitType.unit(getUnitIndex())) {
         return selectedUnit;
@@ -64,12 +67,12 @@ const ::mg::Unit *ValueView::getUnit() const {
     return &unitType.baseUnit();
 }
 
-std::string ValueView::getValueString(bool abbreviation) const {
-    return value ? value->valueString(static_cast<UnitIndex>(getUnitIndex()), abbreviation) : "n/a";
+std::string ValueView::formatString(bool includeAbbreviation) const {
+    return value_ ? value_->valueString(getUnitIndex(), includeAbbreviation) : "n/a";
 }
 
-const char *ValueView::getName() const {
-    return value ? value->name().data() : "n/a";
+const char* ValueView::name() const {
+    return value_ ? value_->name().data() : "n/a";
 }
 
-} // namespace mg::graphics
+} // namespace mg
