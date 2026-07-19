@@ -45,7 +45,7 @@ Value::Value(
              minimum_(minimum),
              maximum_(maximum) {}
 
-Value *Value::find(std::string_view id) noexcept {
+Value *Value::find(std::string_view id) const noexcept {
     for (auto& value : values) {
         if (value.id() == id) return &value;
     }
@@ -64,7 +64,7 @@ std::span<const Value> Value::list() noexcept {
     return values;
 }
 
-Measurement Value::valueBase() const noexcept { return value_; }
+Measurement Value::valueBase() noexcept { return value_; }
 
 void Value::setValueBase(Measurement newValue) noexcept { 
     value_ = std::clamp(newValue, minimum_, maximum_);
@@ -74,27 +74,27 @@ Measurement Value::minimumBase() const noexcept { return minimum_; }
 
 Measurement Value::maximumBase() const noexcept { return maximum_; }
 
-Measurement Value::value(UnitIndex index) const { return unitType_.convertFromBase(value_, index); }
+Measurement Value::value(UnitIndex index) const noexcept { return unitType_.convertFromBase(value_, index); }
 
 void Value::setValue(Measurement newValue, UnitIndex index) {
     value_ = std::clamp(unitType_.convertToBase(newValue, index), minimum_, maximum_);
 }
 
-Measurement Value::minimum(UnitIndex index) const { return unitType_.convertFromBase(minimum_, index); }
+Measurement Value::minimum(UnitIndex index) const noexcept { return unitType_.convertFromBase(minimum_, index); }
 
-Measurement Value::maximum(UnitIndex index) const { return unitType_.convertFromBase(maximum_, index); }
+Measurement Value::maximum(UnitIndex index) const noexcept { return unitType_.convertFromBase(maximum_, index); }
 
-std::string_view Value::id() const { return id_; }
+std::string_view Value::id() const noexcept { return id_; }
 
-std::string_view Value::name() const { return name_; }
+std::string_view Value::name() const noexcept { return name_; }
 
 const UnitType& Value::unitType() const noexcept { return unitType_; }
 
-float Value::interpolationValue() const { return (value_ - minimum_) / (maximum_ - minimum_); }
+float Value::interpolationValue() const noexcept { return (value_ - minimum_) / (maximum_ - minimum_); }
 
-std::string Value::valueString(UnitIndex index, bool abbreviation) const { return unitType_.formatValue(value(index), index, abbreviation); }
+std::string Value::valueString(UnitIndex index, bool abbreviation) const noexcept { return unitType_.formatValue(value(index), index, abbreviation); }
 
-std::string Value::longestValueString(UnitIndex index, bool abbreviation) {
+std::string Value::longestValueString(UnitIndex index, bool abbreviation) const noexcept {
     std::string minimumString = unitType_.formatValue(minimum(index), index, abbreviation);
     std::string maximumString = unitType_.formatValue(maximum(index), index, abbreviation);
     return (maximumString.length() > minimumString.length()) ? maximumString : minimumString;
