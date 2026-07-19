@@ -45,3 +45,6 @@ jobs:
 
       - name: Build
         run: cmake --build build --config ${{ inputs.build_type }} --target ${{ inputs.build_target }} -j $(nproc)
+
+      - name: Test
+        run: ctest --test-dir build/core -C ${{ inputs.build_type }} --output-on-failure

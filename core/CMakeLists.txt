@@ -7,6 +7,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
+option(MULTIGAUGE_BUILD_TESTS "Build multigauge core tests" ON)
+
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/Dependencies.cmake")
 multigauge_bootstrap_core_dependencies()
 
@@ -45,3 +47,8 @@ target_include_directories(multigauge PRIVATE
 target_link_libraries(multigauge PUBLIC yogacore)
 target_link_libraries(multigauge PRIVATE lodepng)
 target_link_libraries(multigauge PRIVATE tjpgd)
+
+if(MULTIGAUGE_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
+endif()
