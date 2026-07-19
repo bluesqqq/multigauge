@@ -23,7 +23,7 @@ void CircularNeedle::draw(Graphics &g) const {
     float startAngle = resolvedStartAngle() * DEG2RAD;
     float endAngle = resolvedEndAngle() * DEG2RAD;
 
-    float needleAngle = mapf(value.interpolatedValue(), 0.0f, 1.0f, startAngle, endAngle);
+    float needleAngle = mapf(value.interpolationValue(), 0.0f, 1.0f, startAngle, endAngle);
 
     Line<float> needle(cx, cy, cx + cos(needleAngle) * radius, cy + sin(needleAngle) * radius);
     g.setPaint(paint);

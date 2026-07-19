@@ -190,7 +190,7 @@ class Graph : public Element {
             }
 
             g.setTextColor(rgb(255, 255, 255));
-            std::string s = std::string(value.name()) + " : " + value.formatString(true);
+            std::string s = std::string(value.name()) + " : " + value.valueString(true);
             g.drawText(s, b.getTopLeft().toInt().translated(2, 2), Anchor::TopLeft);
 
             if (borderColor) {

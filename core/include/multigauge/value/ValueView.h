@@ -23,51 +23,51 @@ class ValueView : public ::mg::PropertyObject {
 public:
     /* ----- CONSTRUCTORS ----- */
 
-    ValueView();
+    ValueView() noexcept;
 
-    ValueView(std::string_view id);
+    explicit ValueView(std::string_view id);
 
     /* ----- VALUE ----- */
 
     /// @brief Retrieves the raw value stored in the 'Value' reference without any conversion, clamped to the `GaugeValue`s custom limits if defined.
     /// @return The raw value from `value.getValueRaw()`, with additional custom limits if defined.
-    Measurement valueBase() const;
+    Measurement valueBase() const noexcept;
 
     /// @brief Retrieves the value stored in the 'Value' reference using `unitIndex` as the index, clamped to the `GaugeValue`s custom limits if defined.
     /// @return The converted value from `value.getValueRaw()`, with additional custom limits if defined
-    Measurement value() const;
+    Measurement value() const noexcept;
 
     /* ----- RANGE ----- */
 
-    Measurement minimumBase() const;
-    Measurement maximumBase() const;
-    Measurement minimum() const;
-    Measurement maximum() const;
+    Measurement minimumBase() const noexcept;
+    Measurement maximumBase() const noexcept;
+    Measurement minimum() const noexcept;
+    Measurement maximum() const noexcept;
 
-    Measurement interpolatedValue() const;
+    Measurement interpolationValue() const noexcept;
 
     /* ----- METADATA ----- */
 
-    std::string_view name() const;
+    std::string_view name() const noexcept;
 
-    const ::mg::Unit* unit() const;
+    const ::mg::Unit* unit() const noexcept;
 
     /* ----- FORMATTING ----- */
 
-    std::string formatString(bool includeAbbreviation = false) const;
+    std::string valueString(bool includeAbbreviation = false) const;
 
 private:
     ::mg::ValueRef value_; ///< The base `Value` object being wrapped
-    std::optional<Measurement> minimum_ = std::nullopt; ///< Optional custom minimum value.
-    std::optional<Measurement> maximum_ = std::nullopt; ///< Optional custom maximum value.
+    std::optional<Measurement> minimumBase_ = std::nullopt; ///< Optional custom minimum value in base units.
+    std::optional<Measurement> maximumBase_ = std::nullopt; ///< Optional custom maximum value in base units.
     std::optional<UnitIndex> unitIndex_ = std::nullopt; ///< Optional custom unit index.
 
-    UnitIndex getUnitIndex() const;
+    UnitIndex getUnitIndex() const noexcept;
 
     MG_PROPS_BEGIN()
         MG_PROP(value_, "id", "ID", "Value ID.")
-        MG_PROP(minimum_, "min", "Minimum", "Minimum value. Make null to use default minimum.")
-        MG_PROP(maximum_, "max", "Maximum", "Maximum value. Make null to use default maximum.")
+        MG_PROP(minimumBase_, "min", "Minimum", "Minimum value. Make null to use default minimum.")
+        MG_PROP(maximumBase_, "max", "Maximum", "Maximum value. Make null to use default maximum.")
         MG_PROP(unitIndex_, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.")
     MG_PROPS_END()
 };
@@ -87,7 +87,7 @@ CODEC_BEGIN(ValueView)
 
     ENCODE() {
         // we only encode as a plain id string when no optional fields are set
-        if (v.minimum_.has_value() || v.maximum_.has_value() || v.unitIndex_.has_value()) return false;
+        if (v.minimumBase_.has_value() || v.maximumBase_.has_value() || v.unitIndex_.has_value()) return false;
 
         if (v.value_) {
             out.SetString(
