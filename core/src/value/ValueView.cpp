@@ -8,7 +8,7 @@ UnitIndex ValueView::getUnitIndex() const { return unitIndex_.has_value() ? unit
 
 ValueView::ValueView() {}
 
-ValueView::ValueView(const char *newId) : value_(newId) {}
+ValueView::ValueView(std::string_view id) : value_(id) {}
 
 Measurement ValueView::valueBase() const {
     if (!value_) return 0.0f;
@@ -71,7 +71,7 @@ std::string ValueView::formatString(bool includeAbbreviation) const {
     return value_ ? value_->valueString(getUnitIndex(), includeAbbreviation) : "n/a";
 }
 
-const char* ValueView::name() const {
+std::string_view ValueView::name() const {
     return value_ ? value_->name().data() : "n/a";
 }
 

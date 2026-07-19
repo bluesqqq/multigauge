@@ -21,9 +21,13 @@ class ValueView : public ::mg::PropertyObject {
 */
 
 public:
+    /* ----- CONSTRUCTORS ----- */
+
     ValueView();
 
-    ValueView(const char* id);
+    ValueView(std::string_view id);
+
+    /* ----- VALUE ----- */
 
     /// @brief Retrieves the raw value stored in the 'Value' reference without any conversion, clamped to the `GaugeValue`s custom limits if defined.
     /// @return The raw value from `value.getValueRaw()`, with additional custom limits if defined.
@@ -33,18 +37,24 @@ public:
     /// @return The converted value from `value.getValueRaw()`, with additional custom limits if defined
     Measurement value() const;
 
-    Measurement interpolatedValue() const;
+    /* ----- RANGE ----- */
 
     Measurement minimumBase() const;
     Measurement maximumBase() const;
     Measurement minimum() const;
     Measurement maximum() const;
 
+    Measurement interpolatedValue() const;
+
+    /* ----- METADATA ----- */
+
+    std::string_view name() const;
+
     const ::mg::Unit* unit() const;
 
-    std::string formatString(bool includeAbbreviation = false) const;
+    /* ----- FORMATTING ----- */
 
-    const char* name() const;
+    std::string formatString(bool includeAbbreviation = false) const;
 
 private:
     ::mg::ValueRef value_; ///< The base `Value` object being wrapped

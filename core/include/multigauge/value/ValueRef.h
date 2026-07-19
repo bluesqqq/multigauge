@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <string_view>
 
 #include <multigauge/properties/Codec.h>
 #include <multigauge/properties/WidgetTraits.h>
@@ -18,15 +19,14 @@ class ValueRef {
     public:
         ValueRef() = default;
 
-        explicit ValueRef(const char* newId) : id(newId ? newId : "") { resolve(); }
-        explicit ValueRef(const std::string& newId) : id(newId) { resolve(); }
+        explicit ValueRef(std::string_view id) : id(id) { resolve(); }
         explicit ValueRef(Value* value) : id(value ? std::string(value->id()) : ""), ptr(value) {}
 
         void resolve() { ptr = id.empty() ? nullptr : Value::find(id); }
 
         const std::string& getId() const { return id; }
 
-        void setId(const std::string& newId) {
+        void setId(std::string_view newId) {
             id = newId;
             resolve();
         }
@@ -51,7 +51,7 @@ CODEC_BEGIN(ValueRef)
 
         if (!v.IsString()) return false;
 
-        out = ValueRef(std::string(v.GetString(), v.GetStringLength()));
+        out = ValueRef(std::string_view(v.GetString(), v.GetStringLength()));
         return true;
     }
 
