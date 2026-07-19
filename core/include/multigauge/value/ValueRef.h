@@ -13,28 +13,44 @@ class ValueRef {
     CODEC_FRIEND(ValueRef)
 
     private:
-        std::string id;
-        Value* ptr = nullptr;
+        std::string id_;
+        Value* value_ = nullptr;
 
     public:
-        ValueRef() = default;
+        ValueRef() noexcept = default;
 
-        explicit ValueRef(std::string_view id) : id(id) { resolve(); }
-        explicit ValueRef(Value* value) : id(value ? std::string(value->id()) : ""), ptr(value) {}
+        explicit ValueRef(std::string_view id) : id_(id) { resolve(); }
+        explicit ValueRef(Value* value) noexcept : id_(value ? std::string(value->id()) : ""), value_(value) {}
 
-        void resolve() { ptr = id.empty() ? nullptr : Value::find(id); }
+        bool resolve() noexcept {
+            value_ = id_.empty() ? nullptr : Value::find(id_);
+            return value_ != nullptr;
+        }
 
-        const std::string& getId() const { return id; }
+        void clear() noexcept {
+            id_.clear();
+            value_ = nullptr;
+        }
+
+        [[nodiscard]]
+        const std::string& id() const noexcept { return id_; }
 
         void setId(std::string_view newId) {
-            id = newId;
+            id_ = newId;
             resolve();
         }
 
-        Value* get() const { return ptr; }
-        Value& operator*() const { return *ptr; }
-        Value* operator->() const { return ptr; }
-        explicit operator bool() const { return ptr != nullptr; }
+        [[nodiscard]]
+        Value* get() const noexcept { return value_; }
+
+        [[nodiscard]]
+        Value& operator*() const noexcept { return *value_; }
+
+        [[nodiscard]]
+        Value* operator->() const noexcept { return value_; }
+
+        [[nodiscard]]
+        explicit operator bool() const noexcept { return value_ != nullptr; }
 };
 
 template <>
@@ -56,12 +72,12 @@ CODEC_BEGIN(ValueRef)
     }
 
     ENCODE() {
-        if (v.getId().empty()) {
+        if (v.id().empty()) {
             out.SetNull();
             return true;
         }
 
-        out.SetString(v.getId().c_str(), static_cast<rapidjson::SizeType>(v.getId().size()), a);
+        out.SetString(v.id().c_str(), static_cast<rapidjson::SizeType>(v.id().size()), a);
         return true;
     }
 CODEC_END()

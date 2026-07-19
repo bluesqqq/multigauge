@@ -91,8 +91,8 @@ CODEC_BEGIN(ValueView)
 
         if (v.value_) {
             out.SetString(
-                v.value_.getId().c_str(),
-                static_cast<rapidjson::SizeType>(v.value_.getId().size()),
+                v.value_.id().c_str(),
+                static_cast<rapidjson::SizeType>(v.value_.id().size()),
                 a
             );
             return true;
