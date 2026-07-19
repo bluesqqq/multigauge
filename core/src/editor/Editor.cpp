@@ -675,9 +675,12 @@ Result Editor::listValueIDs() const {
     auto& data = result.data;
     auto& allocator = data.GetAllocator();
 
-    for (const Value* value : Value::list()) {
-        if (!value) continue;
-        data.PushBack(rapidjson::Value(value->getId(), allocator), allocator);
+    for (const Value& value : Value::list()) {
+        const std::string_view id = value.id();
+        data.PushBack(
+            rapidjson::Value(id.data(), static_cast<rapidjson::SizeType>(id.size()), allocator),
+            allocator
+        );
     }
 
     return result;

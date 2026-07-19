@@ -63,7 +63,7 @@ TEST_CASE("UnitType falls back to the base unit for invalid indexes") {
     std::span<const mg::Unit>{distanceUnits}
   );
 
-  CHECK(std::string(distanceLike.unit(mg::DEFAULT_UNIT).name) == "meter");
+  CHECK(std::string(distanceLike.unit(static_cast<mg::UnitIndex>(-1)).name) == "meter");
   CHECK(std::string(distanceLike.unit(-99).name) == "meter");
   CHECK(std::string(distanceLike.unit(99).name) == "meter");
 }

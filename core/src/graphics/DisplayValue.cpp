@@ -42,20 +42,20 @@ float DisplayValue::getMaximumBase() const {
 
 float DisplayValue::getMinimum() const {
     if (!value) return 0.0f;
-    auto& unitType = value->getUnitType();
+    auto& unitType = value->unitType();
     return unitType.convertFromBase(getMinimumBase(), getUnitIndex());
 }
 
 float DisplayValue::getMaximum() const {
     if (!value) return 1.0f;
-    auto& unitType = value->getUnitType();
+    auto& unitType = value->unitType();
     return unitType.convertFromBase(getMaximumBase(), getUnitIndex());
 }
 
 const ::mg::Unit *DisplayValue::getUnit() const {
     if (!value) return nullptr;
 
-    auto& unitType = value->getUnitType();
+    auto& unitType = value->unitType();
 
     return &unitType.unit(getUnitIndex());
 }
@@ -65,7 +65,7 @@ std::string DisplayValue::getValueString(bool abbreviation) const {
 }
 
 const char *DisplayValue::getName() const {
-    return value ? value->getName() : "n/a";
+    return value ? value->name().data() : "n/a";
 }
 
 } // namespace mg::graphics

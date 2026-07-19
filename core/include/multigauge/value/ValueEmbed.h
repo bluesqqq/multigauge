@@ -219,7 +219,7 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
     }
 
     if (flagU) { // UNIT ONLY
-        out = getUnitString(v->getUnitType(), unitIndex, useAbbrev);
+        out = getUnitString(v->unitType(), unitIndex, useAbbrev);
         return !out.empty();
     }
 
@@ -232,16 +232,16 @@ static inline bool renderOne(std::string_view inner, std::string& out) {
     // choose decimals
     int decimals = 0;
     if (spec.decimals >= 0) decimals = spec.decimals;
-    else decimals = (int)v->getUnitType().unit(unitIndex).decimalPlaces;
+    else decimals = (int)v->unitType().unit(unitIndex).decimalPlaces;
 
     appendFloat(out, shown, decimals);
 
     // append unit if present
     if (useAbbrev) {
-        const std::string_view ab = v->getUnitType().unit(unitIndex).abbreviation;
+        const std::string_view ab = v->unitType().unit(unitIndex).abbreviation;
         if (!ab.empty()) out.append(ab.data(), ab.size()); // no space
     } else {
-        const std::string_view nm = v->getUnitType().unit(unitIndex).name;
+        const std::string_view nm = v->unitType().unit(unitIndex).name;
         if (!nm.empty()) {
             out += " ";
             out.append(nm.data(), nm.size());
