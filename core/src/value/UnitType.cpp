@@ -2,154 +2,195 @@
 
 #include <multigauge/utils/Math.h>
 
-#include <cstring>
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <utility>
 
 namespace mg {
 
-UnitType::UnitType(const char* baseName, const char* baseAbbreviation, uint8_t baseDecimalPlaces, const std::vector<Unit>& conversionUnits, uint8_t defaultUnitIndex) {
-    units.push_back({baseName, baseAbbreviation, 1.0, 0.0, baseDecimalPlaces}); // Base unit
-    units.insert(units.end(), conversionUnits.begin(), conversionUnits.end());  // All other units
-    setDefaultUnit(defaultUnitIndex);
+namespace {
+
+constexpr Unit temperatureUnits[] = {
+    {"celsius", "C", 1.0F, 0.0F, 2},
+    {"fahrenheit", "F", 1.8F, 32.0F, 2},
+    {"kelvin", "K", 1.0F, 273.15F, 2},
+};
+
+constexpr Unit distanceUnits[] = {
+    {"meter", "m", 1.0F, 0.0F, 2},
+    {"foot", "ft", 3.28084F, 0.0F, 2},
+    {"kilometer", "km", 0.001F, 0.0F, 2},
+    {"mile", "mi", 0.00062137F, 0.0F, 1},
+};
+
+constexpr Unit pressureUnits[] = {
+    {"psi", "psi", 1.0F, 0.0F, 1},
+    {"bar", "bar", 0.0689476F, 0.0F, 4},
+    {"inHg", "inHg", 2.03602F, 0.0F, 1},
+    {"kilopascal", "kPa", 6.89476F, 0.0F, 1},
+};
+
+constexpr Unit velocityUnits[] = {
+    {"kilometer per hour", "km/h", 1.0F, 0.0F, 2},
+    {"mile per hour", "mph", 0.621371F, 0.0F, 1},
+};
+
+constexpr Unit accelerationUnits[] = {
+    {"meter per second squared", "m/s^2", 1.0F, 0.0F, 2},
+    {"foot per second squared", "ft/s^2", 3.2808399F, 0.0F, 2},
+    {"g-force", "g", 0.10197162F, 0.0F, 2},
+};
+
+constexpr Unit volumeUnits[] = {
+    {"liter", "L", 1.0F, 0.0F, 2},
+    {"gallon", "gal", 0.264172F, 0.0F, 3},
+    {"cubic centimeter", "cc", 1000.0F, 0.0F, 0},
+};
+
+constexpr Unit volumePerTimeUnits[] = {
+    {"liter per hour", "L/h", 1.0F, 0.0F, 2},
+    {"milliliter per minute", "mL/min", 16.6666667F, 0.0F, 1},
+    {"gallon per hour", "GPH", 0.264172F, 0.0F, 1},
+};
+
+constexpr Unit revolutionsUnits[] = {
+    {"revolutions per minute", "rpm", 1.0F, 0.0F, 0},
+};
+
+constexpr Unit angleUnits[] = {
+    {"degree", "deg", 1.0F, 0.0F, 0},
+};
+
+constexpr Unit percentageUnits[] = {
+    {"percent", "%", 1.0F, 0.0F, 1},
+};
+
+constexpr Unit invalidUnit = {"", "", 1.0F, 0.0F, 0};
+
+} // namespace
+
+/* ----- CONSTRUCTOR ----- */
+
+UnitType::UnitType(
+    std::string_view name,
+    std::span<const Unit> units
+) noexcept
+    : name_(name),
+      units_(units) {
+    assert(!units.empty());
+    assert(units[0].factor == 1.0F);
+    assert(units[0].offset == 0.0F);
 }
 
-const UnitType& UnitType::find(const char* name) {
-    if (!name) return percentage;
+/* ----- LOOKUP ----- */
 
-    if (strcmp(name, "temperature") == 0) return temperature;
-    if (strcmp(name, "distance") == 0) return distance;
-    if (strcmp(name, "pressure") == 0) return pressure;
-    if (strcmp(name, "velocity") == 0) return velocity;
-    if (strcmp(name, "acceleration") == 0) return acceleration;
-    if (strcmp(name, "volume") == 0) return volume;
-    if (strcmp(name, "volumePerTime") == 0) return volumePerTime;
-    if (strcmp(name, "revolutions") == 0) return revolutions;
-    if (strcmp(name, "angle") == 0) return angle;
-    if (strcmp(name, "percentage") == 0) return percentage;
+const UnitType* UnitType::find(std::string_view name) noexcept {
+    static const std::array registry{
+        std::pair{std::string_view("temperature"), &temperature},
+        std::pair{std::string_view("distance"), &distance},
+        std::pair{std::string_view("pressure"), &pressure},
+        std::pair{std::string_view("velocity"), &velocity},
+        std::pair{std::string_view("acceleration"), &acceleration},
+        std::pair{std::string_view("volume"), &volume},
+        std::pair{std::string_view("volumePerTime"), &volumePerTime},
+        std::pair{std::string_view("revolutions"), &revolutions},
+        std::pair{std::string_view("angle"), &angle},
+        std::pair{std::string_view("percentage"), &percentage},
+    };
 
-    return percentage;
+    const auto found = std::find_if(registry.begin(), registry.end(), [name](const auto& entry) {
+        return entry.first == name;
+    });
+
+    return found == registry.end() ? nullptr : found->second;
 }
 
-void UnitType::setDefaultUnit(uint8_t index) { defaultUnitIndex = (index >= 0 && index < units.size()) ? index : 0; }
+/* ----- CONVERSION ----- */
 
-float UnitType::convert(float value, int fromIndex, int toIndex) const {
+Measurement UnitType::convert(
+    Measurement value,
+    UnitIndex fromIndex,
+    UnitIndex toIndex
+) const noexcept {
     if (fromIndex == toIndex) return value;
-    float baseValue = convertToBase(value, fromIndex);
+
+    const Measurement baseValue = convertToBase(value, fromIndex);
     return convertFromBase(baseValue, toIndex);
 }
 
-float UnitType::convertToBase(float value, int index) const {
-    const Unit& unit = getUnit(index);
-    return (value - unit.offset) / unit.factor;
+Measurement UnitType::convertToBase(
+    Measurement value,
+    UnitIndex index
+) const noexcept {
+    const Unit& inUnit = unitOrBase(index);
+    return inUnit.factor == 0.0F ? value : (value - inUnit.offset) / inUnit.factor;
 }
 
-float UnitType::convertFromBase(float value, int index) const {
-    const Unit& unit = getUnit(index);
-    return (value * unit.factor) + unit.offset;
+Measurement UnitType::convertFromBase(
+    Measurement value,
+    UnitIndex index
+) const noexcept {
+    const Unit& outUnit = unitOrBase(index);
+    return (value * outUnit.factor) + outUnit.offset;
 }
 
-const Unit &UnitType::getUnit(int index) const { return (index >= 0 && index < units.size()) ? units[index] : getDefaultUnit(); }
+/* ----- UNIT ACCESS ----- */
 
-const std::vector<Unit> &UnitType::getUnits() const { return units;}
-
-const Unit &UnitType::getBaseUnit() const { return units[0]; }
-
-const Unit &UnitType::getDefaultUnit() const { return (defaultUnitIndex >= 0 && defaultUnitIndex < units.size()) ? units[defaultUnitIndex] : getBaseUnit(); }
-
-std::string UnitType::getValueString(float value, int index, bool abbreviation) const {
-    const Unit& unit = getUnit(index);
-    return ::mg::utils::floatToString(value, unit.decimalPlaces) + (abbreviation ? unit.abbreviation : "");
+std::string_view UnitType::name() const noexcept {
+    return name_;
 }
 
-std::vector<const char*> UnitType::listUnitStrings(bool abbreviations) const {
-    std::vector<const char*> result;
+const Unit* UnitType::unit(UnitIndex index) const noexcept {
+    return isValidIndex(index, units_.size()) ? &units_[static_cast<std::size_t>(index)] : nullptr;
+}
 
-    for (const auto& unit : units)
-        result.push_back(abbreviations ? unit.abbreviation : unit.name);
+std::span<const Unit> UnitType::units() const noexcept {
+    return units_;
+}
+
+const Unit& UnitType::baseUnit() const noexcept {
+    return units_.empty() ? invalidUnit : units_[0];
+}
+
+/* ----- FORMATTING ----- */
+
+std::string UnitType::formatValue(
+    float value,
+    UnitIndex index,
+    bool includeAbbreviation
+) const {
+    const Unit& formatUnit = unitOrBase(index);
+    std::string result = ::mg::utils::floatToString(value, formatUnit.decimalPlaces);
+
+    if (includeAbbreviation && !formatUnit.abbreviation.empty()) {
+        result.append(formatUnit.abbreviation.data(), formatUnit.abbreviation.size());
+    }
 
     return result;
 }
 
-int UnitType::getIndexFromName(const char *name) {
-    if (!name) return DEFAULT_UNIT;
-    for (uint8_t i = 0; i < units.size(); ++i)
-        if (strcmp(name, units[i].name) == 0) return i;
-    return DEFAULT_UNIT;
+/* ----- PRIVATE ----- */
+
+const Unit& UnitType::unitOrBase(UnitIndex index) const noexcept {
+    if (const Unit* selectedUnit = unit(index)) {
+        return *selectedUnit;
+    }
+
+    return baseUnit();
 }
 
-int UnitType::getIndexFromAbbreviation(const char *abbreviation) {
-    if (!abbreviation) return DEFAULT_UNIT;
-    for (uint8_t i = 0; i < units.size(); ++i)
-        if (strcmp(abbreviation, units[i].abbreviation) == 0) return i;
-    return DEFAULT_UNIT;
-}
+/* ----- UNIT TYPES ----- */
 
-UnitType temperature(
-    "celcius", "C", 2,
-    {
-        {"fahrenheit", "F", 1.8, 32.0, 2},
-        {"kelvin", "K", 1.0, 273.15, 2}
-    }
-);
+const UnitType temperature{"temperature", std::span<const Unit>{temperatureUnits}};
+const UnitType distance{"distance", std::span<const Unit>{distanceUnits}};
+const UnitType pressure{"pressure", std::span<const Unit>{pressureUnits}};
+const UnitType velocity{"velocity", std::span<const Unit>{velocityUnits}};
+const UnitType acceleration{"acceleration", std::span<const Unit>{accelerationUnits}};
+const UnitType volume{"volume", std::span<const Unit>{volumeUnits}};
+const UnitType volumePerTime{"volumePerTime", std::span<const Unit>{volumePerTimeUnits}};
+const UnitType revolutions{"revolutions", std::span<const Unit>{revolutionsUnits}};
+const UnitType angle{"angle", std::span<const Unit>{angleUnits}};
+const UnitType percentage{"percentage", std::span<const Unit>{percentageUnits}};
 
-UnitType distance(
-    "meter", "m", 2,
-    {
-        {"foot", "ft", 3.28084, 0.0, 2},
-        {"kilometer", "km", 0.001, 0.0, 2},
-        {"mile", "mi", 0.00062137, 0.0, 1}
-    }
-);
-
-UnitType pressure(
-    "psi", "psi", 1,
-    {
-        {"bar", "bar", 0.0689476, 0.0, 4},
-        {"inHg", "inHg", 2.03602, 0.0, 1},
-        {"kpa", "kpa", 6.89476, 0.0, 1}
-    }
-);
-
-UnitType velocity(
-    "km/h", "km/h", 2,
-    {
-        {"mph", "mph", 0.621371, 0.0, 1}
-    }
-);
-
-UnitType acceleration(
-    "m/s2", "m/s2", 2,
-    {
-        {"ft/s2", "ft/s2", 3.2808398950131, 0.0, 2},
-        {"G-Force", "g", 0.10197162129779283, 0.0, 2}
-    }
-);
-
-UnitType volume(
-    "liter", "l", 2,
-    {
-        {"gallon", "l", 0.264172, 0.0, 3},
-        {"cc", "l", 1000.0, 0.0, 0}
-    }
-);
-
-UnitType revolutions(
-    "rpm", "rpm", 0
-);
-
-UnitType angle(
-    "degrees", "", 0
-);
-
-UnitType percentage(
-    "percent", "%", 1
-);
-
-UnitType volumePerTime(
-    "L/h", "L/h", 2,
-    {
-        {"mL/min", "mL/min", 16.6666666667, 0.0, 1},
-        {"GPH", "GPH", 0.264172, 0.0, 1}
-    }
-);
-
-}
+} // namespace mg

@@ -3,107 +3,97 @@
 #include <multigauge/io/Log.h>
 
 #include <algorithm>
+#include <array>
 
 namespace mg {
 
-std::unordered_map<std::string, Value*> Value::registry;
+namespace {
 
-Value::Value(const char* id, const char* name, const UnitType& unitType, float minimumValue, float maximumValue) 
-    : id(id), name(name), unitType(unitType), value(minimumValue), minimumValue(minimumValue), maximumValue(maximumValue) { 
-    registry[id] = this;
+std::array<Value, 18> values{{
+    Value{"n/a",                       "n/a",                         percentage,    0.0f,   100.0f},
+    Value{"engineRPM",                 "RPM",                         revolutions,   0.0f,   8000.0f},
+    Value{"engineCoolantTemp",         "Coolant Temp",                temperature,   -40.0f, 120.0f},
+    Value{"engineOilTemp",             "Oil Temp",                    temperature,   -40.0f, 120.0f},
+    Value{"transmissionTemp",          "Transmission Temp",           temperature,   -40.0f, 120.0f},
+    Value{"engineOilPressure",         "Oil Pressure",                pressure,      0.0f,   100.0f},
+    Value{"transmissionFluidPressure", "Transmission Fluid Pressure", pressure,      0.0f,   100.0f},
+    Value{"fuelPressure",              "Fuel Pressure",               pressure,      0.0f,   100.0f},
+    Value{"boostPressure",             "Boost Pressure",              pressure,      0.0f,   100.0f},
+    Value{"fuelLevel",                 "Fuel Level",                  volume,        0.0f,   12.0f},
+    Value{"distanceDriven",            "Distance Driven",             distance,      0.0f,   999999.0f},
+    Value{"speed",                     "Speed",                       velocity,      0.0f,   160.0f},
+    Value{"verticalAcceleration",      "Vertical Accel",              acceleration,  -4.0f,  4.0f},
+    Value{"longitudinalAcceleration",  "Longitudinal Accel",          acceleration,  -4.0f,  4.0f},
+    Value{"lateralAcceleration",       "Lateral Accel",               acceleration,  -4.0f,  4.0f},
+    Value{"calculatedEngineLoad",      "Engine Load",                 percentage,    0.0f,   100.0f},
+    Value{"throttlePosition",          "Throttle Position",           percentage,    0.0f,   100.0f},
+    Value{"engineFuelRate",            "Engine Fuel Rate",            volumePerTime, 0.0f,   3212.75f}
+}};
+
 }
 
-Value *Value::find(const std::string& id) {
-    auto it = registry.find(id);
-    if (it != registry.end()) return it->second;
+Value::Value(
+    std::string_view id,
+    std::string_view name,
+    const UnitType& unitType,
+    Measurement minimum,
+    Measurement maximum
+) noexcept : id_(id),
+             name_(name),
+             unitType_(unitType),
+             value_(minimum),
+             minimum_(minimum),
+             maximum_(maximum) {}
 
-    LOG_WARN("Value::find", "Unknown value id '%s' (returning nullptr)", id.c_str());
+Value *Value::find(std::string_view id) noexcept {
+    for (auto& value : values) {
+        if (value.id() == id) return &value;
+    }
 
     return nullptr;
 }
 
-std::vector<const Value*> Value::list() {
-    std::vector<const Value*> values;
-    values.reserve(registry.size());
-
-    for (const auto& entry : registry) {
-        if (entry.second) {
-            values.push_back(entry.second);
-        }
-    }
-
-    std::sort(values.begin(), values.end(), [](const Value* lhs, const Value* rhs) {
-        if (!lhs || !rhs) return lhs < rhs;
-        return std::string(lhs->getId()) < std::string(rhs->getId());
-    });
-
+std::span<const Value> Value::list() noexcept {
     return values;
 }
 
-Value::operator float() const { return getValueBase(); }
+Measurement Value::valueBase() const noexcept { return value_; }
 
-Value &Value::operator=(float newValue) {
-    setValueBase(newValue);
-    return *this;
+void Value::setValueBase(Measurement newValue) noexcept {
+    value_ = std::clamp(newValue, minimum_, maximum_);
 }
 
-float Value::getValueBase() const { return value; }
+Measurement Value::minimumBase() const noexcept { return minimum_; }
 
-void Value::setValueBase(float newValue) { 
-    value = std::clamp(newValue, minimumValue, maximumValue);
-    if (onChange) onChange(value);
+Measurement Value::maximumBase() const noexcept { return maximum_; }
+
+Measurement Value::value(UnitIndex index) const noexcept { return unitType_.convertFromBase(value_, index); }
+
+void Value::setValue(Measurement newValue, UnitIndex index) noexcept {
+    value_ = std::clamp(unitType_.convertToBase(newValue, index), minimum_, maximum_);
 }
 
-float Value::getMinimumBase() const { return minimumValue; }
+Measurement Value::minimum(UnitIndex index) const noexcept { return unitType_.convertFromBase(minimum_, index); }
 
-float Value::getMaximumBase() const { return maximumValue; }
+Measurement Value::maximum(UnitIndex index) const noexcept { return unitType_.convertFromBase(maximum_, index); }
 
-float Value::getValue(int index) const { return unitType.convertFromBase(value, index); }
+std::string_view Value::id() const noexcept { return id_; }
 
-void Value::setValue(float newValue, int index) {
-    value = std::clamp(unitType.convertToBase(newValue, index), minimumValue, maximumValue);
-    if (onChange) onChange(value);
+std::string_view Value::name() const noexcept { return name_; }
+
+const UnitType& Value::unitType() const noexcept { return unitType_; }
+
+float Value::interpolationValue() const noexcept {
+    const Measurement range = maximum_ - minimum_;
+    return range == 0.0F ? 0.5F : (value_ - minimum_) / range;
 }
 
-float Value::getMinimum(int index) const { return unitType.convertFromBase(minimumValue, index); }
+std::string Value::valueString(UnitIndex index, bool abbreviation) const { return unitType_.formatValue(value(index), index, abbreviation); }
 
-float Value::getMaximum(int index) const { return unitType.convertFromBase(maximumValue, index); }
-
-const char *Value::getId() const { return id; }
-
-const char *Value::getName() const { return name; }
-
-const UnitType& Value::getUnitType() const { return unitType; }
-
-float Value::getInterpolationValue() const { return (value - minimumValue) / (maximumValue - minimumValue); }
-
-std::string Value::getValueString(int index, bool abbreviation) const { return unitType.getValueString(getValue(index), index, abbreviation); }
-
-std::string Value::getLongestValueString(int index, bool abbreviation) {
-    std::string minimumString = unitType.getValueString(getMinimum(index), index, abbreviation);
-    std::string maximumString = unitType.getValueString(getMaximum(index), index, abbreviation);
+std::string Value::longestValueString(UnitIndex index, bool abbreviation) const {
+    std::string minimumString = unitType_.formatValue(minimum(index), index, abbreviation);
+    std::string maximumString = unitType_.formatValue(maximum(index), index, abbreviation);
     return (maximumString.length() > minimumString.length()) ? maximumString : minimumString;
 }
-
-Value dummy("n/a", "n/a", percentage, 0.0f, 100.0f);
-Value engineRPM("engineRPM", "RPM", revolutions, 0.0f, 8000.0f);
-Value engineCoolantTemp("engineCoolantTemp", "Coolant Temp", temperature, -40.0f, 120.0f);
-Value engineOilTemp("engineOilTemp", "Oil Temp", temperature, -40.0f, 120.0f);
-Value transmissionTemp("transmissionTemp", "Transmission Temp", temperature, -40.0f, 120.0f);
-Value engineOilPressure("engineOilPressure", "Oil Pressure", pressure, 0.0f, 100.0f);
-Value transmissionFluidPressure("transmissionFluidPressure", "Transmission Fluid Pressure", pressure, 0.0f, 100.0f);
-Value fuelPressure("fuelPressure", "Fuel Pressure", pressure, 0.0f, 100.0f);
-Value boostPressure("boostPressure", "Boost Pressure", pressure, 0.0f, 100.0f);
-Value fuelLevel("fuelLevel", "Fuel Level", volume, 0.0f, 12.0f);
-Value distanceDriven("distanceDriven", "Distance Driven", distance, 0.0f, 999999.0f);
-Value speed("speed", "Speed", velocity, 0.0f, 160.0f);
-Value verticalAcceleration("verticalAcceleration", "Vertical Accel", acceleration, -4.0f, 4.0f);
-Value longitudinalAcceleration("longitudinalAcceleration", "Longitudinal Accel", acceleration, -4.0f, 4.0f);
-Value lateralAcceleration("lateralAcceleration", "Lateral Accel", acceleration, -4.0f, 4.0f);
-Value calculatedEngineLoad("calculatedEngineLoad", "Engine Load", percentage, 0.0f, 100.0f);
-Value throttlePosition("throttlePosition", "Throttle Position", percentage, 0.0f, 100.0f);
-Value engineFuelRate("engineFuelRate", "Engine Fuel Rate", volumePerTime, 0.0f, 3212.75f);
-
-//Value engineRunTimeSinceStart("Run Time Since Start", time, 0.0f, 65535.0f); // 65535 is max defined by OBD2 protocol
 
 }

@@ -1,6 +1,7 @@
 #include <multigauge/editor/Editor.h>
 
 #include <algorithm>
+#include <cstdint>
 #include <memory>
 
 #include <rapidjson/document.h>
@@ -165,18 +166,22 @@ std::size_t indexOfChild(const Element& parent, const Element* child) {
     return Editor::Append;
 }
 
+rapidjson::Value nodeIdValue(NodeId id) {
+    return rapidjson::Value(static_cast<std::uint64_t>(id));
+}
+
 Result okWithId(NodeId id) {
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", id, allocator);
+    result.data.AddMember("id", nodeIdValue(id), allocator);
     return result;
 }
 
 Result okWithIds(NodeId id, NodeId parentId) {
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", id, allocator);
-    result.data.AddMember("parentId", parentId, allocator);
+    result.data.AddMember("id", nodeIdValue(id), allocator);
+    result.data.AddMember("parentId", nodeIdValue(parentId), allocator);
     return result;
 }
 
@@ -202,7 +207,7 @@ void appendElementHierarchyNode(const Editor& editor,
     for (std::size_t i = 0; i < element.childCount(); ++i) {
         const Element* child = element.childAt(i);
         if (!child) continue;
-        children.PushBack(editor.idOf(child), allocator);
+        children.PushBack(nodeIdValue(editor.idOf(child)), allocator);
     }
     nodeValue.AddMember("children", std::move(children), allocator);
     nodes.AddMember(std::move(nodeKey), std::move(nodeValue), allocator);
@@ -616,7 +621,7 @@ Result Editor::getHierarchy() const {
         if (!face) continue;
 
         const NodeId faceId = idOf(face.get());
-        roots.PushBack(faceId, allocator);
+        roots.PushBack(nodeIdValue(faceId), allocator);
 
         rapidjson::Value nodeKey(std::to_string(faceId).c_str(), allocator);
         rapidjson::Value nodeValue(rapidjson::kObjectType);
@@ -631,7 +636,7 @@ Result Editor::getHierarchy() const {
         for (std::size_t i = 0; i < face->childCount(); ++i) {
             const Element* child = face->childAt(i);
             if (!child) continue;
-            children.PushBack(idOf(child), allocator);
+            children.PushBack(nodeIdValue(idOf(child)), allocator);
         }
 
         nodeValue.AddMember("children", std::move(children), allocator);
@@ -670,9 +675,12 @@ Result Editor::listValueIDs() const {
     auto& data = result.data;
     auto& allocator = data.GetAllocator();
 
-    for (const Value* value : Value::list()) {
-        if (!value) continue;
-        data.PushBack(rapidjson::Value(value->getId(), allocator), allocator);
+    for (const Value& value : Value::list()) {
+        const std::string_view id = value.id();
+        data.PushBack(
+            rapidjson::Value(id.data(), static_cast<rapidjson::SizeType>(id.size()), allocator),
+            allocator
+        );
     }
 
     return result;
@@ -1197,7 +1205,7 @@ Result Editor::getProperty(NodeId id, const std::string& path) const {
     rapidjson::Value value;
     if (!owner->getProperty(property->key, value, result.data.GetAllocator())) return Error("Failed to read property");
 
-    result.data.AddMember("id", id, result.data.GetAllocator());
+    result.data.AddMember("id", nodeIdValue(id), result.data.GetAllocator());
     result.data.AddMember("path", rapidjson::Value(path.c_str(), result.data.GetAllocator()), result.data.GetAllocator());
     result.data.AddMember("value", std::move(value), result.data.GetAllocator());
     return result;
@@ -1211,7 +1219,7 @@ Result Editor::getPropertiesMeta(NodeId id, const std::string& path) const {
 
     Result result = OkObject();
     auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", id, allocator);
+    result.data.AddMember("id", nodeIdValue(id), allocator);
 
     if (path.empty()) {
         rapidjson::Value meta = object->getPropertiesMeta(allocator);

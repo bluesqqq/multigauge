@@ -2,7 +2,7 @@
 
 namespace mg::graphics {
 
-int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : DEFAULT_UNIT; }
+int DisplayValue::getUnitIndex() const { return unitIndex.has_value() ? unitIndex.value() : BASE_UNIT; }
 
 DisplayValue::DisplayValue() {}
 
@@ -10,7 +10,7 @@ DisplayValue::DisplayValue(const char *newId) : value(newId) {}
 
 float DisplayValue::getValueBase() const {
     if (!value) return 0.0f;
-    float result = value->getValueBase();
+    float result = value->valueBase();
     if (minimum.has_value()) result = std::max(minimum.value(), result);
     if (maximum.has_value()) result = std::min(maximum.value(), result);
     return result;
@@ -18,7 +18,7 @@ float DisplayValue::getValueBase() const {
 
 float DisplayValue::getValue() const {
     if (!value) return 0.0f;
-    return 0.0f;
+    return value->value(static_cast<UnitIndex>(getUnitIndex()));
 }
 
 float DisplayValue::getInterpolationValue() const {
@@ -28,44 +28,48 @@ float DisplayValue::getInterpolationValue() const {
 
     if (minimum == maximum) return 0.5f;
 
-    return (value->getValueBase() - minimum) / (maximum - minimum);
+    return (value->valueBase() - minimum) / (maximum - minimum);
 }
 
 float DisplayValue::getMinimumBase() const {
     if (!value) return 0.0f;
-    return minimum.has_value() ? minimum.value() : value->getMinimumBase();
+    return minimum.has_value() ? minimum.value() : value->minimumBase();
 }
 
 float DisplayValue::getMaximumBase() const {
     if (!value) return 1.0f;
-    return maximum.has_value() ? maximum.value() : value->getMaximumBase(); }
+    return maximum.has_value() ? maximum.value() : value->maximumBase(); }
 
 float DisplayValue::getMinimum() const {
     if (!value) return 0.0f;
-    auto& unitType = value->getUnitType();
+    auto& unitType = value->unitType();
     return unitType.convertFromBase(getMinimumBase(), getUnitIndex());
 }
 
 float DisplayValue::getMaximum() const {
     if (!value) return 1.0f;
-    auto& unitType = value->getUnitType();
+    auto& unitType = value->unitType();
     return unitType.convertFromBase(getMaximumBase(), getUnitIndex());
 }
 
 const ::mg::Unit *DisplayValue::getUnit() const {
     if (!value) return nullptr;
 
-    auto& unitType = value->getUnitType();
+    auto& unitType = value->unitType();
 
-    return unitIndex.has_value() ? &unitType.getUnit(unitIndex.value()) : &unitType.getDefaultUnit();
+    if (const Unit* selectedUnit = unitType.unit(getUnitIndex())) {
+        return selectedUnit;
+    }
+
+    return &unitType.baseUnit();
 }
 
 std::string DisplayValue::getValueString(bool abbreviation) const {
-    return value ? value->getValueString(getUnitIndex(), abbreviation) : "n/a";
+    return value ? value->valueString(static_cast<UnitIndex>(getUnitIndex()), abbreviation) : "n/a";
 }
 
 const char *DisplayValue::getName() const {
-    return value ? value->getName() : "n/a";
+    return value ? value->name().data() : "n/a";
 }
 
 } // namespace mg::graphics

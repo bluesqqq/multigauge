@@ -20,7 +20,7 @@ class ValueRef {
 
         explicit ValueRef(const char* newId) : id(newId ? newId : "") { resolve(); }
         explicit ValueRef(const std::string& newId) : id(newId) { resolve(); }
-        explicit ValueRef(Value* value) : id(value ? value->getId() : ""), ptr(value) {}
+        explicit ValueRef(Value* value) : id(value ? std::string(value->id()) : ""), ptr(value) {}
 
         void resolve() { ptr = id.empty() ? nullptr : Value::find(id); }
 

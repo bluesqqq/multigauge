@@ -1,102 +1,139 @@
 #pragma once
 
+#include <span>
 #include <string>
-#include <functional>
-#include <vector>
+#include <string_view>
+
 #include <multigauge/value/UnitType.h>
-#include <unordered_map>
 
 namespace mg {
 
+/// @brief Runtime value stored in base units with fixed metadata and range.
+/// @details `Value` represents a measured quantity, such as RPM, pressure, or
+/// temperature. The stored value and range are always in the associated
+/// `UnitType`'s base unit. Display-unit selection is intentionally not stored
+/// here; callers pass a `UnitIndex` when they need converted values.
 class Value {
-    private:
-        static std::unordered_map<std::string, Value*> registry;
+public:
 
-        const char* id;
-        const char* name;
+    /* ----- CONSTRUCTOR ----- */
 
-        float value;
-        const float minimumValue;
-        const float maximumValue;
+    /// @brief Constructs a value with fixed identity, unit type, and range.
+    /// @param id Stable identifier used by `find`.
+    /// @param name Human-readable display name.
+    /// @param unitType Unit type used for conversion and formatting.
+    /// @param minimum Minimum allowed value in base units.
+    /// @param maximum Maximum allowed value in base units.
+    /// @note `id`, `name`, and `unitType` must outlive this Value.
+    Value(
+        std::string_view id,
+        std::string_view name,
+        const UnitType& unitType,
+        Measurement minimum,
+        Measurement maximum
+    ) noexcept;
 
-        const UnitType& unitType;
+    /* ----- LOOKUP ----- */
 
-    public:
-        Value(const char* id, const char* name, const UnitType& unitType, float minimumValue, float maximumValue);
-        
-        static Value* find(const std::string& id);
-        static std::vector<const Value*> list();
+    /// @brief Finds a registered value by identifier.
+    /// @param id Identifier of the value to find.
+    /// @return The matching value, or nullptr if no value is registered.
+    [[nodiscard]]
+    static Value* find(std::string_view id) noexcept;
 
-        std::function<void(float)> onChange;
+    /// @brief Returns all registered values.
+    /// @return The registered values.
+    [[nodiscard]]
+    static std::span<const Value> list() noexcept;
 
-        operator float() const;
-        Value& operator=(float newValue);
+    /* ----- VALUE ----- */
 
-        float getValueBase() const;
-        void  setValueBase(float newValue);
-        float getMinimumBase() const;
-        float getMaximumBase() const;
+    /// @brief Gets the value in base units.
+    /// @return The value in base units.
+    [[nodiscard]]
+    Measurement valueBase() const noexcept;
 
-        /// @brief Gets the value in the specified unit.
-        /// @param index The index of the unit in the associated UnitType.
-        /// @return The value converted to the specified unit.
-        float getValue(int index = DEFAULT_UNIT) const;
+    /// @brief Sets the value in base units.
+    /// @param newValue The value (in base units) to set.
+    void setValueBase(Measurement newValue) noexcept;
 
-        /// @brief Sets the value in the specified unit.
-        /// @param newValue The value (in the source unit) to set.
-        /// @param index The index of the source unit.
-        void setValue(float newValue, int index = DEFAULT_UNIT);
+    /// @brief Gets the value in the specified unit.
+    /// @param index The index of the unit in the associated UnitType.
+    /// @return The value converted to the specified unit.
+    [[nodiscard]]
+    Measurement value(UnitIndex index = BASE_UNIT) const noexcept;
 
-        /// @brief Gets the minimum value in the specified unit
-        /// @param index The index of the specified unit.
-        /// @return The minimum value converted to the specified unit.
-        float getMinimum(int index = DEFAULT_UNIT) const;
+    /// @brief Sets the value in the specified unit.
+    /// @param newValue The value (in the source unit) to set.
+    /// @param index The index of the source unit.
+    void setValue(Measurement newValue, UnitIndex index = BASE_UNIT) noexcept;
 
-        /// @brief Gets the maximum value in the specified unit
-        /// @param index The index of the specified unit.
-        /// @return The maximum value converted to the specified unit.
-        float getMaximum(int index = DEFAULT_UNIT) const;
+    /* ----- RANGE ----- */
 
-        const char* getId() const;
-        const char* getName() const;
+    /// @brief Gets the minimum value in base units.
+    /// @return The minimum value in base units.
+    [[nodiscard]]
+    Measurement minimumBase() const noexcept;
 
-        const UnitType& getUnitType() const;
+    /// @brief Gets the maximum value in base units.
+    /// @return The maximum value in base units.
+    [[nodiscard]]
+    Measurement maximumBase() const noexcept;
 
-        /// @brief Returns the normalized position of the current value between its minimum and maximum.
-        /// @return A float between 0.0 and 1.0 representing the value's relative position: 0.0 corresponds to the minimum, 1.0 corresponds to the maximum.
-        float getInterpolationValue() const;
+    /// @brief Gets the minimum value in the specified unit.
+    /// @param index The index of the specified unit.
+    /// @return The minimum value converted to the specified unit.
+    [[nodiscard]]
+    Measurement minimum(UnitIndex index = BASE_UNIT) const noexcept;
 
-        /// @brief Returns a string representation of the value for a specific unit.
-        /// @param index The index of the unit.
-        /// @param abbreviation If true, appends the unit abbreviation to the string.
-        /// @return The value, in the specified unit, as a string.
-        std::string getValueString(int index = DEFAULT_UNIT, bool abbreviation = true) const;
-        
-        /// @brief Returns the longest string representation of the value's range (minimum or maximum) for a specific unit
-        /// @param index The index of the unit.
-        /// @param abbreviation If true, appends the unit abbreviation to the string.
-        /// @return The longer of the minimum or maximum value, in the specified unit, as a string.
-        std::string getLongestValueString(int index = DEFAULT_UNIT, bool abbreviation = true);
+    /// @brief Gets the maximum value in the specified unit.
+    /// @param index The index of the specified unit.
+    /// @return The maximum value converted to the specified unit.
+    [[nodiscard]]
+    Measurement maximum(UnitIndex index = BASE_UNIT) const noexcept;
+
+    /// @brief Returns the normalized position of the current value between its minimum and maximum.
+    /// @return A `Measurement` between 0.0 and 1.0 representing the value's relative position: 0.0 corresponds to the minimum, 1.0 corresponds to the maximum.
+    [[nodiscard]]
+    Measurement interpolationValue() const noexcept;
+
+    /* ----- METADATA ----- */
+
+    [[nodiscard]]
+    std::string_view id() const noexcept;
+
+    [[nodiscard]]
+    std::string_view name() const noexcept;
+
+    [[nodiscard]]
+    const UnitType& unitType() const noexcept;
+
+    /* ----- FORMATTING ----- */
+
+    /// @brief Returns a string representation of the value for a specific unit.
+    /// @param index The index of the unit.
+    /// @param abbreviation If true, appends the unit abbreviation to the string.
+    /// @return The value, in the specified unit, as a string.
+    [[nodiscard]]
+    std::string valueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const;
+
+    /// @brief Returns the longest string representation of the value's range (minimum or maximum) for a specific unit
+    /// @param index The index of the unit.
+    /// @param abbreviation If true, appends the unit abbreviation to the string.
+    /// @return The longer of the minimum or maximum value, in the specified unit, as a string.
+    [[nodiscard]]
+    std::string longestValueString(UnitIndex index = BASE_UNIT, bool abbreviation = true) const;
+
+private:
+    std::string_view id_;
+    std::string_view name_;
+
+    Measurement value_;
+    const Measurement minimum_;
+    const Measurement maximum_;
+
+    const UnitType& unitType_;
+
 };
-
-extern Value dummy;
-extern Value engineRPM;
-extern Value engineCoolantTemp;
-extern Value calculatedEngineLoad;
-extern Value throttlePosition;
-extern Value engineRunTimeSinceStart;
-extern Value engineFuelRate;
-extern Value engineOilTemp;
-extern Value transmissionTemp;
-extern Value engineOilPressure;
-extern Value transmissionFluidPressure;
-extern Value fuelPressure;
-extern Value boostPressure;
-extern Value fuelLevel;
-extern Value distanceDriven;
-extern Value speed;
-extern Value verticalAcceleration;
-extern Value longitudinalAcceleration;
-extern Value lateralAcceleration;
 
 }
