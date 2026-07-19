@@ -50,13 +50,6 @@ Value *Value::find(std::string_view id) noexcept {
         if (value.id() == id) return &value;
     }
 
-    LOG_WARN(
-        "Value::find",
-        "Unknown value id '%.*s' (returning nullptr)",
-        static_cast<int>(id.size()),
-        id.data()
-    );
-
     return nullptr;
 }
 

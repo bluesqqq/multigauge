@@ -8,11 +8,23 @@
 
 namespace mg {
 
+/// @brief Runtime value stored in base units with fixed metadata and range.
+/// @details `Value` represents a measured quantity, such as RPM, pressure, or
+/// temperature. The stored value and range are always in the associated
+/// `UnitType`'s base unit. Display-unit selection is intentionally not stored
+/// here; callers pass a `UnitIndex` when they need converted values.
 class Value {
 public:
 
     /* ----- CONSTRUCTOR ----- */
 
+    /// @brief Constructs a value with fixed identity, unit type, and range.
+    /// @param id Stable identifier used by `find`.
+    /// @param name Human-readable display name.
+    /// @param unitType Unit type used for conversion and formatting.
+    /// @param minimum Minimum allowed value in base units.
+    /// @param maximum Maximum allowed value in base units.
+    /// @note `id`, `name`, and `unitType` must outlive this Value.
     Value(
         std::string_view id,
         std::string_view name,

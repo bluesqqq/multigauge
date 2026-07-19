@@ -9,6 +9,11 @@
 
 namespace mg {
 
+/// @brief Immutable collection of units for a measurement category.
+/// @details A `UnitType` owns no unit data. It references a caller-provided static unit
+/// table where index 0 is the base unit used for storage and conversion.
+/// Runtime user preferences, such as which unit should be displayed by default,
+/// should be stored outside this class.
 class UnitType {
 public:
     
@@ -17,6 +22,8 @@ public:
     /// @brief Constructs a unit type backed by an immutable unit table.
     /// @param name Stable name identifying the unit type.
     /// @param units Units for this type. Index 0 is the base unit.
+    /// @pre `units` must not be empty.
+    /// @pre `units[0]` must be the base unit with factor 1 and offset 0.
     /// @note The unit table must outlive this UnitType.
     UnitType(
         std::string_view name,
