@@ -2,11 +2,11 @@
 
 #include <multigauge/value/Unit.h>
 
+#include <cstddef>
 #include <cstdint>
 #include <span>
 #include <string>
 #include <string_view>
-#include <vector>
 
 namespace mg {
 
@@ -15,21 +15,19 @@ class UnitType {
         
         /* ----- CONSTRUCTOR ----- */
 
-        /// @brief Constructs a unit type with a guaranteed base unit.
+        /// @brief Constructs a unit type backed by an immutable unit table.
         /// @param name Stable name identifying the unit type.
-        /// @param baseName Display name of the base unit.
-        /// @param baseAbbreviation Abbreviation of the base unit.
-        /// @param baseDecimalPlaces Default number of decimal places for the base unit.
-        /// @param conversionUnits Additional units defined relative to the base unit.
-        /// @param defaultUnit Index of the initially selected default unit.
-        UnitType(
+        /// @param units Units for this type. Index 0 is the base unit.
+        /// @param defaultUnit Index returned when DEFAULT_UNIT or an invalid index is requested.
+        /// @note The unit table must outlive this UnitType.
+        constexpr UnitType(
             std::string_view name,
-            std::string_view baseName,
-            std::string_view baseAbbreviation,
-            std::uint8_t baseDecimalPlaces,
-            std::span<const Unit> conversionUnits = {},
+            std::span<const Unit> units,
             UnitIndex defaultUnit = 0
-        );
+        ) noexcept
+            : name(name),
+              units(units),
+              defaultUnit(isValidUnitIndex(defaultUnit, units.size()) ? defaultUnit : 0) {}
 
         /* ----- LOOKUP ----- */
 
@@ -37,12 +35,12 @@ class UnitType {
         /// @param name Name of the unit type to find.
         /// @return The matching unit type.
         [[nodiscard]]
-        static const UnitType* find(std::string_view name) noexcept;
+        static UnitType* find(std::string_view name) noexcept;
 
         /* ----- CONFIGURATION ----- */
 
-        /// @brief Sets the default unit.
-        /// @param index Index of the new default unit.
+        /// @brief Sets the default unit used when DEFAULT_UNIT or an invalid index is requested.
+        /// @param index Index of the new default unit. Invalid indexes fall back to the base unit.
         void setDefaultUnit(UnitIndex index) noexcept;
 
         /* ----- CONVERSION ----- */
@@ -81,14 +79,20 @@ class UnitType {
 
         /* ----- UNIT ACCESS ----- */
 
+        [[nodiscard]]
+        std::string_view getName() const noexcept;
+
         /// @brief Returns a unit by index.
         /// @param index Index of the unit, or `DEFAULT_UNIT`.
-        /// @return The requested unit.
+        /// @return The requested unit, or the default unit when the index is invalid.
         [[nodiscard]]
         const Unit& getUnit(UnitIndex index = DEFAULT_UNIT) const noexcept;
 
         [[nodiscard]]
-        const std::vector<Unit>& getUnits() const noexcept;
+        std::span<const Unit> getUnits() const noexcept;
+
+        [[nodiscard]]
+        std::size_t getUnitCount() const noexcept;
 
         /// @brief Returns the base unit.
         /// @return The unit stored at index 0.
@@ -99,6 +103,9 @@ class UnitType {
         /// @return The default unit.
         [[nodiscard]]
         const Unit& getDefaultUnit() const noexcept;
+
+        [[nodiscard]]
+        UnitIndex getDefaultUnitIndex() const noexcept;
 
         /* ----- FORMATTING ----- */
 
@@ -118,8 +125,13 @@ class UnitType {
         [[nodiscard]]
         bool isValidIndex(UnitIndex index) const noexcept;
 
+        [[nodiscard]]
+        static constexpr bool isValidUnitIndex(UnitIndex index, std::size_t unitCount) noexcept {
+            return index >= 0 && static_cast<std::size_t>(index) < unitCount;
+        }
+
         std::string_view name;
-        std::vector<Unit> units;
+        std::span<const Unit> units;
         UnitIndex defaultUnit = 0;
 
 };
@@ -137,4 +149,4 @@ extern UnitType percentage;
 
 
 
-}
+} // namespace mg
