@@ -6,9 +6,7 @@
 #include <limits>
 #include <string>
 #include <string_view>
-#include <type_traits>
 #include <utility>
-#include <variant>
 
 #include <multigauge/properties/Codec.h>
 #include <multigauge/text/TextBuffer.h>
@@ -63,28 +61,6 @@ inline bool asciiDigit(char c) noexcept {
 
 inline bool asciiAlnum(char c) noexcept {
     return asciiAlpha(c) || asciiDigit(c);
-}
-
-inline bool identifierStart(char c) noexcept {
-    return asciiAlpha(c) || c == '_';
-}
-
-inline bool identifierCharacter(char c) noexcept {
-    return asciiAlnum(c) || c == '_';
-}
-
-inline bool validIdentifier(std::string_view input) noexcept {
-    if (input.empty() || !identifierStart(input.front())) {
-        return false;
-    }
-
-    for (size_t i = 1; i < input.size(); ++i) {
-        if (!identifierCharacter(input[i])) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 inline Spec parseValueSpec(std::string_view input) noexcept {
@@ -248,27 +224,6 @@ struct ValueEmbedMetadata {
     uint8_t flags = None;
 };
 
-/*
- * Environment variable names remain inside EmbeddedText::source_.
- *
- * This metadata stores only the name's offset and length, keeping the
- * alternative at four bytes.
- */
-struct EnvironmentEmbedMetadata {
-    uint16_t nameOffset = 0;
-    uint16_t nameLength = 0;
-};
-
-using EmbedMetadata = std::variant<
-    ValueEmbedMetadata,
-    EnvironmentEmbedMetadata
->;
-
-using EnvironmentResolver = bool (*)(
-    std::string_view name,
-    TextBuffer& out
-) noexcept;
-
 inline bool appendValue(
     const ValueEmbedMetadata& metadata,
     TextBuffer& out
@@ -385,65 +340,6 @@ inline bool parseValue(
     return true;
 }
 
-inline bool parseEnvironment(
-    std::string_view inner,
-    size_t absoluteInnerOffset,
-    EnvironmentEmbedMetadata& metadata
-) noexcept {
-    constexpr std::string_view Prefix = "env:";
-
-    if (!inner.starts_with(Prefix)) {
-        return false;
-    }
-
-    const std::string_view name = inner.substr(Prefix.size());
-
-    if (!validIdentifier(name)) {
-        return false;
-    }
-
-    const size_t nameOffset =
-        absoluteInnerOffset + Prefix.size();
-
-    if (nameOffset > std::numeric_limits<uint16_t>::max() ||
-        name.size() > std::numeric_limits<uint16_t>::max()) {
-        return false;
-    }
-
-    metadata.nameOffset =
-        static_cast<uint16_t>(nameOffset);
-
-    metadata.nameLength =
-        static_cast<uint16_t>(name.size());
-
-    return true;
-}
-
-inline bool parseEmbed(
-    std::string_view inner,
-    size_t absoluteInnerOffset,
-    EmbedMetadata& metadata
-) noexcept {
-    EnvironmentEmbedMetadata environment;
-
-    if (parseEnvironment(
-            inner,
-            absoluteInnerOffset,
-            environment)) {
-        metadata = environment;
-        return true;
-    }
-
-    ValueEmbedMetadata value;
-
-    if (parseValue(inner, value)) {
-        metadata = value;
-        return true;
-    }
-
-    return false;
-}
-
 } // namespace detail
 
 class EmbeddedText {
@@ -483,30 +379,8 @@ public:
         rebuildCache();
     }
 
-    /*
-     * Renders value embeds only.
-     *
-     * Returns false if the text contains an environment embed because no
-     * environment resolver was supplied.
-     */
     [[nodiscard]]
     bool render(TextBuffer& out) const noexcept {
-        return render(out, nullptr);
-    }
-
-    /*
-     * Environment variables use the following syntax:
-     *
-     *     {env:carName}
-     *     {env:gaugeLabel}
-     *
-     * The resolver writes the corresponding runtime string into `out`.
-     */
-    [[nodiscard]]
-    bool render(
-        TextBuffer& out,
-        detail::EnvironmentResolver environmentResolver
-    ) const noexcept {
         out.clear();
 
         /*
@@ -530,40 +404,7 @@ public:
                 return false;
             }
 
-            const bool success = std::visit(
-                [&](const auto& metadata) noexcept -> bool {
-                    using T = std::remove_cvref_t<
-                        decltype(metadata)
-                    >;
-
-                    if constexpr (
-                        std::is_same_v<
-                            T,
-                            detail::ValueEmbedMetadata
-                        >
-                    ) {
-                        return detail::appendValue(
-                            metadata,
-                            out
-                        );
-                    } else {
-                        if (!environmentResolver) {
-                            return false;
-                        }
-
-                        const std::string_view name =
-                            source.substr(
-                                metadata.nameOffset,
-                                metadata.nameLength
-                            );
-
-                        return environmentResolver(name, out);
-                    }
-                },
-                embeds_[i]
-            );
-
-            if (!success) {
+            if (!detail::appendValue(embeds_[i], out)) {
                 return false;
             }
         }
@@ -609,20 +450,15 @@ private:
                 break;
             }
 
-            detail::EmbedMetadata metadata;
-
-            const size_t innerOffset = cursor + 1;
+            detail::ValueEmbedMetadata metadata;
 
             const std::string_view inner =
                 source.substr(
-                    innerOffset,
-                    close - innerOffset
+                    cursor + 1,
+                    close - cursor - 1
                 );
 
-            if (!detail::parseEmbed(
-                    inner,
-                    innerOffset,
-                    metadata)) {
+            if (!detail::parseValue(inner, metadata)) {
                 ++cursor;
                 continue;
             }
@@ -676,7 +512,7 @@ private:
     > strings_{};
 
     std::array<
-        detail::EmbedMetadata,
+        detail::ValueEmbedMetadata,
         MaxEmbeds
     > embeds_{};
 
