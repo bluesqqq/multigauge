@@ -13,6 +13,7 @@ add_executable(multigauge_core_tests
   test_value.cpp
   test_value_ref.cpp
   test_value_view.cpp
+  test_value_embed.cpp
 )
 
 target_link_libraries(multigauge_core_tests
