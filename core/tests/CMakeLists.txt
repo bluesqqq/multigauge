@@ -11,6 +11,8 @@ FetchContent_MakeAvailable(doctest)
 add_executable(multigauge_core_tests
   test_unit_type.cpp
   test_value.cpp
+  test_value_ref.cpp
+  test_value_view.cpp
 )
 
 target_link_libraries(multigauge_core_tests

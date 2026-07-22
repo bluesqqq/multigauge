@@ -2,6 +2,8 @@
 #include <doctest/doctest.h>
 
 #include <algorithm>
+#include <array>
+#include <ostream>
 #include <string>
 
 #include <multigauge/value/Value.h>
@@ -56,6 +58,17 @@ TEST_CASE("Value exposes identity, range, unit type, and initial value") {
   CHECK(value.valueBase() == doctest::Approx(10.0f));
 }
 
+TEST_CASE("Value handles a zero-width range") {
+  mg::Value value("test.fixed", "Fixed", mg::percentage, 42.0f, 42.0f);
+
+  CHECK(value.valueBase() == doctest::Approx(42.0f));
+  CHECK(value.interpolationValue() == doctest::Approx(0.5f));
+  value.setValueBase(-100.0f);
+  CHECK(value.valueBase() == doctest::Approx(42.0f));
+  value.setValue(999.0f, kFahrenheit);
+  CHECK(value.valueBase() == doctest::Approx(42.0f));
+}
+
 TEST_CASE("Value clamps base assignments to its configured range") {
   auto& value = clampValue();
 
@@ -100,18 +113,28 @@ TEST_CASE("Value formats values through its unit type") {
   CHECK(value.valueString(mg::BASE_UNIT, true) == "10.0psi");
   CHECK(value.valueString(kKilopascal, true) == "68.9kPa");
   CHECK(value.longestValueString(mg::BASE_UNIT, true) == "100.0psi");
+  CHECK(value.valueString(mg::BASE_UNIT, false) == "10.0");
+  CHECK(value.value(static_cast<mg::UnitIndex>(127)) == doctest::Approx(10.0f));
+  CHECK(value.minimum(static_cast<mg::UnitIndex>(-1)) == doctest::Approx(0.0f));
+  CHECK(value.maximum(static_cast<mg::UnitIndex>(127)) == doctest::Approx(100.0f));
 }
 
 TEST_CASE("Value registry can find built-in values and returns a fixed list") {
-  const mg::Value* value = mg::Value::find("engineRPM");
-
-  REQUIRE(value != nullptr);
-  CHECK(std::string(value->id()) == "engineRPM");
-
   const auto values = mg::Value::list();
-  const auto found = std::find_if(values.begin(), values.end(), [](const mg::Value& listed) {
-    return listed.id() == "engineRPM";
-  });
+  const std::array expectedIds{
+    "n/a", "engineRPM", "engineCoolantTemp", "engineOilTemp", "transmissionTemp", "engineOilPressure",
+    "transmissionFluidPressure", "fuelPressure", "boostPressure", "fuelLevel", "distanceDriven", "speed",
+    "verticalAcceleration", "longitudinalAcceleration", "lateralAcceleration", "calculatedEngineLoad",
+    "throttlePosition", "engineFuelRate",
+  };
 
-  CHECK(found != values.end());
+  REQUIRE(values.size() == expectedIds.size());
+  for (std::size_t index = 0; index < values.size(); ++index) {
+    const mg::Value& listed = values[index];
+    CHECK(std::string(listed.id()) == expectedIds[index]);
+    CHECK(mg::Value::find(listed.id()) == &listed);
+  }
+
+  CHECK(mg::Value::find("missing") == nullptr);
+  CHECK(mg::Value::find("") == nullptr);
 }

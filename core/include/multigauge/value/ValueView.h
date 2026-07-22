@@ -89,7 +89,7 @@ CODEC_BEGIN(ValueView)
         // we only encode as a plain id string when no optional fields are set
         if (v.minimumBase_.has_value() || v.maximumBase_.has_value() || v.unitIndex_.has_value()) return false;
 
-        if (v.value_) {
+        if (!v.value_.id().empty()) {
             out.SetString(
                 v.value_.id().c_str(),
                 static_cast<rapidjson::SizeType>(v.value_.id().size()),
