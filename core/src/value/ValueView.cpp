@@ -20,7 +20,7 @@ Measurement ValueView::valueBase() const noexcept {
 
 Measurement ValueView::value() const noexcept {
     if (!value_) return 0.0f;
-    return value_->value(getUnitIndex());
+    return value_->unitType().convertFromBase(valueBase(), getUnitIndex());
 }
 
 Measurement ValueView::interpolationValue() const noexcept {
@@ -30,7 +30,7 @@ Measurement ValueView::interpolationValue() const noexcept {
 
     if (minimum == maximum) return 0.5f;
 
-    return (value_->valueBase() - minimum) / (maximum - minimum);
+    return (valueBase() - minimum) / (maximum - minimum);
 }
 
 Measurement ValueView::minimumBase() const noexcept {
@@ -68,11 +68,11 @@ const Unit* ValueView::unit() const noexcept {
 }
 
 std::string ValueView::valueString(bool includeAbbreviation) const {
-    return value_ ? value_->valueString(getUnitIndex(), includeAbbreviation) : "n/a";
+    return value_ ? value_->unitType().formatValue(value(), getUnitIndex(), includeAbbreviation) : "n/a";
 }
 
 std::string_view ValueView::name() const noexcept {
-    return value_ ? value_->name().data() : "n/a";
+    return value_ ? value_->name() : "n/a";
 }
 
 } // namespace mg
