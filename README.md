@@ -14,6 +14,8 @@
   </em>
 </p>
 
+---
+
 It provides:
 
 - Gauge and dashboard models
