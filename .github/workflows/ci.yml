@@ -1,14 +1,12 @@
-name: CI
+name: Core CI
 
 on:
   push:
     branches:
       - '**'
-
   pull_request:
     branches:
       - main
-
   workflow_dispatch:
 
 permissions:
@@ -19,28 +17,55 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  core:
-    name: Core
-    uses: ./.github/workflows/build-core.yml
-    with:
-      fetch_depth: 1
-      build_type: Debug
-      build_target: multigauge_ci
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: pwsh
 
-  firmware:
-    name: Firmware
-    needs: core
-    uses: ./.github/workflows/build-firmware.yml
-    with:
-      fetch_depth: 1
-      upload_artifact: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  web:
-    name: Web
-    needs: core
-    uses: ./.github/workflows/build-web.yml
-    with:
-      fetch_depth: 1
-      build_type: Debug
-      upload_artifact: true
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2
+        with:
+          key: ${{ github.workflow }}-${{ github.job }}-${{ runner.os }}
 
+      - name: Configure
+        run: |
+          cmake -S . -B build `
+            -DCMAKE_C_COMPILER_LAUNCHER=ccache `
+            -DCMAKE_CXX_COMPILER_LAUNCHER=ccache `
+            -DCMAKE_BUILD_TYPE=Debug
+
+      - name: Build
+        run: cmake --build build --config Debug --target multigauge_core_tests -j $(nproc)
+
+      - name: Test
+        run: ctest --test-dir build -C Debug --output-on-failure
+
+  integration:
+    name: Private Integration
+    needs: test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Dispatch the private integration build
+        shell: bash
+        env:
+          CORE_SHA: ${{ github.sha }}
+          PRIVATE_DISPATCH_TOKEN: ${{ secrets.MULTIGAUGE_PRIVATE_DISPATCH_TOKEN }}
+        run: |
+          if [[ -z "$PRIVATE_DISPATCH_TOKEN" ]]; then
+            echo "::warning::MULTIGAUGE_PRIVATE_DISPATCH_TOKEN is not configured; private integration was skipped."
+            exit 0
+          fi
+
+          curl --fail-with-body --request POST \
+            --header "Accept: application/vnd.github+json" \
+            --header "Authorization: Bearer $PRIVATE_DISPATCH_TOKEN" \
+            --header "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/bluesqqq/multigauge-private/dispatches \
+            --data "{\"event_type\":\"core-updated\",\"client_payload\":{\"sha\":\"$CORE_SHA\"}}"

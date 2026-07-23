@@ -1,4 +1,4 @@
-include("${CMAKE_CURRENT_LIST_DIR}/../../cmake/MultigaugeDependencies.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/MultigaugeDependencies.cmake")
 
 function(multigauge_bootstrap_core_dependencies)
   file(MAKE_DIRECTORY "${MULTIGAUGE_DEPS_DIR}")

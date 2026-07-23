@@ -1,94 +1,54 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(multigauge_superbuild LANGUAGES NONE)
+project(multigauge LANGUAGES C CXX)
 
-include(ExternalProject)
-include("${CMAKE_CURRENT_LIST_DIR}/cmake/MultigaugeDependencies.cmake")
+set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
-option(MULTIGAUGE_BUILD_CORE "Build the native core library" ON)
-option(MULTIGAUGE_BUILD_WEB "Build the web port" ON)
-option(MULTIGAUGE_REQUIRE_WEB "Fail if the web port cannot be configured" OFF)
+option(MULTIGAUGE_BUILD_TESTS "Build multigauge core tests" ON)
 
-set(MULTIGAUGE_SOURCE_DIR "${CMAKE_CURRENT_LIST_DIR}")
-function(multigauge_append_common_args out_var fetchcontent_base_dir)
-  set(args
-    "-DFETCHCONTENT_BASE_DIR:PATH=${fetchcontent_base_dir}"
-  )
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/Dependencies.cmake")
+multigauge_bootstrap_core_dependencies()
 
-  if(CMAKE_BUILD_TYPE)
-    list(APPEND args "-DCMAKE_BUILD_TYPE:STRING=${CMAKE_BUILD_TYPE}")
-  endif()
+set(MULTIGAUGE_RAPIDJSON_INCLUDE_DIR "${MULTIGAUGE_DEPS_DIR}/rapidjson/include")
+set(MULTIGAUGE_YOGA_SOURCE_DIR "${MULTIGAUGE_DEPS_DIR}/yoga/yoga")
+set(MULTIGAUGE_LODEPNG_SOURCE_DIR "${MULTIGAUGE_DEPS_DIR}/lodepng")
+set(MULTIGAUGE_TJPGD_SOURCE_DIR "${MULTIGAUGE_DEPS_DIR}/tjpgd")
 
-  set(${out_var} "${args}" PARENT_SCOPE)
-endfunction()
+add_subdirectory("${MULTIGAUGE_YOGA_SOURCE_DIR}" "${CMAKE_BINARY_DIR}/_deps/yoga")
 
-function(multigauge_resolve_emscripten_toolchain out_var)
-  if(DEFINED ENV{EMSDK} AND NOT "$ENV{EMSDK}" STREQUAL "")
-    set(candidate "$ENV{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake")
-    if(EXISTS "${candidate}")
-      set(${out_var} "${candidate}" PARENT_SCOPE)
-      return()
-    endif()
-  endif()
+add_library(lodepng STATIC "${MULTIGAUGE_LODEPNG_SOURCE_DIR}/lodepng.cpp")
+target_include_directories(lodepng PUBLIC "${MULTIGAUGE_LODEPNG_SOURCE_DIR}")
 
-  set(${out_var} "" PARENT_SCOPE)
-endfunction()
+add_library(tjpgd STATIC "${MULTIGAUGE_TJPGD_SOURCE_DIR}/tjpgd.c")
+target_compile_options(tjpgd PRIVATE
+  $<$<C_COMPILER_ID:MSVC>:/U_WIN32>
+  $<$<NOT:$<C_COMPILER_ID:MSVC>>:-U_WIN32>
+)
+target_include_directories(tjpgd PUBLIC "${MULTIGAUGE_TJPGD_SOURCE_DIR}")
 
-if(MULTIGAUGE_BUILD_CORE)
-  set(MULTIGAUGE_CORE_FETCHCONTENT_BASE_DIR "${CMAKE_BINARY_DIR}/core/_deps")
-  multigauge_append_common_args(MULTIGAUGE_CORE_CMAKE_ARGS
-    "${MULTIGAUGE_CORE_FETCHCONTENT_BASE_DIR}"
-  )
+file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS
+  "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
+)
 
-  ExternalProject_Add(multigauge_external
-    SOURCE_DIR "${MULTIGAUGE_SOURCE_DIR}/core"
-    BINARY_DIR "${CMAKE_BINARY_DIR}/core"
-    CMAKE_ARGS
-      ${MULTIGAUGE_CORE_CMAKE_ARGS}
-      "-DMULTIGAUGE_DEPS_DIR:PATH=${MULTIGAUGE_DEPS_DIR}"
-    INSTALL_COMMAND ""
-  )
-endif()
+add_library(multigauge STATIC)
+target_sources(multigauge PRIVATE ${CORE_SOURCES})
 
-set(MULTIGAUGE_WEB_TOOLCHAIN_FILE "")
-if(MULTIGAUGE_BUILD_WEB)
-  multigauge_resolve_emscripten_toolchain(MULTIGAUGE_WEB_TOOLCHAIN_FILE)
-  if(MULTIGAUGE_WEB_TOOLCHAIN_FILE)
-    set(MULTIGAUGE_WEB_FETCHCONTENT_BASE_DIR "${CMAKE_BINARY_DIR}/ports/web/_deps")
-    multigauge_append_common_args(MULTIGAUGE_WEB_CMAKE_ARGS
-      "${MULTIGAUGE_WEB_FETCHCONTENT_BASE_DIR}"
-    )
+target_include_directories(multigauge PUBLIC
+  "${CMAKE_CURRENT_SOURCE_DIR}/include"
+  "${MULTIGAUGE_RAPIDJSON_INCLUDE_DIR}"
+)
+target_include_directories(multigauge PRIVATE
+  "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
 
-    ExternalProject_Add(multigauge_web_external
-      SOURCE_DIR "${MULTIGAUGE_SOURCE_DIR}/ports/web"
-      BINARY_DIR "${CMAKE_BINARY_DIR}/ports/web"
-      CMAKE_GENERATOR Ninja
-      CMAKE_ARGS
-        ${MULTIGAUGE_WEB_CMAKE_ARGS}
-        "-DCMAKE_TOOLCHAIN_FILE:FILEPATH=${MULTIGAUGE_WEB_TOOLCHAIN_FILE}"
-        "-DMULTIGAUGE_CORE_DIR:PATH=${MULTIGAUGE_SOURCE_DIR}/core"
-        "-DMULTIGAUGE_DEPS_DIR:PATH=${MULTIGAUGE_DEPS_DIR}"
-      INSTALL_COMMAND ""
-      DEPENDS multigauge_external
-    )
-  elseif(MULTIGAUGE_REQUIRE_WEB)
-    message(FATAL_ERROR
-      "MULTIGAUGE_BUILD_WEB is ON, but emsdk was not found.\n"
-      "Set EMSDK or place emsdk next to the repo root so the web port can be configured."
-    )
-  else()
-    message(WARNING
-      "Skipping web build because emsdk was not found. Set EMSDK to enable the web port."
-    )
-  endif()
-endif()
+target_link_libraries(multigauge PUBLIC yogacore)
+target_link_libraries(multigauge PRIVATE lodepng)
+target_link_libraries(multigauge PRIVATE tjpgd)
 
-add_custom_target(multigauge_ci ALL)
-
-if(TARGET multigauge_external)
-  add_dependencies(multigauge_ci multigauge_external)
-endif()
-
-if(TARGET multigauge_web_external)
-  add_dependencies(multigauge_ci multigauge_web_external)
+if(MULTIGAUGE_BUILD_TESTS)
+  enable_testing()
+  add_subdirectory(tests)
 endif()
