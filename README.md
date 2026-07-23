@@ -6,9 +6,9 @@
   </picture>
 </p>
 
-# Multigauge Core
+# Multigauge
 
-Multigauge Core is a platform-agnostic C++20 engine for defining, laying out, rendering, and updating automotive gauges and dashboards.
+Multigauge is a platform-agnostic C++20 engine for defining, laying out, rendering, and updating automotive gauges and dashboards.
 
 It provides:
 
@@ -55,7 +55,7 @@ ctest --test-dir build -C Debug --output-on-failure
 ## Status
 
 > [!WARNING]
-> Multigauge Core is under active development. Public APIs and serialized formats may change before the first stable release.
+> Multigauge is under active development. Public APIs and serialized formats may change before the first stable release.
 
 ## Contributing
 
