@@ -1,66 +1,31 @@
-# Multigauge Agent Guide
+# Portable Core Guide
 
-## Purpose and map
+This repository is the portable multigauge core library.
 
-Multigauge is a monorepo for a portable C++20 automotive gauge renderer/editor and the targets and applications built around it.
+## Portability and public contracts
 
-- `core/`: platform-independent engine, editor, runtime, public headers, and native tests.
-- `ports/esp32/`: Arduino/PlatformIO firmware and ESP32 hardware services.
-- `ports/web/`: Emscripten/WebAssembly runtime, C bindings, browser loader, and examples.
-- `apps/website/`: Flask/Jinja public site, workshop/editor UI, database models, and static assets.
-- `docs/`: porting, storage, element, release, public-header style, and canonical JSON-schema documentation.
-- `cmake/`: shared dependency versions/bootstrap; `.deps/` is generated dependency state.
-- `scripts/`: web-bundle publishing and firmware-manifest generation.
-- `.github/workflows/`: CI and the repository-wide release pipeline; `VERSION` is the single release version.
+- Build as C++20. Keep headers and sources platform-independent: no Arduino/ESP32, Emscripten/DOM, OS filesystem, or concrete graphics-backend APIs.
+- Express platform needs through the interfaces in `include/multigauge/graphics/GraphicsContext.h` and `include/multigauge/io/`; initialization flows through `mg::init`. Update `docs/porting.md` when this contract changes.
+- `include/multigauge/` is public; `src/` is implementation-only. Preserve source compatibility unless a break is intentional, and document non-obvious public contracts using `docs/style/doxygen.md`.
+- The core uses value types plus `std::unique_ptr` for exclusive ownership of screens, gauge elements, faces, and colors, and `std::shared_ptr` for shared editor-history state. Treat raw pointers/references as borrowed unless the API explicitly says otherwise. Preserve documented lifetime rules such as `Value`'s borrowed `std::string_view` identity/name and `UnitType` reference.
+- Dynamic allocation is supported and common; there is no repository rule banning it. Still avoid unnecessary allocation/copying in per-frame `update`/`draw`, image decode, and other hot paths because this code also runs on a no-PSRAM ESP32 target.
+- Core CMake does not override exception or RTTI modes. Do not change those modes or make shared code depend on target-specific exception/RTTI behavior without verifying native, web, and ESP32 builds.
 
-Read the nearest nested `AGENTS.md` before changing a component. Use [README.md](README.md) for the overview, [docs/porting.md](docs/porting.md) for the platform contract, [docs/storage.md](docs/storage.md) for installed/package data, [docs/style/doxygen.md](docs/style/doxygen.md) for public C++ docs, and [docs/releasing.md](docs/releasing.md) for releases.
+## Serialization and registries
 
-## Boundaries and compatibility
+- `MG_PROP` keys and `MG_TYPE_ID` strings are serialized and editor-facing. Keep element/color registries, property codecs/metadata, `docs/schemas/gauge.schema.json`, examples, and JS editor widgets consistent.
+- Built-in IDs in `src/value/Value.cpp`, unit-type lookup names and unit ordering in `src/value/UnitType.cpp`, and `ValueRef` string encoding are compatibility-sensitive.
+- Package-manager behavior must remain aligned with `docs/storage.md` and the package, manifest, and library schemas. Preserve validation-before-write, internally derived safe paths, import/export shape and order, and the distinction between authoritative manifests/faces and derived `library.json`.
+- Use RapidJSON through the existing codecs/helpers and check decode failures. Do not silently rename or discard serialized fields.
 
-- Keep `core/` free of Arduino, ESP32, Emscripten, browser, and vendor-backend dependencies. Ports implement `GraphicsContext`, `FileSystem`, `Time`, and optional `Logger`, then register them through `mg::init`.
-- Put hardware/browser integration in the relevant port. The Flask app consumes published web artifacts; it is not a second implementation of the renderer.
-- Treat headers under `core/include/multigauge/` as public API. Make signature, ownership, lifetime, and behavior changes deliberately and update callers and contract documentation together.
-- Treat serialized names as compatibility surfaces: JSON property keys, `MG_TYPE_ID` values, built-in value IDs, unit-type/unit identifiers and ordering, editor result shapes, package/storage IDs, schema fields, and exported `mg_*` WebAssembly functions. Update code, schemas under `docs/schemas/`, examples, and consumers together when a deliberate format change is required.
-- `docs/storage.md` is authoritative for package import/export and installed storage. Derive paths internally; never trust uploaded IDs, paths, or filenames as storage locations.
-- Shared C++ must remain viable on both native/WebAssembly builds and the ESP32 target. Review code size, peak memory, hot-path allocation, synchronous I/O, and unavailable platform facilities.
+## Build and tests
 
-## Toolchains and generated content
-
-- Native core and WebAssembly targets require C++20. The root superbuild and component projects require CMake 3.16 or newer; web presets require CMake 3.25 and Ninja.
-- ESP32 uses PlatformIO, the Arduino framework, GNU C++20, and the `esp32-s3-devkitc-1` environment. See its nested guide for the current hardware profile.
-- WebAssembly requires emsdk/Emscripten. CI installs the latest emsdk rather than pinning a version.
-- Dependency bootstrap populates `.deps/` and `ports/esp32/lib/`. Builds populate `build/`, `ports/esp32/.pio/`, `ports/web/dist/`, and the published `apps/website/static/multigauge-web/`. Do not hand-edit or commit generated/ignored output.
-- The repository has no configured repository-wide formatter, linter, or static-analysis command. Match nearby style; do not present an ad hoc formatter as project policy.
-
-## Build and verification from the repository root
-
-Use the CI-equivalent native workflow for shared/core changes:
+From the repository root, configure, build, and run the doctest suite:
 
 ```powershell
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug -DMULTIGAUGE_BUILD_WEB=OFF
-cmake --build build --config Debug --target multigauge_ci
-ctest --test-dir build/core -C Debug --output-on-failure
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+cmake --build build --config Debug --target multigauge_core_tests
+ctest --test-dir build -C Debug --output-on-failure
 ```
 
-Build firmware when shared code or ESP32 code is affected:
-
-```powershell
-pio run -d ports/esp32 -e esp32-s3-devkitc-1
-```
-
-Web builds require an active/discoverable emsdk. The component-specific scripts and publication checks are in `ports/web/AGENTS.md`. CI's full graph builds core, then firmware, then web; select all affected targets locally.
-
-## Working rules and definition of done
-
-- Keep changes narrowly scoped. Do not mix unrelated refactoring, formatting, generated output, or dependency upgrades into a focused task.
-- Add a dependency only with a concrete need and justification; update the owning dependency manifest/bootstrap source, not generated copies.
-- Follow existing naming and layout in the touched component. For public C++ declarations, follow `docs/style/doxygen.md` and state non-obvious ownership, lifetime, nullability, units, and structured return shapes.
-- Add or update the closest relevant tests when behavior changes. When no automated coverage exists, record the targeted manual checks performed.
-- A change is complete when affected targets build, relevant tests pass, schemas/examples/consumers agree with intentional contract changes, generated artifacts can be reproduced by their scripts, embedded implications were considered, and the diff contains no unrelated files.
-- Report commands that were not run or require emsdk, credentials, network access, or physical hardware.
-
-## Maintaining these instructions
-
-Treat every `AGENTS.md` as maintained repository documentation. When a change makes applicable guidance inaccurate, make the smallest necessary update in the nearest owning `AGENTS.md`, preserve still-correct guidance, revise or remove obsolete instructions, and verify changed commands against current configuration. This includes durable changes to directory layout or ownership, build/test/lint/format/generation commands, platforms/toolchains/language standards, architectural constraints, public API or serialization compatibility, generated-file rules, environment setup, or the definition of done.
-
-Do not update `AGENTS.md` for temporary implementation details or changes that do not affect future agent behavior. Avoid duplicating information already owned by another `AGENTS.md` or authoritative document; link to it instead.
+Tests live in `tests/` and are registered through CTest. Add focused doctest cases and list new files in `tests/CMakeLists.txt`. Cross-platform integration builds run from the private monorepo.

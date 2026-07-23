@@ -1,9 +1,0 @@
-set(MG_RUNTIME_API_EXPORTS
-  "'_main'"
-  "'_mg_runtime_create_context'"
-  "'_mg_runtime_remove_context'"
-  "'_mg_runtime_clear_screen'"
-  "'_mg_runtime_set_gauge_screen'"
-  "'_mg_runtime_set_editor_screen'"
-  "'_mg_runtime_frame'"
-)

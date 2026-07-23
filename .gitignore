@@ -1,25 +1,5 @@
 build/
-.vscode/
+build-*/
 .deps/
-ports/esp32/lib/
-ports/esp32/.pio/
-
-# Environment
-.env
-**/.env
-
-# Python
-__pycache__/
-**/__pycache__/
-*.pyc
-*.pyo
-*.pyd
-
-# Flask app local state
-apps/website/instance/
-
-# Generated web build outputs
-ports/web/dist/
-apps/website/static/multigauge-web/
-
-node_modules
+.vscode/
+compile_commands.json
