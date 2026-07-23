@@ -19,7 +19,7 @@ set(FETCHCONTENT_QUIET OFF)
 
 FetchContent_Declare(
   rapidjson
-  URL https://github.com/Tencent/rapidjson/archive/refs/tags/v1.1.0.zip
+  URL https://github.com/Tencent/rapidjson/archive/24b5e7a8b27f42fa16b96fc70aade9106cf7102.tar.gz
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 FetchContent_Populate(rapidjson)
