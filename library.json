@@ -5,12 +5,6 @@
     "includeDir": "include",
     "srcFilter": [
       "+<src/**>"
-    ],
-    "flags": [
-      "-I../.deps/rapidjson/include",
-      "-I../.deps/lodepng",
-      "-I../.deps/tjpgd",
-      "-I../.deps/yoga"
     ]
   },
   "dependencies": [
