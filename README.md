@@ -6,9 +6,13 @@
   </picture>
 </p>
 
-# Multigauge
-
-Multigauge is a platform-agnostic C++20 engine for defining, laying out, rendering, and updating automotive gauges and dashboards.
+<p align="center">
+  <em>
+    <a href="https://www.multi-gauge.com/"><b>Multigauge</b></a> is a platform-agnostic
+    <b>automotive gauge rendering engine</b> for building highly customizable, data-driven digital dashboards.
+    It aims to make custom instrumentation both <b>powerful</b> and <b>aesthetically pleasing</b>.
+  </em>
+</p>
 
 It provides:
 
