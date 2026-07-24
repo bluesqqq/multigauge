@@ -3,6 +3,8 @@
 #include <multigauge/properties/Codec.h>
 #include <multigauge/utils/Json.h>
 
+#include <string_view>
+
 namespace mg {
 
 class PropertyObject;
@@ -23,10 +25,10 @@ inline bool decodePolymorphicOwned(const rapidjson::Value& v, Owned& out) {
 
     const auto obj = v.GetObject();
 
-    const char* type = nullptr;
-    std::string typeString;
-    if (mg::json::getStringMember(v, "type", typeString)) {
-        type = typeString.c_str();
+    std::string_view type;
+    const auto typeMember = v.FindMember("type");
+    if (typeMember != v.MemberEnd() && typeMember->value.IsString()) {
+        type = std::string_view(typeMember->value.GetString(), typeMember->value.GetStringLength());
     }
 
     Owned decoded = Base::registry().create(type);

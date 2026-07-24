@@ -19,16 +19,14 @@ const Property* PropertyObject::findProperty(std::string_view key) const {
     return found;
 }
 
-bool PropertyObject::setProperty(const char* key, const rapidjson::Value& v) {
-    if (!key) return false;
-    const Property* property = findProperty(std::string_view(key));
+bool PropertyObject::setProperty(std::string_view key, const rapidjson::Value& v) {
+    const Property* property = findProperty(key);
     if (!property || !property->set) return false;
     return property->set(this, v);
 }
 
-bool PropertyObject::getProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
-    if (!key) return false;
-    const Property* property = findProperty(std::string_view(key));
+bool PropertyObject::getProperty(std::string_view key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
+    const Property* property = findProperty(key);
     if (!property || !property->get) return false;
     return property->get(this, out, a);
 }

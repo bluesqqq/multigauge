@@ -58,11 +58,11 @@ class PropertyObject {
 
         /// Sets a single property from a JSON value.
         /// @return `true` if the property exists and accepts the value, otherwise `false`.
-        bool setProperty(const char* key, const rapidjson::Value& v);
+        bool setProperty(std::string_view key, const rapidjson::Value& v);
 
         /// Serializes a single property to JSON.
         /// @return `true` if the property exists and is successfully serialized, otherwise `false`.
-        bool getProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+        bool getProperty(std::string_view key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
 
         /// Loads all matching properties from a JSON object.
         /// @return `true` when every recognized property accepts its value.

@@ -3,6 +3,7 @@
 #include <multigauge/utils/Json.h>
 
 #include <algorithm>
+#include <string_view>
 
 #include <multigauge/gauge/elements/primitives/TextElement.h>
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
@@ -188,10 +189,10 @@ DECODE_IMPL(gauge::OwnedElement) {
 
     const auto obj = v.GetObject();
 
-    const char* type = nullptr;
-    std::string typeString;
-    if (mg::json::getStringMember(v, "type", typeString)) {
-        type = typeString.c_str();
+    std::string_view type;
+    const auto typeMember = v.FindMember("type");
+    if (typeMember != v.MemberEnd() && typeMember->value.IsString()) {
+        type = std::string_view(typeMember->value.GetString(), typeMember->value.GetStringLength());
     }
 
     gauge::OwnedElement decoded = gauge::Element::registry().create(type, nullptr);
