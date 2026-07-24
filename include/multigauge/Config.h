@@ -1,0 +1,5 @@
+#pragma once
+
+#ifndef MG_ENABLE_EDITOR_REFLECTION
+#define MG_ENABLE_EDITOR_REFLECTION 1
+#endif

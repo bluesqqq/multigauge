@@ -34,6 +34,12 @@ struct MgPropsParentGetter<T, std::void_t<decltype(&T::__mg_parent_property_list
 
 namespace mg::props {
 
+#if MG_ENABLE_EDITOR_REFLECTION
+using RuleListGetter = ::mg::PropertyMetadata::RuleListGetter;
+#else
+using RuleListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
+#endif
+
 namespace detail {
 
 //----------[ MEMBER TRAITS ]----------//
@@ -66,13 +72,9 @@ bool setMember(::mg::PropertyObject* obj, const rapidjson::Value& v) {
     using T = MemberType<MemberPtr>;
     C* self = static_cast<C*>(obj);
 
-    if constexpr (std::is_base_of_v<::mg::PropertyObject, T>) {
-        if (!decodeAny<T>(v, self->*MemberPtr)) return false;
-    } else {
-        T decoded{};
-        if (!decodeAny<T>(v, decoded)) return false;
-        self->*MemberPtr = std::move(decoded);
-    }
+    T decoded{};
+    if (!decodeAny<T>(v, decoded)) return false;
+    self->*MemberPtr = std::move(decoded);
 
     if constexpr (!std::is_same_v<decltype(CallbackPtr), std::nullptr_t>) {
         using CbClass = MemberClass<CallbackPtr>;
@@ -166,7 +168,7 @@ template <auto MemberPtr>
 /// @param interactableWhen Optional interactability-rule provider for tooling.
 /// @param inspectorVisible Whether the property should appear in inspector metadata.
 template <auto MemberPtr, auto CallbackPtr = nullptr>
-::mg::Property makeProperty(const char* key, const char* name, const char* description, ::mg::PropertyMetadata::RuleListGetter visibleWhen = nullptr, ::mg::PropertyMetadata::RuleListGetter interactableWhen = nullptr, bool inspectorVisible = true) {
+::mg::Property makeProperty(const char* key, const char* name, const char* description, RuleListGetter visibleWhen = nullptr, RuleListGetter interactableWhen = nullptr, bool inspectorVisible = true) {
     using T = detail::MemberType<MemberPtr>;
 
     ::mg::Property p{};
@@ -174,6 +176,12 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
     p.set = &detail::setMember<MemberPtr, CallbackPtr>;
     p.get = &detail::getMember<MemberPtr>;
 
+    if constexpr (detail::ChildObjectTraits<T>::supported) {
+        p.getChild = &detail::getChildObject<MemberPtr>;
+        p.getChildConst = &detail::getChildObjectConst<MemberPtr>;
+    }
+
+#if MG_ENABLE_EDITOR_REFLECTION
     ::mg::PropertyMetadata meta{};
     meta.name = name ? name : key;
     meta.description = description ? description : "No description.";
@@ -184,13 +192,12 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
     meta.getInteractableWhen = interactableWhen;
     if constexpr (::mg::HasEnumTraitsV<::mg::EnumTraitsTypeT<T>>) meta.getOptionsMeta = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
     if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypesMeta = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
-
-    if constexpr (detail::ChildObjectTraits<T>::supported) {
-        p.getChild = &detail::getChildObject<MemberPtr>;
-        p.getChildConst = &detail::getChildObjectConst<MemberPtr>;
-    }
-
     return {p.key, p.set, p.get, p.getChild, p.getChildConst, meta};
+#endif
+
+#if !MG_ENABLE_EDITOR_REFLECTION
+    return p;
+#endif
 }
 
 /// Builds a `Property` descriptor from custom setter and getter functions.
@@ -202,7 +209,8 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
 /// @param inspectorVisible Whether the property should appear in inspector metadata.
 /// @param set Custom setter function.
 /// @param get Custom getter function.
-inline ::mg::Property makeCustomProperty(const char* key, const char* name, const char* description, ::mg::PropertyMetadata::RuleListGetter visibleWhen, ::mg::PropertyMetadata::RuleListGetter interactableWhen, bool inspectorVisible, ::mg::Property::Setter set, ::mg::Property::Getter get) {
+inline ::mg::Property makeCustomProperty(const char* key, const char* name, const char* description, RuleListGetter visibleWhen, RuleListGetter interactableWhen, bool inspectorVisible, ::mg::Property::Setter set, ::mg::Property::Getter get) {
+#if MG_ENABLE_EDITOR_REFLECTION
     ::mg::PropertyMetadata meta{};
     meta.name = name ? name : key;
     meta.description = description ? description : "No description.";
@@ -212,6 +220,9 @@ inline ::mg::Property makeCustomProperty(const char* key, const char* name, cons
     meta.getInteractableWhen = interactableWhen;
 
     return {key, set, get, nullptr, nullptr, meta};
+#else
+    return {key, set, get, nullptr, nullptr};
+#endif
 }
 
 } // namespace mg::props

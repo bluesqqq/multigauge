@@ -8,6 +8,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_POLICY_VERSION_MINIMUM 3.5)
 
 option(MULTIGAUGE_BUILD_TESTS "Build multigauge core tests" ON)
+option(MULTIGAUGE_ENABLE_EDITOR_REFLECTION "Include editor-facing property metadata and reflection" ON)
 
 include(FetchContent)
 
@@ -81,6 +82,7 @@ target_include_directories(multigauge PRIVATE
 target_link_libraries(multigauge PUBLIC yogacore)
 target_link_libraries(multigauge PRIVATE lodepng)
 target_link_libraries(multigauge PRIVATE tjpgd)
+target_compile_definitions(multigauge PUBLIC MG_ENABLE_EDITOR_REFLECTION=$<BOOL:${MULTIGAUGE_ENABLE_EDITOR_REFLECTION}>)
 
 if(MULTIGAUGE_BUILD_TESTS)
   enable_testing()

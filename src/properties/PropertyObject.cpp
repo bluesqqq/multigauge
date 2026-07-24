@@ -2,8 +2,8 @@
 
 namespace mg {
 
-const Property* PropertyObject::findProperty(const char* key) const {
-    if (!key) return nullptr;
+const Property* PropertyObject::findProperty(std::string_view key) const {
+    if (key.empty()) return nullptr;
 
     const Property* found = nullptr;
 
@@ -11,7 +11,7 @@ const Property* PropertyObject::findProperty(const char* key) const {
         if (found) return;
 
         const char* propName = prop.key;
-        if (propName && std::strcmp(propName, key) == 0) {
+        if (propName && key == propName) {
             found = &prop;
         }
     });
@@ -20,22 +20,28 @@ const Property* PropertyObject::findProperty(const char* key) const {
 }
 
 bool PropertyObject::setProperty(const char* key, const rapidjson::Value& v) {
-    const Property* property = findProperty(key);
+    if (!key) return false;
+    const Property* property = findProperty(std::string_view(key));
     if (!property || !property->set) return false;
     return property->set(this, v);
 }
 
 bool PropertyObject::getProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
-    const Property* property = findProperty(key);
+    if (!key) return false;
+    const Property* property = findProperty(std::string_view(key));
     if (!property || !property->get) return false;
     return property->get(this, out, a);
 }
 
-void PropertyObject::loadProperties(rapidjson::Value::ConstObject json) {
+bool PropertyObject::loadProperties(rapidjson::Value::ConstObject json) {
+    bool success = true;
     for (auto it = json.MemberBegin(); it != json.MemberEnd(); ++it) {
-        const char* key = it->name.GetString();
-        setProperty(key, it->value);
+        const Property* property = findProperty(std::string_view(it->name.GetString(), it->name.GetStringLength()));
+        if (property && property->set && !property->set(this, it->value)) {
+            success = false;
+        }
     }
+    return success;
 }
 
 void PropertyObject::saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
@@ -60,17 +66,20 @@ void PropertyObject::saveProperties(rapidjson::Value& out, rapidjson::Document::
 rapidjson::Value PropertyObject::getPropertiesMeta(rapidjson::Document::AllocatorType& a) const {
     rapidjson::Value metas(rapidjson::kArrayType);
 
+#if MG_ENABLE_EDITOR_REFLECTION
     propertyList().forEach(this, [&](const Property& prop) {
         if (!prop.key) return;
         if (findProperty(prop.key) != &prop) return;
         if (!prop.meta.inspectorVisible) return;
         metas.PushBack(getPropertyMeta(prop, a), a);
     });
+#endif
 
     return metas;
 }
 
 rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson::Document::AllocatorType& a) const {
+#if MG_ENABLE_EDITOR_REFLECTION
     rapidjson::Value meta = prop.getBaseMeta(a);
 
     if (prop.getChildConst) {
@@ -106,46 +115,34 @@ rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson
     }
 
     return meta;
-}
-
-std::vector<std::string> PropertyObject::splitPath(const std::string& path) {
-    std::vector<std::string> parts;
-    std::string current;
-
-    for (char c : path) {
-        if (c == '.') {
-            if (!current.empty()) {
-                parts.push_back(current);
-                current.clear();
-            }
-        } else {
-            current.push_back(c);
-        }
-    }
-
-    if (!current.empty()) {
-        parts.push_back(current);
-    }
-
-    return parts;
+#else
+    (void)prop;
+    (void)a;
+    return rapidjson::Value(rapidjson::kObjectType);
+#endif
 }
 
 bool PropertyObject::resolvePath(const std::string& path, PropertyObject*& owner, const Property*& prop) {
     owner = nullptr;
     prop = nullptr;
 
-    const auto parts = splitPath(path);
-    if (parts.empty()) return false;
-
     PropertyObject* current = this;
+    std::string_view remaining(path);
 
-    for (std::size_t i = 0; i < parts.size(); ++i) {
-        const bool last = (i + 1 == parts.size());
+    while (!remaining.empty()) {
+        const std::size_t dot = remaining.find('.');
+        const std::string_view segment = remaining.substr(0, dot);
+        if (segment.empty()) {
+            if (dot == std::string_view::npos) return false;
+            remaining.remove_prefix(dot + 1);
+            continue;
+        }
 
-        const Property* p = current->findProperty(parts[i].c_str());
+        const Property* p = current->findProperty(segment);
         if (!p) return false;
 
-        if (last) {
+        const std::string_view next = dot == std::string_view::npos ? std::string_view{} : remaining.substr(dot + 1);
+        if (next.find_first_not_of('.') == std::string_view::npos) {
             owner = current;
             prop = p;
             return true;
@@ -155,6 +152,7 @@ bool PropertyObject::resolvePath(const std::string& path, PropertyObject*& owner
 
         current = p->getChild(current);
         if (!current) return false;
+        remaining = next;
     }
 
     return false;
@@ -164,18 +162,23 @@ bool PropertyObject::resolvePath(const std::string& path, const PropertyObject*&
     owner = nullptr;
     prop = nullptr;
 
-    const auto parts = splitPath(path);
-    if (parts.empty()) return false;
-
     const PropertyObject* current = this;
+    std::string_view remaining(path);
 
-    for (std::size_t i = 0; i < parts.size(); ++i) {
-        const bool last = (i + 1 == parts.size());
+    while (!remaining.empty()) {
+        const std::size_t dot = remaining.find('.');
+        const std::string_view segment = remaining.substr(0, dot);
+        if (segment.empty()) {
+            if (dot == std::string_view::npos) return false;
+            remaining.remove_prefix(dot + 1);
+            continue;
+        }
 
-        const Property* p = current->findProperty(parts[i].c_str());
+        const Property* p = current->findProperty(segment);
         if (!p) return false;
 
-        if (last) {
+        const std::string_view next = dot == std::string_view::npos ? std::string_view{} : remaining.substr(dot + 1);
+        if (next.find_first_not_of('.') == std::string_view::npos) {
             owner = current;
             prop = p;
             return true;
@@ -185,6 +188,7 @@ bool PropertyObject::resolvePath(const std::string& path, const PropertyObject*&
 
         current = p->getChildConst(current);
         if (!current) return false;
+        remaining = next;
     }
 
     return false;
