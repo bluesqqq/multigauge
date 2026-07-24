@@ -29,10 +29,11 @@ inline bool decodePolymorphicOwned(const rapidjson::Value& v, Owned& out) {
         type = typeString.c_str();
     }
 
-    out = Base::registry().create(type);
-    if (!out) return false;
+    Owned decoded = Base::registry().create(type);
+    if (!decoded) return false;
 
-    out->loadProperties(obj);
+    if (!decoded->loadProperties(obj)) return false;
+    out = std::move(decoded);
     return true;
 }
 
@@ -63,8 +64,7 @@ inline bool decodeAny(const rapidjson::Value& v, T& out) {
     // PropertyObject-derived type
     if constexpr (std::is_base_of_v<PropertyObject, T>) {
         if (!v.IsObject()) return false;
-        out.loadProperties(v.GetObject());
-        return true;
+        return out.loadProperties(v.GetObject());
     }
 
     static_assert(HasCodecV<T> || std::is_base_of_v<PropertyObject, T> || PolymorphicOwnedTraits<T>::supported, "Type must have Codec<T>, be a PropertyObject, or use the polymorphic owned path.");
