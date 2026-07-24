@@ -72,6 +72,10 @@ bool Element::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) 
     std::vector<OwnedElement> decoded;
     if (!decodeAny(v, decoded)) return false;
 
+    for (const auto& child : decoded) {
+        if (!child) return false;
+    }
+
     while (!self->children.empty()) {
         self->removeChild(self->children.back().get());
     }
@@ -190,10 +194,11 @@ DECODE_IMPL(gauge::OwnedElement) {
         type = typeString.c_str();
     }
 
-    out = gauge::Element::registry().create(type, nullptr);
-    if (!out) return false;
+    gauge::OwnedElement decoded = gauge::Element::registry().create(type, nullptr);
+    if (!decoded) return false;
 
-    out->loadProperties(obj);
+    if (!decoded->loadProperties(obj)) return false;
+    out = std::move(decoded);
     return true;
 }
 
