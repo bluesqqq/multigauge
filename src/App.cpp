@@ -13,7 +13,6 @@
 #include <multigauge/io/Log.h>
 #include <multigauge/utils/Json.h>
 
-#include <rapidjson/document.h>
 #include <utility>
 
 namespace mg {
@@ -119,11 +118,11 @@ bool hasScreen(ContextId id) {
 }
 
 namespace {
-bool loadGaugeFaceFromValue(const rapidjson::Value& value, std::unique_ptr<gauge::GaugeFace>& outFace) {
-    if (!value.IsObject()) return false;
+bool loadGaugeFaceFromValue(json::Reader value, std::unique_ptr<gauge::GaugeFace>& outFace) {
+    if (!value.isObject()) return false;
 
     auto face = std::make_unique<gauge::GaugeFace>();
-    face->load(value);
+    if (!face->load(value)) return false;
     outFace = std::move(face);
     return true;
 }
@@ -133,12 +132,11 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
     RuntimeContext* context = getContext(id);
     if (!context) return false;
 
-    rapidjson::Document doc;
-    doc.Parse(json.c_str());
-    if (doc.HasParseError() || !doc.IsObject()) return false;
+    json::Document doc = json::parse(json);
+    if (!doc.valid() || !doc.root().isObject()) return false;
 
     std::unique_ptr<gauge::GaugeFace> face;
-    if (!loadGaugeFaceFromValue(doc, face)) return false;
+    if (!loadGaugeFaceFromValue(doc.root(), face)) return false;
 
     auto screen = std::make_unique<GaugeScreen>();
     screen->setFace(std::move(face));
@@ -152,7 +150,7 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
     if (!faceResult.ok) return false;
 
     std::unique_ptr<gauge::GaugeFace> face;
-    if (!loadGaugeFaceFromValue(faceResult.data, face)) return false;
+    if (!loadGaugeFaceFromValue(faceResult.data.root(), face)) return false;
 
     auto screen = std::make_unique<GaugeScreen>();
     screen->setFace(std::move(face));
@@ -190,7 +188,7 @@ Result importPackage(const std::string& json) {
     return g_packages->importPackage(json);
 }
 
-Result importPackage(const rapidjson::Value& package) {
+Result importPackage(json::Reader package) {
     if (!g_packages) return Error("App not initialized");
     return g_packages->importPackage(package);
 }

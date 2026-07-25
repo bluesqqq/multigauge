@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include <rapidjson/document.h>
+#include <multigauge/json/Json.h>
 #include <multigauge/properties/Property.h>
 
 #define TYPE_KEY "type"
@@ -54,28 +54,28 @@ class PropertyObject {
         virtual PropertyList propertyList() const { return {nullptr, 0, nullptr}; }
 
         /// Finds a property by key.
-        const Property* findProperty(const char* key) const;
+        const Property* findProperty(std::string_view key) const;
 
         /// Sets a single property from a JSON value.
         /// @return `true` if the property exists and accepts the value, otherwise `false`.
-        bool setProperty(const char* key, const rapidjson::Value& v);
+        bool setProperty(std::string_view key, json::Reader value);
 
         /// Serializes a single property to JSON.
         /// @return `true` if the property exists and is successfully serialized, otherwise `false`.
-        bool getProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+        bool getProperty(std::string_view key, json::Writer& writer) const;
 
         /// Loads all matching properties from a JSON object.
-        void loadProperties(rapidjson::Value::ConstObject json);
+        bool loadProperties(json::Reader object);
 
         /// Serializes all exposed properties into a JSON object.
-        void saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+        bool saveProperties(json::Writer& writer) const;
 
         /// Builds editor metadata for every visible property on this object.
-        rapidjson::Value getPropertiesMeta(rapidjson::Document::AllocatorType& a) const;
+        bool writePropertiesMeta(json::Writer& writer) const;
 
         /// Builds editor metadata for a single property.
         /// @param prop The property to describe.
-        rapidjson::Value getPropertyMeta(const Property& prop, rapidjson::Document::AllocatorType& a) const;
+        bool writePropertyMeta(json::Writer& writer, const Property& prop) const;
 
         /// Resolves a dotted property path to its owning object and final property.
         /// @param path Dotted path such as `"layout.margin.left"`.

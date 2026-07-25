@@ -94,7 +94,7 @@ CODEC_BEGIN(graphics::TimeColor::LoopType)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 

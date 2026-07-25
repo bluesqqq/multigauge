@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <rapidjson/document.h>
+#include <multigauge/json/Json.h>
 
 #include <multigauge/properties/Property.h>
 #include <multigauge/properties/PropertyCodec.h>
@@ -61,16 +61,16 @@ using MemberType = typename MemberPtrTraits<decltype(MemberPtr)>::Type;
 /// @tparam MemberPtr Pointer to the member being assigned.
 /// @tparam CallbackPtr Optional callback invoked after assignment.
 template <auto MemberPtr, auto CallbackPtr>
-bool setMember(::mg::PropertyObject* obj, const rapidjson::Value& v) {
+bool setMember(::mg::PropertyObject* obj, json::Reader value) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     C* self = static_cast<C*>(obj);
 
     if constexpr (std::is_base_of_v<::mg::PropertyObject, T>) {
-        if (!decodeAny<T>(v, self->*MemberPtr)) return false;
+    if (!decodeAny<T>(value, self->*MemberPtr)) return false;
     } else {
         T decoded{};
-        if (!decodeAny<T>(v, decoded)) return false;
+        if (!decodeAny<T>(value, decoded)) return false;
         self->*MemberPtr = std::move(decoded);
     }
 
@@ -85,10 +85,10 @@ bool setMember(::mg::PropertyObject* obj, const rapidjson::Value& v) {
 /// Property getter adapter for a concrete member pointer.
 /// @tparam MemberPtr Pointer to the member being serialized.
 template <auto MemberPtr>
-bool getMember(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+bool getMember(const ::mg::PropertyObject* obj, json::Writer& writer) {
     using C = MemberClass<MemberPtr>;
     const C* self = static_cast<const C*>(obj);
-    return encodeAny(out, a, self->*MemberPtr);
+    return encodeAny(writer, self->*MemberPtr);
 }
 
 //----------[ CHILD OBJECTS ]----------//

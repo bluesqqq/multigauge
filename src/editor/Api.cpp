@@ -25,30 +25,18 @@ Result invalidEditorId() {
 
 Result saveJsonResult(const std::string& json) {
     Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("json", rapidjson::Value(json.c_str(), allocator), allocator);
-    return result;
+    json::Writer writer = result.data.writer();
+    return writer.writeObject([&](json::ObjectWriter& object) { return object.write("json", json); }) ? std::move(result) : Error("Failed to build JSON result");
 }
 
 Result packageInfoResult(const Editor::PackageInfo& info) {
-    Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("name", rapidjson::Value(info.name.c_str(), allocator), allocator);
-    result.data.AddMember("author", rapidjson::Value(info.author.c_str(), allocator), allocator);
-    result.data.AddMember("description", rapidjson::Value(info.description.c_str(), allocator), allocator);
-    return result;
-}
-
-rapidjson::Value nodeIdValue(NodeId id) {
-    return rapidjson::Value(static_cast<std::uint64_t>(id));
+    Result result = OkObject(); json::Writer writer = result.data.writer();
+    return writer.writeObject([&](json::ObjectWriter& object) { return object.write("name", info.name) && object.write("author", info.author) && object.write("description", info.description); }) ? std::move(result) : Error("Failed to build package info result");
 }
 
 Result faceNameResult(NodeId faceId, const std::string& name) {
-    Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", nodeIdValue(faceId), allocator);
-    result.data.AddMember("name", rapidjson::Value(name.c_str(), allocator), allocator);
-    return result;
+    Result result = OkObject(); json::Writer writer = result.data.writer();
+    return writer.writeObject([&](json::ObjectWriter& object) { return object.write("id", static_cast<std::uint64_t>(faceId)) && object.write("name", name); }) ? std::move(result) : Error("Failed to build face result");
 }
 
 }
@@ -244,7 +232,7 @@ Result copyFace(EditorId EditorId, NodeId faceId) {
     if (!serialized.ok) return serialized;
 
     clipboard.kind = ClipboardState::Kind::Face;
-    clipboard.json = serialized.data["json"].GetString();
+    std::string_view json; if (!serialized.data.root().member("json").read(json)) return Error("Invalid serialized face"); clipboard.json.assign(json);
     return OkObject();
 }
 
@@ -275,7 +263,7 @@ Result copyElement(EditorId EditorId, NodeId elementId) {
     if (!serialized.ok) return serialized;
 
     clipboard.kind = ClipboardState::Kind::Element;
-    clipboard.json = serialized.data["json"].GetString();
+    std::string_view json; if (!serialized.data.root().member("json").read(json)) return Error("Invalid serialized element"); clipboard.json.assign(json);
     return OkObject();
 }
 

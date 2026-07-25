@@ -1,6 +1,5 @@
 #include <multigauge/App.h>
 #include <multigauge/gauge/Element.h>
-#include <multigauge/utils/Json.h>
 
 #include <algorithm>
 
@@ -66,11 +65,11 @@ namespace {
     }
 }
 
-bool Element::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) {
+bool Element::setChildren(::mg::PropertyObject* obj, json::Reader value) {
     auto* self = static_cast<Element*>(obj);
 
     std::vector<OwnedElement> decoded;
-    if (!decodeAny(v, decoded)) return false;
+    if (!decodeAny(value, decoded)) return false;
 
     while (!self->children.empty()) {
         self->removeChild(self->children.back().get());
@@ -83,9 +82,9 @@ bool Element::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) 
     return true;
 }
 
-bool Element::getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+bool Element::getChildren(const ::mg::PropertyObject* obj, json::Writer& writer) {
     const auto* self = static_cast<const Element*>(obj);
-    return encodeAny(out, a, self->children);
+    return encodeAny(writer, self->children);
 }
 
 bool Element::insertChild(OwnedElement child, std::size_t index) {
@@ -175,36 +174,33 @@ void Element::layoutRecursive(float parentAbsX, float parentAbsY) {
 namespace mg {
 
 DECODE_IMPL(gauge::OwnedElement) {
-    if (v.IsNull()) {
+    if (v.isNull()) {
         out = nullptr;
         return true;
     }
 
-    if (!v.IsObject()) return false;
-
-    const auto obj = v.GetObject();
+    if (!v.isObject()) return false;
 
     const char* type = nullptr;
     std::string typeString;
-    if (mg::json::getStringMember(v, "type", typeString)) {
+    std::string_view typeView;
+    if (v.member("type").read(typeView)) {
+        typeString.assign(typeView);
         type = typeString.c_str();
     }
 
     out = gauge::Element::registry().create(type, nullptr);
     if (!out) return false;
 
-    out->loadProperties(obj);
-    return true;
+    return out->loadProperties(v);
 }
 
 ENCODE_IMPL(gauge::OwnedElement) {
     if (!v) {
-        out.SetNull();
-        return true;
+        return out.null();
     }
 
-    v->saveProperties(out, a);
-    return true;
+    return v->saveProperties(out);
 }
 
 } // namespace mg

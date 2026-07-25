@@ -212,14 +212,12 @@ namespace mg {
 
 CODEC_BEGIN(graphics::rgba)
     DECODE() {
-        if (v.IsString()) return CodecType::fromString(v.GetString(), out);
-
-        return false;
+        std::string_view text;
+        return v.read(text) && CodecType::fromString(std::string(text).c_str(), out);
     }
 
     ENCODE() {
-        out.SetString(v.toHex(), 9, a);
-        return true;
+        return out.write(v.toHex());
     }
 CODEC_END()
 

@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <memory>
 
-#include <rapidjson/document.h>
-
 #include <multigauge/value/Value.h>
 #include <multigauge/utils/Json.h>
 
@@ -118,10 +116,10 @@ void collectSubtreeIds(const Editor& editor, const Element* element, std::vector
 
 ElementSnapshot snapshotElement(const Editor& editor, const Element& element) {
     ElementSnapshot snapshot;
-    rapidjson::Document doc;
-    doc.SetObject();
-    element.saveProperties(doc, doc.GetAllocator());
-    snapshot.json = mg::json::toString(doc);
+    json::Document doc = json::object();
+    json::Writer writer = doc.writer();
+    if (!element.saveProperties(writer)) return snapshot;
+    snapshot.json = doc.toString();
     collectSubtreeIds(editor, &element, snapshot.ids);
     return snapshot;
 }
@@ -166,57 +164,35 @@ std::size_t indexOfChild(const Element& parent, const Element* child) {
     return Editor::Append;
 }
 
-rapidjson::Value nodeIdValue(NodeId id) {
-    return rapidjson::Value(static_cast<std::uint64_t>(id));
-}
-
 Result okWithId(NodeId id) {
     Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", nodeIdValue(id), allocator);
+    json::Writer writer = result.data.writer();
+    if (!writer.writeObject([&](json::ObjectWriter& object) { return object.write("id", static_cast<std::uint64_t>(id)); })) return Error("Failed to build result");
     return result;
 }
 
 Result okWithIds(NodeId id, NodeId parentId) {
     Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", nodeIdValue(id), allocator);
-    result.data.AddMember("parentId", nodeIdValue(parentId), allocator);
+    json::Writer writer = result.data.writer();
+    if (!writer.writeObject([&](json::ObjectWriter& object) { return object.write("id", static_cast<std::uint64_t>(id)) && object.write("parentId", static_cast<std::uint64_t>(parentId)); })) return Error("Failed to build result");
     return result;
 }
 
-bool validatePackageShape(const rapidjson::Value& value) {
+bool validatePackageShape(json::Reader value) {
     (void)value;
     return true;
 }
 
-void appendElementHierarchyNode(const Editor& editor,
-                                const Element& element,
-                                rapidjson::Value& nodes,
-                                rapidjson::Document::AllocatorType& allocator) {
+bool appendElementHierarchyNode(const Editor& editor, const Element& element, json::ObjectWriter& nodes) {
     const NodeId id = editor.idOf(&element);
-    rapidjson::Value nodeKey(std::to_string(id).c_str(), allocator);
-    rapidjson::Value nodeValue(rapidjson::kObjectType);
-
-    nodeValue.AddMember("kind", rapidjson::Value("element", allocator), allocator);
-    nodeValue.AddMember("type", rapidjson::Value(element.typeName(), allocator), allocator);
-    nodeValue.AddMember("name", rapidjson::Value(element.typeName(), allocator), allocator);
-
-    rapidjson::Value children(rapidjson::kArrayType);
-    children.Reserve(static_cast<rapidjson::SizeType>(element.childCount()), allocator);
-    for (std::size_t i = 0; i < element.childCount(); ++i) {
-        const Element* child = element.childAt(i);
-        if (!child) continue;
-        children.PushBack(nodeIdValue(editor.idOf(child)), allocator);
-    }
-    nodeValue.AddMember("children", std::move(children), allocator);
-    nodes.AddMember(std::move(nodeKey), std::move(nodeValue), allocator);
+    if (!nodes.writeObject(std::to_string(id), [&](json::ObjectWriter& node) { return node.write("kind", "element") && node.write("type", element.typeName()) && node.write("name", element.typeName()) && node.writeArray("children", [&](json::ArrayWriter& children) { for (std::size_t i = 0; i < element.childCount(); ++i) { const Element* child = element.childAt(i); if (child && !children.write(static_cast<std::uint64_t>(editor.idOf(child)))) return false; } return true; }); })) return false;
 
     for (std::size_t i = 0; i < element.childCount(); ++i) {
         const Element* child = element.childAt(i);
         if (!child) continue;
-        appendElementHierarchyNode(editor, *child, nodes, allocator);
+        if (!appendElementHierarchyNode(editor, *child, nodes)) return false;
     }
+    return true;
 }
 
 } // namespace
@@ -486,40 +462,38 @@ std::string Editor::getFaceName(NodeId faceId) const {
 }
 
 bool Editor::loadPackage(const std::string& json) {
-    rapidjson::Document doc = mg::json::parseJson(json);
-    if (doc.HasParseError()) return false;
-    if (!doc.IsObject()) return false;
+    json::Document doc = mg::json::parse(json);
+    if (!doc.valid() || !doc.root().isObject()) return false;
 
     std::string name;
     std::string author;
     std::string description;
-    if (!mg::json::getStringMember(doc, "name", name) ||
-        !mg::json::getStringMember(doc, "author", author) ||
-        !mg::json::getStringMember(doc, "description", description)) {
+    if (!mg::json::getStringMember(doc.root(), "name", name) || !mg::json::getStringMember(doc.root(), "author", author) || !mg::json::getStringMember(doc.root(), "description", description)) {
         return false;
     }
 
-    const rapidjson::Value* faces = mg::json::getArrayMember(doc, "faces");
-    if (!faces) return false;
+    const json::Reader faces = mg::json::getArrayMember(doc.root(), "faces");
+    if (!faces.valid()) return false;
 
     clear();
     packageName = std::move(name);
     packageAuthor = std::move(author);
     packageDescription = std::move(description);
 
-    for (const auto& faceEntry : faces->GetArray()) {
-        if (!faceEntry.IsObject()) return false;
+    for (std::size_t index = 0; index < faces.size(); ++index) {
+        const json::Reader faceEntry = faces.element(index);
+        if (!faceEntry.isObject()) return false;
 
         std::string faceName;
         if (!mg::json::getStringMember(faceEntry, "name", faceName)) {
             return false;
         }
 
-        const rapidjson::Value* faceJson = mg::json::getObjectMember(faceEntry, "face");
-        if (!faceJson) return false;
+        const json::Reader faceJson = mg::json::getObjectMember(faceEntry, "face");
+        if (!faceJson.valid()) return false;
 
         auto face = std::make_unique<GaugeFace>();
-        face->load(*faceJson);
+        if (!face->load(faceJson)) return false;
 
         GaugeFace* raw = face.get();
 
@@ -536,52 +510,39 @@ bool Editor::loadPackage(const std::string& json) {
 }
 
 std::string Editor::exportPackage() const {
-    rapidjson::Document doc;
-    doc.SetObject();
-    auto& allocator = doc.GetAllocator();
-
-    doc.AddMember("name", rapidjson::Value(packageName.c_str(), allocator), allocator);
-    doc.AddMember("author", rapidjson::Value(packageAuthor.c_str(), allocator), allocator);
-    doc.AddMember("description", rapidjson::Value(packageDescription.c_str(), allocator), allocator);
-
-    rapidjson::Value facesOut(rapidjson::kArrayType);
-    for (std::size_t i = 0; i < this->faces.size(); ++i) {
+    json::Document doc = json::object();
+    if (!doc.writer().writeObject([&](json::ObjectWriter& object) { return object.write("name", packageName) && object.write("author", packageAuthor) && object.write("description", packageDescription) && object.writeArray("faces", [&](json::ArrayWriter& facesOut) { for (std::size_t i = 0; i < this->faces.size(); ++i) {
         const auto& face = this->faces[i];
         if (!face) continue;
 
-        rapidjson::Document saved = face->save();
-        rapidjson::Value entry(rapidjson::kObjectType);
         const FaceMeta meta = i < faceMeta.size() ? faceMeta[i] : FaceMeta{ "Face" };
-        entry.AddMember("name", rapidjson::Value(meta.name.c_str(), allocator), allocator);
-        rapidjson::Value faceValue;
-        faceValue.CopyFrom(saved, allocator);
-        entry.AddMember("face", std::move(faceValue), allocator);
-        facesOut.PushBack(std::move(entry), allocator);
+        if (!facesOut.writeObject([&](json::ObjectWriter& entry) { return entry.write("name", meta.name) && entry.writeObject("face", [&](json::ObjectWriter& faceValue) { json::Writer& faceWriter = faceValue.writer(); return face->save(faceWriter); }); })) return false;
     }
-
-    doc.AddMember("faces", std::move(facesOut), allocator);
-
-    return mg::json::toString(doc);
+    return true; }); })) return {};
+    return doc.toString();
 }
 
 Result Editor::serializeFace(NodeId faceId) const {
     const GaugeFace* face = getFaceById(faceId);
     if (!face) return Error("Invalid face id");
-    std::string json = mg::json::toString(face->save());
+    json::Document document = json::object();
+    json::Writer writer = document.writer();
+    if (!face->save(writer)) return Error("Failed to serialize face");
+    std::string json = document.toString();
     Result result = OkObject();
-    result.data.AddMember("json", rapidjson::Value(json.c_str(), result.data.GetAllocator()), result.data.GetAllocator());
+    result.data.writer().writeObject([&](json::ObjectWriter& object) { return object.write("json", json); });
     return result;
 }
 
 Result Editor::serializeElement(NodeId elementId) const {
     const Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
-    rapidjson::Document doc;
-    doc.SetObject();
-    element->saveProperties(doc, doc.GetAllocator());
-    std::string json = mg::json::toString(doc);
+    json::Document doc = json::object();
+    json::Writer writer = doc.writer();
+    if (!element->saveProperties(writer)) return Error("Failed to serialize element");
+    std::string json = doc.toString();
     Result result = OkObject();
-    result.data.AddMember("json", rapidjson::Value(json.c_str(), result.data.GetAllocator()), result.data.GetAllocator());
+    result.data.writer().writeObject([&](json::ObjectWriter& object) { return object.write("json", json); });
     return result;
 }
 
@@ -609,86 +570,42 @@ NodeId Editor::idOf(const Element* element) const {
 
 Result Editor::getHierarchy() const {
     Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-
-    rapidjson::Value roots(rapidjson::kArrayType);
-    roots.Reserve(static_cast<rapidjson::SizeType>(faces.size()), allocator);
-
-    rapidjson::Value nodesValue(rapidjson::kObjectType);
-
-    for (std::size_t i = 0; i < faces.size(); ++i) {
+    if (!result.data.writer().writeObject([&](json::ObjectWriter& output) { return output.writeArray("roots", [&](json::ArrayWriter& roots) { for (const auto& face : faces) if (face && !roots.write(static_cast<std::uint64_t>(idOf(face.get())))) return false; return true; }) && output.writeObject("nodes", [&](json::ObjectWriter& nodesValue) { for (std::size_t i = 0; i < faces.size(); ++i) {
         const auto& face = faces[i];
         if (!face) continue;
 
         const NodeId faceId = idOf(face.get());
-        roots.PushBack(nodeIdValue(faceId), allocator);
-
-        rapidjson::Value nodeKey(std::to_string(faceId).c_str(), allocator);
-        rapidjson::Value nodeValue(rapidjson::kObjectType);
-
-        nodeValue.AddMember("kind", rapidjson::Value("face", allocator), allocator);
         const std::string faceName = i < faceMeta.size() ? faceMeta[i].name : face->typeName();
-        nodeValue.AddMember("name", rapidjson::Value(faceName.c_str(), allocator), allocator);
-
-        rapidjson::Value children(rapidjson::kArrayType);
-        children.Reserve(static_cast<rapidjson::SizeType>(face->childCount()), allocator);
+        if (!nodesValue.writeObject(std::to_string(faceId), [&](json::ObjectWriter& node) { return node.write("kind", "face") && node.write("name", faceName) && node.writeArray("children", [&](json::ArrayWriter& children) { for (std::size_t childIndex = 0; childIndex < face->childCount(); ++childIndex) { const Element* child = face->childAt(childIndex); if (child && !children.write(static_cast<std::uint64_t>(idOf(child)))) return false; } return true; }); })) return false;
 
         for (std::size_t i = 0; i < face->childCount(); ++i) {
             const Element* child = face->childAt(i);
             if (!child) continue;
-            children.PushBack(nodeIdValue(idOf(child)), allocator);
-        }
-
-        nodeValue.AddMember("children", std::move(children), allocator);
-        nodesValue.AddMember(std::move(nodeKey), std::move(nodeValue), allocator);
-
-        for (std::size_t i = 0; i < face->childCount(); ++i) {
-            const Element* child = face->childAt(i);
-            if (!child) continue;
-            appendElementHierarchyNode(*this, *child, nodesValue, allocator);
+            if (!appendElementHierarchyNode(*this, *child, nodesValue)) return false;
         }
     }
-
-    result.data.AddMember("roots", std::move(roots), allocator);
-    result.data.AddMember("nodes", std::move(nodesValue), allocator);
+    return true; }); })) return Error("Failed to build hierarchy");
 
     return result;
 }
 
 Result Editor::listElementTypes() const {
     Result result = OkArray();
-    auto& data = result.data;
-    auto& allocator = data.GetAllocator();
-
-    for (const auto& descriptor : Element::registry()) {
-        rapidjson::Value entry(rapidjson::kObjectType);
-        entry.AddMember("name", rapidjson::Value(descriptor.name ? descriptor.name : "", allocator), allocator);
-        entry.AddMember("type", rapidjson::Value(descriptor.id ? descriptor.id : "", allocator), allocator);
-        data.PushBack(std::move(entry), allocator);
-    }
+    if (!result.data.writer().writeArray([&](json::ArrayWriter& data) { for (const auto& descriptor : Element::registry()) if (!data.writeObject([&](json::ObjectWriter& entry) { return entry.write("name", descriptor.name ? descriptor.name : "") && entry.write("type", descriptor.id ? descriptor.id : ""); })) return false; return true; })) return Error("Failed to list element types");
 
     return result;
 }
 
 Result Editor::listValueIDs() const {
     Result result = OkArray();
-    auto& data = result.data;
-    auto& allocator = data.GetAllocator();
-
-    for (const Value& value : Value::list()) {
-        const std::string_view id = value.id();
-        data.PushBack(
-            rapidjson::Value(id.data(), static_cast<rapidjson::SizeType>(id.size()), allocator),
-            allocator
-        );
-    }
+    if (!result.data.writer().writeArray([&](json::ArrayWriter& data) { for (const Value& value : Value::list()) if (!data.write(value.id())) return false; return true; })) return Error("Failed to list values");
 
     return result;
 }
 
 Result Editor::createFace(const std::string& json, FacePlacement where) {
-    rapidjson::Document doc = mg::json::parseJson(json);
-    if (!doc.IsObject()) return Error("Invalid JSON");
+    json::Document doc = mg::json::parse(json);
+    if (!doc.valid() || !doc.root().isObject()) return Error("Invalid JSON");
 
     const std::size_t index = clampIndex(where.index, faces.size());
     const NodeId id = makeId();
@@ -704,10 +621,11 @@ Result Editor::createFace(const std::string& json, FacePlacement where) {
 
         // DO
         [this, state, json]() {
-            rapidjson::Document doc = mg::json::parseJson(json);
+            json::Document doc = mg::json::parse(json);
+            if (!doc.valid() || !doc.root().isObject()) return false;
 
             auto face = std::make_unique<GaugeFace>();
-            face->load(doc);
+            if (!face->load(doc.root())) return false;
 
             GaugeFace* raw = face.get();
 
@@ -765,7 +683,7 @@ Result Editor::removeFace(NodeId faceId) {
     if (index < faceMeta.size()) {
         state->meta = faceMeta[index];
     }
-    state->json = mg::json::toString(state->face->save());
+    { json::Document document = json::object(); json::Writer writer = document.writer(); if (!state->face->save(writer)) return Error("Failed to serialize face"); state->json = document.toString(); }
     state->rootIds = snapshotFaceRootIds(*this, *it->get());
 
     const bool committed = history.commit({
@@ -788,11 +706,11 @@ Result Editor::removeFace(NodeId faceId) {
 
         // UNDO
         [this, state]() {
-            rapidjson::Document doc = mg::json::parseJson(state->json);
-            if (!doc.IsObject()) return false;
+            json::Document doc = mg::json::parse(state->json);
+            if (!doc.valid() || !doc.root().isObject()) return false;
 
             auto face = std::make_unique<GaugeFace>();
-            face->load(doc);
+            if (!face->load(doc.root())) return false;
             GaugeFace* raw = face.get();
 
             faces.insert(
@@ -872,8 +790,8 @@ Result Editor::createElement(const ElementPlacement& where, const std::string& j
     ElementContainerRef parent = getElementContainerById(where.parentId);
     if (!parent.isFace() && !parent.isElement()) return Error("Invalid parent id");
 
-    rapidjson::Document doc = mg::json::parseJson(json);
-    if (!doc.IsObject()) return Error("Invalid JSON");
+    json::Document doc = mg::json::parse(json);
+    if (!doc.valid() || !doc.root().isObject()) return Error("Invalid JSON");
 
     const std::size_t index = clampIndex(where.index, childCountOf(parent));
     auto state = std::make_shared<ElementCreateState>();
@@ -887,9 +805,9 @@ Result Editor::createElement(const ElementPlacement& where, const std::string& j
             ElementContainerRef currentParent = getElementContainerById(state->parentId);
             if (!currentParent.isFace() && !currentParent.isElement()) return false;
 
-            rapidjson::Document parsed = mg::json::parseJson(state->json);
+            json::Document parsed = mg::json::parse(state->json);
             OwnedElement element;
-            if (!decodeAny(parsed, element)) return false;
+            if (!parsed.valid() || !decodeAny(parsed.root(), element)) return false;
             Element* raw = element.get();
             if (!insertIntoContainer(currentParent, std::move(element), state->index)) return false;
 
@@ -943,9 +861,9 @@ Result Editor::removeElement(NodeId elementId) {
         [this, state]() {
             ElementContainerRef currentParent = getElementContainerById(state->parentId);
             if (!currentParent.isFace() && !currentParent.isElement()) return false;
-            rapidjson::Document parsed = mg::json::parseJson(state->removed.json);
+            json::Document parsed = mg::json::parse(state->removed.json);
             OwnedElement restored;
-            if (!decodeAny(parsed, restored)) return false;
+            if (!parsed.valid() || !decodeAny(parsed.root(), restored)) return false;
             Element* raw = restored.get();
             if (!insertIntoContainer(currentParent, std::move(restored), state->index)) return false;
             std::size_t next = 0;
@@ -1051,8 +969,8 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
     Element* element = getElementById(elementId);
     if (!element) return Error("Invalid element id");
 
-    rapidjson::Document doc = mg::json::parseJson(json);
-    if (!doc.IsObject()) return Error("Invalid JSON");
+    json::Document doc = mg::json::parse(json);
+    if (!doc.valid() || !doc.root().isObject()) return Error("Invalid JSON");
 
     auto state = std::make_shared<ReplaceState>();
     state->targetId = elementId;
@@ -1085,9 +1003,9 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
                 if (!face || !face->removeChild(current)) return false;
             }
 
-            rapidjson::Document parsed = mg::json::parseJson(state->initialized ? state->after.json : state->pendingJson);
+            json::Document parsed = mg::json::parse(state->initialized ? state->after.json : state->pendingJson);
             OwnedElement replacement;
-            if (!decodeAny(parsed, replacement)) return false;
+            if (!parsed.valid() || !decodeAny(parsed.root(), replacement)) return false;
             Element* raw = replacement.get();
 
             const bool inserted = state->parentId != 0
@@ -1120,9 +1038,9 @@ Result Editor::replaceElement(NodeId elementId, const std::string& json) {
                 if (!face || !face->removeChild(current)) return false;
             }
 
-            rapidjson::Document parsed = mg::json::parseJson(state->before.json);
+            json::Document parsed = mg::json::parse(state->before.json);
             OwnedElement restored;
-            if (!decodeAny(parsed, restored)) return false;
+            if (!parsed.valid() || !decodeAny(parsed.root(), restored)) return false;
             Element* raw = restored.get();
 
             const bool inserted = state->parentId != 0
@@ -1143,8 +1061,8 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
     ::mg::PropertyObject* object = getObjectById(id);
     if (!object) return Error("Invalid id");
 
-    rapidjson::Document value = mg::json::parseJson(json);
-    if (value.HasParseError()) return Error("Invalid JSON");
+    json::Document value = mg::json::parse(json);
+    if (!value.valid()) return Error("Invalid JSON");
 
     ::mg::PropertyObject* owner = nullptr;
     const ::mg::Property* property = nullptr;
@@ -1152,13 +1070,13 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
         return Error("Invalid property path");
     }
 
-    rapidjson::Document beforeDoc;
-    beforeDoc.SetObject();
-    if (!owner->getProperty(property->key, beforeDoc, beforeDoc.GetAllocator())) {
+    json::Document beforeDoc = json::object();
+    json::Writer beforeWriter = beforeDoc.writer();
+    if (!owner->getProperty(property->key, beforeWriter)) {
         return Error("Failed to read current property value");
     }
 
-    const std::string beforeJson = mg::json::toString(beforeDoc);
+    const std::string beforeJson = beforeDoc.toString();
     auto state = std::make_shared<PropertySetState>();
     state->nodeId = id;
     state->path = path;
@@ -1173,8 +1091,8 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
     ::mg::PropertyObject* currentOwner = nullptr;
             const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
-            rapidjson::Document parsed = mg::json::parseJson(state->afterJson);
-            return currentOwner->setProperty(currentProperty->key, parsed);
+            json::Document parsed = mg::json::parse(state->afterJson);
+            return parsed.valid() && currentOwner->setProperty(currentProperty->key, parsed.root());
         },
         [this, state]() {
     ::mg::PropertyObject* currentObject = getObjectById(state->nodeId);
@@ -1182,8 +1100,8 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
     ::mg::PropertyObject* currentOwner = nullptr;
             const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
-            rapidjson::Document parsed = mg::json::parseJson(state->beforeJson);
-            return currentOwner->setProperty(currentProperty->key, parsed);
+            json::Document parsed = mg::json::parse(state->beforeJson);
+            return parsed.valid() && currentOwner->setProperty(currentProperty->key, parsed.root());
         }
     });
 
@@ -1202,12 +1120,7 @@ Result Editor::getProperty(NodeId id, const std::string& path) const {
     if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
     Result result = OkObject();
-    rapidjson::Value value;
-    if (!owner->getProperty(property->key, value, result.data.GetAllocator())) return Error("Failed to read property");
-
-    result.data.AddMember("id", nodeIdValue(id), result.data.GetAllocator());
-    result.data.AddMember("path", rapidjson::Value(path.c_str(), result.data.GetAllocator()), result.data.GetAllocator());
-    result.data.AddMember("value", std::move(value), result.data.GetAllocator());
+    if (!result.data.writer().writeObject([&](json::ObjectWriter& output) { return output.write("id", static_cast<std::uint64_t>(id)) && output.write("path", path) && output.writeValue("value", [&](json::Writer& writer) { return owner->getProperty(property->key, writer); }); })) return Error("Failed to read property");
     return result;
 }
 
@@ -1218,12 +1131,9 @@ Result Editor::getPropertiesMeta(NodeId id, const std::string& path) const {
     const ::mg::PropertyObject* object = node->kind == NodeKind::Face ? static_cast<const ::mg::PropertyObject*>(node->face) : static_cast<const ::mg::PropertyObject*>(node->element);
 
     Result result = OkObject();
-    auto& allocator = result.data.GetAllocator();
-    result.data.AddMember("id", nodeIdValue(id), allocator);
 
     if (path.empty()) {
-        rapidjson::Value meta = object->getPropertiesMeta(allocator);
-        result.data.AddMember("meta", std::move(meta), allocator);
+        if (!result.data.writer().writeObject([&](json::ObjectWriter& output) { return output.write("id", static_cast<std::uint64_t>(id)) && output.writeValue("meta", [&](json::Writer& writer) { return object->writePropertiesMeta(writer); }); })) return Error("Failed to write property metadata");
         return result;
     }
 
@@ -1231,19 +1141,13 @@ Result Editor::getPropertiesMeta(NodeId id, const std::string& path) const {
     const ::mg::Property* property = nullptr;
     if (!object->resolvePath(path, owner, property) || !owner || !property) return Error("Invalid property path");
 
-    rapidjson::Value meta = owner->getPropertyMeta(*property, allocator);
-    result.data.AddMember("path", rapidjson::Value(path.c_str(), allocator), allocator);
-    result.data.AddMember("meta", std::move(meta), allocator);
+    if (!result.data.writer().writeObject([&](json::ObjectWriter& output) { return output.write("id", static_cast<std::uint64_t>(id)) && output.write("path", path) && output.writeValue("meta", [&](json::Writer& writer) { return owner->writePropertyMeta(writer, *property); }); })) return Error("Failed to write property metadata");
     return result;
 }
 
 Result Editor::getHistory() const {
     Result result = OkArray();
-    auto& allocator = result.data.GetAllocator();
-
-    for (const auto& name : history.names()) {
-        result.data.PushBack(rapidjson::Value(name.c_str(), allocator), allocator);
-    }
+    if (!result.data.writer().writeArray([&](json::ArrayWriter& output) { for (const auto& name : history.names()) if (!output.write(name)) return false; return true; })) return Error("Failed to write history");
 
     return result;
 }

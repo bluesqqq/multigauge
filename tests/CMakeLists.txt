@@ -1,4 +1,5 @@
 add_executable(multigauge_core_tests
+  test_json.cpp
   test_unit_type.cpp
   test_value.cpp
   test_value_ref.cpp

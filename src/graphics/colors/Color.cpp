@@ -41,12 +41,10 @@ const ColorTimeline* Color::getTimeline() const { return nullptr; }
 namespace mg {
 
 DECODE_IMPL(graphics::OwnedColor) {
-    if (v.IsNull()) {
+    if (v.isNull()) {
         out = nullptr;
         return true;
     }
-
-    if (!v.IsString()) return false;
 
     graphics::rgba color;
     if (!Codec<graphics::rgba>::decode(v, color)) return false;
@@ -57,12 +55,11 @@ DECODE_IMPL(graphics::OwnedColor) {
 
 ENCODE_IMPL(graphics::OwnedColor) {
     if (!v) {
-        out.SetNull();
-        return true;
+        return out.null();
     }
 
     if (v->getType() == graphics::Color::Type::Static) {
-        return Codec<graphics::rgba>::encode(out, a, v->getColor());
+        return Codec<graphics::rgba>::encode(out, v->getColor());
     }
 
     return false;

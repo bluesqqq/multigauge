@@ -113,12 +113,12 @@ MG_EDITOR_WIDGET(gauge::Padding, "box")
 
 CODEC_BEGIN(gauge::LayoutSize)
     DECODE() {
-        if (v.IsNumber()) { out = {gauge::LayoutSize::Unit::Px, v.GetFloat()}; return true; }
-
-        if (!v.IsString()) return false;
-
-        const auto s = v.GetString();
-        if (!s) return false;
+        double number;
+        if (v.read(number)) { out = {gauge::LayoutSize::Unit::Px, static_cast<float>(number)}; return true; }
+        std::string_view text;
+        if (!v.read(text)) return false;
+        std::string owned(text);
+        const auto s = owned.c_str();
 
         if (strcmp(s, "auto") == 0) { out = {gauge::LayoutSize::Unit::Auto, 0}; return true; }
 
@@ -144,20 +144,18 @@ CODEC_BEGIN(gauge::LayoutSize)
     ENCODE() {
         switch (v.unit) {
             case gauge::LayoutSize::Unit::Auto:
-                out.SetString("auto", a);
-                break;
+                return out.write("auto");
 
             case gauge::LayoutSize::Unit::Percent: {
                 char buf[32];
                 std::snprintf(buf, sizeof(buf), "%g%%", v.value);
-                out.SetString(buf, a);
-                break;
+                return out.write(buf);
             }
 
-            case gauge::LayoutSize::Unit::Px: default: out.SetFloat(v.value); break;
+            case gauge::LayoutSize::Unit::Px: default: return out.write(v.value);
         }
 
-        return true;
+        return false;
     }
 CODEC_END()
 
@@ -243,22 +241,18 @@ struct Gap : public ::mg::PropertyObject {
         YGNodeStyleSetGap(node, YGGutterColumn, column);
     }
 
-    static rapidjson::Value rowInteractableWhen(rapidjson::Document::AllocatorType& a) {
-        return MG_UI_RULES(
-            MG_UI_RULE_ANY(
-                MG_UI_RULE("../wrap", "!=", "no-wrap"),
-                MG_UI_RULE_IN("../direction", "column", "column-reverse")
-            )
-        );
+    static bool rowInteractableWhen(json::Writer& writer) {
+        return writer.writeArray([](json::ArrayWriter& rules) { return rules.writeObject([](json::ObjectWriter& group) { return group.writeArray("any", [](json::ArrayWriter& any) {
+            return any.writeObject([](json::ObjectWriter& rule) { return rule.write("path", "../wrap") && rule.write("op", "!=") && rule.write("value", "no-wrap"); }) &&
+                   any.writeObject([](json::ObjectWriter& rule) { return rule.write("path", "../direction") && rule.write("op", "in") && rule.writeArray("value", [](json::ArrayWriter& values) { return values.write("column") && values.write("column-reverse"); }); });
+        }); }); });
     }
 
-    static rapidjson::Value columnInteractableWhen(rapidjson::Document::AllocatorType& a) {
-        return MG_UI_RULES(
-            MG_UI_RULE_ANY(
-                MG_UI_RULE("../wrap", "!=", "no-wrap"),
-                MG_UI_RULE_IN("../direction", "row", "row-reverse")
-            )
-        );
+    static bool columnInteractableWhen(json::Writer& writer) {
+        return writer.writeArray([](json::ArrayWriter& rules) { return rules.writeObject([](json::ObjectWriter& group) { return group.writeArray("any", [](json::ArrayWriter& any) {
+            return any.writeObject([](json::ObjectWriter& rule) { return rule.write("path", "../wrap") && rule.write("op", "!=") && rule.write("value", "no-wrap"); }) &&
+                   any.writeObject([](json::ObjectWriter& rule) { return rule.write("path", "../direction") && rule.write("op", "in") && rule.writeArray("value", [](json::ArrayWriter& values) { return values.write("row") && values.write("row-reverse"); }); });
+        }); }); });
     }
 
     MG_PROPS_BEGIN()
@@ -284,10 +278,8 @@ struct FlexContainer : public ::mg::PropertyObject {
         gap.apply(node);
     }
 
-    static rapidjson::Value alignContentVisibleWhen(rapidjson::Document::AllocatorType& a) {
-        return MG_UI_RULES(
-            MG_UI_RULE("wrap", "!=", "no-wrap")
-        );
+    static bool alignContentVisibleWhen(json::Writer& writer) {
+        return writer.writeArray([](json::ArrayWriter& rules) { return rules.writeObject([](json::ObjectWriter& rule) { return rule.write("path", "wrap") && rule.write("op", "!=") && rule.write("value", "no-wrap"); }); });
     }
 
     MG_PROPS_BEGIN()
@@ -329,10 +321,8 @@ struct Position : public ::mg::PropertyObject {
     LayoutSize top;
     LayoutSize bottom;
 
-    static rapidjson::Value insetVisibleWhen(rapidjson::Document::AllocatorType& a) {
-        return MG_UI_RULES(
-            MG_UI_RULE("type", "!=", "static")
-        );
+    static bool insetVisibleWhen(json::Writer& writer) {
+        return writer.writeArray([](json::ArrayWriter& rules) { return rules.writeObject([](json::ObjectWriter& rule) { return rule.write("path", "type") && rule.write("op", "!=") && rule.write("value", "static"); }); });
     }
 
     void apply(YGNodeRef node) const {
@@ -488,7 +478,7 @@ CODEC_BEGIN(YGFlexDirection)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 
@@ -499,7 +489,7 @@ CODEC_BEGIN(YGJustify)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 
@@ -509,7 +499,7 @@ CODEC_BEGIN(YGAlign)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 
@@ -520,7 +510,7 @@ CODEC_BEGIN(YGWrap)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 
@@ -531,7 +521,7 @@ CODEC_BEGIN(YGPositionType)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 
@@ -542,7 +532,7 @@ CODEC_BEGIN(YGDisplay)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 
@@ -553,7 +543,7 @@ CODEC_BEGIN(YGOverflow)
     }
 
     ENCODE() {
-        return encodeEnum(out, a, v);
+        return encodeEnum(out, v);
     }
 CODEC_END()
 

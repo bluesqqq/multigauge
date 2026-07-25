@@ -5,7 +5,7 @@
 #include <multigauge/graphics/image/Image.h>
 #include <multigauge/graphics/image/ImageDecoder.h>
 
-#include <rapidjson/document.h>
+#include <multigauge/json/Json.h>
 
 #include <cstddef>
 #include <string>
@@ -33,8 +33,8 @@ class AssetManager {
     public:
         AssetManager(io::FileSystem& fs) : fs(&fs) {}
 
-        bool loadJson(const std::string& path, rapidjson::Document& out);
-        bool loadDocumentAssets(const rapidjson::Value::ConstArray& assets);
+        bool loadJson(const std::string& path, json::Document& out);
+        bool loadDocumentAssets(json::Reader assets);
         bool loadImage(graphics::GraphicsContext& ctx, const std::string& path, images::Image& out);
 };
 
