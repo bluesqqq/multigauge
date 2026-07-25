@@ -4,6 +4,9 @@
 #include <multigauge/value/ValueView.h>
 #include <multigauge/utils/Math.h>
 
+#include <chrono>
+#include <cstdint>
+
 namespace mg::gauge {
 
 using ::mg::ValueView;
@@ -14,7 +17,7 @@ using ::mg::utils::mapf;
 
 struct TimeValue {
     float value;
-    unsigned long time;
+    std::uint64_t time;
 };
 
 class Graph : public Element {
@@ -33,6 +36,7 @@ class Graph : public Element {
 
         ValueView value;
         std::vector<TimeValue> valueMemory = {};
+        std::chrono::microseconds elapsed{};
 
         enum Style { Line, Bars, Dots };
 
@@ -49,12 +53,13 @@ class Graph : public Element {
     MG_PROP(value, "value", "Value", "Value to display.")
         MG_PROPS_END()
 
-        unsigned long timeAtX(int x, int left, int width, unsigned long currentTime, float windowMs) const {
+        std::uint64_t timeAtX(int x, int left, int width, std::uint64_t currentTime, float windowMs) const {
             float t01 = float(x - left) / float(std::max(1, width)); // 0..1
-            return currentTime - (unsigned long)std::lround((1.0f - t01) * windowMs) - (unsigned long)bufferMilliseconds;
+            const std::uint64_t offset = static_cast<std::uint64_t>(std::lround((1.0f - t01) * windowMs)) + static_cast<std::uint64_t>(std::max(0, bufferMilliseconds));
+            return currentTime > offset ? currentTime - offset : 0;
         }
 
-        float valueAtTime(unsigned long time) const {
+        float valueAtTime(std::uint64_t time) const {
             if (valueMemory.empty()) return 0.0f;
             if (valueMemory.size() == 1) return valueMemory[0].value;
 
@@ -70,7 +75,7 @@ class Graph : public Element {
                 const TimeValue& b = valueMemory[i + 1]; // older
 
                 if (a.time >= time && time >= b.time) {
-                    const unsigned long dt = a.time - b.time;
+                    const std::uint64_t dt = a.time - b.time;
                     if (dt == 0) return a.value;
 
                     const float t = float(a.time - time) / float(dt);
@@ -87,10 +92,12 @@ class Graph : public Element {
         void draw(Graphics& g) const override {
             const auto b = getBounds();
 
+            if (seconds <= 0.0f || samplePx <= 0) return;
+
             const float minimum = value.minimumBase();
             const float maximum = value.maximumBase();
 
-            const unsigned long currentTime = 0; //millis(); // TODO HANGE TO ABSTRACT TIME CLASS
+            const std::uint64_t currentTime = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
             const float secondLength = b.width / seconds; // length of 1 second
 
             if (backgroundColor) {
@@ -115,7 +122,7 @@ class Graph : public Element {
                         int prevX = 0, prevY = 0;
 
                         for (int x = b.getLeft(); x <= b.getRight(); x += samplePx) {
-                            const unsigned long t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
+                            const std::uint64_t t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
                             const float v = valueAtTime(t);
                             const int y = mapf(v, minimum, maximum, b.getBottom(), b.getTop());
 
@@ -141,7 +148,7 @@ class Graph : public Element {
                         const float windowMs = seconds * 1000.0f;
 
                         for (int x = b.getLeft(); x <= b.getRight(); x += samplePx) {
-                            const unsigned long t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
+                            const std::uint64_t t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
                             const float v = valueAtTime(t);
                             const int yVal = mapf(v, minimum, maximum, b.getBottom(), b.getTop());
 
@@ -158,7 +165,7 @@ class Graph : public Element {
                         const float windowMs = seconds * 1000.0f;
 
                         for (int x = b.getLeft(); x <= b.getRight(); x += samplePx) {
-                            const unsigned long t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
+                            const std::uint64_t t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
                             const float v = valueAtTime(t);
                             const int y = mapf(v, minimum, maximum, b.getBottom(), b.getTop());
 
@@ -199,8 +206,9 @@ class Graph : public Element {
             }
         }
 
-        void update(int deltaTime) override {
-            unsigned long currentTime = 0; //millis(); // TODO: CHANGE TO ABSTRACT TIME CLASS
+        void update(std::chrono::microseconds delta) override {
+            elapsed += delta;
+            const std::uint64_t currentTime = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
 
             valueMemory.insert(valueMemory.begin(), {value.valueBase(), currentTime});
 

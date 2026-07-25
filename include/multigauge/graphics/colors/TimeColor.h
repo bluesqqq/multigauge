@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/graphics/colors/ColorTimeline.h>
 
@@ -21,6 +23,7 @@ class TimeColor : public Color {
         };
 
     private:
+        static std::chrono::microseconds currentElapsed;
         ColorTimeline timeline;
         LoopType loopType;
 
@@ -36,6 +39,8 @@ class TimeColor : public Color {
         float getTime() const;
 
     public:
+        /// Updates the shared monotonic runtime time used by all time colors.
+        static void setElapsed(std::chrono::microseconds elapsed) noexcept;
         /// @brief Constructs a TimeColor with the default timeline and loop type.
         TimeColor();
 

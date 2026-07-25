@@ -20,7 +20,7 @@ class GaugeScreen : public Screen {
 
         void onShow(RuntimeContext& ctx) override;
         void onHide(RuntimeContext& ctx) override;
-        void update(RuntimeContext& ctx, uint64_t deltaUs) override;
+        void update(RuntimeContext& ctx, std::chrono::microseconds delta) override;
         void draw(RuntimeContext& ctx, graphics::Graphics& g) override;
 };
 

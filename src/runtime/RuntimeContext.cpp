@@ -47,7 +47,7 @@ Screen* RuntimeContext::getScreen() { return screen.get(); }
 
 const Screen* RuntimeContext::getScreen() const { return screen.get(); }
 
-void RuntimeContext::frame(uint64_t deltaUs) {
+void RuntimeContext::frame(std::chrono::microseconds delta) {
     if (!context) return;
 
     graphics.clearColorCache();
@@ -56,7 +56,7 @@ void RuntimeContext::frame(uint64_t deltaUs) {
     context->beginFrame();
 
     if (screen) {
-        screen->update(*this, deltaUs);
+        screen->update(*this, delta);
         screen->draw(*this, graphics);
     } else {
         graphics.fillAll(backgroundColor);

@@ -34,7 +34,7 @@ void EditorScreen::onHide(RuntimeContext& ctx) {
     lastFace = nullptr;
 }
 
-void EditorScreen::update(RuntimeContext& ctx, uint64_t deltaUs) {
+void EditorScreen::update(RuntimeContext& ctx, std::chrono::microseconds delta) {
     gauge::GaugeFace* face = resolveFace();
     if (!face) {
         lastFace = nullptr;
@@ -42,7 +42,7 @@ void EditorScreen::update(RuntimeContext& ctx, uint64_t deltaUs) {
     }
 
     ensureFaceInitialized(ctx, face);
-    face->update(deltaUs);
+    face->update(delta);
 }
 
 void EditorScreen::draw(RuntimeContext& ctx, graphics::Graphics& g) {

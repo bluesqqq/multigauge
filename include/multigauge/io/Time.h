@@ -1,14 +1,15 @@
 #pragma once
 
-#include <cstdint>
+#include <chrono>
 
 namespace mg::io {
 
 class Time {
     public:
         virtual ~Time() = default;
-        virtual uint64_t getMillis() = 0;
-        virtual uint64_t getMicros() = 0;
+
+        /// Monotonic elapsed time; the epoch is intentionally unspecified.
+        virtual std::chrono::microseconds elapsed() const = 0;
 };
 
 } // namespace mg::io

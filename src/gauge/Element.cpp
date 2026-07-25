@@ -148,9 +148,9 @@ void Element::drawRecursive(Graphics &g) const {
     for (auto const& c : children) c->drawRecursive(g);
 }
 
-void Element::updateRecursive(int deltaTime) {
-    update(deltaTime);
-    for (auto& c : children) c->updateRecursive(deltaTime);
+void Element::updateRecursive(std::chrono::microseconds delta) {
+    update(delta);
+    for (auto& c : children) c->updateRecursive(delta);
 }
 
 void Element::layoutRecursive(float parentAbsX, float parentAbsY) {

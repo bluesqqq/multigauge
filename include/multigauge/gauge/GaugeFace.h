@@ -1,6 +1,7 @@
 #pragma once
 
 #include <memory>
+#include <chrono>
 #include <type_traits>
 #include <multigauge/graphics/colors/Color.h>
 #include <multigauge/gauge/Element.h>
@@ -39,7 +40,7 @@ class GaugeFace : public ::mg::PropertyObject {
         //----------[ LIFETIME ]----------//
 
         bool init(AssetManager& assetManager, GraphicsContext& context);
-        void update(int deltaTime);
+        void update(std::chrono::microseconds delta);
         void draw(Graphics& g) const;
 
         //----------[ CHILDREN ]----------//

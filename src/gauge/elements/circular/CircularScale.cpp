@@ -20,7 +20,7 @@ void CircularScale::draw(Graphics &g) const {
     ticks.drawCircular(g, {cx, cy}, radius, startAngle, endAngle, value.minimumBase(), value.maximumBase());
 }
 
-void CircularScale::update(int deltaTime) {
+void CircularScale::update(std::chrono::microseconds delta) {
     ValueView value = resolvedValueView();
 
     ticks.setValueView(value.valueBase());
