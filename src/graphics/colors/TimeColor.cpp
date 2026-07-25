@@ -5,12 +5,18 @@
 
 namespace mg::graphics {
 
+std::chrono::microseconds TimeColor::currentElapsed{};
+
+void TimeColor::setElapsed(std::chrono::microseconds elapsed) noexcept {
+    currentElapsed = elapsed;
+}
+
 float TimeColor::getTime() const {
     float duration = timeline.getEndPosition();
 
     if (timeline.size() == 0 || duration <= 0.0f) return 0.0f;
 
-    float t = 0; //static_cast<float>(millis()) / 1000.0f; // TODO: PUT TIME HERE!!!
+    float t = std::chrono::duration<float, std::milli>(currentElapsed).count();
 
     switch (loopType) {
         case LoopType::Forward:

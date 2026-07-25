@@ -113,7 +113,7 @@ class Horizon : public Element {
             }
         }
 
-        void update(int deltaTime) override {
+        void update(std::chrono::microseconds delta) override {
             zPosition += 0; //lateralAcceleration.getValueRaw() * zVelMultiplier; //zValue.getValue(DEFAULT) * zVelMultiplier;
             xPosition -= 0.01f; //speed.getValueRaw() * xVelMultiplier; //xValue.getValue(DEFAULT) * xVelMultiplier;
         }

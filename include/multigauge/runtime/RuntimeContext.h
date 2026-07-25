@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstdint>
+#include <chrono>
 #include <memory>
 
 #include <multigauge/graphics/Graphics.h>
@@ -50,7 +50,7 @@ class RuntimeContext {
         Screen* getScreen();
         const Screen* getScreen() const;
 
-        void frame(uint64_t deltaUs);
+        void frame(std::chrono::microseconds delta);
 };
 
 }

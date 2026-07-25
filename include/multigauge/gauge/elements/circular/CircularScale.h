@@ -26,7 +26,7 @@ class CircularScale : public CircularElement {
 
         void draw(Graphics& g) const override;
 
-        void update(int deltaTime) override;
+        void update(std::chrono::microseconds delta) override;
 };
 
 } // namespace mg::gauge

@@ -62,8 +62,8 @@ bool GaugeFace::init(AssetManager& assetManager, GraphicsContext& context) {
     return ok;
 }
 
-void GaugeFace::update(int deltaTime) {
-    for (auto& c : children) c->updateRecursive(deltaTime);
+void GaugeFace::update(std::chrono::microseconds delta) {
+    for (auto& c : children) c->updateRecursive(delta);
 }
 
 void GaugeFace::draw(Graphics& g) const {

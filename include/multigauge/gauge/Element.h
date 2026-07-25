@@ -13,6 +13,7 @@
 #include <multigauge/gauge/Layout.h>
 
 #include <cstdint>
+#include <chrono>
 #include <memory>
 #include <vector>
 
@@ -56,7 +57,7 @@ class Element : public ::mg::PropertyObject {
 
         virtual bool init(AssetManager& assetManager, GraphicsContext& context) { return true; }
         virtual void draw(Graphics& g) const {}
-        virtual void update(int deltaTime) {}
+        virtual void update(std::chrono::microseconds delta) {}
 
     public:
         enum Type { Base, Circular };
@@ -90,7 +91,7 @@ class Element : public ::mg::PropertyObject {
 
         bool initRecursive(AssetManager& assetManager, GraphicsContext& context);
         void drawRecursive(Graphics& g) const;
-        void updateRecursive(int deltaTime);
+        void updateRecursive(std::chrono::microseconds delta);
 
         //----------[ LAYOUT ]----------//
         

@@ -17,9 +17,9 @@ void GaugeScreen::onShow(RuntimeContext& ctx) {
 
 void GaugeScreen::onHide(RuntimeContext& ctx) {}
 
-void GaugeScreen::update(RuntimeContext& ctx, uint64_t deltaUs) {
+void GaugeScreen::update(RuntimeContext& ctx, std::chrono::microseconds delta) {
     if (!face) return;
-    face->update(static_cast<int>(deltaUs));
+    face->update(delta);
 }
 
 void GaugeScreen::draw(RuntimeContext& ctx, graphics::Graphics& g) {

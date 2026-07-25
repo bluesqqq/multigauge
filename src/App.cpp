@@ -8,12 +8,14 @@
 #include <multigauge/HandlePool.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/gauge/GaugeFace.h>
+#include <multigauge/graphics/colors/TimeColor.h>
 #include <multigauge/screens/GaugeScreen.h>
 #include <multigauge/screens/EditorScreen.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/utils/Json.h>
 
 #include <utility>
+#include <chrono>
 
 namespace mg {
 
@@ -29,7 +31,7 @@ namespace {
 
     HandlePool<RuntimeContext> contexts;
     bool initialized = false;
-    uint64_t lastUs = 0;
+    std::chrono::microseconds lastElapsed{};
     YGConfigRef yogaConfig = nullptr;
 
     io::FileSystem* g_fs = nullptr;
@@ -58,7 +60,7 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
     yogaConfig = createYogaConfig();
     initialized = true;
 
-    lastUs = g_time->getMicros();
+    lastElapsed = g_time->elapsed();
 
     return true;
 }
@@ -71,17 +73,20 @@ void shutdown() {
         yogaConfig = nullptr;
     }
     initialized = false;
-    lastUs = 0;
+    lastElapsed = {};
+    g_time = nullptr;
+    g_fs = nullptr;
 }
 
 void frame() {
     if (!initialized) return;
 
-    const uint64_t nowUs = g_time->getMicros();
-    const uint64_t deltaUs = nowUs - lastUs;
-    lastUs = nowUs;
+    const std::chrono::microseconds now = g_time->elapsed();
+    const std::chrono::microseconds delta = now >= lastElapsed ? now - lastElapsed : std::chrono::microseconds{};
+    lastElapsed = now;
 
-    for (auto& context : contexts) context.frame(deltaUs);
+    graphics::TimeColor::setElapsed(now);
+    for (auto& context : contexts) context.frame(delta);
 }
 
 YGConfigRef getYogaConfig() { return yogaConfig; }
