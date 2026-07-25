@@ -41,6 +41,10 @@ bool GaugeFace::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v
     std::vector<OwnedElement> decoded;
     if (!decodeAny(v, decoded)) return false;
 
+    for (const auto& child : decoded) {
+        if (!child) return false;
+    }
+
     while (!self->children.empty()) {
         self->removeChild(self->children.back().get());
     }

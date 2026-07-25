@@ -2,6 +2,7 @@
 
 namespace mg {
 
+#if MG_ENABLE_EDITOR_REFLECTION
 rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) const {
     rapidjson::Value metaJson(rapidjson::kObjectType);
 
@@ -17,5 +18,6 @@ rapidjson::Value Property::getBaseMeta(rapidjson::Document::AllocatorType& a) co
 
     return metaJson;
 }
+#endif
 
 } // namespace mg

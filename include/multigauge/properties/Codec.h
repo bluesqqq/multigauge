@@ -3,6 +3,7 @@
 #include <rapidjson/document.h>
 
 #include <cstdint>
+#include <cmath>
 #include <limits>
 #include <string>
 #include <optional>
@@ -87,7 +88,7 @@ CODEC_END()
 
 CODEC_BEGIN(int)
     DECODE() {
-        if (!v.IsNumber()) return false;
+        if (!v.IsInt()) return false;
         out = v.GetInt();
         return true;
     }
@@ -119,7 +120,9 @@ CODEC_END()
 CODEC_BEGIN(float)
     DECODE() {
         if (!v.IsNumber()) return false;
-        out = v.GetFloat();
+        const double value = v.GetDouble();
+        if (!std::isfinite(value) || value < -std::numeric_limits<float>::max() || value > std::numeric_limits<float>::max()) return false;
+        out = static_cast<float>(value);
         return true;
     }
 
@@ -172,7 +175,6 @@ CODEC_BEGIN_TPARAMS(typename T, std::optional<T>)
     ENCODE() {
         if (!v) { out.SetNull(); return true; }
         return encodeAny(out, a, *v);
-        return true;
     }
 CODEC_END()
 

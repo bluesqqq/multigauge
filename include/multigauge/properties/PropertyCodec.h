@@ -3,6 +3,8 @@
 #include <multigauge/properties/Codec.h>
 #include <multigauge/utils/Json.h>
 
+#include <string_view>
+
 namespace mg {
 
 class PropertyObject;
@@ -23,16 +25,17 @@ inline bool decodePolymorphicOwned(const rapidjson::Value& v, Owned& out) {
 
     const auto obj = v.GetObject();
 
-    const char* type = nullptr;
-    std::string typeString;
-    if (mg::json::getStringMember(v, "type", typeString)) {
-        type = typeString.c_str();
+    std::string_view type;
+    const auto typeMember = v.FindMember("type");
+    if (typeMember != v.MemberEnd() && typeMember->value.IsString()) {
+        type = std::string_view(typeMember->value.GetString(), typeMember->value.GetStringLength());
     }
 
-    out = Base::registry().create(type);
-    if (!out) return false;
+    Owned decoded = Base::registry().create(type);
+    if (!decoded) return false;
 
-    out->loadProperties(obj);
+    if (!decoded->loadProperties(obj)) return false;
+    out = std::move(decoded);
     return true;
 }
 
@@ -63,8 +66,7 @@ inline bool decodeAny(const rapidjson::Value& v, T& out) {
     // PropertyObject-derived type
     if constexpr (std::is_base_of_v<PropertyObject, T>) {
         if (!v.IsObject()) return false;
-        out.loadProperties(v.GetObject());
-        return true;
+        return out.loadProperties(v.GetObject());
     }
 
     static_assert(HasCodecV<T> || std::is_base_of_v<PropertyObject, T> || PolymorphicOwnedTraits<T>::supported, "Type must have Codec<T>, be a PropertyObject, or use the polymorphic owned path.");

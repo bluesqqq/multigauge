@@ -2,8 +2,12 @@
 
 #include <rapidjson/document.h>
 
+#include <multigauge/Config.h>
 #include <multigauge/properties/EnumTraits.h>
+#include <multigauge/properties/meta/Rules.h>
+#if MG_ENABLE_EDITOR_REFLECTION
 #include <multigauge/properties/meta/PropertyMetadata.h>
+#endif
 
 namespace mg {
 
@@ -25,9 +29,11 @@ struct Property {
     ChildGetter getChild = nullptr;
     /// Returns const nested PropertyObject for group-like properties, or nullptr.
     ChildGetterConst getChildConst = nullptr;
+#if MG_ENABLE_EDITOR_REFLECTION
     const PropertyMetadata meta;
 
     rapidjson::Value getBaseMeta(rapidjson::Document::AllocatorType& a) const;
+#endif
 };
 
 } // namespace mg

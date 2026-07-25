@@ -2,7 +2,7 @@
 
 #include <cstddef>
 #include <string>
-#include <vector>
+#include <string_view>
 
 #include <rapidjson/document.h>
 #include <multigauge/properties/Property.h>
@@ -54,18 +54,20 @@ class PropertyObject {
         virtual PropertyList propertyList() const { return {nullptr, 0, nullptr}; }
 
         /// Finds a property by key.
-        const Property* findProperty(const char* key) const;
+        const Property* findProperty(std::string_view key) const;
 
         /// Sets a single property from a JSON value.
         /// @return `true` if the property exists and accepts the value, otherwise `false`.
-        bool setProperty(const char* key, const rapidjson::Value& v);
+        bool setProperty(std::string_view key, const rapidjson::Value& v);
 
         /// Serializes a single property to JSON.
         /// @return `true` if the property exists and is successfully serialized, otherwise `false`.
-        bool getProperty(const char* key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
+        bool getProperty(std::string_view key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
 
         /// Loads all matching properties from a JSON object.
-        void loadProperties(rapidjson::Value::ConstObject json);
+        /// @return `true` when every recognized property accepts its value.
+        /// Unknown properties remain ignored for forward compatibility.
+        bool loadProperties(rapidjson::Value::ConstObject json);
 
         /// Serializes all exposed properties into a JSON object.
         void saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const;
@@ -91,9 +93,6 @@ class PropertyObject {
         /// @return `true` if the full path resolves successfully, otherwise `false`.
         bool resolvePath(const std::string& path, const PropertyObject*& owner, const Property*& prop) const;
 
-    protected:
-        /// Splits a dotted property path into path segments.
-        static std::vector<std::string> splitPath(const std::string& path);
 };
 
 } // namespace mg

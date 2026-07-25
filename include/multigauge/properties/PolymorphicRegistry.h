@@ -1,7 +1,7 @@
 #pragma once
 
 #include <cstddef>
-#include <cstring>
+#include <string_view>
 
 #include <rapidjson/document.h>
 
@@ -28,12 +28,10 @@ public:
     constexpr MgPolymorphicRegistry(const Descriptor* descriptors, std::size_t count, Creator fallback)
         : descriptors_(descriptors), count_(count), fallback_(fallback) {}
 
-    const Descriptor* find(const char* type) const {
-        if (!type) return nullptr;
-
+    const Descriptor* find(std::string_view type) const {
         for (std::size_t i = 0; i < count_; ++i) {
             const Descriptor& descriptor = descriptors_[i];
-            if (descriptor.id && std::strcmp(descriptor.id, type) == 0) {
+            if (descriptor.id && type == descriptor.id) {
                 return &descriptor;
             }
         }
@@ -41,7 +39,7 @@ public:
         return nullptr;
     }
 
-    Owned create(const char* type, Args... args) const {
+    Owned create(std::string_view type, Args... args) const {
         if (const Descriptor* descriptor = find(type)) {
             if (descriptor->create) return descriptor->create(args...);
         }

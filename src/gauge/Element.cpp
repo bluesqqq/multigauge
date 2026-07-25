@@ -3,6 +3,7 @@
 #include <multigauge/utils/Json.h>
 
 #include <algorithm>
+#include <string_view>
 
 #include <multigauge/gauge/elements/primitives/TextElement.h>
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
@@ -71,6 +72,10 @@ bool Element::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) 
 
     std::vector<OwnedElement> decoded;
     if (!decodeAny(v, decoded)) return false;
+
+    for (const auto& child : decoded) {
+        if (!child) return false;
+    }
 
     while (!self->children.empty()) {
         self->removeChild(self->children.back().get());
@@ -184,16 +189,17 @@ DECODE_IMPL(gauge::OwnedElement) {
 
     const auto obj = v.GetObject();
 
-    const char* type = nullptr;
-    std::string typeString;
-    if (mg::json::getStringMember(v, "type", typeString)) {
-        type = typeString.c_str();
+    std::string_view type;
+    const auto typeMember = v.FindMember("type");
+    if (typeMember != v.MemberEnd() && typeMember->value.IsString()) {
+        type = std::string_view(typeMember->value.GetString(), typeMember->value.GetStringLength());
     }
 
-    out = gauge::Element::registry().create(type, nullptr);
-    if (!out) return false;
+    gauge::OwnedElement decoded = gauge::Element::registry().create(type, nullptr);
+    if (!decoded) return false;
 
-    out->loadProperties(obj);
+    if (!decoded->loadProperties(obj)) return false;
+    out = std::move(decoded);
     return true;
 }
 

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstring>
 #include <optional>
 #include <rapidjson/document.h>
+#include <string_view>
 #include <type_traits>
 
 namespace mg {
@@ -42,11 +42,10 @@ using EnumTraitsTypeT = typename EnumTraitsType<T>::type;
 template <typename E>
 bool decodeEnum(const rapidjson::Value& v, E& out) {
     if (!v.IsString()) return false;
-    const char* s = v.GetString();
-    if (!s) return false;
+    const std::string_view value(v.GetString(), v.GetStringLength());
 
     for (const auto& opt : EnumTraits<E>::options) {
-        if (std::strcmp(opt.key, s) == 0) {
+        if (opt.key && value == opt.key) {
             out = opt.value;
             return true;
         }
