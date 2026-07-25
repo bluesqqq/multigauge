@@ -13,7 +13,7 @@ public:
     using Descriptor = MgPolymorphicTypeDescriptor<Owned, Args...>; using Creator = Owned (*)(Args...);
     constexpr MgPolymorphicRegistry(const Descriptor* descriptors, std::size_t count, Creator fallback) : descriptors_(descriptors), count_(count), fallback_(fallback) {}
     const Descriptor* find(std::string_view type) const { if (type.empty()) return nullptr; for (std::size_t i = 0; i < count_; ++i) if (descriptors_[i].id && type == descriptors_[i].id) return &descriptors_[i]; return nullptr; }
-    Owned create(const char* type, Args... args) const { if (const Descriptor* descriptor = find(type ? std::string_view(type) : std::string_view{}); descriptor && descriptor->create) return descriptor->create(args...); return fallback_ ? fallback_(args...) : Owned{}; }
+    Owned create(std::string_view type, Args... args) const { if (const Descriptor* descriptor = find(type); descriptor && descriptor->create) return descriptor->create(args...); return fallback_ ? fallback_(args...) : Owned{}; }
     const Descriptor* begin() const { return descriptors_; } const Descriptor* end() const { return descriptors_ + count_; } std::size_t size() const { return count_; }
     bool writeTypesMeta(json::Writer& writer) const { return writer.writeArray([&](json::ArrayWriter& types) { for (std::size_t i = 0; i < count_; ++i) { const auto& d = descriptors_[i]; if (!types.writeObject([&](json::ObjectWriter& entry) { return entry.write("id", d.id ? d.id : "") && entry.write("name", d.name ? d.name : ""); })) return false; } return true; }); }
 private: const Descriptor* descriptors_ = nullptr; std::size_t count_ = 0; Creator fallback_ = nullptr;

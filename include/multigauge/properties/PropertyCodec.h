@@ -11,10 +11,9 @@ template <typename Base, typename Owned>
 inline bool decodePolymorphicOwned(json::Reader value, Owned& out) {
     if (value.isNull()) { out = nullptr; return true; }
     if (!value.isObject()) return false;
-    std::string type;
     std::string_view typeView;
-    if (value.member("type").read(typeView)) type.assign(typeView);
-    Owned decoded = Base::registry().create(type.empty() ? nullptr : type.c_str());
+    (void)value.member("type").read(typeView);
+    Owned decoded = Base::registry().create(typeView);
     if (!decoded || !decoded->loadProperties(value)) return false;
     out = std::move(decoded);
     return true;

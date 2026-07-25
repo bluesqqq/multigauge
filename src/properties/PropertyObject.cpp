@@ -47,6 +47,9 @@ bool PropertyObject::saveProperties(json::Writer& writer) const {
 }
 
 bool PropertyObject::writePropertiesMeta(json::Writer& writer) const {
+#if !MG_ENABLE_EDITOR_REFLECTION
+    return writer.writeArray([](json::ArrayWriter&) { return true; });
+#else
     return writer.writeArray([&](json::ArrayWriter& array) {
         bool success = true;
         propertyList().forEach(this, [&](const Property& property) {
@@ -55,9 +58,14 @@ bool PropertyObject::writePropertiesMeta(json::Writer& writer) const {
         });
         return success;
     });
+#endif
 }
 
 bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& prop) const {
+#if !MG_ENABLE_EDITOR_REFLECTION
+    (void)prop;
+    return writer.writeObject([](json::ObjectWriter&) { return true; });
+#else
     return writer.writeObject([&](json::ObjectWriter& object) {
         if (!prop.writeBaseMeta(object)) return false;
         if (prop.getChildConst) {
@@ -75,6 +83,7 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
         }
         return object.writeValue("value", [&](json::Writer& value) { return prop.get ? prop.get(this, value) : value.null(); });
     });
+#endif
 }
 
 std::vector<std::string> PropertyObject::splitPath(const std::string& path) {

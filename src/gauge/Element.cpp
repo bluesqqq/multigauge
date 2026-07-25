@@ -181,18 +181,12 @@ DECODE_IMPL(gauge::OwnedElement) {
 
     if (!v.isObject()) return false;
 
-    const char* type = nullptr;
-    std::string typeString;
     std::string_view typeView;
-    if (v.member("type").read(typeView)) {
-        typeString.assign(typeView);
-        type = typeString.c_str();
-    }
-
-    out = gauge::Element::registry().create(type, nullptr);
-    if (!out) return false;
-
-    return out->loadProperties(v);
+    (void)v.member("type").read(typeView);
+    gauge::OwnedElement decoded = gauge::Element::registry().create(typeView, nullptr);
+    if (!decoded || !decoded->loadProperties(v)) return false;
+    out = std::move(decoded);
+    return true;
 }
 
 ENCODE_IMPL(gauge::OwnedElement) {

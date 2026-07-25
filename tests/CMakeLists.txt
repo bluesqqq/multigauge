@@ -5,6 +5,7 @@ add_executable(multigauge_core_tests
   test_value_ref.cpp
   test_value_view.cpp
   test_value_embed.cpp
+  test_properties.cpp
 )
 
 target_include_directories(multigauge_core_tests PRIVATE

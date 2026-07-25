@@ -34,6 +34,10 @@ bool GaugeFace::setChildren(::mg::PropertyObject* obj, json::Reader value) {
     std::vector<OwnedElement> decoded;
     if (!decodeAny(value, decoded)) return false;
 
+    for (const auto& child : decoded) {
+        if (!child) return false;
+    }
+
     while (!self->children.empty()) {
         self->removeChild(self->children.back().get());
     }

@@ -3,7 +3,10 @@
 #include <multigauge/json/Json.h>
 
 #include <multigauge/properties/EnumTraits.h>
+#include <multigauge/Config.h>
+#if MG_ENABLE_EDITOR_REFLECTION
 #include <multigauge/properties/meta/PropertyMetadata.h>
+#endif
 
 namespace mg {
 
@@ -25,9 +28,11 @@ struct Property {
     ChildGetter getChild = nullptr;
     /// Returns const nested PropertyObject for group-like properties, or nullptr.
     ChildGetterConst getChildConst = nullptr;
+#if MG_ENABLE_EDITOR_REFLECTION
     const PropertyMetadata meta;
 
     bool writeBaseMeta(json::ObjectWriter& object) const;
+#endif
 };
 
 } // namespace mg
