@@ -7,10 +7,6 @@
 #include <multigauge/utils/Json.h>
 #include <multigauge/utils/Text.h>
 
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-
 #include <algorithm>
 #include <cctype>
 #include <string_view>
@@ -23,8 +19,6 @@ namespace {
 
 constexpr const char* TAG = "PackageManager";
 
-using mg::json::getArrayMember;
-using mg::json::getObjectMember;
 using mg::json::getStringMember;
 
 bool makeDirectoryChain(io::FileSystem& fs, const std::string& path) {
@@ -75,17 +69,10 @@ struct LibraryIndexPackage {
     std::string author;
 };
 
-bool writePackageEntry(rapidjson::Writer<rapidjson::StringBuffer>& writer, const LibraryIndexPackage& package) {
-    writer.StartObject();
-    writer.Key("id");
-    writer.String(package.id.c_str());
-    writer.Key("name");
-    writer.String(package.name.c_str());
-    writer.Key("author");
-    writer.String(package.author.c_str());
-
-    writer.EndObject();
-    return true;
+bool writePackageEntry(json::ArrayWriter& writer, const LibraryIndexPackage& package) {
+    return writer.writeObject([&](json::ObjectWriter& object) {
+        return object.write("id", package.id) && object.write("name", package.name) && object.write("author", package.author);
+    });
 }
 
 bool isSafeId(std::string_view value) {
@@ -144,7 +131,7 @@ Result readJsonFile(io::FileSystem& fs, const std::string& path) {
 
     LOG_DEBUG(TAG, "readJsonFile: reading %s", path.c_str());
 
-    rapidjson::Document json;
+    json::Document json;
     if (!mg::json::readJsonFile(fs, path, json)) {
         LOG_WARN(TAG, "readJsonFile: invalid JSON in %s", path.c_str());
         return Error("Invalid JSON");
@@ -153,7 +140,7 @@ Result readJsonFile(io::FileSystem& fs, const std::string& path) {
     LOG_DEBUG(TAG, "readJsonFile: parsed %s", path.c_str());
     Result result;
     result.ok = true;
-    result.data.Swap(json);
+    result.data = std::move(json);
     return result;
 }
 
@@ -210,31 +197,32 @@ std::vector<PackageManager::PackageRecord> PackageManager::readInstalledPackages
             continue;
         }
 
-        rapidjson::Document manifest;
-        if (!mg::json::readJsonFile(fs, paths::manifestPath(dataRoot, packageId), manifest) || !manifest.IsObject()) {
+        json::Document manifest;
+        if (!mg::json::readJsonFile(fs, paths::manifestPath(dataRoot, packageId), manifest) || !manifest.root().isObject()) {
             LOG_WARN(TAG, "rebuildLibrary: skipping invalid manifest for %s", packageId.c_str());
             continue;
         }
 
         PackageRecord record;
         record.summary.id = packageId;
-        if (!getStringMember(manifest, "name", record.name) ||
-            !getStringMember(manifest, "author", record.summary.author)) {
+        if (!getStringMember(manifest.root(), "name", record.name) ||
+            !getStringMember(manifest.root(), "author", record.summary.author)) {
             LOG_WARN(TAG, "rebuildLibrary: skipping manifest missing package fields for %s", packageId.c_str());
             continue;
         }
 
         record.summary.name = record.name;
 
-        const rapidjson::Value* facesValue = getArrayMember(manifest, "faces");
-        if (!facesValue) {
+        const json::Reader facesValue = json::getArrayMember(manifest.root(), "faces");
+        if (!facesValue.valid()) {
             LOG_WARN(TAG, "rebuildLibrary: skipping manifest missing faces for %s", packageId.c_str());
             continue;
         }
 
-        record.faces.reserve(facesValue->Size());
-        for (const auto& faceEntry : facesValue->GetArray()) {
-            if (!faceEntry.IsObject()) {
+        record.faces.reserve(facesValue.size());
+        for (std::size_t index = 0; index < facesValue.size(); ++index) {
+            const json::Reader faceEntry = facesValue.element(index);
+            if (!faceEntry.isObject()) {
                 LOG_WARN(TAG, "rebuildLibrary: skipping non-object face entry for %s", packageId.c_str());
                 continue;
             }
@@ -292,22 +280,15 @@ bool PackageManager::writeLibraryIndexFromCache() const {
         return false;
     }
 
-    rapidjson::StringBuffer buffer;
-    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-    writer.StartObject();
-    writer.Key("packages");
-    writer.StartArray();
-    for (const auto& entry : cache) {
-        LibraryIndexPackage packageEntry;
-        packageEntry.id = entry.summary.id;
-        packageEntry.name = entry.summary.name;
-        packageEntry.author = entry.summary.author;
-        writePackageEntry(writer, packageEntry);
-    }
-    writer.EndArray();
-    writer.EndObject();
-
-    return fs.writeText(paths::libraryPath(dataRoot), buffer.GetString());
+    json::Document document = json::object();
+    json::Writer writer = document.writer();
+    if (!writer.writeObject([&](json::ObjectWriter& object) { return object.writeArray("packages", [&](json::ArrayWriter& packages) {
+        for (const auto& entry : cache) {
+            if (!writePackageEntry(packages, {entry.summary.id, entry.summary.name, entry.summary.author})) return false;
+        }
+        return true;
+    }); })) return false;
+    return fs.writeText(paths::libraryPath(dataRoot), document.toString());
 }
 
 bool PackageManager::listPackages(std::vector<PackageSummary>& out) const {
@@ -374,67 +355,73 @@ Result PackageManager::getFace(const std::string& packageId, const std::string& 
     return readJsonFile(fs, path);
 }
 
-bool validatePackageDocument(const rapidjson::Value& input, std::string& error) {
-    if (!input.IsObject()) {
+bool validatePackageDocument(json::Reader input, std::string& error) {
+    if (!input.isObject()) {
         error = "Invalid package JSON";
         return false;
     }
 
     const char* requiredKeys[] = {"name", "author", "description", "faces"};
     for (const char* key : requiredKeys) {
-        if (!input.HasMember(key)) {
+        if (!input.member(key).valid()) {
             error = std::string("Package JSON is missing required field: ") + key;
             return false;
         }
     }
 
-    if (input.MemberCount() != 4) {
+    if (input.size() != 4) {
         error = "Package JSON contains unsupported fields";
         return false;
     }
 
-    if (!input["name"].IsString() || input["name"].GetStringLength() == 0) {
+    std::string_view name;
+    std::string_view author;
+    std::string_view description;
+    if (!input.member("name").read(name) || name.empty()) {
         error = "Package name must be a non-empty string";
         return false;
     }
 
-    if (!input["author"].IsString() || input["author"].GetStringLength() == 0) {
+    if (!input.member("author").read(author) || author.empty()) {
         error = "Package author must be a non-empty string";
         return false;
     }
 
-    if (!input["description"].IsString()) {
+    if (!input.member("description").read(description)) {
         error = "Package description must be a string";
         return false;
     }
 
-    if (!input["faces"].IsArray() || input["faces"].Empty()) {
+    const json::Reader faces = input.member("faces");
+    if (!faces.isArray() || faces.size() == 0) {
         error = "Package must contain at least one face";
         return false;
     }
 
-    for (const auto& faceEntry : input["faces"].GetArray()) {
-        if (!faceEntry.IsObject()) {
+    for (std::size_t index = 0; index < faces.size(); ++index) {
+        const json::Reader faceEntry = faces.element(index);
+        if (!faceEntry.isObject()) {
             error = "Face entries must be objects";
             return false;
         }
 
-        if (!faceEntry.HasMember("name") || !faceEntry.HasMember("face")) {
+        if (!faceEntry.member("name").valid() || !faceEntry.member("face").valid()) {
             error = "Face entries must contain name and face";
             return false;
         }
 
-        if (faceEntry.MemberCount() != 2) {
+        if (faceEntry.size() != 2) {
             error = "Face entries contain unsupported fields";
             return false;
         }
 
-        if (!faceEntry["name"].IsString() || faceEntry["name"].GetStringLength() == 0) {
+        std::string_view faceName;
+        if (!faceEntry.member("name").read(faceName) || faceName.empty()) {
             error = "Face name must be a non-empty string";
             return false;
         }
 
-        if (!faceEntry["face"].IsObject()) {
+        if (!faceEntry.member("face").isObject()) {
             error = "Face payload must be an object";
             return false;
         }
@@ -446,17 +433,16 @@ bool validatePackageDocument(const rapidjson::Value& input, std::string& error) 
 Result PackageManager::importPackage(const std::string& json) {
     LOG_INFO(TAG, "importPackage: input bytes=%u", static_cast<unsigned>(json.size()));
 
-    rapidjson::Document input;
-    input.Parse(json.c_str());
-    if (input.HasParseError() || !input.IsObject()) {
+    json::Document input = json::parse(json);
+    if (!input.valid() || !input.root().isObject()) {
         LOG_ERROR(TAG, "importPackage: invalid package JSON");
         return Error("Invalid package JSON");
     }
 
-    return importPackage(input);
+    return importPackage(input.root());
 }
 
-Result PackageManager::importPackage(const rapidjson::Value& input) {
+Result PackageManager::importPackage(json::Reader input) {
     std::string validationError;
     if (!validatePackageDocument(input, validationError)) {
         LOG_ERROR(TAG, "importPackage: %s", validationError.c_str());
@@ -489,7 +475,7 @@ Result PackageManager::importPackage(const rapidjson::Value& input) {
              "importPackage: packageId=%s name=%s faces=%u",
              packageId.c_str(),
              packageName.c_str(),
-             static_cast<unsigned>(input["faces"].Size()));
+             static_cast<unsigned>(input.member("faces").size()));
 
     const std::string packageRoot = paths::packagePath(dataRoot, packageId);
     if (!makeDirectoryChain(fs, dataRoot) ||
@@ -502,28 +488,25 @@ Result PackageManager::importPackage(const rapidjson::Value& input) {
 
     std::vector<std::string> usedFaceIds;
     std::vector<FaceSummary> faceSummaries;
-    faceSummaries.reserve(input["faces"].Size());
-    rapidjson::StringBuffer manifestBuffer;
-    rapidjson::Writer<rapidjson::StringBuffer> manifestWriter(manifestBuffer);
-    manifestWriter.StartObject();
-    manifestWriter.Key("name");
-    manifestWriter.String(packageName.c_str());
-    manifestWriter.Key("author");
-    manifestWriter.String(packageAuthor.c_str());
-    manifestWriter.Key("description");
-    manifestWriter.String(packageDescription.c_str());
-    manifestWriter.Key("faces");
-    manifestWriter.StartArray();
+    const json::Reader inputFaces = input.member("faces");
+    faceSummaries.reserve(inputFaces.size());
+    json::Document manifest = json::object();
+    json::Writer manifestWriter = manifest.writer();
+    std::vector<std::pair<std::string, std::string>> manifestFaces;
     unsigned faceIndex = 0;
-    for (const auto& faceValue : input["faces"].GetArray()) {
+    for (std::size_t inputIndex = 0; inputIndex < inputFaces.size(); ++inputIndex) {
+        const json::Reader faceValue = inputFaces.element(inputIndex);
         ++faceIndex;
         std::string faceName;
         (void)getStringMember(faceValue, "name", faceName);
-        const rapidjson::Value* faceDocValue = getObjectMember(faceValue, "face");
+        const json::Reader faceDocValue = json::getObjectMember(faceValue, "face");
 
         const std::string faceId = uniqueSlug(faceName, usedFaceIds);
         const std::string faceStoragePath = paths::facePath(dataRoot, packageId, faceId);
-        const std::string faceJson = mg::json::toString(*faceDocValue);
+        json::Document faceDocument = json::object();
+        json::Writer faceWriter = faceDocument.writer();
+        if (!faceWriter.write(faceDocValue)) return Error("Invalid face payload");
+        const std::string faceJson = faceDocument.toString();
         faceSummaries.push_back(FaceSummary{faceId, faceName});
         LOG_INFO(TAG,
                  "importPackage: face %u id=%s",
@@ -536,18 +519,11 @@ Result PackageManager::importPackage(const rapidjson::Value& input) {
             return Error("Failed to write face file");
         }
 
-        manifestWriter.StartObject();
-        manifestWriter.Key("id");
-        manifestWriter.String(faceId.c_str());
-        manifestWriter.Key("name");
-        manifestWriter.String(faceName.c_str());
-        manifestWriter.EndObject();
+        manifestFaces.emplace_back(faceId, faceName);
     }
 
-    manifestWriter.EndArray();
-    manifestWriter.EndObject();
-
-    const std::string manifestJson = manifestBuffer.GetString();
+    if (!manifestWriter.writeObject([&](json::ObjectWriter& object) { return object.write("name", packageName) && object.write("author", packageAuthor) && object.write("description", packageDescription) && object.writeArray("faces", [&](json::ArrayWriter& faces) { for (const auto& face : manifestFaces) if (!faces.writeObject([&](json::ObjectWriter& entry) { return entry.write("id", face.first) && entry.write("name", face.second); })) return false; return true; }); })) return Error("Failed to create package manifest");
+    const std::string manifestJson = manifest.toString();
     LOG_INFO(TAG, "importPackage: writing manifest %s (%u bytes)", paths::manifestPath(dataRoot, packageId).c_str(), static_cast<unsigned>(manifestJson.size()));
     if (!fs.writeText(paths::manifestPath(dataRoot, packageId), manifestJson)) {
         LOG_ERROR(TAG, "importPackage: failed to write manifest");
@@ -587,68 +563,46 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
     }
 
     LOG_INFO(TAG, "exportPackage: packageId=%s", packageId.c_str());
-    rapidjson::Document manifest;
-    if (!mg::json::readJsonFile(fs, paths::manifestPath(dataRoot, packageId), manifest) || !manifest.IsObject()) {
+    json::Document manifest;
+    if (!mg::json::readJsonFile(fs, paths::manifestPath(dataRoot, packageId), manifest) || !manifest.root().isObject()) {
         LOG_WARN(TAG, "exportPackage: manifest load failed for %s", packageId.c_str());
         return Error("Package not found");
     }
 
-    const rapidjson::Value* facesValue = getArrayMember(manifest, "faces");
-    if (!facesValue) {
+    const json::Reader facesValue = json::getArrayMember(manifest.root(), "faces");
+    if (!facesValue.valid()) {
         return Error("Package manifest is invalid");
     }
 
     Result result;
     result.ok = true;
-    result.data.SetObject();
-    auto& allocator = result.data.GetAllocator();
-
-    const char* keys[] = {"name", "author", "description"};
-    for (const char* key : keys) {
-        if (!manifest.HasMember(key) || !manifest[key].IsString()) {
-            return Error("Package manifest is invalid");
-        }
-
-        rapidjson::Value keyValue;
-        keyValue.SetString(manifest[key].GetString(), manifest[key].GetStringLength(), allocator);
-        result.data.AddMember(rapidjson::StringRef(key), std::move(keyValue), allocator);
-    }
-
-    rapidjson::Value facesValueOut(rapidjson::kArrayType);
-    facesValueOut.Reserve(static_cast<rapidjson::SizeType>(facesValue->Size()), allocator);
-    for (const auto& faceEntry : facesValue->GetArray()) {
-        if (!faceEntry.IsObject()) {
-            return Error("Package manifest is invalid");
-        }
+    std::string name, author, description;
+    if (!getStringMember(manifest.root(), "name", name) || !getStringMember(manifest.root(), "author", author) || !getStringMember(manifest.root(), "description", description)) return Error("Package manifest is invalid");
+    json::Writer writer = result.data.writer();
+    if (!writer.writeObject([&](json::ObjectWriter& object) { return object.write("name", name) && object.write("author", author) && object.write("description", description) && object.writeArray("faces", [&](json::ArrayWriter& outputFaces) {
+    for (std::size_t index = 0; index < facesValue.size(); ++index) {
+        const json::Reader faceEntry = facesValue.element(index);
+        if (!faceEntry.isObject()) return false;
 
         std::string faceId;
         std::string faceName;
         if (!getStringMember(faceEntry, "id", faceId) ||
             !getStringMember(faceEntry, "name", faceName)) {
-            return Error("Package manifest is invalid");
+            return false;
         }
 
-        rapidjson::Document faceDoc;
+        json::Document faceDoc;
         const std::string facePath = paths::facePath(dataRoot, packageId, faceId);
         LOG_DEBUG(TAG, "exportPackage: reading face %s", facePath.c_str());
-        if (!mg::json::readJsonFile(fs, facePath, faceDoc) || !faceDoc.IsObject()) {
+        if (!mg::json::readJsonFile(fs, facePath, faceDoc) || !faceDoc.root().isObject()) {
             LOG_WARN(TAG, "exportPackage: face load failed for %s/%s", packageId.c_str(), faceId.c_str());
-            return Error("Face file not found");
+            return false;
         }
 
-        rapidjson::Value faceOut(rapidjson::kObjectType);
-
-        rapidjson::Value faceNameValue;
-        faceNameValue.SetString(faceName.c_str(), static_cast<rapidjson::SizeType>(faceName.size()), allocator);
-        faceOut.AddMember("name", std::move(faceNameValue), allocator);
-
-        rapidjson::Value faceDocValue;
-        faceDocValue.CopyFrom(faceDoc, allocator);
-        faceOut.AddMember("face", std::move(faceDocValue), allocator);
-
-        facesValueOut.PushBack(std::move(faceOut), allocator);
+        if (!outputFaces.writeObject([&](json::ObjectWriter& faceOut) { return faceOut.write("name", faceName) && faceOut.write("face", faceDoc.root()); })) return false;
     }
-    result.data.AddMember("faces", std::move(facesValueOut), allocator);
+    return true;
+    }); })) return Error("Failed to export package");
     return result;
 }
 

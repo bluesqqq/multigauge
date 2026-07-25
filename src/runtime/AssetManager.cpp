@@ -54,7 +54,7 @@ bool AssetManager::decodeImageData(ImageType type, const std::vector<uint8_t>& d
 }
 
 
-bool AssetManager::loadJson(const std::string &path, rapidjson::Document &out) {
+bool AssetManager::loadJson(const std::string &path, json::Document &out) {
     constexpr const char* TAG = "AssetManager::loadJson";
 
     LOG_DEBUG(TAG, "Reading gauge document: %s", path.c_str());
@@ -70,34 +70,28 @@ bool AssetManager::loadJson(const std::string &path, rapidjson::Document &out) {
         return false;
     }
 
-    bytes.push_back(0);
-
-    const char* json = reinterpret_cast<const char*>(bytes.data());
-    const size_t length = bytes.size() - 1;
-
-    out.Parse(json, length);
-
-    if (out.HasParseError()) {
-        LOG_ERROR(TAG, "parse error: %s (offset=%u) file=%s",
-            rapidjson::GetParseErrorFunc(out.GetParseError()),
-            (unsigned)out.GetErrorOffset(),
-            path.c_str());
+    const std::string_view text(reinterpret_cast<const char*>(bytes.data()), bytes.size());
+    out = json::parse(text);
+    if (!out.valid()) {
+        LOG_ERROR(TAG, "parse error: file=%s", path.c_str());
         return false;
     }
 
-    LOG_INFO(TAG, "Loaded gauge document: %s (%u bytes)", path.c_str(), (unsigned)length);
+    LOG_INFO(TAG, "Loaded gauge document: %s (%u bytes)", path.c_str(), (unsigned)bytes.size());
     return true;
 }
 
-bool AssetManager::loadDocumentAssets(const rapidjson::Value::ConstArray &assets) {
+bool AssetManager::loadDocumentAssets(json::Reader assets) {
     constexpr const char* TAG = "AssetManager::loadDocumentAssets";
 
-    LOG_INFO(TAG, "Loading %u embedded assets", (unsigned)assets.Size());
+    if (!assets.isArray()) return false;
+    LOG_INFO(TAG, "Loading %u embedded assets", (unsigned)assets.size());
 
     size_t totalDecodedBytes = 0;
 
-    for (const auto& asset : assets) {
-        if (!asset.IsObject()) {
+    for (std::size_t index = 0; index < assets.size(); ++index) {
+        const json::Reader asset = assets.element(index);
+        if (!asset.isObject()) {
             LOG_ERROR(TAG, "Asset must be an object.");
             return false;
         }
@@ -135,7 +129,7 @@ bool AssetManager::loadDocumentAssets(const rapidjson::Value::ConstArray &assets
         LOG_DEBUG(TAG, "Wrote asset '%s' (%u bytes)", path.c_str(), (unsigned)decoded.size());
     }
 
-    LOG_INFO(TAG, "Processed %u assets (%u bytes)", (unsigned)assets.Size(), (unsigned)totalDecodedBytes);
+    LOG_INFO(TAG, "Processed %u assets (%u bytes)", (unsigned)assets.size(), (unsigned)totalDecodedBytes);
 
     return true;
 }

@@ -1,9 +1,7 @@
 #include <multigauge/App.h>
 #include <multigauge/gauge/Element.h>
-#include <multigauge/utils/Json.h>
 
 #include <algorithm>
-#include <string_view>
 
 #include <multigauge/gauge/elements/primitives/TextElement.h>
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
@@ -67,15 +65,11 @@ namespace {
     }
 }
 
-bool Element::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) {
+bool Element::setChildren(::mg::PropertyObject* obj, json::Reader value) {
     auto* self = static_cast<Element*>(obj);
 
     std::vector<OwnedElement> decoded;
-    if (!decodeAny(v, decoded)) return false;
-
-    for (const auto& child : decoded) {
-        if (!child) return false;
-    }
+    if (!decodeAny(value, decoded)) return false;
 
     while (!self->children.empty()) {
         self->removeChild(self->children.back().get());
@@ -88,9 +82,9 @@ bool Element::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) 
     return true;
 }
 
-bool Element::getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+bool Element::getChildren(const ::mg::PropertyObject* obj, json::Writer& writer) {
     const auto* self = static_cast<const Element*>(obj);
-    return encodeAny(out, a, self->children);
+    return encodeAny(writer, self->children);
 }
 
 bool Element::insertChild(OwnedElement child, std::size_t index) {
@@ -180,37 +174,27 @@ void Element::layoutRecursive(float parentAbsX, float parentAbsY) {
 namespace mg {
 
 DECODE_IMPL(gauge::OwnedElement) {
-    if (v.IsNull()) {
+    if (v.isNull()) {
         out = nullptr;
         return true;
     }
 
-    if (!v.IsObject()) return false;
+    if (!v.isObject()) return false;
 
-    const auto obj = v.GetObject();
-
-    std::string_view type;
-    const auto typeMember = v.FindMember("type");
-    if (typeMember != v.MemberEnd() && typeMember->value.IsString()) {
-        type = std::string_view(typeMember->value.GetString(), typeMember->value.GetStringLength());
-    }
-
-    gauge::OwnedElement decoded = gauge::Element::registry().create(type, nullptr);
-    if (!decoded) return false;
-
-    if (!decoded->loadProperties(obj)) return false;
+    std::string_view typeView;
+    (void)v.member("type").read(typeView);
+    gauge::OwnedElement decoded = gauge::Element::registry().create(typeView, nullptr);
+    if (!decoded || !decoded->loadProperties(v)) return false;
     out = std::move(decoded);
     return true;
 }
 
 ENCODE_IMPL(gauge::OwnedElement) {
     if (!v) {
-        out.SetNull();
-        return true;
+        return out.null();
     }
 
-    v->saveProperties(out, a);
-    return true;
+    return v->saveProperties(out);
 }
 
 } // namespace mg

@@ -60,25 +60,23 @@ struct MgPropWidgetTraits<ValueRef> {
 
 CODEC_BEGIN(ValueRef)
     DECODE() {
-        if (v.IsNull()) {
+        if (v.isNull()) {
             out = ValueRef();
             return true;
         }
 
-        if (!v.IsString()) return false;
-
-        out = ValueRef(std::string_view(v.GetString(), v.GetStringLength()));
+        std::string_view id;
+        if (!v.read(id)) return false;
+        out = ValueRef(id);
         return true;
     }
 
     ENCODE() {
         if (v.id().empty()) {
-            out.SetNull();
-            return true;
+            return out.null();
         }
 
-        out.SetString(v.id().c_str(), static_cast<rapidjson::SizeType>(v.id().size()), a);
-        return true;
+        return out.write(v.id());
     }
 CODEC_END()
 

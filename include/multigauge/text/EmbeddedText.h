@@ -526,28 +526,15 @@ namespace mg {
 
 CODEC_BEGIN(text::EmbeddedText)
     DECODE() {
-        if (!v.IsString()) {
-            return false;
-        }
-
-        out.setSource(std::string(
-            v.GetString(),
-            v.GetStringLength()
-        ));
+        std::string_view source;
+        if (!v.read(source)) return false;
+        out.setSource(std::string(source));
 
         return true;
     }
 
     ENCODE() {
-        out.SetString(
-            v.source().data(),
-            static_cast<rapidjson::SizeType>(
-                v.source().size()
-            ),
-            a
-        );
-
-        return true;
+        return out.write(v.source());
     }
 CODEC_END()
 

@@ -5,7 +5,7 @@
 #include <type_traits>
 #include <utility>
 
-#include <rapidjson/document.h>
+#include <multigauge/json/Json.h>
 
 #include <multigauge/properties/Property.h>
 #include <multigauge/properties/PropertyCodec.h>
@@ -37,7 +37,7 @@ namespace mg::props {
 #if MG_ENABLE_EDITOR_REFLECTION
 using RuleListGetter = ::mg::PropertyMetadata::RuleListGetter;
 #else
-using RuleListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
+using RuleListGetter = bool (*)(::mg::json::Writer&);
 #endif
 
 namespace detail {
@@ -67,14 +67,18 @@ using MemberType = typename MemberPtrTraits<decltype(MemberPtr)>::Type;
 /// @tparam MemberPtr Pointer to the member being assigned.
 /// @tparam CallbackPtr Optional callback invoked after assignment.
 template <auto MemberPtr, auto CallbackPtr>
-bool setMember(::mg::PropertyObject* obj, const rapidjson::Value& v) {
+bool setMember(::mg::PropertyObject* obj, json::Reader value) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     C* self = static_cast<C*>(obj);
 
-    T decoded{};
-    if (!decodeAny<T>(v, decoded)) return false;
-    self->*MemberPtr = std::move(decoded);
+    if constexpr (std::is_base_of_v<::mg::PropertyObject, T>) {
+    if (!decodeAny<T>(value, self->*MemberPtr)) return false;
+    } else {
+        T decoded{};
+        if (!decodeAny<T>(value, decoded)) return false;
+        self->*MemberPtr = std::move(decoded);
+    }
 
     if constexpr (!std::is_same_v<decltype(CallbackPtr), std::nullptr_t>) {
         using CbClass = MemberClass<CallbackPtr>;
@@ -87,10 +91,10 @@ bool setMember(::mg::PropertyObject* obj, const rapidjson::Value& v) {
 /// Property getter adapter for a concrete member pointer.
 /// @tparam MemberPtr Pointer to the member being serialized.
 template <auto MemberPtr>
-bool getMember(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+bool getMember(const ::mg::PropertyObject* obj, json::Writer& writer) {
     using C = MemberClass<MemberPtr>;
     const C* self = static_cast<const C*>(obj);
-    return encodeAny(out, a, self->*MemberPtr);
+    return encodeAny(writer, self->*MemberPtr);
 }
 
 //----------[ CHILD OBJECTS ]----------//
@@ -192,10 +196,10 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
     meta.getInteractableWhen = interactableWhen;
     if constexpr (::mg::HasEnumTraitsV<::mg::EnumTraitsTypeT<T>>) meta.getOptionsMeta = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
     if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypesMeta = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
-    return {p.key, p.set, p.get, p.getChild, p.getChildConst, meta};
-#endif
 
-#if !MG_ENABLE_EDITOR_REFLECTION
+    return {p.key, p.set, p.get, p.getChild, p.getChildConst, meta};
+#else
+    (void)name; (void)description; (void)visibleWhen; (void)interactableWhen; (void)inspectorVisible;
     return p;
 #endif
 }
@@ -221,6 +225,7 @@ inline ::mg::Property makeCustomProperty(const char* key, const char* name, cons
 
     return {key, set, get, nullptr, nullptr, meta};
 #else
+    (void)name; (void)description; (void)visibleWhen; (void)interactableWhen; (void)inspectorVisible;
     return {key, set, get, nullptr, nullptr};
 #endif
 }

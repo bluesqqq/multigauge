@@ -193,7 +193,7 @@ CODEC_BEGIN(graphics::ColorTimeline)
     }
 
     ENCODE() {
-        if (v.size() == 1) return encodeAny(out, a, v.keyframes[0].color);
+        if (v.size() == 1) return encodeAny(out, v.keyframes[0].color);
         return false;
     }
 CODEC_END()

@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include <rapidjson/document.h>
+#include <multigauge/json/Json.h>
 
 #include <multigauge/editor/Result.h>
 
@@ -67,7 +67,7 @@ public:
     /// Imports a package JSON payload into storage.
     /// @param package Package JSON to import.
     /// @return Imported package document, or an error result.
-    Result importPackage(const rapidjson::Value& package);
+    Result importPackage(json::Reader package);
 
     /// Exports a package JSON payload from storage.
     /// @param packageId Installed package id.

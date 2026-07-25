@@ -78,8 +78,9 @@ namespace mg {
 
 CODEC_BEGIN(ValueView)
     DECODE() {
-        if (v.IsString()) {
-            out = CodecType(v.GetString());
+        std::string_view id;
+        if (v.read(id)) {
+            out = CodecType(id);
             return true;
         }
         return false;
@@ -90,15 +91,9 @@ CODEC_BEGIN(ValueView)
         if (v.minimumBase_.has_value() || v.maximumBase_.has_value() || v.unitIndex_.has_value()) return false;
 
         if (!v.value_.id().empty()) {
-            out.SetString(
-                v.value_.id().c_str(),
-                static_cast<rapidjson::SizeType>(v.value_.id().size()),
-                a
-            );
-            return true;
+            return out.write(v.value_.id());
         } else {
-            out.SetNull();
-            return true;
+            return out.null();
         }
     }
 CODEC_END()

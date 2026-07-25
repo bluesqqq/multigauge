@@ -20,8 +20,8 @@ class GaugeFace : public ::mg::PropertyObject {
 
         RootLayout style;
 
-        static bool setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v);
-        static bool getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
+        static bool setChildren(::mg::PropertyObject* obj, json::Reader value);
+        static bool getChildren(const ::mg::PropertyObject* obj, json::Writer& writer);
 
         MG_PROPS_BEGIN()
             MG_PROP(style, "layout", "Layout", "Root layout options.")
@@ -33,8 +33,8 @@ class GaugeFace : public ::mg::PropertyObject {
         GaugeFace();
         ~GaugeFace();
 
-        void load(const rapidjson::Value& json);
-        rapidjson::Document save() const;
+        bool load(json::Reader value);
+        bool save(json::Writer& writer) const;
 
         //----------[ LIFETIME ]----------//
 

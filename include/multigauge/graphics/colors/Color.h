@@ -2,7 +2,6 @@
 
 #include <memory>
 
-#include <rapidjson/document.h>
 
 #include <multigauge/graphics/colors/rgba.h>
 #include <multigauge/properties/PropertyObject.h>
@@ -71,8 +70,8 @@ template <>
 struct MgPolymorphicRegistryTraits<graphics::OwnedColor> {
     static constexpr bool supported = true;
 
-    static rapidjson::Value getTypesMeta(rapidjson::Document::AllocatorType& a) {
-        return graphics::Color::registry().getTypesMeta(a);
+    static bool getTypesMeta(json::Writer& writer) {
+        return graphics::Color::registry().writeTypesMeta(writer);
     }
 };
 

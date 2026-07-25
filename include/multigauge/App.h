@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include <rapidjson/document.h>
+#include <multigauge/json/Json.h>
 
 #include <multigauge/editor/Api.h>
 #include <multigauge/runtime/PackageManager.h>
@@ -60,7 +60,7 @@ bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out);
 
 Result getPackage(const std::string& packageId);
 Result importPackage(const std::string& json);
-Result importPackage(const rapidjson::Value& package);
+Result importPackage(json::Reader package);
 Result exportPackage(const std::string& packageId);
 Result removePackage(const std::string& packageId);
 

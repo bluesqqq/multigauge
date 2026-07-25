@@ -1,19 +1,7 @@
 #include <doctest/doctest.h>
 
 #include <ostream>
-#include <rapidjson/document.h>
-
 #include <multigauge/value/ValueRef.h>
-
-namespace {
-
-rapidjson::Value encode(const mg::ValueRef& value, rapidjson::Document& document) {
-  rapidjson::Value encoded;
-  CHECK(mg::Codec<mg::ValueRef>::encode(encoded, document.GetAllocator(), value));
-  return encoded;
-}
-
-} // namespace
 
 TEST_CASE("ValueRef resolves, retargets, and clears value IDs") {
   mg::ValueRef reference;
@@ -53,35 +41,27 @@ TEST_CASE("ValueRef can be constructed from a value pointer") {
 }
 
 TEST_CASE("ValueRef codec preserves IDs and rejects unsupported JSON") {
-  rapidjson::Document document;
-  document.SetObject();
-
   const mg::ValueRef empty;
-  const rapidjson::Value encodedEmpty = encode(empty, document);
-  CHECK(encodedEmpty.IsNull());
+  mg::json::Document encodedEmpty = mg::json::object(); auto emptyWriter = encodedEmpty.writer(); CHECK(mg::encodeAny(emptyWriter, empty)); CHECK(encodedEmpty.root().isNull());
 
   const mg::ValueRef known("engineRPM");
-  const rapidjson::Value encodedKnown = encode(known, document);
-  REQUIRE(encodedKnown.IsString());
-  CHECK(std::string_view(encodedKnown.GetString(), encodedKnown.GetStringLength()) == "engineRPM");
+  mg::json::Document encodedKnown = mg::json::object(); auto knownWriter = encodedKnown.writer(); CHECK(mg::encodeAny(knownWriter, known)); std::string_view knownText; REQUIRE(encodedKnown.root().read(knownText)); CHECK(knownText == "engineRPM");
 
   const mg::ValueRef unknown("future.value");
-  const rapidjson::Value encodedUnknown = encode(unknown, document);
-  REQUIRE(encodedUnknown.IsString());
-  CHECK(std::string_view(encodedUnknown.GetString(), encodedUnknown.GetStringLength()) == "future.value");
+  mg::json::Document encodedUnknown = mg::json::object(); auto unknownWriter = encodedUnknown.writer(); CHECK(mg::encodeAny(unknownWriter, unknown)); std::string_view unknownText; REQUIRE(encodedUnknown.root().read(unknownText)); CHECK(unknownText == "future.value");
 
   mg::ValueRef decoded("engineRPM");
-  rapidjson::Value nullValue(rapidjson::kNullType);
-  CHECK(mg::Codec<mg::ValueRef>::decode(nullValue, decoded));
+  mg::json::Document nullValue = mg::json::parse("null");
+  CHECK(mg::decodeAny(nullValue.root(), decoded));
   CHECK_FALSE(decoded);
   CHECK(decoded.id().empty());
 
-  rapidjson::Value unknownId("future.value", document.GetAllocator());
-  CHECK(mg::Codec<mg::ValueRef>::decode(unknownId, decoded));
+  mg::json::Document unknownId = mg::json::parse("\"future.value\"");
+  CHECK(mg::decodeAny(unknownId.root(), decoded));
   CHECK_FALSE(decoded);
   CHECK(decoded.id() == "future.value");
 
-  rapidjson::Value number(7);
-  CHECK_FALSE(mg::Codec<mg::ValueRef>::decode(number, decoded));
+  mg::json::Document number = mg::json::parse("7");
+  CHECK_FALSE(mg::decodeAny(number.root(), decoded));
   CHECK(decoded.id() == "future.value");
 }

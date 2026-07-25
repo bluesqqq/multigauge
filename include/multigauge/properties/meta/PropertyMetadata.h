@@ -1,6 +1,6 @@
 #pragma once
 
-#include <rapidjson/document.h>
+#include <multigauge/json/Json.h>
 #include <multigauge/properties/meta/Rules.h>
 
 namespace mg {
@@ -15,9 +15,9 @@ class PropertyObject;
 /// Metadata does not store the property's runtime value and does not enforce runtime
 /// behavior. It is only used by editors/tooling that require it for interfaces.
 struct PropertyMetadata {
-    using OptionsGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
-    using TypeListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
-    using RuleListGetter = rapidjson::Value (*)(rapidjson::Document::AllocatorType&);
+    using OptionsGetter = bool (*)(json::Writer&);
+    using TypeListGetter = bool (*)(json::Writer&);
+    using RuleListGetter = bool (*)(json::Writer&);
 
     //----------[ GENERIC ]----------//
 

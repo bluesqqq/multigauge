@@ -14,32 +14,25 @@ GaugeFace::~GaugeFace() {
     }
 }
 
-void GaugeFace::load(const rapidjson::Value& json) {
+bool GaugeFace::load(json::Reader value) {
     children.clear();
     backgroundColor.reset();
     style = RootLayout{};
 
-    if (!json.IsObject()) return;
+    if (!value.isObject()) return false;
 
-    loadProperties(json.GetObject());
+    return loadProperties(value);
 }
 
-rapidjson::Document GaugeFace::save() const {
-    rapidjson::Document doc;
-    doc.SetObject();
-
-    auto& a = doc.GetAllocator();
-
-    saveProperties(doc, a);
-
-    return doc;
+bool GaugeFace::save(json::Writer& writer) const {
+    return saveProperties(writer);
 }
 
-bool GaugeFace::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v) {
+bool GaugeFace::setChildren(::mg::PropertyObject* obj, json::Reader value) {
     auto* self = static_cast<GaugeFace*>(obj);
 
     std::vector<OwnedElement> decoded;
-    if (!decodeAny(v, decoded)) return false;
+    if (!decodeAny(value, decoded)) return false;
 
     for (const auto& child : decoded) {
         if (!child) return false;
@@ -56,9 +49,9 @@ bool GaugeFace::setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v
     return true;
 }
 
-bool GaugeFace::getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) {
+bool GaugeFace::getChildren(const ::mg::PropertyObject* obj, json::Writer& writer) {
     const auto* self = static_cast<const GaugeFace*>(obj);
-    return encodeAny(out, a, self->children);
+    return encodeAny(writer, self->children);
 }
 
 bool GaugeFace::init(AssetManager& assetManager, GraphicsContext& context) {

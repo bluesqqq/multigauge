@@ -1,194 +1,107 @@
 #include <multigauge/properties/PropertyObject.h>
 
+#include <cstring>
+
 namespace mg {
+namespace {
+bool loadMember(void* context, std::string_view key, json::Reader value) {
+    auto* object = static_cast<PropertyObject*>(context);
+    const Property* property = object->findProperty(key);
+    return !property || !property->set || property->set(object, value);
+}
+}
 
 const Property* PropertyObject::findProperty(std::string_view key) const {
     if (key.empty()) return nullptr;
-
     const Property* found = nullptr;
-
     propertyList().forEach(this, [&](const Property& prop) {
-        if (found) return;
-
-        const char* propName = prop.key;
-        if (propName && key == propName) {
-            found = &prop;
-        }
+        if (!found && prop.key && key == prop.key) found = &prop;
     });
-
     return found;
 }
 
-bool PropertyObject::setProperty(std::string_view key, const rapidjson::Value& v) {
+bool PropertyObject::setProperty(std::string_view key, json::Reader value) {
     const Property* property = findProperty(key);
-    if (!property || !property->set) return false;
-    return property->set(this, v);
+    return property && property->set && property->set(this, value);
 }
 
-bool PropertyObject::getProperty(std::string_view key, rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
+bool PropertyObject::getProperty(std::string_view key, json::Writer& writer) const {
     const Property* property = findProperty(key);
-    if (!property || !property->get) return false;
-    return property->get(this, out, a);
+    return property && property->get && property->get(this, writer);
 }
 
-bool PropertyObject::loadProperties(rapidjson::Value::ConstObject json) {
-    bool success = true;
-    for (auto it = json.MemberBegin(); it != json.MemberEnd(); ++it) {
-        const Property* property = findProperty(std::string_view(it->name.GetString(), it->name.GetStringLength()));
-        if (property && property->set && !property->set(this, it->value)) {
-            success = false;
-        }
-    }
-    return success;
+bool PropertyObject::loadProperties(json::Reader object) {
+    return object.isObject() && object.forEachMember(&loadMember, this);
 }
 
-void PropertyObject::saveProperties(rapidjson::Value& out, rapidjson::Document::AllocatorType& a) const {
-    out.SetObject();
-
-    const char* type = typeId();
-    if (type) {
-        out.AddMember(rapidjson::Value(TYPE_KEY, a), rapidjson::Value(type, a), a);
-    }
-
-    propertyList().forEach(this, [&](const Property& property) {
-        if (!property.key || !property.get) return;
-        if (findProperty(property.key) != &property) return;
-
-        rapidjson::Value val;
-        if (!property.get(this, val, a)) return;
-
-        out.AddMember(rapidjson::StringRef(property.key), val, a);
+bool PropertyObject::saveProperties(json::Writer& writer) const {
+    return writer.writeObject([&](json::ObjectWriter& object) {
+        if (const char* type = typeId(); type && !object.write(TYPE_KEY, type)) return false;
+        bool success = true;
+        propertyList().forEach(this, [&](const Property& property) {
+            if (!success || !property.key || !property.get || findProperty(property.key) != &property) return;
+            success = object.writeValue(property.key, [&](json::Writer& value) { return property.get(this, value); });
+        });
+        return success;
     });
 }
 
-rapidjson::Value PropertyObject::getPropertiesMeta(rapidjson::Document::AllocatorType& a) const {
-    rapidjson::Value metas(rapidjson::kArrayType);
-
-#if MG_ENABLE_EDITOR_REFLECTION
-    propertyList().forEach(this, [&](const Property& prop) {
-        if (!prop.key) return;
-        if (findProperty(prop.key) != &prop) return;
-        if (!prop.meta.inspectorVisible) return;
-        metas.PushBack(getPropertyMeta(prop, a), a);
-    });
-#endif
-
-    return metas;
-}
-
-rapidjson::Value PropertyObject::getPropertyMeta(const Property& prop, rapidjson::Document::AllocatorType& a) const {
-#if MG_ENABLE_EDITOR_REFLECTION
-    rapidjson::Value meta = prop.getBaseMeta(a);
-
-    if (prop.getChildConst) {
-        if (prop.meta.getTypesMeta) {
-            rapidjson::Value types(rapidjson::kObjectType);
-            const PropertyObject* child = prop.getChildConst(this);
-
-            if (child && child->typeId()) {
-                types.AddMember("current", rapidjson::Value(child->typeId(), a), a);
-            } else {
-                types.AddMember("current", rapidjson::Value(rapidjson::kNullType), a);
-            }
-
-            types.AddMember("all", prop.meta.getTypesMeta(a), a);
-            meta.AddMember("types", std::move(types), a);
-        }
-
-        rapidjson::Value props(rapidjson::kArrayType);
-        const PropertyObject* child = prop.getChildConst(this);
-        if (child) {
-            props = child->getPropertiesMeta(a);
-        }
-
-        meta.AddMember("properties", props, a);
-        return meta;
-    }
-
-    rapidjson::Value value;
-    if (prop.get && prop.get(this, value, a)) {
-        meta.AddMember("value", std::move(value), a);
-    } else {
-        meta.AddMember("value", rapidjson::Value(rapidjson::kNullType), a);
-    }
-
-    return meta;
+bool PropertyObject::writePropertiesMeta(json::Writer& writer) const {
+#if !MG_ENABLE_EDITOR_REFLECTION
+    return writer.writeArray([](json::ArrayWriter&) { return true; });
 #else
-    (void)prop;
-    (void)a;
-    return rapidjson::Value(rapidjson::kObjectType);
+    return writer.writeArray([&](json::ArrayWriter& array) {
+        bool success = true;
+        propertyList().forEach(this, [&](const Property& property) {
+            if (!success || !property.key || !property.meta.inspectorVisible || findProperty(property.key) != &property) return;
+            success = writePropertyMeta(array.writer(), property);
+        });
+        return success;
+    });
 #endif
+}
+
+bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& prop) const {
+#if !MG_ENABLE_EDITOR_REFLECTION
+    (void)prop;
+    return writer.writeObject([](json::ObjectWriter&) { return true; });
+#else
+    return writer.writeObject([&](json::ObjectWriter& object) {
+        if (!prop.writeBaseMeta(object)) return false;
+        if (prop.getChildConst) {
+            if (prop.meta.getTypesMeta && !object.writeObject("types", [&](json::ObjectWriter& types) {
+                const PropertyObject* child = prop.getChildConst(this);
+                if (child && child->typeId()) { if (!types.write("current", child->typeId())) return false; }
+                else if (!types.writeValue("current", [](json::Writer& value) { return value.null(); })) return false;
+                return types.writeValue("all", prop.meta.getTypesMeta);
+            })) return false;
+            const PropertyObject* child = prop.getChildConst(this);
+            return object.writeArray("properties", [&](json::ArrayWriter& properties) {
+                if (!child) return true;
+                return child->writePropertiesMeta(properties.writer());
+            });
+        }
+        return object.writeValue("value", [&](json::Writer& value) { return prop.get ? prop.get(this, value) : value.null(); });
+    });
+#endif
+}
+
+std::vector<std::string> PropertyObject::splitPath(const std::string& path) {
+    std::vector<std::string> parts; std::string current;
+    for (char c : path) { if (c == '.') { if (!current.empty()) { parts.push_back(std::move(current)); current.clear(); } } else current.push_back(c); }
+    if (!current.empty()) parts.push_back(std::move(current));
+    return parts;
 }
 
 bool PropertyObject::resolvePath(const std::string& path, PropertyObject*& owner, const Property*& prop) {
-    owner = nullptr;
-    prop = nullptr;
-
-    PropertyObject* current = this;
-    std::string_view remaining(path);
-
-    while (!remaining.empty()) {
-        const std::size_t dot = remaining.find('.');
-        const std::string_view segment = remaining.substr(0, dot);
-        if (segment.empty()) {
-            if (dot == std::string_view::npos) return false;
-            remaining.remove_prefix(dot + 1);
-            continue;
-        }
-
-        const Property* p = current->findProperty(segment);
-        if (!p) return false;
-
-        const std::string_view next = dot == std::string_view::npos ? std::string_view{} : remaining.substr(dot + 1);
-        if (next.find_first_not_of('.') == std::string_view::npos) {
-            owner = current;
-            prop = p;
-            return true;
-        }
-
-        if (!p->getChild) return false;
-
-        current = p->getChild(current);
-        if (!current) return false;
-        remaining = next;
-    }
-
+    owner = nullptr; prop = nullptr; const auto parts = splitPath(path); if (parts.empty()) return false; PropertyObject* current = this;
+    for (std::size_t i = 0; i < parts.size(); ++i) { const Property* found = current->findProperty(parts[i].c_str()); if (!found) return false; if (i + 1 == parts.size()) { owner = current; prop = found; return true; } if (!found->getChild || !(current = found->getChild(current))) return false; }
     return false;
 }
 
 bool PropertyObject::resolvePath(const std::string& path, const PropertyObject*& owner, const Property*& prop) const {
-    owner = nullptr;
-    prop = nullptr;
-
-    const PropertyObject* current = this;
-    std::string_view remaining(path);
-
-    while (!remaining.empty()) {
-        const std::size_t dot = remaining.find('.');
-        const std::string_view segment = remaining.substr(0, dot);
-        if (segment.empty()) {
-            if (dot == std::string_view::npos) return false;
-            remaining.remove_prefix(dot + 1);
-            continue;
-        }
-
-        const Property* p = current->findProperty(segment);
-        if (!p) return false;
-
-        const std::string_view next = dot == std::string_view::npos ? std::string_view{} : remaining.substr(dot + 1);
-        if (next.find_first_not_of('.') == std::string_view::npos) {
-            owner = current;
-            prop = p;
-            return true;
-        }
-
-        if (!p->getChildConst) return false;
-
-        current = p->getChildConst(current);
-        if (!current) return false;
-        remaining = next;
-    }
-
+    owner = nullptr; prop = nullptr; const auto parts = splitPath(path); if (parts.empty()) return false; const PropertyObject* current = this;
+    for (std::size_t i = 0; i < parts.size(); ++i) { const Property* found = current->findProperty(parts[i].c_str()); if (!found) return false; if (i + 1 == parts.size()) { owner = current; prop = found; return true; } if (!found->getChildConst || !(current = found->getChildConst(current))) return false; }
     return false;
 }
 

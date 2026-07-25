@@ -3,8 +3,6 @@
 #include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/io/Log.h>
 
-#include <rapidjson/document.h>
-
 namespace mg {
 
 GaugeScreen::GaugeScreen() = default;

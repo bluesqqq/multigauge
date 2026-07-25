@@ -2,7 +2,6 @@
 
 #include <multigauge/graphics/image/Image.h>
 #include <multigauge/runtime/AssetManager.h>
-#include "rapidjson/document.h"
 
 namespace mg::images {
 

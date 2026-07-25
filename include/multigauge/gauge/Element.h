@@ -5,7 +5,6 @@
 #include <multigauge/graphics/Graphics.h>
 #include <yoga/Yoga.h>
 
-#include <rapidjson/document.h>
 
 #include <multigauge/runtime/AssetManager.h>
 
@@ -101,8 +100,8 @@ class Element : public ::mg::PropertyObject {
 
         //----------[ SERIALIZATION ]----------//
 
-        static bool setChildren(::mg::PropertyObject* obj, const rapidjson::Value& v);
-        static bool getChildren(const ::mg::PropertyObject* obj, rapidjson::Value& out, rapidjson::Document::AllocatorType& a);
+        static bool setChildren(::mg::PropertyObject* obj, json::Reader value);
+        static bool getChildren(const ::mg::PropertyObject* obj, json::Writer& writer);
 
         MG_PROPS_BEGIN()
             MG_PROP(style, "style", "Style", "Layout options.")

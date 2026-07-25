@@ -2,8 +2,6 @@
 
 #include <array>
 #include <ostream>
-#include <rapidjson/document.h>
-
 #include <multigauge/text/EmbeddedText.h>
 
 TEST_CASE("EmbeddedText preserves source and renders into fixed storage") {
@@ -28,19 +26,13 @@ TEST_CASE("EmbeddedText leaves ordinary strings unchanged") {
 }
 
 TEST_CASE("EmbeddedText codec remains a JSON string codec") {
-    rapidjson::Document document;
-    document.SetObject();
-    auto& allocator = document.GetAllocator();
-
     mg::text::EmbeddedText text;
-    rapidjson::Value source("Value: {engineRPM}", allocator);
-    REQUIRE(mg::Codec<mg::text::EmbeddedText>::decode(source, text));
+    mg::json::Document source = mg::json::parse("\"Value: {engineRPM}\"");
+    REQUIRE(mg::decodeAny(source.root(), text));
     CHECK(text.source() == "Value: {engineRPM}");
 
-    rapidjson::Value encoded;
-    REQUIRE(mg::Codec<mg::text::EmbeddedText>::encode(encoded, allocator, text));
-    REQUIRE(encoded.IsString());
-    CHECK(std::string(encoded.GetString(), encoded.GetStringLength()) == "Value: {engineRPM}");
+    mg::json::Document encoded = mg::json::object(); auto writer = encoded.writer(); REQUIRE(mg::encodeAny(writer, text));
+    std::string_view value; REQUIRE(encoded.root().read(value)); CHECK(value == "Value: {engineRPM}");
 }
 
 TEST_CASE("EmbeddedText reports fixed-buffer overflow without partial output") {
