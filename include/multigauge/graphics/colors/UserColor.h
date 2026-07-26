@@ -4,46 +4,40 @@
 
 namespace mg::graphics {
 
-class UserColor : public Color {
+class UserColor final : public Color {
     MG_EDITOR_NAME("User Color")
     MG_TYPE_ID("user")
 
-    public:
-        enum class Slot : uint8_t {
-            Primary,
-            Secondary,
-            Background,
-        };
+public:
+    enum class Slot : std::uint8_t { Primary, Secondary, Background };
 
-    private:
-        Slot slot;
-        
-        static rgba userColors[3];
-    
-    public:
-        UserColor(Slot slot = Slot::Primary);
-        
-        OwnedColor clone() const override;
-        
-        /// @brief Gets the user-defined color value.
-        /// @return The 16-bit color value
-        rgba getColor() const override;
+    explicit UserColor(Slot slot = Slot::Primary);
+    OwnedColor clone() const override;
 
-        /// @brief Gets the type of this color.
-        /// @return Type::User
-        Type getType() const override;
+protected:
+    rgba resolveUncached(const ColorResolver::Frame& frame) const noexcept override;
 
-        /// @brief Blends this color with a static color value.
-        /// @param color The 16-bit color value to blend with
-        /// @param alpha The blend amount (0.0 = this color, 1.0 = blend color)
-        /// @return A new StaticColor object with the blended result
-        OwnedColor blended(rgba color, float alpha) const override;
-
-        /// @brief Blends this color with another Color object.
-        /// @param color The Color object to blend with
-        /// @param alpha The blend amount (0.0 = this color, 1.0 = other color)
-        /// @return A new Color object of the same derived type as the input (e.g., blending with a TimeColor returns a TimeColor)
-        OwnedColor blended(const Color& other, float alpha) const override;
+private:
+    Slot slot;
+    MG_PROPS_PARENT(Color)
+    MG_PROPS_BEGIN()
+    MG_PROP(slot, "slot", "Slot", "User palette slot.")
+    MG_PROPS_END()
 };
 
 } // namespace mg::graphics
+
+namespace mg {
+template<> struct EnumTraits<graphics::UserColor::Slot> {
+    static constexpr EnumOption<graphics::UserColor::Slot> options[] = {
+        { graphics::UserColor::Slot::Primary, "primary", "Primary" },
+        { graphics::UserColor::Slot::Secondary, "secondary", "Secondary" },
+        { graphics::UserColor::Slot::Background, "background", "Background" },
+    };
+};
+
+CODEC_BEGIN(graphics::UserColor::Slot)
+    DECODE() { return decodeEnum(v, out); }
+    ENCODE() { return encodeEnum(out, v); }
+CODEC_END()
+} // namespace mg

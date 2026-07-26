@@ -1,226 +1,90 @@
 #include <multigauge/graphics/colors/ColorTimeline.h>
-#include <multigauge/graphics/colors/StaticColor.h>
-#include <multigauge/graphics/colors/TimeColor.h>
-#include <multigauge/graphics/colors/ValueColor.h>
-#include <multigauge/utils/Math.h>
-#include <set>
+
 #include <algorithm>
+#include <cmath>
 #include <utility>
+
+#include <multigauge/graphics/colors/StaticColor.h>
 
 namespace mg::graphics {
 
-using ::mg::utils::mapf;
-
-ColorKeyframe::ColorKeyframe() { }
-
-ColorKeyframe::ColorKeyframe(OwnedColor color, float position) : color(std::move(color)), position(position) { }
-
-ColorKeyframe::ColorKeyframe(const ColorKeyframe &other) : position(other.position), color(other.color ? other.color->clone() : nullptr) {}
-
-ColorKeyframe &ColorKeyframe::operator=(const ColorKeyframe &other) {
+ColorKeyframe::ColorKeyframe(OwnedColor color, float position) : position(position), color(std::move(color)) {}
+ColorKeyframe::ColorKeyframe(const ColorKeyframe& other)
+    : position(other.position), color(other.color ? other.color->clone() : nullptr) {}
+ColorKeyframe& ColorKeyframe::operator=(const ColorKeyframe& other) {
     if (this != &other) {
-        this->position = other.position;
-        this->color = other.color ? other.color->clone() : nullptr;
+        position = other.position;
+        color = other.color ? other.color->clone() : nullptr;
     }
     return *this;
 }
 
-size_t ColorTimeline::getKeyframeIndexAtPosition(float position) const {
-    const size_t n = keyframes.size();
-    if (n <= 1) return 0;
-    if (position < keyframes[1].position) return 0;
-    if (position >= keyframes.back().position) return n - 1;
-
-    size_t left = 1;
-    size_t right = n - 1;
-    while (left < right) {
-        size_t middle = (left + right) / 2;
-        if (keyframes[middle].position < position) 
-            left = middle + 1;
-        else right = middle;
-    }
-
-    return left - 1;
-}
-
-ColorTimeline::ColorTimeline() {}
-
-ColorTimeline::ColorTimeline(rgba color) { addKeyframe(color, 0.0f); }
-
-ColorTimeline::ColorTimeline(OwnedColor color) { addKeyframe(std::move(color), 0.0f); }
-
-ColorTimeline::ColorTimeline(const ColorTimeline &other) {
-    keyframes.reserve(other.keyframes.size());
-    for (const auto& keyframe : other.keyframes)
-        this->keyframes.emplace_back(keyframe);
-}
-
-ColorTimeline &ColorTimeline::operator=(const ColorTimeline &other) {
-    if (this == &other) return *this;
-
-    std::vector<ColorKeyframe> tmp;
-    tmp.reserve(other.keyframes.size());
-    for (const auto& keyframe : other.keyframes) tmp.emplace_back(keyframe);
-    keyframes = std::move(tmp);
-    return *this;
-}
-
-ColorTimeline ColorTimeline::blended(rgba color, float alpha) const {
-    ColorTimeline newTimeline;
-
-    // TODO: addKeyframe is inefficient in this case. emplace_back directly into the keyframes would be better
-    for (const auto& keyframe : keyframes)
-        newTimeline.addKeyframe(ColorKeyframe(keyframe.color->blended(color, alpha), keyframe.position));
-
-    return newTimeline;
-}
-
-ColorTimeline ColorTimeline::blended(const Color &other, float alpha) const {
-    if (const ColorTimeline* tl = other.getTimeline()) return blended(*tl, alpha);
-
-    return blended(other.getColor(), alpha);
-}
-
-ColorTimeline ColorTimeline::blended(const ColorTimeline &other, float alpha) const {
-    ColorTimeline newTimeline;
-
-    std::set<float> positions;
-    for (const auto& keyframe : this->keyframes) positions.insert(keyframe.position);
-    for (const auto& keyframe : other.keyframes) positions.insert(keyframe.position);
-
-    // TODO: this only creates static colors, figure out a way to make it work for all types
-    for (float position : positions) {
-        rgba colorA = this->getColor(position);
-        rgba colorB = other.getColor(position);
-        rgba blended = colorA.blended(colorB, alpha);
-
-        newTimeline.addKeyframe(blended, position);
-    }
-
-    return newTimeline;
-}
-
-void ColorTimeline::addKeyframe(rgba color, float position) { addKeyframe(ColorKeyframe(std::make_unique<StaticColor>(color), position)); }
-
-void ColorTimeline::addKeyframe(OwnedColor color, float position) { addKeyframe(ColorKeyframe(std::move(color), position)); }
-
-void ColorTimeline::addKeyframe(ColorKeyframe keyframe) {
-    auto it = keyframes.begin();
-    while(it != keyframes.end() && it->position < keyframe.position) ++it;
-    keyframes.insert(it, std::move(keyframe));
-}
+ColorTimeline::ColorTimeline(rgba color) { addKeyframe(color, 0.0F); }
+ColorTimeline::ColorTimeline(OwnedColor color) { addKeyframe(std::move(color), 0.0F); }
+ColorTimeline::ColorTimeline(const ColorTimeline& other) : keyframes(other.keyframes) {}
+ColorTimeline& ColorTimeline::operator=(const ColorTimeline& other) { keyframes = other.keyframes; return *this; }
 
 void ColorTimeline::clear() { keyframes.clear(); }
 
-size_t ColorTimeline::size() const { return keyframes.size(); }
-
-bool ColorTimeline::empty() const { return keyframes.empty(); }
-
-rgba ColorTimeline::getColor(float position) const {
-    if (keyframes.empty()) return DEFAULT_COLOR;
-
-    size_t index = getKeyframeIndexAtPosition(position);
-
-    if (index >= keyframes.size() - 1) return keyframes.back().color->getColor();
-
-    const float span = keyframes[index + 1].position - keyframes[index].position;
-    if (span == 0.0f) return keyframes[index + 1].color->getColor();
-
-    float normalized = (position - keyframes[index].position) / span;
-
-    return keyframes[index].color->getColor().blended(keyframes[index + 1].color->getColor(), normalized);
+bool ColorTimeline::addKeyframe(rgba color, float position) {
+    return addKeyframe(std::make_unique<StaticColor>(color), position);
 }
 
-float ColorTimeline::getStartPosition() const { return !keyframes.empty() ? keyframes.front().position : 0.0f; }
-
-float ColorTimeline::getEndPosition() const { return !keyframes.empty() ? keyframes.back().position : 0.0f; }
-
-std::vector<float> ColorTimeline::getPositions() const {
-    std::vector<float> positions;
-
-    for (const auto& keyframe : keyframes) positions.push_back(keyframe.position);
-
-    return positions;
+bool ColorTimeline::addKeyframe(OwnedColor color, float position) {
+    return addKeyframe(ColorKeyframe(std::move(color), position));
 }
 
-std::vector<float> ColorTimeline::getPositionsMapped(float start, float end) const {
-    std::vector<float> positions;
-
-    float startPosition = getStartPosition();
-    float endPosition = getEndPosition();
-
-    for (const auto& keyframe : keyframes) positions.push_back(mapf(keyframe.position, startPosition, endPosition, start, end));
-
-    return positions;
+bool ColorTimeline::addKeyframe(ColorKeyframe keyframe) {
+    if (!keyframe.color || !std::isfinite(keyframe.position) || keyframe.position < 0.0F || keyframe.position > 1.0F) return false;
+    const auto position = std::lower_bound(keyframes.begin(), keyframes.end(), keyframe.position,
+        [](const ColorKeyframe& existing, float position) { return existing.position < position; });
+    if (position != keyframes.end() && position->position == keyframe.position) return false;
+    keyframes.insert(position, std::move(keyframe));
+    return true;
 }
 
-std::vector<rgba> ColorTimeline::sample(float startPosition, float endPosition, size_t numSamples) {
-    std::vector<rgba> result;
-    if (keyframes.empty() || numSamples == 0) return result;
-    result.reserve(numSamples);
+std::size_t ColorTimeline::size() const noexcept { return keyframes.size(); }
+bool ColorTimeline::empty() const noexcept { return keyframes.empty(); }
 
-    if (numSamples == 1) {
-        result.push_back(getColor(startPosition));
-        return result;
+bool ColorTimeline::valid() const noexcept {
+    float previous = -1.0F;
+    for (const ColorKeyframe& keyframe : keyframes) {
+        if (!keyframe.color || !std::isfinite(keyframe.position) || keyframe.position < 0.0F || keyframe.position > 1.0F || keyframe.position <= previous) return false;
+        previous = keyframe.position;
     }
-
-    float step = (endPosition - startPosition) / (numSamples - 1);
-    size_t startIndex = 0;
-    size_t endIndex = (keyframes.size() > 1) ? 1 : 0;
-
-    rgba startColor = keyframes[startIndex].color->getColor();
-    rgba endColor   = keyframes[endIndex].color->getColor();
-
-    for (size_t sample = 0; sample < numSamples; ++sample) {
-        float position = startPosition + step * sample;
-
-        while (endIndex < keyframes.size() && position > keyframes[endIndex].position) {
-            startIndex = endIndex;
-            startColor = endColor;
-            endIndex++;
-            endColor = keyframes[std::min(endIndex, keyframes.size() - 1)].color->getColor();
-        }
-
-        endIndex = std::min(endIndex, keyframes.size() - 1);
-
-        float t = 0;
-        if (startIndex != endIndex) {
-            float delta = keyframes[endIndex].position - keyframes[startIndex].position;
-            t = (delta != 0) ? (position - keyframes[startIndex].position) / delta : 0;
-        }
-
-        result.push_back(startColor.blended(endColor, t));
-    }
-
-    return result;
+    return true;
 }
 
-PaintTimeline::PaintTimeline(ColorTimeline f, ColorTimeline s, float t) : fill(f), stroke(s), thickness(t) {}
-
-PaintTimeline PaintTimeline::blended(rgba color, float alpha) const {
-    return PaintTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
+std::size_t ColorTimeline::indexAt(float position) const noexcept {
+    const auto upper = std::upper_bound(keyframes.begin(), keyframes.end(), position,
+        [](float position, const ColorKeyframe& keyframe) { return position < keyframe.position; });
+    return upper == keyframes.begin() ? 0 : static_cast<std::size_t>((upper - keyframes.begin()) - 1);
 }
 
-PaintTimeline PaintTimeline::blended(const Color &color, float alpha) const {
-    return PaintTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
+rgba ColorTimeline::sample(float position, const ColorResolver::Frame& frame) const noexcept {
+    if (!frame.valid() || keyframes.empty() || !valid() || !std::isfinite(position)) return rgba{0, 0, 0, 0};
+    position = std::clamp(position, 0.0F, 1.0F);
+    if (position <= keyframes.front().position) return frame.resolve(*keyframes.front().color);
+    if (position >= keyframes.back().position) return frame.resolve(*keyframes.back().color);
+
+    const std::size_t index = indexAt(position);
+    const ColorKeyframe& left = keyframes[index];
+    const ColorKeyframe& right = keyframes[index + 1];
+    const float t = (position - left.position) / (right.position - left.position);
+    return frame.resolve(*left.color).blended(frame.resolve(*right.color), t);
 }
 
-PaintTimeline PaintTimeline::blended(const ColorTimeline &color, float alpha) const {
-    return PaintTimeline(fill.blended(color, alpha), stroke.blended(color, alpha), thickness);
-}
+PaintTimeline::PaintTimeline(ColorTimeline fill, ColorTimeline stroke, float thickness)
+    : fill(std::move(fill)), stroke(std::move(stroke)), thickness(thickness) {}
 
-PaintTimeline PaintTimeline::blended(const PaintTimeline &other, float alpha) const {
-    return PaintTimeline(fill.blended(other.fill, alpha), stroke.blended(other.stroke, alpha), (thickness + other.thickness) / 2.0f);
-}
-
-#include <multigauge/graphics/colors/StaticColor.h>
-
-Paint PaintTimeline::getPaintAtPosition(float position) const {
-    return Paint(
-        fill.empty() ? nullptr : std::make_unique<StaticColor>(fill.getColor(position)),
-        stroke.empty() ? nullptr : std::make_unique<StaticColor>(stroke.getColor(position)),
-        thickness
-    );
+ResolvedPaint PaintTimeline::sample(float position, const ColorResolver::Frame& frame) const noexcept {
+    return {
+        .fillEnabled = !fill.empty(),
+        .fill = fill.sample(position, frame),
+        .strokeEnabled = !stroke.empty(),
+        .stroke = stroke.sample(position, frame),
+        .thickness = std::max(0.0F, thickness),
+    };
 }
 
 } // namespace mg::graphics

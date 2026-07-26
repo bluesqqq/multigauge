@@ -1,80 +1,37 @@
 #include <multigauge/graphics/colors/TimeColor.h>
 
 #include <cmath>
+#include <cstdint>
+#include <limits>
 #include <utility>
 
 namespace mg::graphics {
 
-std::chrono::microseconds TimeColor::currentElapsed{};
-
-void TimeColor::setElapsed(std::chrono::microseconds elapsed) noexcept {
-    currentElapsed = elapsed;
-}
-
-float TimeColor::getTime() const {
-    float duration = timeline.getEndPosition();
-
-    if (timeline.size() == 0 || duration <= 0.0f) return 0.0f;
-
-    float t = std::chrono::duration<float, std::milli>(currentElapsed).count();
-
-    switch (loopType) {
-        case LoopType::Forward:
-            t = std::fmod(t, duration);
-            break;
-        
-        case LoopType::Reverse:
-            t = duration - std::fmod(t, duration);
-            break;
-
-        case LoopType::PingPong:
-            t = std::fmod(t, 2.0f * duration);
-            if (t > duration) t = 2.0f * duration - t;
-            break;
-    }
-
-    return t;
-}
-
-const ColorTimeline *TimeColor::getTimeline() const { return &timeline; }
-
-TimeColor::TimeColor() : timeline(ColorTimeline()), loopType(LoopType::Forward) { }
-
-TimeColor::TimeColor(ColorTimeline timeline, LoopType loopType) : timeline(std::move(timeline)), loopType(loopType) {}
-
-TimeColor::TimeColor(const TimeColor &other) : timeline(other.timeline), loopType(other.loopType) {}
-
-TimeColor &TimeColor::operator=(const TimeColor &other) {
-    if (this != &other) {
-        this->timeline = other.timeline;
-        this->loopType = other.loopType;
-    }
-    return *this;
-}
-
-OwnedColor TimeColor::blended(rgba color, float alpha) const { return std::make_unique<TimeColor>(timeline.blended(color, alpha)); }
-
-OwnedColor TimeColor::blended(const Color &other, float alpha) const {
-    switch(other.getType()) {
-        case (Type::Static):
-        case (Type::User):
-            return blended(other.getColor(), alpha);
-
-        case (Type::Time):
-        case (Type::Value): {
-            const ColorTimeline* timeline = other.getTimeline();
-            if (timeline != nullptr) return std::make_unique<TimeColor>(this->timeline.blended(*timeline, alpha), this->loopType);
-        }
-    }
-
-    //return std::make_unique<TimeColor>(this->timeline, this->loopType);
-    return std::make_unique<TimeColor>();
-}
-
+TimeColor::TimeColor() = default;
+TimeColor::TimeColor(ColorTimeline timeline, LoopType loopType, float periodMs)
+    : timeline(std::move(timeline)), loopType(loopType), periodMs(periodMs) {}
 OwnedColor TimeColor::clone() const { return std::make_unique<TimeColor>(*this); }
 
-rgba TimeColor::getColor() const { return timeline.getColor(getTime()); }
+rgba TimeColor::resolveUncached(const ColorResolver::Frame& frame) const noexcept {
+    const ColorFrame* data = frame.data();
+    if (!data || !std::isfinite(periodMs) || periodMs <= 0.0F) return rgba{0, 0, 0, 0};
+    constexpr double maxPeriodMs = static_cast<double>(std::numeric_limits<std::int64_t>::max() / 2) / 1000.0;
+    if (static_cast<double>(periodMs) > maxPeriodMs) return rgba{0, 0, 0, 0};
+    const auto period = static_cast<std::int64_t>(std::llround(static_cast<double>(periodMs) * 1000.0));
+    if (period <= 0) return rgba{0, 0, 0, 0};
 
-Color::Type TimeColor::getType() const { return Type::Time; }
+    const std::int64_t elapsed = data->elapsed().count() >= 0 ? data->elapsed().count() : 0;
+    const std::int64_t phase = elapsed % period;
+    float normalized = static_cast<float>(static_cast<double>(phase) / static_cast<double>(period));
+    switch (loopType) {
+        case LoopType::Forward: break;
+        case LoopType::Reverse: normalized = 1.0F - normalized; break;
+        case LoopType::PingPong:
+            normalized = static_cast<float>(static_cast<double>(elapsed % (period * 2)) / static_cast<double>(period));
+            if (normalized > 1.0F) normalized = 2.0F - normalized;
+            break;
+    }
+    return timeline.sample(normalized, frame);
+}
 
 } // namespace mg::graphics

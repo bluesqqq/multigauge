@@ -14,6 +14,7 @@
 #include <multigauge/io/FileSystem.h>
 #include <multigauge/io/Time.h>
 #include <multigauge/io/Logger.h>
+#include <multigauge/graphics/UserPalette.h>
 
 namespace mg {
 
@@ -35,6 +36,11 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config = AppConfi
 void shutdown();
 void frame();
 YGConfigRef getYogaConfig();
+
+//----------[ USER PALETTE ]----------//
+
+bool setUserColor(std::size_t slot, graphics::rgba color);
+graphics::rgba getUserColor(std::size_t slot);
 
 //----------[ CONTEXT ]----------//
 

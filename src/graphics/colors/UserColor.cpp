@@ -1,24 +1,14 @@
 #include <multigauge/graphics/colors/UserColor.h>
-#include <multigauge/graphics/colors/StaticColor.h>
 
 namespace mg::graphics {
 
-rgba UserColor::userColors[3] = {
-    rgba("white"),     // Primary
-    rgba("red"),       // Secondary
-    rgba("black")      // Background
-};
-
-UserColor::UserColor(Slot slot) : slot(slot) { }
-
+UserColor::UserColor(Slot slot) : slot(slot) {}
 OwnedColor UserColor::clone() const { return std::make_unique<UserColor>(*this); }
 
-rgba UserColor::getColor() const { return userColors[static_cast<size_t>(slot)]; }
-
-Color::Type UserColor::getType() const { return Type::User; }
-
-OwnedColor UserColor::blended(rgba color, float alpha) const { return std::make_unique<StaticColor>(getColor().blended(color, alpha)); }
-
-OwnedColor UserColor::blended(const Color &other, float alpha) const { return other.blended(getColor(), alpha); }
+rgba UserColor::resolveUncached(const ColorResolver::Frame& frame) const noexcept {
+    const ColorFrame* data = frame.data();
+    const UserPalette* palette = data ? data->palette() : nullptr;
+    return palette ? palette->color(static_cast<std::size_t>(slot)) : rgba{0, 0, 0, 0};
+}
 
 } // namespace mg::graphics

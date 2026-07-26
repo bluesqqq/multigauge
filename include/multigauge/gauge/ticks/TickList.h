@@ -21,8 +21,8 @@ namespace mg::gauge {
 using ::mg::Line;
 using ::mg::Point;
 using ::mg::graphics::Graphics;
-using ::mg::graphics::Paint;
 using ::mg::graphics::PaintTimeline;
+using ::mg::graphics::ResolvedPaint;
 using ::mg::utils::lerp;
 using ::mg::utils::inRange;
 
@@ -94,16 +94,16 @@ class TickList : public ::mg::PropertyObject {
             }
         }
 
-        void drawLineTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
+        void drawLineTick(Graphics& g, Line<float> line, float thickness, const ResolvedPaint& paint) const {
             g.setPaint(paint);
             g.drawLine(line.toInt(), thickness);
         }
 
-        void drawCircleTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
+        void drawCircleTick(Graphics& g, Line<float> line, float thickness, const ResolvedPaint& paint) const {
             
         }
 
-        void drawTriangleTick(Graphics& g, Line<float> line, float thickness, Paint& paint) const {
+        void drawTriangleTick(Graphics& g, Line<float> line, float thickness, const ResolvedPaint& paint) const {
             
         }
 

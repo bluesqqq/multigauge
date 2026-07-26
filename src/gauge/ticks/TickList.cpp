@@ -60,17 +60,7 @@ void TickList::drawCircularTick(Graphics &g, uint8_t index, Point<float> pos, fl
     Line<float> line = Line<float>(pos + unitVector * tickRadii.first, pos + unitVector * tickRadii.second);
 
     // Get the color at the current position  
-    Paint temporaryFS = color.getPaintAtPosition(value);
-
-    //if (PaintModifier.fill != nullptr) temporaryFS.blendFill(PaintModifier.fill->getColor(), highlightFactor);
-    //if (PaintModifier.stroke != nullptr) temporaryFS.blendStroke(PaintModifier.stroke->getColor(), PaintModifier.stroke->thickness, highlightFactor);
-
-    /*
-    if (fade != nullptr) { // Apply fade
-        uint8_t alpha = fade->getAlpha(position);
-        temporaryFS = temporaryFS.getBlendPaint(fade->color->getColor(), alpha);
-    }
-    */
+    const ResolvedPaint temporaryFS = color.sample(value, g.colorFrameToken());
 
     switch(style) {
         case LINE:
@@ -96,49 +86,6 @@ void TickList::drawCircularTick(Graphics &g, uint8_t index, Point<float> pos, fl
             drawCircleTick(g, line, thickness, temporaryFS);
             break;
     }
-   
-    /*
-    // Draw the value if needed
-    if (valueStyle.has_value()) {
-        double cosAngle, sinAngle; sincos(angle, &sinAngle, &cosAngle);
-
-        TickValueStyle style = valueStyle.value();
-
-        String displayValue = String((int)round(value));
-
-        // Set text parameters
-        canvas.setTextDatum(middle_center);
-        canvas.setTextFont(style.font);
-        canvas.setTextSize(1.0f * (1.0f + (highlightFactor * textSizeFactor)));
-        
-        uint16_t valueColor = style.color.getColor(value);
-
-        valueColor = blendColors(valueColor, valueColorModifier->getColor(), highlightFactor);
-
-        if (fade != nullptr) { // Apply fade
-            uint8_t alpha = fade->getAlpha(position);
-            canvas.setTextColor(alphaBlend(alpha, valueColor, fade->color->getColor()));
-        }
-
-        // Calculate the drawn values width and height
-        int stringWidth = canvas.textWidth(displayValue);
-        int stringHeight = canvas.fontHeight();
-
-        // Check if the alignment is RADIUS_INNER or if flip is enabled, but not both
-        // Also an excuse to use the cool '^' XOR operator
-        bool isInnerFlipped = (alignment == LENGTH_INNER) ^ style.flipValuesPosition;
-
-        int modifierSign = isInnerFlipped ? 1 : -1;
-
-        // Some simple math to determine a height/width modifier to draw the values at
-        int widthModifier  = cosAngle * ((stringWidth / 2)  + style.spacing) * modifierSign;
-        int heightModifier = sinAngle * ((stringHeight / 2) + style.spacing) * modifierSign;
-
-        float selectedRadii = isInnerFlipped ? tickRadii.second : tickRadii.first;
-
-        canvas.drawString(displayValue, pos.x + selectedRadii * cosAngle + widthModifier, pos.y + selectedRadii * sinAngle + heightModifier);
-    }
-    */
 }
 
 } // namespace mg::gauge

@@ -6,7 +6,8 @@
 
 namespace mg {
 
-RuntimeContext::RuntimeContext(graphics::GraphicsContext& context, io::FileSystem& fs) : context(&context), graphics(context), assets(fs) {}
+RuntimeContext::RuntimeContext(graphics::GraphicsContext& context, io::FileSystem& fs, const graphics::UserPalette& userPalette)
+    : context(&context), graphics(context), assets(fs), userPalette(&userPalette) {}
 
 RuntimeContext::~RuntimeContext() = default;
 
@@ -47,21 +48,22 @@ Screen* RuntimeContext::getScreen() { return screen.get(); }
 
 const Screen* RuntimeContext::getScreen() const { return screen.get(); }
 
-void RuntimeContext::frame(std::chrono::microseconds delta) {
+void RuntimeContext::frame(std::chrono::microseconds delta, std::chrono::microseconds elapsed) {
     if (!context) return;
-
-    graphics.clearColorCache();
-
-    // TODO: maybe allow graphics to handle begin/end so i dont have to do this?
     context->beginFrame();
 
     if (screen) {
         screen->update(*this, delta);
+        colorFrame.refresh(elapsed, *userPalette);
+        graphics.beginFrame(colorFrame);
         screen->draw(*this, graphics);
     } else {
+        colorFrame.refresh(elapsed, *userPalette);
+        graphics.beginFrame(colorFrame);
         graphics.fillAll(backgroundColor);
     }
 
+    graphics.endFrame();
     context->endFrame();
 }
 
