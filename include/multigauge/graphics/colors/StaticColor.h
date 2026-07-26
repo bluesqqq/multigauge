@@ -4,48 +4,24 @@
 
 namespace mg::graphics {
 
-class StaticColor : public Color {
+class StaticColor final : public Color {
     MG_EDITOR_NAME("Static Color")
     MG_TYPE_ID("static")
 
-    private:
-        rgba color;
-
-        MG_PROPS_PARENT(Color)
-
-        MG_PROPS_BEGIN()
+    rgba color;
+    MG_PROPS_PARENT(Color)
+    MG_PROPS_BEGIN()
     MG_PROP(color, "color", "Color", "RGBA color value.")
-        MG_PROPS_END()
-    
-    public:
-        /// @brief Constructs a StaticColor with default color
-        StaticColor();
+    MG_PROPS_END()
 
-        StaticColor(rgba color);
+public:
+    StaticColor();
+    explicit StaticColor(rgba color);
+    OwnedColor clone() const override;
+    [[nodiscard]] rgba value() const noexcept { return color; }
 
-        OwnedColor clone() const override;
-
-        /// @brief Gets the static color value.
-        /// @return The 16-bit color value
-        rgba getColor() const override;
-
-        /// @brief Gets the type of this color.
-        /// @return Type::Static
-        Type getType() const override;
-
-        /// @brief Blends this color with a static color value.
-        /// @param color The 16-bit color value to blend with
-        /// @param alpha The blend amount (0.0 = this color, 1.0 = blend color)
-        /// @return A new StaticColor object with the blended result
-        OwnedColor blended(rgba color, float alpha) const override;
-
-        /// @brief Blends this color with another Color object.
-        /// @param color The Color object to blend with
-        /// @param alpha The blend amount (0.0 = this color, 1.0 = other color)
-        /// @return A new Color object of the same derived type as the input (e.g., blending with a TimeColor returns a TimeColor)
-        OwnedColor blended(const Color& other, float alpha) const override;
-
+protected:
+    rgba resolveUncached(const ColorResolver::Frame&) const noexcept override;
 };
 
 } // namespace mg::graphics
-

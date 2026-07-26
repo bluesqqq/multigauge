@@ -5,15 +5,7 @@
 
 namespace mg::graphics {
 
-rgba Graphics::getCachedColor(const Color& color) {
-    auto it = colorCache.find(&color);
-    if (it != colorCache.end())
-        return it->second;
-
-    rgba c = color.getColor();
-    colorCache[&color] = c;
-    return c;
-}
+rgba Graphics::resolveColor(const Color& color) noexcept { return colorFrame.resolve(color); }
 
 Graphics::Graphics(GraphicsContext& context) : context(&context) { }
 
@@ -21,7 +13,9 @@ Rect<int> Graphics::getScreenBounds() { return Rect<int>(0, 0, context->width(),
 
 //----------[ COLOR ]----------//
 
-void Graphics::clearColorCache() { colorCache.clear(); }
+void Graphics::beginFrame(const ColorFrame& frame) noexcept { colorFrame = colorResolver.beginFrame(frame); }
+void Graphics::endFrame() noexcept { colorFrame = {}; }
+rgba Graphics::resolve(const Color& color) const noexcept { return colorFrame.resolve(color); }
 
 void Graphics::setFill(rgba color) {
     fill.enabled = true;
@@ -29,7 +23,7 @@ void Graphics::setFill(rgba color) {
 }
 
 void Graphics::setFill(const Color *color) {
-    if (color) setFill(getCachedColor(*color));
+    if (color) setFill(resolveColor(*color));
     else fill.enabled = false;
 }
 
@@ -40,7 +34,7 @@ void Graphics::setStroke(rgba color, float t) {
 }
 
 void Graphics::setStroke(const Color *color, float t) {
-    if (color) setStroke(getCachedColor(*color), t);
+    if (color) setStroke(resolveColor(*color), t);
     else stroke.enabled = false;
 }
 
@@ -59,6 +53,11 @@ void Graphics::setPaint(const Color *f, const Color *s, float t) {
 
 void Graphics::setPaint(const Paint &paint) { setPaint(paint.fill.get(), paint.stroke.get(), paint.thickness); }
 
+void Graphics::setPaint(const ResolvedPaint& paint) {
+    if (paint.fillEnabled) setFill(paint.fill); else fill.enabled = false;
+    if (paint.strokeEnabled) setStroke(paint.stroke, paint.thickness); else stroke.enabled = false;
+}
+
 //----------[ FILL ]----------//
 
 void Graphics::fillAll() const { if (fill.enabled) context->clear(fill.value); }
@@ -66,7 +65,7 @@ void Graphics::fillAll() const { if (fill.enabled) context->clear(fill.value); }
 void Graphics::fillAll(rgba color) const { context->clear(color); }
 
 void Graphics::fillAll(const Color* color) { 
-    if (color) fillAll(getCachedColor(*color));
+    if (color) fillAll(resolveColor(*color));
     else fillAll();
 }
 
@@ -186,7 +185,7 @@ void Graphics::setTextColor(rgba color) {
 }
 
 void Graphics::setTextColor(const Color *color) { 
-    if (color) setTextColor(getCachedColor(*color));
+    if (color) setTextColor(resolveColor(*color));
     else textColor.enabled = false;
 }
 

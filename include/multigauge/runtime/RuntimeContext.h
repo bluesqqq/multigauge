@@ -22,9 +22,11 @@ class RuntimeContext {
 
         OwnedScreen screen;
         graphics::rgba backgroundColor = graphics::rgba(0, 0, 0, 255);
+        graphics::ColorFrame colorFrame;
+        const graphics::UserPalette* userPalette;
 
     public:
-        explicit RuntimeContext(graphics::GraphicsContext& graphicsContext, io::FileSystem& fs);
+        explicit RuntimeContext(graphics::GraphicsContext& graphicsContext, io::FileSystem& fs, const graphics::UserPalette& userPalette);
         ~RuntimeContext();
 
         RuntimeContext(const RuntimeContext&) = delete;
@@ -43,14 +45,13 @@ class RuntimeContext {
 
         void setBackgroundColor(graphics::rgba color);
         graphics::rgba getBackgroundColor() const;
-
         void clearScreen();
         bool setScreen(OwnedScreen screen);
 
         Screen* getScreen();
         const Screen* getScreen() const;
 
-        void frame(std::chrono::microseconds delta);
+        void frame(std::chrono::microseconds delta, std::chrono::microseconds elapsed);
 };
 
 }

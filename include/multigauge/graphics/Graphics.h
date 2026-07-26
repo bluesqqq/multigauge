@@ -10,9 +10,10 @@
 #include <multigauge/graphics/image/Image.h>
 #include <multigauge/graphics/image/NineSlice.h>
 #include <multigauge/graphics/TextPaint.h>
+#include <multigauge/graphics/colors/ColorTimeline.h>
 
 #include <string>
-#include <unordered_map>
+#include <cstddef>
 
 #define MIN_HYPHEN_PREFIX 3 // Prefix must be this number of chars or higher to be hyphenated in text wrap
 
@@ -43,13 +44,10 @@ class Graphics final {
 
         float thickness = 0.0f; // for stroke
 
-        /// @brief Cache that stores a color's value for quick lookup
-        std::unordered_map<const Color*, rgba> colorCache;
+        ColorResolver colorResolver;
+        ColorResolver::Frame colorFrame;
 
-        /// @brief Gets a color's value from the cache.
-        /// @param color The Color object to get the color value of
-        /// @return The current Color object's 16-bit color value
-        rgba getCachedColor(const Color& color);
+        rgba resolveColor(const Color& color) noexcept;
 
         //----------[ Font ]----------//
         std::string family = "default";
@@ -64,7 +62,15 @@ class Graphics final {
         /// @brief Returns the full rawable bounds of the current target (in pixels).
         Rect<int> getScreenBounds();
 
-        void clearColorCache();
+        /// Starts color resolution for one immutable render frame. Color based
+        /// drawing before this call deterministically resolves to transparent.
+        void beginFrame(const ColorFrame& frame) noexcept;
+        void endFrame() noexcept;
+        /// Reserves color-resolution storage outside rendering for packages
+        /// that use more than the default number of colors per frame.
+        void reserveColorCache(std::size_t colorCount) { colorResolver.reserve(colorCount); }
+        [[nodiscard]] rgba resolve(const Color& color) const noexcept;
+        [[nodiscard]] const ColorResolver::Frame& colorFrameToken() const noexcept { return colorFrame; }
         
         //----------[ COLOR ]----------//
 
@@ -86,6 +92,7 @@ class Graphics final {
         void setPaint(const Color* fill = nullptr, const Color* stroke = nullptr, float thickness = 1.0f);
         /// @brief Sets the current fill and stroke colors and stroke thickness (in pixels).
         void setPaint(const Paint& paint);
+        void setPaint(const ResolvedPaint& paint);
 
         //----------[ FILL ]----------//
 

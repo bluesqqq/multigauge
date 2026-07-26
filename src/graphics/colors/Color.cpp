@@ -1,97 +1,72 @@
 #include <multigauge/graphics/colors/Color.h>
 
 #include <multigauge/graphics/colors/StaticColor.h>
-#include <multigauge/graphics/colors/ValueColor.h>
 #include <multigauge/graphics/colors/TimeColor.h>
 #include <multigauge/graphics/colors/UserColor.h>
+#include <multigauge/graphics/colors/ValueColor.h>
 
+#include <atomic>
 #include <utility>
 
 namespace mg::graphics {
 
 namespace {
-    template <typename T>
-    OwnedColor createColor() {
-        return std::make_unique<T>();
-    }
+std::atomic_uint32_t nextColorId{1};
 
-    OwnedColor createDefaultColor() {
-        return std::make_unique<StaticColor>();
-    }
-
-    using ColorDescriptor = MgPolymorphicTypeDescriptor<OwnedColor>;
-
-    static const ColorDescriptor COLOR_TYPES[] = {
-        makePolymorphicTypeDescriptor<StaticColor, OwnedColor>(&createColor<StaticColor>),
-        makePolymorphicTypeDescriptor<ValueColor, OwnedColor>(&createColor<ValueColor>),
-        makePolymorphicTypeDescriptor<TimeColor, OwnedColor>(&createColor<TimeColor>),
-        makePolymorphicTypeDescriptor<UserColor, OwnedColor>(&createColor<UserColor>),
-    };
+std::uint32_t allocateColorId() noexcept {
+    const std::uint32_t id = nextColorId.fetch_add(1, std::memory_order_relaxed);
+    return id != 0 ? id : nextColorId.fetch_add(1, std::memory_order_relaxed);
 }
 
+template <typename T>
+OwnedColor createColor() { return std::make_unique<T>(); }
+
+OwnedColor createDefaultColor() { return std::make_unique<StaticColor>(); }
+
+using ColorDescriptor = MgPolymorphicTypeDescriptor<OwnedColor>;
+const ColorDescriptor colorTypes[] = {
+    makePolymorphicTypeDescriptor<StaticColor, OwnedColor>(&createColor<StaticColor>),
+    makePolymorphicTypeDescriptor<ValueColor, OwnedColor>(&createColor<ValueColor>),
+    makePolymorphicTypeDescriptor<TimeColor, OwnedColor>(&createColor<TimeColor>),
+    makePolymorphicTypeDescriptor<UserColor, OwnedColor>(&createColor<UserColor>),
+};
+}
+
+Color::Color() noexcept : id_(allocateColorId()) {}
+Color::Color(const Color&) noexcept : id_(allocateColorId()) {}
+
 const Color::Registry& Color::registry() {
-    static const Registry registry(COLOR_TYPES, sizeof(COLOR_TYPES) / sizeof(COLOR_TYPES[0]), &createDefaultColor);
+    static const Registry registry(colorTypes, sizeof(colorTypes) / sizeof(colorTypes[0]), &createDefaultColor);
     return registry;
 }
 
-const ColorTimeline* Color::getTimeline() const { return nullptr; }
+Paint::Paint() = default;
+Paint::Paint(OwnedColor fill, OwnedColor stroke, float thickness)
+    : fill(std::move(fill)), stroke(std::move(stroke)), thickness(thickness) {}
 
 } // namespace mg::graphics
 
 namespace mg {
 
 DECODE_IMPL(graphics::OwnedColor) {
-    if (v.isNull()) {
-        out = nullptr;
+    if (v.isNull()) { out = nullptr; return true; }
+    graphics::rgba legacy;
+    if (Codec<graphics::rgba>::decode(v, legacy)) {
+        out = std::make_unique<graphics::StaticColor>(legacy);
         return true;
     }
-
-    graphics::rgba color;
-    if (!Codec<graphics::rgba>::decode(v, color)) return false;
-
-    out = std::make_unique<graphics::StaticColor>(color);
-    return true;
+    if (!v.isObject()) return false;
+    std::string_view type;
+    if (!v.member(TYPE_KEY).read(type) || !graphics::Color::registry().find(type)) return false;
+    return decodePolymorphicOwned<graphics::Color>(v, out);
 }
 
 ENCODE_IMPL(graphics::OwnedColor) {
-    if (!v) {
-        return out.null();
+    if (!v) return out.null();
+    if (std::string_view(v->typeId()) == graphics::StaticColor::staticTypeId()) {
+        return Codec<graphics::rgba>::encode(out, static_cast<const graphics::StaticColor&>(*v).value());
     }
-
-    if (v->getType() == graphics::Color::Type::Static) {
-        return Codec<graphics::rgba>::encode(out, v->getColor());
-    }
-
-    return false;
+    return encodePolymorphicOwned(out, v);
 }
 
 } // namespace mg
-
-namespace mg::graphics {
-
-//----------[ FILL STROKE ]----------//
-
-Paint::Paint() : fill(nullptr), stroke(nullptr) {}
-
-Paint::Paint(OwnedColor fill, OwnedColor stroke, float thickness) : fill(std::move(fill)), stroke(std::move(stroke)), thickness(thickness) {}
-
-Paint Paint::blended(rgba c, float alpha) const { return Paint((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }
-
-Paint Paint::blended(const Color &c, float alpha) const { return Paint((fill) ? fill->blended(c, alpha) : nullptr, (stroke) ? stroke->blended(c, alpha) : nullptr, thickness); }
-
-Paint Paint::blended(const Paint &other, float alpha) const {
-    OwnedColor outFill;
-    OwnedColor outStroke;
-
-    if (fill && other.fill) outFill = fill->blended(*other.fill, alpha);
-    else if (fill) outFill = fill->clone();
-    else if (other.fill) outFill = other.fill->clone();
-
-    if (stroke && other.stroke) outStroke = stroke->blended(*other.stroke, alpha);
-    else if (stroke) outStroke = stroke->clone();
-    else if (other.stroke) outStroke = other.stroke->clone();
-
-    return Paint(std::move(outFill), std::move(outStroke), thickness);
-}
-
-} // namespace mg::graphics

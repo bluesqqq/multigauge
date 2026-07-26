@@ -8,11 +8,11 @@
 #include <multigauge/HandlePool.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/graphics/colors/TimeColor.h>
 #include <multigauge/screens/GaugeScreen.h>
 #include <multigauge/screens/EditorScreen.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/utils/Json.h>
+#include <multigauge/graphics/UserPalette.h>
 
 #include <utility>
 #include <chrono>
@@ -33,6 +33,7 @@ namespace {
     bool initialized = false;
     std::chrono::microseconds lastElapsed{};
     YGConfigRef yogaConfig = nullptr;
+    graphics::UserPalette userPalette;
 
     io::FileSystem* g_fs = nullptr;
     io::Time* g_time = nullptr;
@@ -85,13 +86,16 @@ void frame() {
     const std::chrono::microseconds delta = now >= lastElapsed ? now - lastElapsed : std::chrono::microseconds{};
     lastElapsed = now;
 
-    graphics::TimeColor::setElapsed(now);
-    for (auto& context : contexts) context.frame(delta);
+    for (auto& context : contexts) context.frame(delta, now);
 }
 
 YGConfigRef getYogaConfig() { return yogaConfig; }
 
-ContextId addContext(graphics::GraphicsContext& graphics) { return contexts.emplace(graphics, *g_fs); }
+bool setUserColor(std::size_t slot, graphics::rgba color) { return userPalette.setColor(slot, color); }
+
+graphics::rgba getUserColor(std::size_t slot) { return userPalette.color(slot); }
+
+ContextId addContext(graphics::GraphicsContext& graphics) { return contexts.emplace(graphics, *g_fs, userPalette); }
 
 bool removeContext(ContextId id) { return contexts.remove(id); }
 
