@@ -102,6 +102,7 @@ class Editor {
         NodeId idOfContainer(const ElementContainerRef& container) const;
         bool insertIntoContainer(const ElementContainerRef& container, OwnedElement child, std::size_t index);
         OwnedElement removeFromContainer(const ElementContainerRef& container, Element* child);
+        void invalidateLayoutForProperty(NodeId id, const std::string& path);
         std::size_t childCountOf(const ElementContainerRef& container) const {
             if (container.face) return container.face->childCount();
             if (container.element) return container.element->childCount();

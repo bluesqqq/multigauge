@@ -47,6 +47,10 @@ class Element : public ::mg::PropertyObject {
         Rect<float> bounds = Rect<float>(0.0f, 0.0f, 0.0f, 0.0f);
         /// Yoga node for this element.
         YGNodeRef node = nullptr;
+        /// This element's Yoga style must be synchronized before layout.
+        bool layoutDirty = true;
+        /// This element or a descendant has pending layout work.
+        bool subtreeLayoutDirty = true;
 
     protected:
         GaugeFace* face = nullptr;
@@ -95,9 +99,15 @@ class Element : public ::mg::PropertyObject {
 
         //----------[ LAYOUT ]----------//
         
-        void layoutRecursive(float parentAbsX, float parentAbsY);
+        /// Invalidates this element's Yoga style and schedules a face layout.
+        /// Call this after changing layout outside the property/editor API.
+        void markLayoutDirty();
         YGNodeRef getNode() const { return node; }
         const Rect<float>& getBounds() const { return bounds; }
+
+    private:
+        void markLayoutSubtreeDirty();
+        void syncLayoutRecursive();
 
         //----------[ SERIALIZATION ]----------//
 
@@ -105,7 +115,7 @@ class Element : public ::mg::PropertyObject {
         static bool getChildren(const ::mg::PropertyObject* obj, json::Writer& writer);
 
         MG_PROPS_BEGIN()
-            MG_PROP(style, "style", "Style", "Layout options.")
+            MG_PROP_CALLBACK(style, "style", "Style", "Layout options.", &Element::markLayoutDirty)
             MG_PROP_CUSTOM_HIDDEN("children", "Children", "Child elements.", &Element::setChildren, &Element::getChildren)
         MG_PROPS_END()
 };

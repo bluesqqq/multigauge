@@ -13,6 +13,7 @@ class GaugeFace : public ::mg::PropertyObject {
     MG_EDITOR_NAME("Gauge Face")
 
     private:
+        friend class Element;
         YGNodeRef node = nullptr;
 
         std::vector<OwnedElement> children;
@@ -20,12 +21,17 @@ class GaugeFace : public ::mg::PropertyObject {
         OwnedColor backgroundColor;
 
         RootLayout style;
+        bool rootLayoutDirty = true;
+        bool layoutDirty = true;
+        float layoutWidth = -1.0f;
+        float layoutHeight = -1.0f;
 
         static bool setChildren(::mg::PropertyObject* obj, json::Reader value);
         static bool getChildren(const ::mg::PropertyObject* obj, json::Writer& writer);
+        void markLayoutSubtreeDirty();
 
         MG_PROPS_BEGIN()
-            MG_PROP(style, "layout", "Layout", "Root layout options.")
+            MG_PROP_CALLBACK(style, "layout", "Layout", "Root layout options.", &GaugeFace::markLayoutDirty)
             MG_PROP(backgroundColor, "bgColor", "Background Color", "Background color.")
             MG_PROP_CUSTOM_HIDDEN("children", "Children", "Child elements.", &GaugeFace::setChildren, &GaugeFace::getChildren)
         MG_PROPS_END()
@@ -55,6 +61,8 @@ class GaugeFace : public ::mg::PropertyObject {
         //----------[ LAYOUT ]----------//
 
         void layout(Graphics& g);
+        /// Invalidates root layout after a root-style or tree change.
+        void markLayoutDirty();
         YGNodeRef getNode() const { return node; }
     };
 

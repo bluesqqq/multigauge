@@ -1,5 +1,6 @@
 #include <multigauge/App.h>
 #include <multigauge/gauge/Element.h>
+#include <multigauge/gauge/GaugeFace.h>
 
 #include <algorithm>
 
@@ -108,6 +109,7 @@ bool Element::insertChild(OwnedElement child, std::size_t index) {
     }
 
     children.insert(children.begin() + static_cast<std::ptrdiff_t>(childIndex), std::move(child));
+    markLayoutDirty();
     return true;
 }
 
@@ -129,6 +131,7 @@ OwnedElement Element::removeChild(Element* child) {
 
         detached->parent = nullptr;
         detached->face = nullptr;
+        markLayoutDirty();
         
         return detached;
     }
@@ -153,20 +156,30 @@ void Element::updateRecursive(std::chrono::microseconds delta) {
     for (auto& c : children) c->updateRecursive(delta);
 }
 
-void Element::layoutRecursive(float parentAbsX, float parentAbsY) {
-    style.apply(node);
-    
-    const float left = YGNodeLayoutGetLeft(node);
-    const float top  = YGNodeLayoutGetTop(node);
-    const float w    = YGNodeLayoutGetWidth(node);
-    const float h    = YGNodeLayoutGetHeight(node);
+void Element::markLayoutDirty() {
+    layoutDirty = true;
+    markLayoutSubtreeDirty();
+}
 
-    const float absX = parentAbsX + left;
-    const float absY = parentAbsY + top;
+void Element::markLayoutSubtreeDirty() {
+    if (subtreeLayoutDirty) return;
 
-    bounds = Rect<float>(absX, absY, w, h);
+    subtreeLayoutDirty = true;
+    if (parent) {
+        parent->markLayoutSubtreeDirty();
+    } else if (face) {
+        face->markLayoutSubtreeDirty();
+    }
+}
 
-    for (auto& c : children)c->layoutRecursive(absX, absY);
+void Element::syncLayoutRecursive() {
+    if (!subtreeLayoutDirty) return;
+    if (layoutDirty) {
+        style.apply(node);
+        layoutDirty = false;
+    }
+
+    for (auto& child : children) child->syncLayoutRecursive();
 }
 
 } // namespace mg::gauge

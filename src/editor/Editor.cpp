@@ -1092,7 +1092,9 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
             const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             json::Document parsed = mg::json::parse(state->afterJson);
-            return parsed.valid() && currentOwner->setProperty(currentProperty->key, parsed.root());
+            if (!parsed.valid() || !currentOwner->setProperty(currentProperty->key, parsed.root())) return false;
+            invalidateLayoutForProperty(state->nodeId, state->path);
+            return true;
         },
         [this, state]() {
     ::mg::PropertyObject* currentObject = getObjectById(state->nodeId);
@@ -1101,11 +1103,25 @@ Result Editor::setProperty(NodeId id, const std::string& path, const std::string
             const ::mg::Property* currentProperty = nullptr;
             if (!currentObject->resolvePath(state->path, currentOwner, currentProperty) || !currentOwner || !currentProperty) return false;
             json::Document parsed = mg::json::parse(state->beforeJson);
-            return parsed.valid() && currentOwner->setProperty(currentProperty->key, parsed.root());
+            if (!parsed.valid() || !currentOwner->setProperty(currentProperty->key, parsed.root())) return false;
+            invalidateLayoutForProperty(state->nodeId, state->path);
+            return true;
         }
     });
 
     return committed ? OkObject() : Error("Failed to set property");
+}
+
+void Editor::invalidateLayoutForProperty(NodeId id, const std::string& path) {
+    const auto inGroup = [&](std::string_view group) {
+        return path == group || (path.size() > group.size() && path.compare(0, group.size(), group) == 0 && path[group.size()] == '.');
+    };
+
+    if (Element* element = getElementById(id)) {
+        if (inGroup("style")) element->markLayoutDirty();
+    } else if (GaugeFace* face = getFaceById(id)) {
+        if (inGroup("layout")) face->markLayoutDirty();
+    }
 }
 
 Result Editor::getProperty(NodeId id, const std::string& path) const {

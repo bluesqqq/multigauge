@@ -21,7 +21,9 @@ bool GaugeFace::load(json::Reader value) {
 
     if (!value.isObject()) return false;
 
-    return loadProperties(value);
+    const bool loaded = loadProperties(value);
+    if (loaded) markLayoutDirty();
+    return loaded;
 }
 
 bool GaugeFace::save(json::Writer& writer) const {
@@ -88,6 +90,7 @@ bool GaugeFace::insertChild(OwnedElement child, std::size_t index) {
     }
 
     children.insert(children.begin() + i, std::move(child));
+    markLayoutDirty();
     return true;
 }
 
@@ -105,6 +108,7 @@ OwnedElement GaugeFace::removeChild(Element *child) {
         children.erase(children.begin() + i);
 
         out->face = nullptr;
+        markLayoutDirty();
 
         return out;
     }
@@ -115,19 +119,55 @@ OwnedElement GaugeFace::removeChild(Element *child) {
 void GaugeFace::layout(Graphics& g) {
     if (!node) return;
 
-    style.apply(node);
-
     const auto screenBounds = g.getScreenBounds();
 
     const float width  = screenBounds.width;
     const float height = screenBounds.height;
 
-    YGNodeStyleSetWidth(node, width);
-    YGNodeStyleSetHeight(node, height);
+    const bool sizeChanged = width != layoutWidth || height != layoutHeight;
+    if (!layoutDirty && !sizeChanged) return;
 
+    if (rootLayoutDirty || sizeChanged) {
+        style.apply(node);
+        YGNodeStyleSetWidth(node, width);
+        YGNodeStyleSetHeight(node, height);
+    }
+
+    for (auto& child : children) child->syncLayoutRecursive();
     YGNodeCalculateLayout(node, width, height, YGDirectionLTR);
 
-    for (auto& c : children) c->layoutRecursive(0.0f, 0.0f);
+    const auto updateBounds = [&](auto&& self, Element& element, float parentAbsX, float parentAbsY, bool parentChanged) -> void {
+        const bool changed = parentChanged || YGNodeGetHasNewLayout(element.node);
+        float absX = element.bounds.x;
+        float absY = element.bounds.y;
+        if (changed) {
+            absX = parentAbsX + YGNodeLayoutGetLeft(element.node);
+            absY = parentAbsY + YGNodeLayoutGetTop(element.node);
+            element.bounds = Rect<float>(absX, absY, YGNodeLayoutGetWidth(element.node), YGNodeLayoutGetHeight(element.node));
+            YGNodeSetHasNewLayout(element.node, false);
+        }
+
+        for (auto& child : element.children) self(self, *child, absX, absY, changed);
+        element.subtreeLayoutDirty = false;
+    };
+
+    const bool rootChanged = sizeChanged || rootLayoutDirty;
+    for (auto& child : children) updateBounds(updateBounds, *child, 0.0f, 0.0f, rootChanged);
+    YGNodeSetHasNewLayout(node, false);
+
+    layoutWidth = width;
+    layoutHeight = height;
+    rootLayoutDirty = false;
+    layoutDirty = false;
+}
+
+void GaugeFace::markLayoutDirty() {
+    rootLayoutDirty = true;
+    layoutDirty = true;
+}
+
+void GaugeFace::markLayoutSubtreeDirty() {
+    layoutDirty = true;
 }
 
 } // namespace mg::gauge
