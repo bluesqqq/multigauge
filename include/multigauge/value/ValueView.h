@@ -40,8 +40,11 @@ public:
     /* ----- RANGE ----- */
 
     Measurement minimumBase() const noexcept;
+
     Measurement maximumBase() const noexcept;
+
     Measurement minimum() const noexcept;
+
     Measurement maximum() const noexcept;
 
     Measurement interpolationValue() const noexcept;
@@ -72,17 +75,15 @@ private:
     MG_PROPS_END()
 };
 
-} // namespace mg
-
-namespace mg {
-
 CODEC_BEGIN(ValueView)
     DECODE() {
         std::string_view id;
+
         if (v.read(id)) {
             out = CodecType(id);
-            return true;
+            return static_cast<bool>(out.value_);
         }
+
         return false;
     }
 
@@ -90,11 +91,7 @@ CODEC_BEGIN(ValueView)
         // we only encode as a plain id string when no optional fields are set
         if (v.minimumBase_.has_value() || v.maximumBase_.has_value() || v.unitIndex_.has_value()) return false;
 
-        if (!v.value_.id().empty()) {
-            return out.write(v.value_.id());
-        } else {
-            return out.null();
-        }
+        return !v.value_.id().empty() ? out.write(v.value_.id()) : out.null();
     }
 CODEC_END()
 
