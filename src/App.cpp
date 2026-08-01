@@ -5,7 +5,7 @@
 #include <multigauge/runtime/PackageManager.h>
 
 #include <multigauge/runtime/RuntimeContext.h>
-#include <multigauge/HandlePool.h>
+#include <multigauge/container/HandlePool.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/screens/GaugeScreen.h>
@@ -29,7 +29,7 @@ namespace {
         return config;
     }
 
-    HandlePool<RuntimeContext> contexts;
+    HandlePool<RuntimeContext, ContextId> contexts;
     bool initialized = false;
     std::chrono::microseconds lastElapsed{};
     YGConfigRef yogaConfig = nullptr;

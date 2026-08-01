@@ -4,7 +4,7 @@
 
 #include <cstdint>
 
-#include <multigauge/HandlePool.h>
+#include <multigauge/container/HandlePool.h>
 
 namespace mg::editor {
 
@@ -12,7 +12,7 @@ using ::mg::Result;
 
 namespace {
 
-HandlePool<Editor> editors;
+HandlePool<Editor, EditorId> editors;
 ClipboardState clipboard;
 
 Editor* getEditor(EditorId EditorId) {

@@ -8,8 +8,6 @@
 
 namespace mg {
 
-using ContextId = uint32_t;
-
 class Screen;
 using OwnedScreen = std::unique_ptr<Screen>;
 
