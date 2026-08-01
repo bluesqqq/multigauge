@@ -3,9 +3,11 @@
 #include <cstddef>
 #include <cstdint>
 
+#include <multigauge/container/GenerationalHandle.h>
+
 namespace mg::editor {
 
-using EditorId = uint32_t;
+using EditorId = GenerationalHandle<struct EditorTag>;
 using NodeId = uint32_t;
 
 struct FacePlacement {

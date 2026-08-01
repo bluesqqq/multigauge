@@ -8,7 +8,7 @@ namespace mg {
 
 class EditorScreen : public Screen {
     private:
-        editor::EditorId editorId = 0;
+        editor::EditorId editorId{};
         editor::NodeId faceId = 0;
         gauge::GaugeFace* lastFace = nullptr;
 
@@ -16,7 +16,7 @@ class EditorScreen : public Screen {
         void ensureFaceInitialized(RuntimeContext& ctx, gauge::GaugeFace* face);
 
     public:
-        explicit EditorScreen(editor::EditorId editorId = 0, editor::NodeId faceId = 0);
+        explicit EditorScreen(editor::EditorId editorId = editor::EditorId{}, editor::NodeId faceId = 0);
 
         void setFace(editor::EditorId editorId, editor::NodeId faceId);
 
