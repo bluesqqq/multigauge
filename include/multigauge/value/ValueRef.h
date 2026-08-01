@@ -1,82 +1,106 @@
 #pragma once
 
-#include <string>
-#include <string_view>
-
 #include <multigauge/properties/Codec.h>
 #include <multigauge/properties/WidgetTraits.h>
-#include <multigauge/value/Value.h>
+#include <multigauge/value/ValueRegistry.h>
 
 namespace mg {
 
+/// Serializable two-byte reference to a registry value.
+/// @note Decode succeeds only after the referenced value has been registered.
 class ValueRef {
     CODEC_FRIEND(ValueRef)
 
-    private:
-        std::string id_;
-        Value* value_ = nullptr;
+public:
+    /* ----- CONSTRUCTORS ----- */
 
-    public:
-        ValueRef() noexcept = default;
+    ValueRef() noexcept;
 
-        explicit ValueRef(std::string_view id) : id_(id) { resolve(); }
-        explicit ValueRef(Value* value) : id_(value ? std::string(value->id()) : ""), value_(value) {}
+    explicit ValueRef(ValueHandle handle) noexcept;
 
-        bool resolve() noexcept {
-            value_ = id_.empty() ? nullptr : Value::find(id_);
-            return value_ != nullptr;
-        }
+    explicit ValueRef(BuiltInValue value) noexcept;
+    
+    explicit ValueRef(std::string_view id) noexcept;
 
-        void clear() noexcept {
-            id_.clear();
-            value_ = nullptr;
-        }
+    /* ----- REFERENCE MANAGEMENT ----- */
 
-        [[nodiscard]]
-        const std::string& id() const noexcept { return id_; }
+    [[nodiscard]]
+    bool resolve(std::string_view id) noexcept;
 
-        void setId(std::string_view newId) {
-            id_ = newId;
-            resolve();
-        }
+    void clear() noexcept;
 
-        [[nodiscard]]
-        Value* get() const noexcept { return value_; }
+    [[nodiscard]]
+    ValueHandle handle() const noexcept;
 
-        [[nodiscard]]
-        Value& operator*() const noexcept { return *value_; }
+    void setHandle(ValueHandle handle) noexcept;
 
-        [[nodiscard]]
-        Value* operator->() const noexcept { return value_; }
+    /* ----- METADATA ----- */
 
-        [[nodiscard]]
-        explicit operator bool() const noexcept { return value_ != nullptr; }
+    [[nodiscard]]
+    std::string_view id() const noexcept;
+
+    [[nodiscard]]
+    std::string_view name() const noexcept;
+
+    [[nodiscard]]
+    const UnitType* unit() const noexcept;
+
+    [[nodiscard]]
+    Measurement minimum() const noexcept;
+
+    [[nodiscard]]
+    Measurement maximum() const noexcept;
+
+    /* ----- VALUE ACCESS ----- */
+
+    [[nodiscard]]
+    Measurement value() const noexcept;
+
+    [[nodiscard]]
+    bool available() const noexcept;
+
+    /* ----- VALUE MUTATION ----- */
+
+    [[nodiscard]]
+    bool setValue(Measurement value) noexcept;
+
+    [[nodiscard]]
+    bool invalidate() noexcept;
+
+    /* ----- OPERATORS ----- */
+
+    [[nodiscard]]
+    explicit operator bool() const noexcept;
+
+    friend bool operator==(
+        const ValueRef& lhs,
+        const ValueRef& rhs
+    ) noexcept;
+
+private:
+    /* ----- DATA ----- */
+
+    ValueHandle handle_{};
 };
 
-template <>
-struct MgPropWidgetTraits<ValueRef> {
-    static constexpr const char* value = "value";
-};
+template<>
+struct MgPropWidgetTraits<ValueRef> { static constexpr const char* value = "value"; };
 
 CODEC_BEGIN(ValueRef)
     DECODE() {
         if (v.isNull()) {
-            out = ValueRef();
+            out.clear();
             return true;
         }
 
         std::string_view id;
         if (!v.read(id)) return false;
-        out = ValueRef(id);
-        return true;
+        
+        return out.resolve(id);
     }
 
     ENCODE() {
-        if (v.id().empty()) {
-            return out.null();
-        }
-
-        return out.write(v.id());
+        return v.id().empty() ? out.null() : out.write(v.id());
     }
 CODEC_END()
 
