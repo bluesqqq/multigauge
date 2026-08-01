@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+#include <multigauge/container/GenerationalHandle.h>
 #include <multigauge/json/Json.h>
 
 #include <multigauge/editor/Api.h>
@@ -24,7 +25,7 @@ namespace graphics {
 class GraphicsContext;
 }
 
-using ContextId = uint32_t;
+using ContextId = GenerationalHandle<struct ContextTag>;
 
 struct AppConfig {
     std::string dataRoot = "/multigauge";
