@@ -14,22 +14,20 @@ mg::json::Document viewDocument(const char* id, float minimum, float maximum, in
 }
 
 TEST_CASE("ValueView applies serialized limits") {
-    mg::Value* temperature = mg::Value::find("engineCoolantTemp");
-    REQUIRE(temperature != nullptr);
-    const mg::Measurement original = temperature->valueBase();
-    temperature->setValueBase(110.0f);
+    const auto temperature = mg::ValueRegistry::handle(mg::BuiltInValue::engineCoolantTemp);
+    REQUIRE(mg::ValueRegistry::set(temperature, 110.0f));
     auto document = viewDocument("engineCoolantTemp", 20.0f, 80.0f, 1);
     mg::ValueView view;
     REQUIRE(mg::decodeAny(document.root(), view));
     CHECK(view.minimumBase() == doctest::Approx(20.0f));
     CHECK(view.maximumBase() == doctest::Approx(80.0f));
     CHECK(view.unit()->abbreviation == "F");
-    temperature->setValueBase(original);
+    REQUIRE(mg::ValueRegistry::invalidate(temperature));
 }
 
 TEST_CASE("ValueView restores optional defaults and rejects unsupported values") {
-    mg::Value* temperature = mg::Value::find("engineCoolantTemp");
-    REQUIRE(temperature != nullptr);
+    const auto temperature = mg::ValueRegistry::handle(mg::BuiltInValue::engineCoolantTemp);
+    REQUIRE(mg::ValueRegistry::exists(temperature));
     auto document = viewDocument("engineCoolantTemp", 20.0f, 80.0f, 127);
     mg::ValueView view;
     REQUIRE(mg::decodeAny(document.root(), view));
