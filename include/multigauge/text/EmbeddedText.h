@@ -11,7 +11,7 @@
 #include <multigauge/properties/Codec.h>
 #include <multigauge/text/TextBuffer.h>
 #include <multigauge/value/UnitType.h>
-#include <multigauge/value/Value.h>
+#include <multigauge/value/ValueRegistry.h>
 
 namespace mg::text {
 
@@ -218,7 +218,7 @@ struct StringPart {
 };
 
 struct ValueEmbedMetadata {
-    ::mg::Value* value = nullptr;
+    ::mg::ValueHandle value;
     UnitIndex unit = BASE_UNIT;
     int8_t decimals = -1;
     uint8_t flags = None;
@@ -228,11 +228,12 @@ inline bool appendValue(
     const ValueEmbedMetadata& metadata,
     TextBuffer& out
 ) noexcept {
-    ::mg::Value* value = metadata.value;
-
-    if (!value) {
+    if (!::mg::ValueRegistry::exists(metadata.value)) {
         return false;
     }
+
+    const ::mg::UnitType* unitType = ::mg::ValueRegistry::unit(metadata.value);
+    if (!unitType) return false;
 
     const bool fullName =
         (metadata.flags & NoAbbreviation) != 0;
@@ -241,12 +242,12 @@ inline bool appendValue(
         (metadata.flags & UnitOnly) != 0;
 
     const ::mg::Unit* selected =
-        value->unitType().unit(metadata.unit);
+        unitType->unit(metadata.unit);
 
     const ::mg::Unit& unit =
         selected
             ? *selected
-            : value->unitType().baseUnit();
+            : unitType->baseUnit();
 
     const std::string_view unitText =
         fullName
@@ -267,8 +268,13 @@ inline bool appendValue(
                 ? 0
                 : static_cast<uint8_t>(metadata.decimals);
 
+        const float minimum = ::mg::ValueRegistry::minimum(metadata.value);
+        const float maximum = ::mg::ValueRegistry::maximum(metadata.value);
+        const float span = maximum - minimum;
+
         return out.appendFloat(
-                   value->interpolationValue() * 100.0f,
+                   (span == 0.0F ? 50.0F :
+                    ((::mg::ValueRegistry::value(metadata.value) - minimum) / span) * 100.0F),
                    decimals
                ) &&
                out.append(
@@ -284,10 +290,10 @@ inline bool appendValue(
 
     const float shown =
         (metadata.flags & Minimum) != 0
-            ? value->minimum(metadata.unit)
+            ? unitType->convertFromBase(::mg::ValueRegistry::minimum(metadata.value), metadata.unit)
             : (metadata.flags & Maximum) != 0
-                ? value->maximum(metadata.unit)
-                : value->value(metadata.unit);
+                ? unitType->convertFromBase(::mg::ValueRegistry::maximum(metadata.value), metadata.unit)
+                : unitType->convertFromBase(::mg::ValueRegistry::value(metadata.value), metadata.unit);
 
     const uint8_t decimals =
         metadata.decimals < 0
@@ -319,9 +325,9 @@ inline bool parseValue(
         return false;
     }
 
-    metadata.value = ::mg::Value::find(spec.name);
+    metadata.value = ::mg::ValueRegistry::resolve(spec.name);
 
-    if (!metadata.value) {
+    if (!metadata.value.valid()) {
         return false;
     }
 
@@ -329,7 +335,8 @@ inline bool parseValue(
      * Reject invalid unit indices instead of relying on separate fallback
      * behavior in Value and UnitType.
      */
-    if (!metadata.value->unitType().unit(spec.unit)) {
+    const ::mg::UnitType* unitType = ::mg::ValueRegistry::unit(metadata.value);
+    if (!unitType || !unitType->unit(spec.unit)) {
         return false;
     }
 

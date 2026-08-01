@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <memory>
 
-#include <multigauge/value/Value.h>
+#include <multigauge/value/ValueRegistry.h>
 #include <multigauge/utils/Json.h>
 
 namespace mg::editor {
@@ -598,7 +598,7 @@ Result Editor::listElementTypes() const {
 
 Result Editor::listValueIDs() const {
     Result result = OkArray();
-    if (!result.data.writer().writeArray([&](json::ArrayWriter& data) { for (const Value& value : Value::list()) if (!data.write(value.id())) return false; return true; })) return Error("Failed to list values");
+    if (!result.data.writer().writeArray([&](json::ArrayWriter& data) { bool wrote = true; ValueRegistry::forEach([&](ValueHandle value) { if (wrote) wrote = data.write(ValueRegistry::id(value)); }); return wrote; })) return Error("Failed to list values");
 
     return result;
 }
