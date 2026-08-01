@@ -5,7 +5,7 @@
 #include <multigauge/graphics/colors/ValueColor.h>
 #include <multigauge/json/Json.h>
 #include <multigauge/properties/Codec.h>
-#include <multigauge/value/Value.h>
+#include <multigauge/value/ValueRegistry.h>
 
 namespace {
 
@@ -66,15 +66,14 @@ TEST_CASE("color resolver never allocates while resolving") {
 }
 
 TEST_CASE("value colors use an indexed frame snapshot and normalized ramps") {
-    mg::Value* rpm = mg::Value::find("engineRPM");
-    REQUIRE(rpm != nullptr);
+    const auto rpm = mg::ValueRegistry::handle(mg::BuiltInValue::engineRPM);
 
     ColorTimeline ramp;
     REQUIRE(ramp.addKeyframe(rgba{0, 0, 0, 255}, 0.0F));
     REQUIRE(ramp.addKeyframe(rgba{255, 0, 0, 255}, 1.0F));
-    ValueColor color(rpm, std::move(ramp));
+    ValueColor color(mg::ValueRef(rpm), std::move(ramp));
 
-    rpm->setValueBase(rpm->minimumBase());
+    REQUIRE(mg::ValueRegistry::set(rpm, mg::ValueRegistry::minimum(rpm)));
     ColorFrame frame;
     ColorResolver resolver;
     UserPalette palette;
@@ -82,7 +81,7 @@ TEST_CASE("value colors use an indexed frame snapshot and normalized ramps") {
     const rgba first = token.resolve(color);
 
     // Mutation after the snapshot cannot affect this frame.
-    rpm->setValueBase(rpm->maximumBase());
+    REQUIRE(mg::ValueRegistry::set(rpm, mg::ValueRegistry::maximum(rpm)));
     const rgba sameFrame = token.resolve(color);
     CHECK(sameFrame.r == first.r);
 
@@ -90,7 +89,7 @@ TEST_CASE("value colors use an indexed frame snapshot and normalized ramps") {
     const rgba nextFrame = token.resolve(color);
     CHECK(first.r == 0);
     CHECK(nextFrame.r == 255);
-    rpm->setValueBase(rpm->minimumBase());
+    REQUIRE(mg::ValueRegistry::invalidate(rpm));
 }
 
 TEST_CASE("color ramps serialize complete normalized nested definitions") {

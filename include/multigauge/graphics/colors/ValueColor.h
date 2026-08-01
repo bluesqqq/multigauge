@@ -20,7 +20,7 @@ class ValueColor final : public Color {
 
 public:
     ValueColor() = default;
-    ValueColor(::mg::Value* value, ColorTimeline timeline);
+    ValueColor(::mg::ValueRef value, ColorTimeline timeline);
     ValueColor(const ValueColor&) = default;
     ValueColor& operator=(const ValueColor&) = default;
     OwnedColor clone() const override;
