@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <concepts>
 #include <string>
 #include <vector>
 
@@ -40,6 +41,7 @@ class PropertyObject {
 
             /// Iterates this property list and every parent list in order.
             template <typename Fn>
+                requires std::invocable<Fn&, const Property&>
             void forEach(const PropertyObject* self, Fn&& fn) const {
                 for (PropertyList pl = *this; pl.valid(); pl = next(self, pl)) {
                     if (!pl.props || pl.count == 0) continue;
