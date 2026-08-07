@@ -2,15 +2,15 @@
 
 #include <multigauge/json/Json.h>
 
+#include <concepts>
 #include <optional>
 #include <type_traits>
 
 namespace mg {
 template <typename T> struct EnumOption { T value; const char* key; const char* label; };
 template <typename T> struct EnumTraits;
-template <typename T, typename = void> struct HasEnumTraits : std::false_type {};
-template <typename T> struct HasEnumTraits<T, std::void_t<decltype(EnumTraits<T>::options)>> : std::true_type {};
-template <typename T> inline constexpr bool HasEnumTraitsV = HasEnumTraits<T>::value;
+template <typename T>
+concept EnumDescribed = requires { EnumTraits<T>::options; };
 template <typename T> struct EnumTraitsType { using type = std::remove_cv_t<std::remove_reference_t<T>>; };
 template <typename T> struct EnumTraitsType<std::optional<T>> { using type = typename EnumTraitsType<T>::type; };
 template <typename T> using EnumTraitsTypeT = typename EnumTraitsType<T>::type;
