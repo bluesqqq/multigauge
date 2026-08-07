@@ -24,6 +24,9 @@ struct Parent final : mg::PropertyObject {
     MG_PROPS_END()
 };
 
+static_assert(mg::CodecFor<int>);
+static_assert(mg::PropertyObjectValue<Child>);
+
 mg::json::Document objectWithValue(std::string_view json) {
     return mg::json::parse(json);
 }
