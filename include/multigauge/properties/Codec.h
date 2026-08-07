@@ -3,11 +3,11 @@
 #include <multigauge/json/Json.h>
 
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <limits>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -16,25 +16,24 @@ namespace mg {
 class PropertyObject;
 template<typename T> struct Codec;
 
-template <typename T, typename = void> struct HasCodec : std::false_type {};
-template <typename T> struct HasCodec<T, std::void_t<
-    decltype(Codec<T>::decode(std::declval<json::Reader>(), std::declval<T&>())),
-    decltype(Codec<T>::encode(std::declval<json::Writer&>(), std::declval<const T&>()))
->> : std::true_type {};
-template <typename T> inline constexpr bool HasCodecV = HasCodec<T>::value;
+/// A codec that can losslessly participate in the property serialization path.
+template <typename T>
+concept CodecFor = requires(json::Reader reader, json::Writer& writer, T& out, const T& value) {
+    { Codec<T>::decode(reader, out) } -> std::same_as<bool>;
+    { Codec<T>::encode(writer, value) } -> std::same_as<bool>;
+};
 
 template <typename T> bool decodeAny(json::Reader value, T& out);
 template <typename T> bool encodeAny(json::Writer& writer, const T& value);
 
-template <class T> struct mg_remove_cvref { using type = std::remove_cv_t<std::remove_reference_t<T>>; };
 #define CODEC_FRIEND(T) friend struct Codec<T>;
-#define CODEC_BEGIN(CODEC_T) template<> struct Codec<CODEC_T> { using CodecType = CODEC_T;
-#define CODEC_BEGIN_TPARAMS(TPARAMS, CODEC_T) template<TPARAMS> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+#define CODEC_BEGIN(CODEC_T) template <> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+#define CODEC_BEGIN_TPARAMS(TPARAMS, CODEC_T) template <TPARAMS> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+#define CODEC_END() };
 #define DECODE() static bool decode(::mg::json::Reader v, CodecType& out)
 #define ENCODE() static bool encode(::mg::json::Writer& out, const CodecType& v)
-#define CODEC_END() };
-#define DECODE_IMPL(CODEC_T) bool Codec<CODEC_T>::decode(::mg::json::Reader v, CodecType& out)
-#define ENCODE_IMPL(CODEC_T) bool Codec<CODEC_T>::encode(::mg::json::Writer& out, const CodecType& v)
+#define DECODE_IMPL(CODEC_T) bool Codec<CODEC_T>::decode(::mg::json::Reader v, CODEC_T& out)
+#define ENCODE_IMPL(CODEC_T) bool Codec<CODEC_T>::encode(::mg::json::Writer& out, const CODEC_T& v)
 
 CODEC_BEGIN(bool)
     DECODE() { return v.read(out); }
