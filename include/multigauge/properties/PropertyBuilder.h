@@ -114,7 +114,6 @@ struct ChildObjectTraits {
     static constexpr bool supported = false;
 
     static const ::mg::PropertyObject* getConst(const T&) { return nullptr; }
-    static ::mg::PropertyObject* getMutable(T&) { return nullptr; }
 };
 
 /// Nested-child support for direct `PropertyObject` members.
@@ -123,7 +122,6 @@ struct ChildObjectTraits<T> {
     static constexpr bool supported = true;
 
     static const ::mg::PropertyObject* getConst(const T& value) { return &value; }
-    static ::mg::PropertyObject* getMutable(T& value) { return &value; }
 };
 
 /// Nested-child support for owned `PropertyObject` pointers.
@@ -132,7 +130,6 @@ struct ChildObjectTraits<std::unique_ptr<T>> {
     static constexpr bool supported = true;
 
     static const ::mg::PropertyObject* getConst(const std::unique_ptr<T>& value) { return value.get(); }
-    static ::mg::PropertyObject* getMutable(std::unique_ptr<T>& value) { return value.get(); }
 };
 
 /// Nested-child support for optional `PropertyObject` members.
@@ -141,31 +138,17 @@ struct ChildObjectTraits<std::optional<T>> {
     static constexpr bool supported = true;
 
     static const ::mg::PropertyObject* getConst(const std::optional<T>& value) { return value ? &(*value) : nullptr; }
-
-    static ::mg::PropertyObject* getMutable(std::optional<T>& value) {
-        return value ? &(*value) : nullptr;
-    }
 };
 
-/// Returns the const child object exposed by a member pointer.
+/// Returns the child object exposed by a member pointer.
 template <auto MemberPtr>
     requires PropertyMember<MemberPtr>
-const ::mg::PropertyObject* getChildObjectConst(const ::mg::PropertyObject* obj) {
+const ::mg::PropertyObject* getChildObject(const ::mg::PropertyObject* obj) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
     static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
     const C* self = static_cast<const C*>(obj);
     return ChildObjectTraits<T>::getConst(self->*MemberPtr);
-}
-
-/// Returns the mutable child object exposed by a member pointer.
-template <auto MemberPtr>
-::mg::PropertyObject* getChildObject(::mg::PropertyObject* obj) requires PropertyMember<MemberPtr> {
-    using C = MemberClass<MemberPtr>;
-    using T = MemberType<MemberPtr>;
-    static_assert(ChildObjectTraits<T>::supported, "Member must expose a PropertyObject child.");
-    C* self = static_cast<C*>(obj);
-    return ChildObjectTraits<T>::getMutable(self->*MemberPtr);
 }
 
 } // namespace detail
@@ -193,7 +176,6 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
 
     if constexpr (detail::ChildObjectTraits<T>::supported) {
         p.getChild = &detail::getChildObject<MemberPtr>;
-        p.getChildConst = &detail::getChildObjectConst<MemberPtr>;
     }
 
 #if MG_ENABLE_EDITOR_REFLECTION
@@ -208,7 +190,7 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
     if constexpr (::mg::EnumDescribed<::mg::EnumTraitsTypeT<T>>) meta.getOptionsMeta = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
     if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypesMeta = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
 
-    return {p.key, p.set, p.get, p.getChild, p.getChildConst, meta};
+    return {p.key, p.set, p.get, p.getChild, meta};
 #else
     (void)name; (void)description; (void)visibleWhen; (void)interactableWhen; (void)inspectorVisible;
     return p;
@@ -234,10 +216,10 @@ inline ::mg::Property makeCustomProperty(const char* key, const char* name, cons
     meta.getVisibleWhen = visibleWhen;
     meta.getInteractableWhen = interactableWhen;
 
-    return {key, set, get, nullptr, nullptr, meta};
+    return {key, set, get, nullptr, meta};
 #else
     (void)name; (void)description; (void)visibleWhen; (void)interactableWhen; (void)inspectorVisible;
-    return {key, set, get, nullptr, nullptr};
+    return {key, set, get, nullptr};
 #endif
 }
 
