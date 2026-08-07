@@ -3,6 +3,7 @@
 #include <multigauge/json/Json.h>
 
 #include <cstddef>
+#include <span>
 #include <string_view>
 
 namespace mg {
@@ -44,26 +45,20 @@ public:
 
     /// @brief Constructs a registry over an existing descriptor array.
     /// @param descriptors Registered type descriptors.
-    /// @param count Number of descriptors in the array.
     /// @param fallback Factory used when no matching registered type is found.
-    constexpr MgPolymorphicRegistry(
-        const Descriptor* descriptors,
-        std::size_t count,
-        Creator fallback
-    )
+    constexpr MgPolymorphicRegistry(std::span<const Descriptor> descriptors, Creator fallback)
         : descriptors_(descriptors),
-          count_(count),
           fallback_(fallback) {}
 
     /// @brief Finds a registered type by identifier.
     /// @param type Type identifier to find.
     /// @return Matching descriptor, or nullptr if no type matches.
-    const Descriptor* find(std::string_view type) const {
+    [[nodiscard]] constexpr const Descriptor* find(std::string_view type) const noexcept {
         if (type.empty()) return nullptr;
 
-        for (std::size_t i = 0; i < count_; ++i) {
-            if (descriptors_[i].id && type == descriptors_[i].id) {
-                return &descriptors_[i];
+        for (const Descriptor& descriptor : descriptors_) {
+            if (descriptor.id && type == descriptor.id) {
+                return &descriptor;
             }
         }
 
@@ -74,7 +69,7 @@ public:
     /// @param type Type identifier to create.
     /// @param args Arguments forwarded to the selected factory.
     /// @return Created instance, the fallback instance if configured, or an empty owner.
-    Owned create(std::string_view type, Args... args) const {
+    [[nodiscard]] Owned create(std::string_view type, Args... args) const {
         if (const Descriptor* descriptor = find(type);
             descriptor && descriptor->create) {
             return descriptor->create(args...);
@@ -83,17 +78,16 @@ public:
         return fallback_ ? fallback_(args...) : Owned{};
     }
 
-    const Descriptor* begin() const { return descriptors_; }
-    const Descriptor* end() const { return descriptors_ + count_; }
-    std::size_t size() const { return count_; }
+    [[nodiscard]] constexpr const Descriptor* begin() const noexcept { return descriptors_.data(); }
+    [[nodiscard]] constexpr const Descriptor* end() const noexcept { return descriptors_.data() + descriptors_.size(); }
+    [[nodiscard]] constexpr std::size_t size() const noexcept { return descriptors_.size(); }
 
     /// @brief Writes editor metadata for all registered polymorphic types.
     /// @param writer JSON writer receiving the type metadata.
     /// @return true if all metadata is written successfully; otherwise false.
-    bool writeTypesMeta(json::Writer& writer) const {
+    [[nodiscard]] bool writeTypesMeta(json::Writer& writer) const {
         return writer.writeArray([&](json::ArrayWriter& types) {
-            for (std::size_t i = 0; i < count_; ++i) {
-                const auto& descriptor = descriptors_[i];
+            for (const Descriptor& descriptor : descriptors_) {
 
                 if (!types.writeObject([&](json::ObjectWriter& entry) {
                     return entry.write("id", descriptor.id ? descriptor.id : "")
@@ -108,8 +102,7 @@ public:
     }
 
 private:
-    const Descriptor* descriptors_ = nullptr;
-    std::size_t count_ = 0;
+    std::span<const Descriptor> descriptors_;
     Creator fallback_ = nullptr;
 };
 
