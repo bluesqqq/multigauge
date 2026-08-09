@@ -101,7 +101,7 @@ CODEC_BEGIN(graphics::ColorTimeline)
         }
 
         std::vector<graphics::ColorKeyframe> stops;
-        if (!v.isObject() || !set(v, "keyframes", stops)) return false;
+        if (!v.isObject() || !decodeAny(v.member("keyframes"), stops)) return false;
         graphics::ColorTimeline decoded;
         for (auto& stop : stops) {
             if (!decoded.addKeyframe(std::move(stop))) return false;

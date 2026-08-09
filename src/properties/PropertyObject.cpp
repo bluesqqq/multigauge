@@ -68,14 +68,14 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
 #else
     return writer.writeObject([&](json::ObjectWriter& object) {
         if (!prop.writeBaseMeta(object)) return false;
-        if (prop.getChildConst) {
+        if (prop.getChild) {
             if (prop.meta.getTypesMeta && !object.writeObject("types", [&](json::ObjectWriter& types) {
-                const PropertyObject* child = prop.getChildConst(this);
+                const PropertyObject* child = prop.getChild(this);
                 if (child && child->typeId()) { if (!types.write("current", child->typeId())) return false; }
                 else if (!types.writeValue("current", [](json::Writer& value) { return value.null(); })) return false;
                 return types.writeValue("all", prop.meta.getTypesMeta);
             })) return false;
-            const PropertyObject* child = prop.getChildConst(this);
+            const PropertyObject* child = prop.getChild(this);
             return object.writeArray("properties", [&](json::ArrayWriter& properties) {
                 if (!child) return true;
                 return child->writePropertiesMeta(properties.writer());
@@ -95,13 +95,13 @@ std::vector<std::string> PropertyObject::splitPath(const std::string& path) {
 
 bool PropertyObject::resolvePath(const std::string& path, PropertyObject*& owner, const Property*& prop) {
     owner = nullptr; prop = nullptr; const auto parts = splitPath(path); if (parts.empty()) return false; PropertyObject* current = this;
-    for (std::size_t i = 0; i < parts.size(); ++i) { const Property* found = current->findProperty(parts[i].c_str()); if (!found) return false; if (i + 1 == parts.size()) { owner = current; prop = found; return true; } if (!found->getChild || !(current = found->getChild(current))) return false; }
+    for (std::size_t i = 0; i < parts.size(); ++i) { const Property* found = current->findProperty(parts[i].c_str()); if (!found) return false; if (i + 1 == parts.size()) { owner = current; prop = found; return true; } const PropertyObject* child = found->getChild ? found->getChild(current) : nullptr; if (!child) return false; current = const_cast<PropertyObject*>(child); }
     return false;
 }
 
 bool PropertyObject::resolvePath(const std::string& path, const PropertyObject*& owner, const Property*& prop) const {
     owner = nullptr; prop = nullptr; const auto parts = splitPath(path); if (parts.empty()) return false; const PropertyObject* current = this;
-    for (std::size_t i = 0; i < parts.size(); ++i) { const Property* found = current->findProperty(parts[i].c_str()); if (!found) return false; if (i + 1 == parts.size()) { owner = current; prop = found; return true; } if (!found->getChildConst || !(current = found->getChildConst(current))) return false; }
+    for (std::size_t i = 0; i < parts.size(); ++i) { const Property* found = current->findProperty(parts[i].c_str()); if (!found) return false; if (i + 1 == parts.size()) { owner = current; prop = found; return true; } if (!found->getChild || !(current = found->getChild(current))) return false; }
     return false;
 }
 

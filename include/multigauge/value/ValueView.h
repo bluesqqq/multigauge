@@ -80,7 +80,7 @@ CODEC_BEGIN(ValueView)
         std::string_view id;
 
         if (v.read(id)) {
-            out = CodecType(id);
+            out = ValueView(id);
             return static_cast<bool>(out.value_);
         }
 

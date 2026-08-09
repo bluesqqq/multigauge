@@ -3,80 +3,79 @@
 #include <multigauge/json/Json.h>
 
 #include <cmath>
+#include <concepts>
 #include <cstdint>
 #include <limits>
 #include <optional>
 #include <string>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
 namespace mg {
 
-class PropertyObject;
-template<typename T> struct Codec;
+class PropertyObject; // Forward declaration
 
-template <typename T, typename = void> struct HasCodec : std::false_type {};
-template <typename T> struct HasCodec<T, std::void_t<
-    decltype(Codec<T>::decode(std::declval<json::Reader>(), std::declval<T&>())),
-    decltype(Codec<T>::encode(std::declval<json::Writer&>(), std::declval<const T&>()))
->> : std::true_type {};
-template <typename T> inline constexpr bool HasCodecV = HasCodec<T>::value;
 
-template <typename T> bool decodeAny(json::Reader value, T& out);
-template <typename T> bool encodeAny(json::Writer& writer, const T& value);
-
-template <class T> struct mg_remove_cvref { using type = std::remove_cv_t<std::remove_reference_t<T>>; };
-#define CODEC_FRIEND(T) friend struct Codec<T>;
-#define CODEC_BEGIN(CODEC_T) template<> struct Codec<CODEC_T> { using CodecType = CODEC_T;
-#define CODEC_BEGIN_TPARAMS(TPARAMS, CODEC_T) template<TPARAMS> struct Codec<CODEC_T> { using CodecType = CODEC_T;
-#define DECODE() static bool decode(::mg::json::Reader v, CodecType& out)
-#define ENCODE() static bool encode(::mg::json::Writer& out, const CodecType& v)
-#define CODEC_END() };
-#define DECODE_IMPL(CODEC_T) bool Codec<CODEC_T>::decode(::mg::json::Reader v, CodecType& out)
-#define ENCODE_IMPL(CODEC_T) bool Codec<CODEC_T>::encode(::mg::json::Writer& out, const CodecType& v)
-
-CODEC_BEGIN(bool)
-    DECODE() { return v.read(out); }
-    ENCODE() { return out.write(v); }
-CODEC_END()
-
-CODEC_BEGIN(int)
-    DECODE() { std::int64_t decoded; if (!v.read(decoded) || decoded < std::numeric_limits<int>::min() || decoded > std::numeric_limits<int>::max()) return false; out = static_cast<int>(decoded); return true; }
-    ENCODE() { return out.write(v); }
-CODEC_END()
-
-CODEC_BEGIN(std::int8_t)
-    DECODE() { std::int64_t decoded; if (!v.read(decoded) || decoded < std::numeric_limits<std::int8_t>::min() || decoded > std::numeric_limits<std::int8_t>::max()) return false; out = static_cast<std::int8_t>(decoded); return true; }
-    ENCODE() { return out.write(static_cast<int>(v)); }
-CODEC_END()
-
-CODEC_BEGIN(float)
-    DECODE() { double decoded; if (!v.read(decoded) || !std::isfinite(decoded) || decoded < -std::numeric_limits<float>::max() || decoded > std::numeric_limits<float>::max()) return false; out = static_cast<float>(decoded); return true; }
-    ENCODE() { return out.write(v); }
-CODEC_END()
-
-CODEC_BEGIN(std::string)
-    DECODE() { std::string_view decoded; if (!v.read(decoded)) return false; out.assign(decoded); return true; }
-    ENCODE() { return out.write(v); }
-CODEC_END()
-
-CODEC_BEGIN_TPARAMS(typename T, std::optional<T>)
-    DECODE() { if (v.isNull()) { out.reset(); return true; } T decoded{}; if (!decodeAny(v, decoded)) return false; out = std::move(decoded); return true; }
-    ENCODE() { return v ? encodeAny(out, *v) : out.null(); }
-CODEC_END()
-
-CODEC_BEGIN_TPARAMS(typename T, std::vector<T>)
-    DECODE() { if (!v.isArray()) return false; CodecType decoded; decoded.reserve(v.size()); for (std::size_t i = 0; i < v.size(); ++i) { T element{}; if (!decodeAny(v.element(i), element)) return false; decoded.push_back(std::move(element)); } out = std::move(decoded); return true; }
-    ENCODE() { return out.writeArray([&](json::ArrayWriter&) { for (const auto& element : v) { if (!encodeAny(out, element)) return false; } return true; }); }
-CODEC_END()
-
+/// @brief Serialization adapter for a type used by the property system.
+/// @tparam T Type serialized by the codec.
 template<typename T>
-inline bool set(json::Reader object, std::string_view key, T& out) {
-    const json::Reader value = object.member(key);
-    return value.valid() && decodeAny(value, out);
-}
+struct Codec;
+
+/// @brief Determines whether a type provides a valid property codec.
+/// @tparam T Type to test.
+template <typename T>
+concept CodecFor = requires(json::Reader reader, json::Writer& writer, T& out, const T& value) {
+    { Codec<T>::decode(reader, out) } -> std::same_as<bool>;
+    { Codec<T>::encode(writer, value) } -> std::same_as<bool>;
+};
+
+/// @brief Decodes a value through the property serialization system.
+/// @tparam T Destination type.
+/// @param value JSON value to decode.
+/// @param out Destination receiving the decoded value.
+/// @return true if decoding succeeds; otherwise false.
+template <typename T> bool decodeAny(
+    json::Reader value,
+    T& out
+);
+
+/// @brief Encodes a value through the property serialization system.
+/// @tparam T Value type.
+/// @param writer JSON writer receiving the encoded value.
+/// @param value Value to encode.
+/// @return true if encoding succeeds; otherwise false.
+template <typename T> bool encodeAny(
+    json::Writer& writer,
+    const T& value
+);
+
+//----------[ MACROS ]----------//
+
+/// @brief Grants Codec<T> access to private members of a type.
+#define CODEC_FRIEND(T) friend struct Codec<T>;
+
+/// @brief Begins a full specialization of Codec for a concrete type.
+#define CODEC_BEGIN(CODEC_T) template <> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+
+/// @brief Begins a templated Codec specialization.
+#define CODEC_BEGIN_TPARAMS(TPARAMS, CODEC_T) template <TPARAMS> struct Codec<CODEC_T> { using CodecType = CODEC_T;
+
+/// @brief Ends a Codec specialization declared with CODEC_BEGIN.
+#define CODEC_END() };
+
+/// @brief Declares the standard decode function for a Codec specialization.
+#define DECODE() static bool decode(::mg::json::Reader v, CodecType& out)
+
+/// @brief Declares the standard encode function for a Codec specialization.
+#define ENCODE() static bool encode(::mg::json::Writer& out, const CodecType& v)
+
+/// @brief Defines an out-of-line Codec decode function.
+#define DECODE_IMPL(CODEC_T) bool Codec<CODEC_T>::decode(::mg::json::Reader v, CODEC_T& out)
+
+/// @brief Defines an out-of-line Codec encode function.
+#define ENCODE_IMPL(CODEC_T) bool Codec<CODEC_T>::encode(::mg::json::Writer& out, const CODEC_T& v)
 
 } // namespace mg
 
 #include <multigauge/properties/PropertyCodec.h>
+#include <multigauge/properties/codecs/StandardCodecs.h>

@@ -36,7 +36,7 @@ Color::Color() noexcept : id_(allocateColorId()) {}
 Color::Color(const Color&) noexcept : id_(allocateColorId()) {}
 
 const Color::Registry& Color::registry() {
-    static const Registry registry(colorTypes, sizeof(colorTypes) / sizeof(colorTypes[0]), &createDefaultColor);
+    static const Registry registry(colorTypes, &createDefaultColor);
     return registry;
 }
 

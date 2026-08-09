@@ -7,6 +7,7 @@ add_executable(multigauge_core_tests
   test_value_view.cpp
   test_value_embed.cpp
   test_properties.cpp
+  test_polymorphic_registry.cpp
   test_colors.cpp
 )
 

@@ -3,6 +3,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <concepts>
 #include <type_traits>
 #include <vector>
 
@@ -27,7 +28,8 @@ struct MgPropNullableTraits {
 };
 
 template <typename T>
-struct MgPropWidgetTraits<T, std::enable_if_t<HasEnumTraitsV<EnumTraitsTypeT<T>>>> {
+    requires EnumDescribed<EnumTraitsTypeT<T>>
+struct MgPropWidgetTraits<T> {
     static constexpr const char* value = "select";
 };
 
@@ -39,7 +41,8 @@ MG_EDITOR_WIDGET(bool, "boolean")
 MG_EDITOR_WIDGET(graphics::rgba, "color-selector")
 
 template <typename T>
-struct MgPropWidgetTraits<T, std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<T, bool>>> {
+    requires (std::is_arithmetic_v<T> && !std::is_same_v<T, bool>)
+struct MgPropWidgetTraits<T> {
     static constexpr const char* value = "number";
 };
 
@@ -61,7 +64,8 @@ struct MgPropNullableTraits<std::optional<T>> {
 };
 
 template <typename T>
-struct MgPropWidgetTraits<T, std::enable_if_t<std::is_base_of_v<PropertyObject, T>>> {
+    requires std::derived_from<T, PropertyObject>
+struct MgPropWidgetTraits<T> {
     static constexpr const char* value = "group";
 };
 

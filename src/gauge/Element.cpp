@@ -42,7 +42,7 @@ namespace {
 }
 
 const Element::Registry& Element::registry() {
-    static const Registry registry(ELEMENT_TYPES, sizeof(ELEMENT_TYPES) / sizeof(ELEMENT_TYPES[0]), &createDefaultElement);
+    static const Registry registry(ELEMENT_TYPES, &createDefaultElement);
     return registry;
 }
 

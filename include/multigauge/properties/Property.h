@@ -10,26 +10,28 @@
 
 namespace mg {
 
-class PropertyObject;
+class PropertyObject; // Forward declaration
 
+/// @brief Describes a property exposed through the property system.
 struct Property {
+    /// @brief Function used to decode and assign a property value.
     using Setter = bool (*)(PropertyObject*, json::Reader);
-    using Getter = bool (*)(const PropertyObject*, json::Writer&);
-    using ChildGetter = PropertyObject* (*)(PropertyObject*);
-    using ChildGetterConst = const PropertyObject* (*)(const PropertyObject*);
 
-    /// Key used in JSON schema
-    const char* key = nullptr;
-    /// Setter function using json value as input
-    Setter set = nullptr;
-    /// Getter function using json value as output
-    Getter get = nullptr;
-    /// Returns mutable nested PropertyObject for group-like properties, or nullptr.
+    /// @brief Function used to encode a property value.
+    using Getter = bool (*)(const PropertyObject*, json::Writer&);
+
+    /// @brief Function used to access a nested PropertyObject.
+    using ChildGetter = const PropertyObject* (*)(const PropertyObject*);
+
+    const char* key = nullptr; ///< JSON key.
+    Setter set = nullptr; ///< Setter function using json value as input.
+    Getter get = nullptr; ///< Getter function using json value as output.
+    /// Returns a borrowed nested property object, or nullptr when absent.
+    /// The returned object must be owned by the supplied property object.
     ChildGetter getChild = nullptr;
-    /// Returns const nested PropertyObject for group-like properties, or nullptr.
-    ChildGetterConst getChildConst = nullptr;
+
 #if MG_ENABLE_EDITOR_REFLECTION
-    const PropertyMetadata meta;
+    const PropertyMetadata meta; ///< Property metadata.
 
     bool writeBaseMeta(json::ObjectWriter& object) const;
 #endif

@@ -24,6 +24,9 @@ struct Parent final : mg::PropertyObject {
     MG_PROPS_END()
 };
 
+static_assert(mg::CodecFor<int>);
+static_assert(mg::PropertyObjectValue<Child>);
+
 mg::json::Document objectWithValue(std::string_view json) {
     return mg::json::parse(json);
 }
@@ -58,6 +61,11 @@ TEST_CASE("properties serialize, resolve paths, and represent nullable children"
     CHECK(owner == &parent.child);
     CHECK(property == parent.child.findProperty("value"));
     CHECK_FALSE(parent.resolvePath("optionalChild.value", owner, property));
+
+    const Parent& constParent = parent;
+    const mg::PropertyObject* constOwner = nullptr;
+    REQUIRE(constParent.resolvePath("child.value", constOwner, property));
+    CHECK(constOwner == &parent.child);
 }
 
 TEST_CASE("property metadata respects the reflection configuration") {

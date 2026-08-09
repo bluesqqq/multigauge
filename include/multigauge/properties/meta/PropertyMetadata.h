@@ -5,15 +5,9 @@
 
 namespace mg {
 
-class PropertyObject;
+class PropertyObject; // Forward declaration
 
-/// Editor-facing metadata for a property exposed through the property system
-/// 
-/// Describes how a property should appear and behave in tooling. This currently
-/// includes display labels, widget types, optional choices, and conditional UI rules.
-///
-/// Metadata does not store the property's runtime value and does not enforce runtime
-/// behavior. It is only used by editors/tooling that require it for interfaces.
+/// @brief Editor-facing metadata for a property exposed through the property system.
 struct PropertyMetadata {
     using OptionsGetter = bool (*)(json::Writer&);
     using TypeListGetter = bool (*)(json::Writer&);
@@ -21,30 +15,21 @@ struct PropertyMetadata {
 
     //----------[ GENERIC ]----------//
 
-    /// Display name used in editor
-    const char* name = nullptr;
-    ///  Brief description used in editor
-    const char* description = nullptr;
-    /// Widget type to display for UI in editor
-    const char* widget = nullptr;
+    const char* name = nullptr;        ///< Display name shown in the editor.
+    const char* description = nullptr; ///< Brief description shown in the editor.
+    const char* widget = nullptr;      ///< Editor widget used to edit the property.
 
     //----------[ INTERACTION ]----------//
 
-    /// Whether the editor should treat this property as nullable.
-    bool nullable = false;
-    /// Whether this property should be listed in inspector metadata.
-    bool inspectorVisible = true;
-    /// Declarative visibility rules for the editor UI.
-    RuleListGetter getVisibleWhen = nullptr;
-    /// Declarative interactability rules for the editor UI.
-    RuleListGetter getInteractableWhen = nullptr;
+    bool nullable = false;                  ///< Whether the property may be set to null.
+    bool inspectorVisible = true;           ///< Whether the property is shown in the editor inspector.
+    RuleListGetter getVisibleWhen = nullptr;      ///< Retrieves rules controlling property visibility.
+    RuleListGetter getInteractableWhen = nullptr; ///< Retrieves rules controlling property interactability.
 
-    //----------[  ]----------//
+    //----------[ SELECTION ]----------//
 
-    /// Returns dropdown/select options metadata when available.
-    OptionsGetter getOptionsMeta = nullptr;
-    /// Returns available polymorphic types metadata when available.
-    TypeListGetter getTypesMeta = nullptr;
+    OptionsGetter getOptionsMeta = nullptr; ///< Retrieves metadata for available selection options.
+    TypeListGetter getTypesMeta = nullptr;  ///< Retrieves metadata for available polymorphic types.
 };
 
 }
