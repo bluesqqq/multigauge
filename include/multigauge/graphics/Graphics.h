@@ -4,7 +4,6 @@
 #include <multigauge/graphics/geometry/Rect.h>
 #include <multigauge/graphics/geometry/Point.h>
 #include <multigauge/graphics/geometry/Line.h>
-#include <multigauge/graphics/geometry/Path.h>
 
 #include <multigauge/graphics/GraphicsContext.h>
 #include <multigauge/graphics/image/Image.h>
@@ -21,7 +20,6 @@ namespace mg::graphics {
 
 using ::mg::Anchor;
 using ::mg::Line;
-using ::mg::Path;
 using ::mg::Point;
 using ::mg::Rect;
 using ::mg::images::Image;
@@ -148,7 +146,6 @@ class Graphics final {
         void drawTri(const Point<int>& p1, const Point<int>& p2, const Point<int>& p3) const;
 
         //----------[ PATH ]----------//
-        void drawPath(const Path<int>& path) const;
 
         //----------[ FONT ]----------//
 
