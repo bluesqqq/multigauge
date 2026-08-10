@@ -1,172 +1,46 @@
 #pragma once
 
-#include <optional>
-
-#include <multigauge/graphics/geometry/Point.h>
-#include <multigauge/graphics/geometry/alignment.h>
 #include <multigauge/graphics/geometry/Line.h>
-#include <multigauge/graphics/geometry/Path.h>
-
-#include <vector>
 
 namespace mg {
 
 template <typename T>
 struct Rect {
-    T x, y;
-    T width, height;
+    T x{};
+    T y{};
+    T width{};
+    T height{};
 
-    Rect(T x, T y, T width, T height);
-    Rect(const Point<T>& pos, T w, T h);
+    constexpr Rect() = default;
+    constexpr Rect(T xValue, T yValue, T widthValue, T heightValue)
+        : x(xValue), y(yValue), width(widthValue), height(heightValue) {}
+    constexpr Rect(const Point<T>& position, T widthValue, T heightValue)
+        : Rect(position.x, position.y, widthValue, heightValue) {}
 
-    static Rect<T> fromPoints(Point<T> p1, Point<T> p2);
+    constexpr T getTop() const { return y; }
+    constexpr T getBottom() const { return static_cast<T>(y + height); }
+    constexpr T getLeft() const { return x; }
+    constexpr T getRight() const { return static_cast<T>(x + width); }
+    constexpr T getCenterX() const { return static_cast<T>(x + width / 2); }
+    constexpr T getCenterY() const { return static_cast<T>(y + height / 2); }
+    constexpr int getRightPixel() const { return static_cast<int>(getRight()) - 1; }
+    constexpr int getBottomPixel() const { return static_cast<int>(getBottom()) - 1; }
 
-    Point<T> position() const;
-    T area() const;
-    T perimeter() const;
-    bool isEmpty() const;
-    
-    bool operator==(const Rect<T>& other) const;
-    bool operator!=(const Rect<T>& other) const;
-    
-    // ====== [INTERSECTIONS] ====== //
+    constexpr Point<T> getTopLeft() const { return {x, y}; }
+    constexpr Point<T> getCenter() const { return {getCenterX(), getCenterY()}; }
 
-    // Point
+    constexpr void setTop(T top) { height = static_cast<T>(getBottom() - top); y = top; }
+    constexpr void setBottom(T bottom) { height = static_cast<T>(bottom - y); }
+    constexpr void reduce(T amount) { x = static_cast<T>(x + amount); y = static_cast<T>(y + amount); width = static_cast<T>(width - 2 * amount); height = static_cast<T>(height - 2 * amount); }
 
-    bool contains(const Point<T>& point) const;
-
-    // Line
-
-    bool intersects(const Line<T>& line) const;
-    std::optional<Line<T>> intersection(const Line<T>& line) const;
-    bool contains(const Line<T>& line);
-
-    // Rect 
-
-    bool intersects(const Rect<T>& other) const;
-    std::optional<Rect<T>> intersection(const Rect<T>& other) const;
-    bool contains(const Rect<T>& other) const;
-
-    // Circle
-
-    bool intersects(const Circle<T>& circle) const;
-    std::optional<Path<T>> intersection(const Circle<T>& circle) const;
-    bool contains(const Circle<T>& circle) const;
-
-    // ====== [POSITIONING] ====== //
-
-    void setTop(T top);
-    void setBottom(T bottom);
-    void setLeft(T left);
-    void setRight(T right);
-    void setCenterX(T centerX);
-    void setCenterY(T centerY);
-
-    T getTop()     const;
-    T getBottom()  const;
-    T getLeft()    const;
-    T getRight()   const;
-    T getCenterX() const;
-    T getCenterY() const;
-
-    int getBottomPixel() const;
-    int getRightPixel() const;
-
-    Point<T> getTopLeft()     const;
-    Point<T> getBottomLeft()  const;
-    Point<T> getTopRight()    const;
-    Point<T> getBottomRight() const;
-    Point<T> getCenter()      const;
-
-    Point<int> getBottomLeftPixel()  const;
-    Point<int> getBottomRightPixel() const;
-    Point<int> getTopRightPixel()    const;
-
-    Line<T> getTopEdge()    const;
-    Line<T> getBottomEdge() const;
-    Line<T> getLeftEdge()   const;
-    Line<T> getRightEdge()  const;
-    std::vector<Line<T>> getEdges() const;
-
-    // ====== [SHAPING] ====== //
-
-    void trimTop(T amount);
-    void trimBottom(T amount);
-    void trimLeft(T amount);
-    void trimRight(T amount);
-
-    Rect<T> trimmedTop(T amount) const;
-    Rect<T> trimmedBottom(T amount) const;
-    Rect<T> trimmedLeft(T amount) const;
-    Rect<T> trimmedRight(T amount) const;
-
-    Rect<T> removeFromTop(T amount);
-    Rect<T> removeFromBottom(T amount);
-    Rect<T> removeFromLeft(T amount);
-    Rect<T> removeFromRight(T amount);
-
-    // ====== [TRANSLATION] ====== //
-
-    Rect<T> operator+(Point<T> delta) const;
-    Rect<T>& operator+=(Point<T> delta);
-    Rect<T> operator-(Point<T> delta) const;
-    Rect<T>& operator-=(Point<T> delta);
-
-    void translate(T deltaX, T deltaY);
-    void translate(Point<T> delta);
-    Rect<T> translated(T deltaX, T deltaY) const;
-    Rect<T> translated(Point<T> delta) const;
-
-    void interpolate(const Rect<T>& other, float t);
-    Rect<T> interpolated(const Rect<T>& other, float t) const;
-
-    // ====== [SCALING] ====== //
-
-    Rect<T>  operator*(float scale) const;
-    Rect<T>& operator*=(float scale);
-    Rect<T>  operator/(float scale) const;
-    Rect<T>& operator/=(float scale);
-
-    void scaleFromOrigin(float scale);
-    Rect<T> scaledFromOrigin(float scale) const;
-
-    void scaleFromPoint(const Point<T>& other, float scale);
-    Rect<T> scaledFromPoint(const Point<T>& other, float scale) const;
-
-    void reduce(T deltaX, T deltaY);
-    void reduce(T delta);
-
-    Rect<T> reduced(T deltaX, T deltaY) const;
-    Rect<T> reduced(T delta) const;
-
-    void expand(T deltaX, T deltaY);
-    void expand(T delta);
-
-    Rect<T> expanded(T deltaX, T deltaY) const;
-    Rect<T> expanded(T delta) const;
-
-    // ====== [ROTATION] ====== //
-
-    void rotateAroundOrigin(float angle);
-    Rect<T> rotatedAroundOrigin(float angle) const;
-
-    void rotateAroundPoint(const Point<T>& other, float angle);
-    Rect<T> rotatedAroundPoint(const Point<T>& other, float angle) const;
-
-    // ====== [REFLECTION] ====== //
-
-    void reflectAcrossHorizontal(T horizontal);
-    Rect<T> reflectedAcrossHorizontal(T horizontal) const;
-
-    void reflectAcrossVertical(T vertical);
-    Rect<T> reflectedAcrossVertical(T vertical) const;
-
-    // ====== [CONVERSION] ====== //
-
-    Rect<float> toFloat() const;
-    Rect<int> toInt() const;
-    Path<T> asPath() const;
+    constexpr Rect<int> toInt() const { return {static_cast<int>(x), static_cast<int>(y), static_cast<int>(width), static_cast<int>(height)}; }
+    constexpr Rect<float> toFloat() const { return {static_cast<float>(x), static_cast<float>(y), static_cast<float>(width), static_cast<float>(height)}; }
 };
+
+template <typename T>
+inline Point<T> Point<T>::getAnchored(const Rect<T>& rectangle, Anchor anchor) {
+    return getAnchored(rectangle.x, rectangle.y, rectangle.width, rectangle.height, anchor);
+}
 
 extern template struct Rect<int>;
 extern template struct Rect<float>;
