@@ -24,6 +24,14 @@ struct Parent final : mg::PropertyObject {
     MG_PROPS_END()
 };
 
+struct TypedChild final : mg::PropertyObject {
+    int value = 11;
+    MG_TYPE_ID("test-child")
+    MG_PROPS_BEGIN()
+        MG_PROP(value, "value", "Value", "Test value.")
+    MG_PROPS_END()
+};
+
 static_assert(mg::CodecFor<int>);
 static_assert(mg::PropertyObjectValue<Child>);
 
@@ -66,6 +74,25 @@ TEST_CASE("properties serialize, resolve paths, and represent nullable children"
     const mg::PropertyObject* constOwner = nullptr;
     REQUIRE(constParent.resolvePath("child.value", constOwner, property));
     CHECK(constOwner == &parent.child);
+}
+
+TEST_CASE("properties serialize members into an existing object") {
+    TypedChild child;
+    mg::json::Document encoded = mg::json::object();
+    mg::json::Writer writer = encoded.writer();
+    REQUIRE(writer.writeObject([&](mg::json::ObjectWriter& object) {
+        return object.write("owner", "container") && child.savePropertyMembers(object);
+    }));
+
+    std::string_view type;
+    std::string_view owner;
+    std::int64_t value = 0;
+    REQUIRE(encoded.root().member("type").read(type));
+    REQUIRE(encoded.root().member("owner").read(owner));
+    REQUIRE(encoded.root().member("value").read(value));
+    CHECK(type == "test-child");
+    CHECK(owner == "container");
+    CHECK(value == 11);
 }
 
 TEST_CASE("property metadata respects the reflection configuration") {

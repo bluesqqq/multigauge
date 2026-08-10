@@ -72,6 +72,11 @@ class PropertyObject {
         /// Serializes all exposed properties into a JSON object.
         bool saveProperties(json::Writer& writer) const;
 
+        /// Serializes the type identifier and all exposed properties into an
+        /// already-open JSON object. This composes property objects with
+        /// container-owned fields such as a gauge face's child hierarchy.
+        bool savePropertyMembers(json::ObjectWriter& object) const;
+
         /// Builds editor metadata for every visible property on this object.
         bool writePropertiesMeta(json::Writer& writer) const;
 
