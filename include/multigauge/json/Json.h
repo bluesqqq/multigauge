@@ -98,20 +98,10 @@ public:
     bool write(Reader value) noexcept;
 
     template <typename Fn>
-    bool writeObject(Fn&& fn) {
-        if (!beginObject()) return false;
-        ObjectWriter object(*this);
-        const bool result = std::forward<Fn>(fn)(object);
-        return endObject() && result;
-    }
+    bool writeObject(Fn&& fn);
 
     template <typename Fn>
-    bool writeArray(Fn&& fn) {
-        if (!beginArray()) return false;
-        ArrayWriter array(*this);
-        const bool result = std::forward<Fn>(fn)(array);
-        return endArray() && result;
-    }
+    bool writeArray(Fn&& fn);
 
 private:
     friend class ObjectWriter;
@@ -174,6 +164,22 @@ public:
 private:
     Writer& writer_;
 };
+
+template <typename Fn>
+bool Writer::writeObject(Fn&& fn) {
+    if (!beginObject()) return false;
+    ObjectWriter object(*this);
+    const bool result = std::forward<Fn>(fn)(object);
+    return endObject() && result;
+}
+
+template <typename Fn>
+bool Writer::writeArray(Fn&& fn) {
+    if (!beginArray()) return false;
+    ArrayWriter array(*this);
+    const bool result = std::forward<Fn>(fn)(array);
+    return endArray() && result;
+}
 
 /// Opaque, move-only owned JSON document supplied by the selected backend.
 struct DocumentBackend {
