@@ -35,15 +35,17 @@ bool PropertyObject::loadProperties(json::Reader object) {
 }
 
 bool PropertyObject::saveProperties(json::Writer& writer) const {
-    return writer.writeObject([&](json::ObjectWriter& object) {
-        if (const char* type = typeId(); type && !object.write(TYPE_KEY, type)) return false;
-        bool success = true;
-        propertyList().forEach(this, [&](const Property& property) {
-            if (!success || !property.key || !property.get || findProperty(property.key) != &property) return;
-            success = object.writeValue(property.key, [&](json::Writer& value) { return property.get(this, value); });
-        });
-        return success;
+    return writer.writeObject([&](json::ObjectWriter& object) { return savePropertyMembers(object); });
+}
+
+bool PropertyObject::savePropertyMembers(json::ObjectWriter& object) const {
+    if (const char* type = typeId(); type && !object.write(TYPE_KEY, type)) return false;
+    bool success = true;
+    propertyList().forEach(this, [&](const Property& property) {
+        if (!success || !property.key || !property.get || findProperty(property.key) != &property) return;
+        success = object.writeValue(property.key, [&](json::Writer& value) { return property.get(this, value); });
     });
+    return success;
 }
 
 bool PropertyObject::writePropertiesMeta(json::Writer& writer) const {
