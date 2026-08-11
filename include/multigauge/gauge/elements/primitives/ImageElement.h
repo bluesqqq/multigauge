@@ -1,33 +1,34 @@
 #pragma once
 
 #include <multigauge/gauge/Element.h>
-#include <multigauge/graphics/colors/Color.h>
-
+#include <multigauge/graphics/image/Image.h>
 #include <string>
 
 namespace mg::gauge {
 
-using ::mg::images::Image;
-
-class ImageElement : public Element {
-        MG_EDITOR_NAME("Image")
+/// @brief Draws an image asset element.
+class ImageElement final : public Element {
+    MG_EDITOR_NAME("Image")
     MG_TYPE_ID("image")
-    private:
-        std::string imagePath;
 
-        Image image;
+public:
+    /// @brief Creates an image element.
+    ImageElement() : Element(staticTypeId()) {}
 
-        // PropertyObject props list
-        MG_PROPS_PARENT(Element)
-        MG_PROPS_BEGIN()
-    MG_PROP(imagePath, "path", "Image Path", "Filepath of image.")
-        MG_PROPS_END()
+    /// @brief Loads the image resource.
+    bool init(::mg::AssetManager&, ::mg::graphics::GraphicsContext&) override;
 
-    public:
-        using Element::Element;
-        
-        bool init(AssetManager& assetManager, GraphicsContext& context) override;
-        void draw(Graphics& g) const override;
+    /// @brief Draws the loaded image in its layout bounds.
+    void draw(::mg::graphics::Graphics&, const ::mg::Rect<float>&) const override;
+
+private:
+    std::string imagePath_;
+    ::mg::images::Image image_;
+
+    MG_PROPS_PARENT(Element)
+    MG_PROPS_BEGIN()
+    MG_PROP(imagePath_, "path", "Image Path", "Filepath of image.")
+    MG_PROPS_END()
 };
 
 } // namespace mg::gauge

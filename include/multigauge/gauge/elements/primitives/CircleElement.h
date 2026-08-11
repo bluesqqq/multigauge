@@ -5,24 +5,25 @@
 
 namespace mg::gauge {
 
-using ::mg::graphics::Paint;
-
-class CircleElement : public Element {
-        MG_EDITOR_NAME("Circle")
+/// @brief Draws a filled circle element.
+class CircleElement final : public Element {
+    MG_EDITOR_NAME("Circle")
     MG_TYPE_ID("circle")
-    private:
-        Paint paint;
 
-        MG_PROPS_PARENT(Element)
+public:
+    /// @brief Creates a circle element.
+    CircleElement() : Element(staticTypeId()) {}
 
-        MG_PROPS_BEGIN()
-    MG_PROP(paint, "paint", "Paint", "Paint options for the circle.")
-        MG_PROPS_END()
-        
-    public:
-        using Element::Element;
-        
-        void draw(Graphics& g) const override;
+    /// @brief Draws the circle in its layout bounds.
+    void draw(::mg::graphics::Graphics&, const ::mg::Rect<float>&) const override;
+
+private:
+    ::mg::graphics::Paint paint_;
+
+    MG_PROPS_PARENT(Element)
+    MG_PROPS_BEGIN()
+    MG_PROP(paint_, "paint", "Paint", "Paint options for the circle.")
+    MG_PROPS_END()
 };
 
 } // namespace mg::gauge

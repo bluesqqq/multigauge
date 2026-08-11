@@ -1,226 +1,62 @@
 #pragma once
 
-#include <multigauge/gauge/Element.h>
-#include <multigauge/value/ValueView.h>
-#include <multigauge/utils/Math.h>
-
 #include <chrono>
 #include <cstdint>
+#include <multigauge/gauge/Element.h>
+#include <multigauge/graphics/colors/Color.h>
+#include <multigauge/value/ValueView.h>
+#include <vector>
 
 namespace mg::gauge {
-
-using ::mg::ValueView;
-using ::mg::graphics::OwnedColor;
-using ::mg::graphics::rgb;
-using ::mg::utils::lerp;
-using ::mg::utils::mapf;
-
-struct TimeValue {
-    float value;
-    std::uint64_t time;
-};
-
-class Graph : public Element {
-        MG_EDITOR_NAME("Graph")
+/// @brief Draws a scrolling graph element.
+class Graph final : public Element {
+    MG_EDITOR_NAME("Graph")
     MG_TYPE_ID("graph")
-    private:
-        float seconds = 1;
-        int bufferMilliseconds = 0;
-        
-        int samplePx = 10;
+public:
+    /// @brief Creates a graph element.
+    Graph() : Element(staticTypeId()) {}
 
-        OwnedColor backgroundColor;
-        OwnedColor secondsColor;
-        OwnedColor graphColor;
-        OwnedColor borderColor;
+    /// @brief Draws the graph in its layout bounds.
+    void draw(::mg::graphics::Graphics&, const ::mg::Rect<float>&) const override;
 
-        ValueView value;
-        std::vector<TimeValue> valueMemory = {};
-        std::chrono::microseconds elapsed{};
+    /// @brief Advances the graph state.
+    void update(std::chrono::microseconds) override;
 
-        enum Style { Line, Bars, Dots };
+private:
+    float seconds_ = 1.0f;
+    int bufferMilliseconds_ = 0;
+    int samplePx_ = 10;
+    ::mg::graphics::OwnedColor backgroundColor_, secondsColor_, graphColor_, borderColor_;
+    ::mg::ValueView value_;
 
-        Style style = Bars;
+    struct TimeValue {
+        float value;
+        std::uint64_t time;
+    };
 
-        MG_PROPS_PARENT(Element)
+    enum class Style { Line, Bars, Dots };
 
-        MG_PROPS_BEGIN()
-    MG_PROP(seconds, "seconds", "Seconds", "Number of seconds to display on the graph.")
-    MG_PROP(backgroundColor, "bgColor", "Background Color", "Color of the background.")
-    MG_PROP(secondsColor, "secondsColor", "Seconds Color", "Color of the seconds tick marks.")
-    MG_PROP(graphColor, "graphColor", "Graph Color", "Color of the graph.")
-    MG_PROP(borderColor, "borderColor", "Border Color", "Color of the border.")
-    MG_PROP(value, "value", "Value", "Value to display.")
-        MG_PROPS_END()
+    std::vector<TimeValue> valueMemory_;
+    std::chrono::microseconds elapsed_{};
+    Style style_ = Style::Bars;
 
-        std::uint64_t timeAtX(int x, int left, int width, std::uint64_t currentTime, float windowMs) const {
-            float t01 = float(x - left) / float(std::max(1, width)); // 0..1
-            const std::uint64_t offset = static_cast<std::uint64_t>(std::lround((1.0f - t01) * windowMs)) + static_cast<std::uint64_t>(std::max(0, bufferMilliseconds));
-            return currentTime > offset ? currentTime - offset : 0;
-        }
+    std::uint64_t timeAtX(
+        int x,
+        int left,
+        int width,
+        std::uint64_t currentTime,
+        float windowMilliseconds
+    ) const;
+    float valueAtTime(std::uint64_t time) const;
 
-        float valueAtTime(std::uint64_t time) const {
-            if (valueMemory.empty()) return 0.0f;
-            if (valueMemory.size() == 1) return valueMemory[0].value;
-
-            const TimeValue& newest = valueMemory.front();
-            const TimeValue& oldest = valueMemory.back();
-
-            if (time >= newest.time) return newest.value;
-
-            if (time <= oldest.time) return oldest.value;
-
-            for (size_t i = 0; i + 1 < valueMemory.size(); ++i) {
-                const TimeValue& a = valueMemory[i];     // newer
-                const TimeValue& b = valueMemory[i + 1]; // older
-
-                if (a.time >= time && time >= b.time) {
-                    const std::uint64_t dt = a.time - b.time;
-                    if (dt == 0) return a.value;
-
-                    const float t = float(a.time - time) / float(dt);
-                    return lerp(a.value, b.value, t);
-                }
-            }
-
-            return oldest.value;
-        }
-
-    public:
-        using Element::Element;
-        
-        void draw(Graphics& g) const override {
-            const auto b = getBounds();
-
-            if (seconds <= 0.0f || samplePx <= 0) return;
-
-            const float minimum = value.minimumBase();
-            const float maximum = value.maximumBase();
-
-            const std::uint64_t currentTime = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
-            const float secondLength = b.width / seconds; // length of 1 second
-
-            if (backgroundColor) {
-                g.setPaint(backgroundColor.get());
-                g.drawRect(b.toInt());
-            }
-
-            if (graphColor) {
-
-                size_t valueMemorySize = valueMemory.size();
-
-                // X position of the right line
-                int lineX = b.getRight();
-
-                g.setPaint(graphColor.get());
-
-                switch (style) {
-                    case Line: {
-                        const float windowMs = seconds * 1000.0f;
-
-                        bool havePrev = false;
-                        int prevX = 0, prevY = 0;
-
-                        for (int x = b.getLeft(); x <= b.getRight(); x += samplePx) {
-                            const std::uint64_t t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
-                            const float v = valueAtTime(t);
-                            const int y = mapf(v, minimum, maximum, b.getBottom(), b.getTop());
-
-                            if (!havePrev) {
-                                havePrev = true;
-                                prevX = x; prevY = y;
-                                continue;
-                            }
-
-                            // simple clip: only draw if at least one endpoint is inside vertical bounds
-                            // (optional, since x is already in-bounds)
-                            if ((y >= b.getTop() && y <= b.getBottom()) ||
-                                (prevY >= b.getTop() && prevY <= b.getBottom())) {
-                                g.drawLine(prevX, prevY, x, y);
-                            }
-
-                            prevX = x; prevY = y;
-                        }
-                        break;
-                    }
-
-                    case Bars: {
-                        const float windowMs = seconds * 1000.0f;
-
-                        for (int x = b.getLeft(); x <= b.getRight(); x += samplePx) {
-                            const std::uint64_t t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
-                            const float v = valueAtTime(t);
-                            const int yVal = mapf(v, minimum, maximum, b.getBottom(), b.getTop());
-
-                            const int barH = b.getBottom() - yVal;
-                            if (barH <= 0) continue;
-
-                            const int w = std::max(1, samplePx);
-                            g.drawRect({x, yVal, w, barH});
-                        }
-                        break;
-                    }
-
-                    case Dots: {
-                        const float windowMs = seconds * 1000.0f;
-
-                        for (int x = b.getLeft(); x <= b.getRight(); x += samplePx) {
-                            const std::uint64_t t = timeAtX(x, b.getLeft(), b.width, currentTime, windowMs);
-                            const float v = valueAtTime(t);
-                            const int y = mapf(v, minimum, maximum, b.getBottom(), b.getTop());
-
-                            if (y >= b.getTop() && y <= b.getBottom()) {
-                                g.drawPixel(x, y);
-                            }
-                        }
-                        break;
-                    }
-
-                }
-            }
-
-            if (secondsColor) {
-                g.setPaint(secondsColor.get());
-
-                const long adj = (long)currentTime - (long)bufferMilliseconds;
-                const float frac = float(((adj % 1000) + 1000) % 1000) / 1000.0f;
-
-                const int xNow = b.getRight() - (int)std::lround(frac * secondLength);
-
-                const int n = (int)std::ceil(seconds) + 2;
-
-                for (int i = 0; i < n; ++i) {
-                    const int x = xNow - (int)std::lround(i * secondLength);
-                    if (x < b.getLeft()) break;
-                    g.drawLine(x, b.getBottom(), x, b.getBottom() + 3);
-                }
-            }
-
-            g.setTextColor(rgb(255, 255, 255));
-            std::string s = std::string(value.name()) + " : " + value.valueString(true);
-            g.drawText(s, b.getTopLeft().toInt().translated(2, 2), Anchor::TopLeft);
-
-            if (borderColor) {
-                g.setPaint(nullptr, borderColor.get());
-                g.drawRect(b.toInt()); 
-            }
-        }
-
-        void update(std::chrono::microseconds delta) override {
-            elapsed += delta;
-            const std::uint64_t currentTime = static_cast<std::uint64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(elapsed).count());
-
-            valueMemory.insert(valueMemory.begin(), {value.valueBase(), currentTime});
-
-            // remove expired values
-            auto it = std::find_if(valueMemory.begin(), valueMemory.end(), [currentTime, this](const TimeValue& tv) {
-                return (currentTime - tv.time) > (seconds * 1000 + bufferMilliseconds);
-            });
-
-            if (it != valueMemory.end() && (it + 1) != valueMemory.end()) {
-                valueMemory.erase(it + 1, valueMemory.end());
-            }
-        }
+    MG_PROPS_PARENT(Element)
+    MG_PROPS_BEGIN()
+    MG_PROP(seconds_, "seconds", "Seconds", "Number of seconds to display on the graph.")
+    MG_PROP(backgroundColor_, "bgColor", "Background Color", "Color of the background.")
+    MG_PROP(secondsColor_, "secondsColor", "Seconds Color", "Color of the seconds tick marks.")
+    MG_PROP(graphColor_, "graphColor", "Graph Color", "Color of the graph.")
+    MG_PROP(borderColor_, "borderColor", "Border Color", "Color of the border.")
+    MG_PROP(value_, "value", "Value", "Value to display.")
+    MG_PROPS_END()
 };
-
 } // namespace mg::gauge
