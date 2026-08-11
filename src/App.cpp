@@ -4,41 +4,34 @@
 
 #include <multigauge/runtime/PackageManager.h>
 
-#include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/container/HandlePool.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/screens/GaugeScreen.h>
-#include <multigauge/screens/EditorScreen.h>
-#include <multigauge/io/Log.h>
-#include <multigauge/utils/Json.h>
 #include <multigauge/graphics/UserPalette.h>
+#include <multigauge/io/Log.h>
+#include <multigauge/runtime/RuntimeContext.h>
+#include <multigauge/screens/EditorScreen.h>
+#include <multigauge/screens/GaugeScreen.h>
+#include <multigauge/utils/Json.h>
 
-#include <utility>
 #include <chrono>
+#include <utility>
 
 namespace mg {
 
 namespace {
-    std::string g_dataRoot = "/multigauge";
-    std::unique_ptr<PackageManager> g_packages;
+std::string g_dataRoot = "/multigauge";
+std::unique_ptr<PackageManager> g_packages;
 
-    YGConfigRef createYogaConfig() {
-        YGConfigRef config = YGConfigNew();
-        YGConfigSetUseWebDefaults(config, false);
-        return config;
-    }
+HandlePool<RuntimeContext, ContextId> contexts;
+bool initialized = false;
+std::chrono::microseconds lastElapsed{};
+graphics::UserPalette userPalette;
 
-    HandlePool<RuntimeContext, ContextId> contexts;
-    bool initialized = false;
-    std::chrono::microseconds lastElapsed{};
-    YGConfigRef yogaConfig = nullptr;
-    graphics::UserPalette userPalette;
+io::FileSystem* g_fs = nullptr;
+io::Time* g_time = nullptr;
 
-    io::FileSystem* g_fs = nullptr;
-    io::Time* g_time = nullptr;
-
-}
+} // namespace
 
 bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logger* logger) {
     if (initialized) return true;
@@ -58,7 +51,6 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
     g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
     g_packages->rebuildLibrary();
     contexts.clear();
-    yogaConfig = createYogaConfig();
     initialized = true;
 
     lastElapsed = g_time->elapsed();
@@ -69,10 +61,6 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
 void shutdown() {
     contexts.clear();
     g_packages.reset();
-    if (yogaConfig) {
-        YGConfigFree(yogaConfig);
-        yogaConfig = nullptr;
-    }
     initialized = false;
     lastElapsed = {};
     g_time = nullptr;
@@ -83,27 +71,41 @@ void frame() {
     if (!initialized) return;
 
     const std::chrono::microseconds now = g_time->elapsed();
-    const std::chrono::microseconds delta = now >= lastElapsed ? now - lastElapsed : std::chrono::microseconds{};
+    const std::chrono::microseconds delta =
+        now >= lastElapsed ? now - lastElapsed : std::chrono::microseconds{};
     lastElapsed = now;
 
-    for (auto& context : contexts) context.frame(delta, now);
+    for (auto& context : contexts)
+        context.frame(delta, now);
 }
 
-YGConfigRef getYogaConfig() { return yogaConfig; }
+bool setUserColor(std::size_t slot, graphics::rgba color) {
+    return userPalette.setColor(slot, color);
+}
 
-bool setUserColor(std::size_t slot, graphics::rgba color) { return userPalette.setColor(slot, color); }
+graphics::rgba getUserColor(std::size_t slot) {
+    return userPalette.color(slot);
+}
 
-graphics::rgba getUserColor(std::size_t slot) { return userPalette.color(slot); }
+ContextId addContext(graphics::GraphicsContext& graphics) {
+    return contexts.emplace(graphics, *g_fs, userPalette);
+}
 
-ContextId addContext(graphics::GraphicsContext& graphics) { return contexts.emplace(graphics, *g_fs, userPalette); }
+bool removeContext(ContextId id) {
+    return contexts.remove(id);
+}
 
-bool removeContext(ContextId id) { return contexts.remove(id); }
+RuntimeContext* getContext(ContextId id) {
+    return contexts.get(id);
+}
 
-RuntimeContext* getContext(ContextId id) { return contexts.get(id); }
+bool hasContext(ContextId id) {
+    return contexts.exists(id);
+}
 
-bool hasContext(ContextId id) { return contexts.exists(id); }
-
-std::size_t contextCount() { return contexts.size(); }
+std::size_t contextCount() {
+    return contexts.size();
+}
 
 bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
     RuntimeContext* context = getContext(id);
@@ -135,7 +137,7 @@ bool loadGaugeFaceFromValue(json::Reader value, std::unique_ptr<gauge::GaugeFace
     outFace = std::move(face);
     return true;
 }
-}
+} // namespace
 
 bool setGaugeScreen(ContextId id, const std::string& json) {
     RuntimeContext* context = getContext(id);
