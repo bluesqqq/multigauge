@@ -131,6 +131,12 @@ bool GaugeFace::replaceElement(NodeHandle handle, std::unique_ptr<Element> eleme
     return true;
 }
 
+bool GaugeFace::moveElement(NodeHandle element, NodeHandle parent, std::size_t index) {
+    return parent.valid()
+               ? insertChild(parent, element, index)
+               : insertRoot(element, index);
+}
+
 bool GaugeFace::insertChild(NodeHandle parent, NodeHandle child, std::size_t index) {
     Node* parentNode = node(parent);
     Node* childNode = node(child);
@@ -153,10 +159,6 @@ bool GaugeFace::insertChild(NodeHandle parent, NodeHandle child, std::size_t ind
     childNode->nextSibling = *link;
     *link = child;
     return true;
-}
-
-bool GaugeFace::detach(NodeHandle child) {
-    return insertRoot(child, std::numeric_limits<std::size_t>::max());
 }
 
 bool GaugeFace::insertRoot(NodeHandle child, std::size_t index) {

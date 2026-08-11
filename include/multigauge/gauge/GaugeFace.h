@@ -61,28 +61,14 @@ public:
         std::unique_ptr<Element> element
     );
 
-    /// @brief Attaches or reparents a child beneath a parent.
-    /// @param parent Destination parent handle.
-    /// @param child Element handle to attach.
+    /// @brief Moves or reorders an element within this face.
+    /// @param element Live element handle to move.
+    /// @param parent Destination parent handle, or an invalid handle to make a root.
     /// @param index Sibling insertion index; values beyond the end append.
-    /// @return False for invalid handles, self-parenting, or hierarchy cycles.
-    bool insertChild(
+    /// @return False for invalid elements, self-parenting, or hierarchy cycles.
+    bool moveElement(
+        NodeHandle element,
         NodeHandle parent,
-        NodeHandle child,
-        std::size_t index
-    );
-
-    /// @brief Detaches an element and makes it a root.
-    /// @param child Handle of the element to detach.
-    /// @return True when child identified a live element.
-    bool detach(NodeHandle child);
-
-    /// @brief Inserts or reorders an element in the root sibling list.
-    /// @param child Live element handle to make a root.
-    /// @param index Root position; values beyond the end append.
-    /// @return False when child is invalid.
-    bool insertRoot(
-        NodeHandle child,
         std::size_t index
     );
 
@@ -197,6 +183,19 @@ private:
         NodeHandle parent,
         NodeHandle child
     ) const noexcept;
+
+    /// @brief Attaches or reparents a child beneath a parent.
+    bool insertChild(
+        NodeHandle parent,
+        NodeHandle child,
+        std::size_t index
+    );
+
+    /// @brief Inserts or reorders an element in the root sibling list.
+    bool insertRoot(
+        NodeHandle child,
+        std::size_t index
+    );
 
     /// @brief Appends an unattached node to the root sibling list.
     void appendRoot(NodeHandle root);
