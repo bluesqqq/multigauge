@@ -75,19 +75,13 @@ set(
   "${doctest_SOURCE_DIR}"
 )
 
-# Yoga
 FetchContent_Declare(
-  yoga
-  URL https://github.com/facebook/yoga/archive/refs/tags/v2.0.0.zip
+  clay
+  URL https://github.com/nicbarker/clay/archive/refs/tags/v0.14.zip
   DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
-FetchContent_Populate(yoga)
-
-add_subdirectory(
-  "${yoga_SOURCE_DIR}/yoga"
-  "${CMAKE_BINARY_DIR}/_deps/yoga"
-)
+FetchContent_Populate(clay)
 
 # LodePNG
 FetchContent_Declare(
@@ -161,13 +155,11 @@ target_include_directories(
 
   PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${clay_SOURCE_DIR}"
 )
 
 target_link_libraries(
   multigauge
-
-  PUBLIC
-    yogacore
 
   PRIVATE
     etl::etl
