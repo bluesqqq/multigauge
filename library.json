@@ -9,9 +9,6 @@
   },
   "dependencies": [
     {
-      "name": "multigauge-yoga"
-    },
-    {
       "name": "multigauge-lodepng"
     },
     {
