@@ -7,31 +7,27 @@
 
 namespace mg {
 
-template<typename T, typename Handle>
-class HandlePool {
+template <typename T, typename Handle> class HandlePool {
 public:
     /* ----- TYPES ----- */
 
     using ValueType = T;
     using HandleType = Handle;
 
+    /// @brief Creates a pool whose newly allocated slots begin at
+    /// `initialGeneration`.
+    explicit HandlePool(std::uint32_t initialGeneration = InitialGeneration) noexcept
+        : initialGeneration_(initialGeneration == 0 ? InitialGeneration : initialGeneration) {}
+
     /* ----- ITERATORS ----- */
 
-    auto begin() noexcept {
-        return values_.begin();
-    }
+    auto begin() noexcept { return values_.begin(); }
 
-    auto begin() const noexcept {
-        return values_.begin();
-    }
+    auto begin() const noexcept { return values_.begin(); }
 
-    auto end() noexcept {
-        return values_.end();
-    }
+    auto end() noexcept { return values_.end(); }
 
-    auto end() const noexcept {
-        return values_.end();
-    }
+    auto end() const noexcept { return values_.end(); }
 
     /* ----- CAPACITY ----- */
 
@@ -54,12 +50,9 @@ public:
         freeSlots_.clear();
     }
 
-    Handle add(T value) {
-        return emplace(std::move(value));
-    }
+    Handle add(T value) { return emplace(std::move(value)); }
 
-    template<typename... Args>
-    Handle emplace(Args&&... args) {
+    template <typename... Args> Handle emplace(Args&&... args) {
         std::uint32_t slotIndex;
 
         if (!freeSlots_.empty()) {
@@ -68,16 +61,11 @@ public:
         } else {
             slotIndex = static_cast<std::uint32_t>(slots_.size());
 
-            slots_.push_back({
-                0,
-                InitialGeneration,
-                true
-            });
+            slots_.push_back({0, initialGeneration_, true});
         }
 
         Slot& slot = slots_[slotIndex];
-        const std::uint32_t valueIndex =
-            static_cast<std::uint32_t>(values_.size());
+        const std::uint32_t valueIndex = static_cast<std::uint32_t>(values_.size());
 
         values_.emplace_back(std::forward<Args>(args)...);
         valueToSlot_.push_back(slotIndex);
@@ -152,9 +140,7 @@ private:
     /* ----- INTERNAL HELPERS ----- */
 
     [[nodiscard]]
-    static constexpr std::uint32_t nextGeneration(
-        std::uint32_t generation
-    ) noexcept {
+    static constexpr std::uint32_t nextGeneration(std::uint32_t generation) noexcept {
         ++generation;
 
         if (generation == 0) {
@@ -204,6 +190,7 @@ private:
     std::vector<Slot> slots_;
     std::vector<std::uint32_t> valueToSlot_;
     std::vector<std::uint32_t> freeSlots_;
+    std::uint32_t initialGeneration_ = InitialGeneration;
 };
 
 } // namespace mg
