@@ -21,7 +21,7 @@ std::uint32_t allocateColorId() noexcept {
 template <typename T>
 OwnedColor createColor() { return std::make_unique<T>(); }
 
-OwnedColor createDefaultColor() { return std::make_unique<StaticColor>(); }
+OwnedColor createDefaultColor(std::string_view) { return std::make_unique<StaticColor>(); }
 
 using ColorDescriptor = MgPolymorphicTypeDescriptor<OwnedColor>;
 const ColorDescriptor colorTypes[] = {

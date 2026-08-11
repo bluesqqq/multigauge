@@ -5,26 +5,27 @@
 
 namespace mg::gauge {
 
-using ::mg::graphics::Paint;
-
-class RectangleElement : public Element {
-        MG_EDITOR_NAME("Rectangle")
+/// @brief Draws a filled rounded rectangle element.
+class RectangleElement final : public Element {
+    MG_EDITOR_NAME("Rectangle")
     MG_TYPE_ID("rectangle")
-    private:
-        Paint paint;
-        float radius = 0.0f;
 
-        // PropertyObject props list
-        MG_PROPS_PARENT(Element)
-        MG_PROPS_BEGIN()
-    MG_PROP(paint, "paint", "Paint", "Paint options for the circle.")
-    MG_PROP(radius, "radius", "Radius", "Radius of the rectangle's corners.")
-        MG_PROPS_END()
+public:
+    /// @brief Creates a rectangle element.
+    RectangleElement() : Element(staticTypeId()) {}
 
-    public:
-        using Element::Element;
-        
-        void draw(Graphics& g) const override;
+    /// @brief Draws the rectangle in its layout bounds.
+    void draw(::mg::graphics::Graphics&, const ::mg::Rect<float>&) const override;
+
+private:
+    ::mg::graphics::Paint paint_;
+    float radius_ = 0.0f;
+
+    MG_PROPS_PARENT(Element)
+    MG_PROPS_BEGIN()
+    MG_PROP(paint_, "paint", "Paint", "Paint options for the rectangle.")
+    MG_PROP(radius_, "radius", "Radius", "Radius of the rectangle's corners.")
+    MG_PROPS_END()
 };
 
 } // namespace mg::gauge

@@ -1,10 +1,9 @@
 #pragma once
 
-#include <multigauge/graphics/colors/ColorTimeline.h>
 #include <multigauge/graphics/TextPaint.h>
+#include <multigauge/graphics/colors/ColorTimeline.h>
 
 namespace mg::gauge {
-
 using ::mg::graphics::ColorTimeline;
 using ::mg::graphics::TextPaint;
 
@@ -16,5 +15,4 @@ struct TickValueStyle {
     int spacing = 1;
     bool flipValuesPosition = false;
 };
-
 } // namespace mg::gauge

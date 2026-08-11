@@ -1,132 +1,97 @@
 #pragma once
 
-#include <multigauge/graphics/geometry/Rect.h>
-
-#include <multigauge/graphics/Graphics.h>
-#include <yoga/Yoga.h>
-
-
-#include <multigauge/runtime/AssetManager.h>
-
-#include <multigauge/properties/PropertyObject.h>
-
-#include <multigauge/gauge/Layout.h>
-
-#include <cstdint>
 #include <chrono>
 #include <memory>
-#include <vector>
+#include <string>
+#include <string_view>
 
-namespace mg::gauge {
-
-using ::mg::AssetManager;
-using ::mg::Rect;
-using ::mg::graphics::Graphics;
-using ::mg::graphics::GraphicsContext;
-
-class Element;
-using OwnedElement = std::unique_ptr<Element>;
-
-class GaugeFace;
-
-class Element : public ::mg::PropertyObject {
-    MG_EDITOR_NAME("Element")
-
-    private:
-        //----------[ TREE ]----------//
-
-        /// Parent element in the hierarchy, or `nullptr` if root.
-        Element* parent = nullptr;
-        /// Owned child elements.
-        std::vector<OwnedElement> children;
-
-        //----------[ LAYOUT ]----------//
-
-        Layout style;
-        /// Absolute bounds computer from Yoga.
-        Rect<float> bounds = Rect<float>(0.0f, 0.0f, 0.0f, 0.0f);
-        /// Yoga node for this element.
-        YGNodeRef node = nullptr;
-        /// This element's Yoga style must be synchronized before layout.
-        bool layoutDirty = true;
-        /// This element or a descendant has pending layout work.
-        bool subtreeLayoutDirty = true;
-
-    protected:
-        GaugeFace* face = nullptr;
-
-        friend class GaugeFace;
-
-        //----------[ LIFETIME HOOKS ]----------//
-
-        virtual bool init(AssetManager& assetManager, GraphicsContext& context) { return true; }
-        virtual void draw(Graphics& g) const {}
-        virtual void update(std::chrono::microseconds delta) {}
-
-    public:
-        enum Type { Base, Circular };
-
-        MG_POLYMORPHIC_REGISTRY_WITH_ARGS(OwnedElement, Element*)
-
-        explicit Element(Element* parent = nullptr);
-        virtual ~Element();
-
-        virtual Type getType() const { return Type::Base; }
-        
-        //----------[ TREE ]----------//
-
-        GaugeFace* getOwnerFace() const {
-            const Element* current = this;
-            while (current->parent) current = current->parent;
-            return current->face;
-        }
-        Element* getParent() const { return parent; }
-
-        //----------[ CHILDREN ]----------//
-
-        std::size_t childCount() const { return children.size(); }
-        Element* childAt(std::size_t i) { return children[i].get(); }
-        const Element* childAt(std::size_t i) const { return children[i].get(); }
-
-        bool insertChild(OwnedElement child, std::size_t index);
-        OwnedElement removeChild(Element* child);
-
-        //----------[ LIFETIME ]----------//
-
-        bool initRecursive(AssetManager& assetManager, GraphicsContext& context);
-        void drawRecursive(Graphics& g) const;
-        void updateRecursive(std::chrono::microseconds delta);
-
-        //----------[ LAYOUT ]----------//
-        
-        /// Invalidates this element's Yoga style and schedules a face layout.
-        /// Call this after changing layout outside the property/editor API.
-        void markLayoutDirty();
-        YGNodeRef getNode() const { return node; }
-        const Rect<float>& getBounds() const { return bounds; }
-
-    private:
-        void markLayoutSubtreeDirty();
-        void syncLayoutRecursive();
-
-        //----------[ SERIALIZATION ]----------//
-
-        static bool setChildren(::mg::PropertyObject* obj, json::Reader value);
-        static bool getChildren(const ::mg::PropertyObject* obj, json::Writer& writer);
-
-        MG_PROPS_BEGIN()
-            MG_PROP_CALLBACK(style, "style", "Style", "Layout options.", &Element::markLayoutDirty)
-            MG_PROP_CUSTOM_HIDDEN("children", "Children", "Child elements.", &Element::setChildren, &Element::getChildren)
-        MG_PROPS_END()
-};
-
-} // namespace mg::gauge
+#include <multigauge/container/GenerationalHandle.h>
+#include <multigauge/gauge/Layout.h>
+#include <multigauge/graphics/geometry/Rect.h>
+#include <multigauge/properties/PolymorphicRegistry.h>
+#include <multigauge/properties/PropertyObject.h>
 
 namespace mg {
 
-CODEC_BEGIN(gauge::OwnedElement)
-    DECODE();
+// Forward Declarations
+namespace graphics { class Graphics; class GraphicsContext; }
+class AssetManager;
 
+namespace gauge {
+
+class GaugeFace; // Forward Declaration
+
+/// @brief Stable reference to an element owned by a gauge face.
+using NodeHandle = ::mg::GenerationalHandle<struct NodeTag>;
+
+/// @brief Represents a single gauge element.
+class Element : public ::mg::PropertyObject {
+public:
+    using OwnedElement = std::unique_ptr<Element>;
+    MG_POLYMORPHIC_REGISTRY(OwnedElement)
+
+    /// @brief Returns the stable identifier written by the polymorphic codec.
+    [[nodiscard]] const char* typeId() const override { return typeId_.data(); }
+
+    //----------[ CTOR + DTOR ]----------//
+
+    /// @brief Creates an element with a stable, static type identifier.
+    /// @param typeId Serialized type identifier. Its storage must outlive this element.
+    explicit constexpr Element(std::string_view typeId = {}) noexcept : typeId_(typeId) {}
+
+    /// @brief Destroys this type-specific element state.
+    virtual ~Element() = default;
+
+    //----------[ LIFECYCLE ]----------//
+
+    /// @brief Advances transient element state.
+    /// @param delta Elapsed time since the preceding update call.
+    virtual void update(std::chrono::microseconds delta) { (void)delta; }
+
+    /// @brief Draws the element into the active graphics target.
+    /// @param graphics Graphics command surface for the current frame.
+    /// @param bounds Current absolute layout rectangle for this element.
+    virtual void draw(
+        ::mg::graphics::Graphics& graphics,
+        const ::mg::Rect<float>& bounds
+    ) const {
+        (void)graphics;
+        (void)bounds;
+    }
+
+    /// @brief Loads any external resources required before drawing.
+    /// @param assetManager Asset provider for element resources.
+    /// @param context Graphics backend context that owns loaded resources.
+    /// @return True when initialization succeeds.
+    virtual bool init(
+        ::mg::AssetManager&,
+        ::mg::graphics::GraphicsContext&
+    ) { return true; }
+
+private:
+    friend class GaugeFace;
+
+    //----------[ LAYOUT ]----------//
+
+    /// @brief Returns mutable layout property state for face layout declaration.
+    [[nodiscard]] Layout& layout() noexcept { return layout_; }
+
+    /// @brief Returns layout property state for read-only face layout declaration.
+    [[nodiscard]] const Layout& layout() const noexcept { return layout_; }
+
+private:
+    std::string_view typeId_; ///< Stable registry string for built-in types.
+    Layout layout_;           ///< Layout configuration.
+
+    MG_PROPS_BEGIN()
+        MG_PROP(layout_, "layout", "Layout", "Layout options.")
+    MG_PROPS_END()
+};
+
+} // namespace gauge
+
+CODEC_BEGIN(gauge::Element::OwnedElement)
+    DECODE();
     ENCODE();
 CODEC_END()
 

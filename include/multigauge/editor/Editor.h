@@ -1,286 +1,227 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
+#include <functional>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
-#include <multigauge/editor/Clipboard.h>
-#include <multigauge/editor/Types.h>
-#include <multigauge/editor/Result.h>
 #include <multigauge/editor/History.h>
+#include <multigauge/editor/Result.h>
+#include <multigauge/editor/Types.h>
 #include <multigauge/gauge/GaugeFace.h>
 
 namespace mg::editor {
 
-using ::mg::Result;
-using ::mg::gauge::Element;
-using ::mg::gauge::GaugeFace;
-using ::mg::gauge::OwnedElement;
+using gauge::Element;
+using gauge::GaugeFace;
+using gauge::NodeHandle;
+
+/// @brief Editor model for gauge faces.
 
 class Editor {
-    public:
-        struct PackageInfo {
-            std::string name;
-            std::string author;
-            std::string description;
-        };
+public:
+    /// @brief Stable ID for an editor-owned face.
+    using FaceId = NodeId;
 
-        struct FaceMeta {
-            std::string name;
-        };
+    /// @brief Sentinel index that appends to a sibling list.
+    static constexpr std::size_t Append = static_cast<std::size_t>(-1);
 
-        /// Appends at the end of a sibling list when used as an index.
-        static constexpr std::size_t Append = static_cast<std::size_t>(-1);
+    struct PackageInfo {
+        std::string name;
+        std::string author;
+        std::string description;
+    };
 
-        enum class NodeKind {
-            Face,
-            Element
-        };
+    struct FaceMeta {
+        std::string name;
+    };
 
-    private:
-        struct ElementContainerRef {
-            GaugeFace* face = nullptr;
-            Element* element = nullptr;
+    /// @brief Constructs an empty editor.
+    Editor() = default;
 
-            bool isFace() const { return face != nullptr; }
-            bool isElement() const { return element != nullptr; }
-        };
+    //----------[ LIFETIME ]----------//
 
-        struct NodeRef {
-            NodeKind kind = NodeKind::Face;
-            union {
-                GaugeFace* face;
-                Element* element;
-            };
+    /// @brief Clears faces, package metadata, and history.
+    void clear();
 
-            NodeRef() : face(nullptr) {}
-            explicit NodeRef(GaugeFace* value) : kind(NodeKind::Face), face(value) {}
-            explicit NodeRef(Element* value) : kind(NodeKind::Element), element(value) {}
-        };
+    //----------[ PACKAGE ]----------//
 
-        std::vector<std::unique_ptr<GaugeFace>> faces;
-        std::vector<FaceMeta> faceMeta;
-        std::string packageName = "Package Export";
-        std::string packageAuthor = "Unknown";
-        std::string packageDescription;
+    /// @brief Updates package metadata.
+    bool setPackageInfo(const PackageInfo& info);
 
-        std::unordered_map<NodeId, NodeRef> nodes;
-        std::unordered_map<GaugeFace*, NodeId> faceToId;
-        std::unordered_map<Element*, NodeId> elementToId;
+    /// @brief Returns package metadata.
+    const PackageInfo& packageInfo() const { return package_; }
 
-        NodeId nextId = 1;
-        History history;
-    private:
-        //----------[ INTERNAL HELPERS ]----------//
+    //----------[ FACES ]----------//
 
-        NodeId makeId() { return nextId++; }
+    /// @brief Sets a face display name.
+    bool setFaceName(FaceId faceId, const std::string& name);
 
-        NodeRef* getNode(NodeId id);
-        const NodeRef* getNode(NodeId id) const;
+    /// @brief Returns a face display name.
+    std::string getFaceName(FaceId faceId) const;
 
-        NodeId registerFace(GaugeFace* face);
-        NodeId registerFaceWithId(NodeId id, GaugeFace* face);
-        NodeId registerElement(Element* element);
-        NodeId registerElementWithId(NodeId id, Element* element);
-        void registerSubtree(Element* element);
-        bool registerSubtreeWithIds(Element* element, const std::vector<NodeId>& ids, std::size_t& nextIndex);
-        void unregisterFace(GaugeFace* face);
-        void unregisterElementRecursive(Element* element);
+    /// @brief Returns the number of faces.
+    std::size_t faceCount() const { return faces_.size(); }
 
-        GaugeFace* getFaceById(NodeId id);
-        const GaugeFace* getFaceById(NodeId id) const;
+    /// @brief Returns the ID of the face at an index.
+    FaceId faceIdAt(std::size_t index) const { return faces_.at(index).id; }
 
-        Element* getElementById(NodeId id);
-        const Element* getElementById(NodeId id) const;
-        ::mg::PropertyObject* getObjectById(NodeId id);
-        const ::mg::PropertyObject* getObjectById(NodeId id) const;
-        ElementContainerRef getElementContainerById(NodeId id);
-        ElementContainerRef getElementContainerOf(Element* element);
-        NodeId idOfContainer(const ElementContainerRef& container) const;
-        bool insertIntoContainer(const ElementContainerRef& container, OwnedElement child, std::size_t index);
-        OwnedElement removeFromContainer(const ElementContainerRef& container, Element* child);
-        void invalidateLayoutForProperty(NodeId id, const std::string& path);
-        std::size_t childCountOf(const ElementContainerRef& container) const {
-            if (container.face) return container.face->childCount();
-            if (container.element) return container.element->childCount();
-            return 0;
-        }
-        std::size_t indexInContainer(const ElementContainerRef& container, const Element* child) const {
-            if (container.face) {
-                for (std::size_t i = 0; i < container.face->childCount(); ++i) {
-                    if (container.face->childAt(i) == child) return i;
-                }
-                return Append;
-            }
-            if (container.element) {
-                for (std::size_t i = 0; i < container.element->childCount(); ++i) {
-                    if (container.element->childAt(i) == child) return i;
-                }
-                return Append;
-            }
-            return Append;
-        }
+    /// @brief Returns a borrowed face by ID.
+    /// @details The pointer becomes invalid when the face is removed, the package is loaded or cleared,
+    /// or an undo/redo operation restores a package snapshot.
+    GaugeFace* getFace(FaceId id) noexcept { return face(id); }
 
-        static std::size_t clampIndex(std::size_t index, std::size_t size) {
-            return (index == Append || index > size) ? size : index;
-        }
+    /// @brief Returns a borrowed read-only face by ID.
+    /// @details The pointer becomes invalid when the face is removed, the package is loaded or cleared,
+    /// or an undo/redo operation restores a package snapshot.
+    const GaugeFace* getFace(FaceId id) const noexcept { return face(id); }
 
-    public:
-        Editor() = default;
-        Editor(const Editor&) = delete;
-        Editor& operator=(const Editor&) = delete;
-        Editor(Editor&&) noexcept = default;
-        Editor& operator=(Editor&&) noexcept = default;
+    //----------[ SERIALIZATION ]----------//
 
-        //----------[ PACKAGE ]----------//
+    /// @brief Loads a package document containing gauge faces.
+    bool loadPackage(const std::string& json);
 
-        /// Clears the loaded package, history, and node IDs.
-        void clear();
+    /// @brief Exports the current package document.
+    std::string exportPackage() const;
 
-        /// Updates the package-level metadata.
-        bool setPackageInfo(const std::string& name, const std::string& author, const std::string& description);
+    //----------[ INSPECTION ]----------//
 
-        /// Returns the package-level metadata.
-        PackageInfo getPackageInfo() const;
+    /// @brief Serializes hierarchy data using face IDs and NodeHandle tokens.
+    Result getHierarchy() const;
 
-        /// Updates the face name for `faceId`.
-        bool setFaceName(NodeId faceId, const std::string& name);
+    /// @brief Lists registered gauge element types.
+    Result listElementTypes() const;
 
-        /// Returns the face name for `faceId`.
-        std::string getFaceName(NodeId faceId) const;
+    //----------[ FACE EDITING ]----------//
 
-        /// Loads faces and elements from a package object.
-        bool loadPackage(const std::string& json);
+    /// @brief Creates a face from serialized face JSON.
+    Result createFace(const std::string& json, FacePlacement where = FacePlacement{});
 
-        /// Saves the current package as a package object.
-        std::string exportPackage() const;
+    /// @brief Removes one face.
+    Result removeFace(FaceId faceId);
 
-        /// Backwards-compatible alias for `loadPackage`.
-        bool loadDocument(const std::string& json) { return loadPackage(json); }
+    /// @brief Reorders one face.
+    Result reorderFace(FaceId faceId, std::size_t index);
 
-        /// Backwards-compatible alias for `exportPackage`.
-        std::string saveDocument() const { return exportPackage(); }
+    /// @brief Serializes one face.
+    Result serializeFace(FaceId faceId) const;
 
-        /// Serializes a single face as JSON.
-        /// @return `{ "json": string }`.
-        Result serializeFace(NodeId faceId) const;
+    //----------[ ELEMENT EDITING ]----------//
 
-        /// Serializes a single element as JSON.
-        /// @return `{ "json": string }`.
-        Result serializeElement(NodeId elementId) const;
+    /// @brief Creates an element from flat element JSON.
+    Result createElement(
+        const ElementPlacement& where,
+        const std::string& json
+    );
 
-        //----------[ QUERIES ]----------//
+    /// @brief Removes an element subtree.
+    Result removeElement(ElementRef element);
 
-        /// Returns whether a face or element with `id` exists.
-        bool hasNode(NodeId id) const;
+    /// @brief Reorders an element within its current parent.
+    Result reorderElement(
+        ElementRef element,
+        std::size_t index
+    );
 
-        /// Returns whether `id` refers to a face.
-        bool isFace(NodeId id) const;
+    /// @brief Moves an element within its owning face.
+    Result moveElement(
+        ElementRef element,
+        const ElementPlacement& where
+    );
 
-        /// Returns whether `id` refers to an element.
-        bool isElement(NodeId id) const;
+    /// @brief Replaces an element's type/properties while preserving its position.
+    Result replaceElement(
+        ElementRef element,
+        const std::string& json
+    );
 
-        /// Returns the editor ID for `face`.
-        /// @return Face ID, or `0` if `face` is not registered.
-        NodeId idOf(const GaugeFace* face) const;
+    /// @brief Serializes one element's type/properties.
+    Result serializeElement(ElementRef element) const;
 
-        /// Returns the editor ID for `element`.
-        /// @return Element ID, or `0` if `element` is not registered.
-        NodeId idOf(const Element* element) const;
+    //----------[ PROPERTIES ]----------//
 
-        std::size_t faceCount() const { return faces.size(); }
-        GaugeFace* faceAt(std::size_t index) { return faces.at(index).get(); }
-        const GaugeFace* faceAt(std::size_t index) const { return faces.at(index).get(); }
+    /// @brief Sets one face or element property from JSON.
+    Result setFaceProperty(
+        FaceId faceId,
+        const std::string& path,
+        const std::string& json
+    );
 
-        /// Returns the face and element tree as a flat hierarchy payload.
-        /// @return `{ "roots": [uint...], "nodes": { "id": { "kind": string, "name": string, "children": [uint...] }, ... } }`
-        /// where element nodes also include `"type": string`.
-        Result getHierarchy() const;
+    /// @brief Sets one element property from JSON.
+    Result setElementProperty(
+        ElementRef element,
+        const std::string& path,
+        const std::string& json
+    );
 
-        /// Returns the available element type descriptors.
-        Result listElementTypes() const;
+    /// @brief Gets one face property.
+    Result getFaceProperty(
+        FaceId faceId,
+        const std::string& path
+    ) const;
 
-        /// Returns the available value IDs.
-        Result listValueIDs() const;
+    /// @brief Gets one element property.
+    Result getElementProperty(
+        ElementRef element,
+        const std::string& path
+    ) const;
 
-        //----------[ GAUGE FACES ]----------//
+    /// @brief Gets face property metadata.
+    Result getFacePropertiesMeta(
+        FaceId faceId,
+        const std::string& path = ""
+    ) const;
 
-        /// Creates a new face in the face list.
-        /// @note `where.index` appends when set to `Append` or greater than the face count.
-        /// @return `{ "id": uint }` for the inserted face.
-        Result createFace(const std::string& json, FacePlacement where = FacePlacement{});
+    /// @brief Gets element property metadata.
+    Result getElementPropertiesMeta(
+        ElementRef element,
+        const std::string& path = ""
+    ) const;
 
-        /// Removes a face from the face list.
-        Result removeFace(NodeId faceId);
+    //----------[ HISTORY ]----------//
 
-        /// Reorders a face within the face list.
-        /// @note `index` is zero-based and clamps to the valid face range.
-        Result reorderFace(NodeId faceId, std::size_t index);
+    /// @brief Returns whether undo is available.
+    bool canUndo() const { return history_.canUndo(); }
 
-        //----------[ ELEMENTS ]----------//
+    /// @brief Returns whether redo is available.
+    bool canRedo() const { return history_.canRedo(); }
 
-        /// Creates an element under a face or element parent from JSON.
-        /// @note `where.parentId` may refer to either a face or an element.
-        /// @note `where.index` appends when set to `Append` or greater than the parent child count.
-        /// @return `{ "id": uint, "parentId": uint }` for the inserted element.
-        Result createElement(const ElementPlacement& where, const std::string& json);
+    /// @brief Restores the preceding package snapshot.
+    bool undo() { return history_.undo(); }
 
-        /// Removes an element from its current parent.
-        Result removeElement(NodeId elementId);
+    /// @brief Restores the next package snapshot.
+    bool redo() { return history_.redo(); }
 
-        /// Reorders an element within its current parent.
-        /// @note `index` is zero-based and clamps to the valid sibling range.
-        Result reorderElement(NodeId elementId, std::size_t index);
+    /// @brief Moves the history cursor to an index.
+    bool jumpTo(std::size_t index) { return history_.jumpTo(index); }
 
-        /// Moves an element to a new face or element parent.
-        /// @note `where.parentId` may refer to either a face or an element.
-        /// @note `where.index` appends when set to `Append` or greater than the destination child count.
-        /// @return `{ "id": uint, "parentId": uint }` for the moved element.
-        Result moveElement(NodeId elementId, const ElementPlacement& where);
+    /// @brief Returns the current history index.
+    std::size_t historyIndex() const { return history_.headIndex(); }
 
-        /// Replaces an element with a new element loaded from JSON.
-        /// @return `{ "id": uint }` for the replaced element.
-        Result replaceElement(NodeId elementId, const std::string& json);
+    /// @brief Returns history command names.
+    Result getHistory() const;
 
-        //----------[ PROPERTIES ]----------//
+private:
+    struct FaceEntry {
+        FaceId id = 0;
+        FaceMeta meta;
+        std::unique_ptr<GaugeFace> face;
+    };
 
-        /// Sets a property on a face or element from JSON.
-        /// @param path Dotted property path such as `"style.margin.left"`.
-        Result setProperty(NodeId id, const std::string& path, const std::string& json);
+    [[nodiscard]] GaugeFace* face(FaceId id) noexcept;
+    [[nodiscard]] const GaugeFace* face(FaceId id) const noexcept;
+    [[nodiscard]] Element* element(ElementRef element) noexcept;
+    [[nodiscard]] const Element* element(ElementRef element) const noexcept;
+    [[nodiscard]] std::size_t faceIndex(FaceId id) const noexcept;
+    [[nodiscard]] static std::size_t clampIndex(std::size_t index, std::size_t size) noexcept;
+    bool restorePackage(const std::string& json);
+    bool commit(const std::string& name, const std::function<bool()>& mutation);
 
-        /// Gets a property from a face or element.
-        /// @param path Dotted property path such as `"style.margin.left"`.
-        /// @return `{ "id": uint, "path": string, "value": any }`.
-        Result getProperty(NodeId id, const std::string& path) const;
-
-        /// Gets property metadata from a face or element.
-        /// @param path Dotted property path, or empty to describe the whole object.
-        /// @return `{ "id": uint, "meta": object }` for an empty `path`, or
-        /// `{ "id": uint, "path": string, "meta": object }` for a resolved property.
-        Result getPropertiesMeta(NodeId id, const std::string& path = "") const;
-
-        //----------[ HISTORY ]----------//
-
-        bool canUndo() const { return history.canUndo(); }
-        bool canRedo() const { return history.canRedo(); }
-
-        /// Undoes the most recent committed edit.
-        bool undo() { return history.undo(); }
-
-        /// Redoes the next committed edit.
-        bool redo() { return history.redo(); }
-
-        /// Jumps the history cursor to `index`.
-        bool jumpTo(std::size_t index) { return history.jumpTo(index); }
-
-        std::size_t historyIndex() { return history.headIndex(); }
-
-        /// Returns the history command names in order.
-        /// @return `[ string, ... ]`.
-        Result getHistory() const;
+    std::vector<FaceEntry> faces_;
+    PackageInfo package_;
+    FaceId nextFaceId_ = 1;
+    History history_;
 };
 
-}
+} // namespace mg::editor

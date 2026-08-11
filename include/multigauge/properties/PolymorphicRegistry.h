@@ -41,12 +41,12 @@ template <typename Owned, typename... Args>
 class MgPolymorphicRegistry {
 public:
     using Descriptor = MgPolymorphicTypeDescriptor<Owned, Args...>;
-    using Creator = Owned (*)(Args...);
+    using Fallback = Owned (*)(std::string_view, Args...);
 
     /// @brief Constructs a registry over an existing descriptor array.
     /// @param descriptors Registered type descriptors.
     /// @param fallback Factory used when no matching registered type is found.
-    constexpr MgPolymorphicRegistry(std::span<const Descriptor> descriptors, Creator fallback)
+    constexpr MgPolymorphicRegistry(std::span<const Descriptor> descriptors, Fallback fallback)
         : descriptors_(descriptors),
           fallback_(fallback) {}
 
@@ -68,14 +68,14 @@ public:
     /// @brief Creates an instance of a registered type.
     /// @param type Type identifier to create.
     /// @param args Arguments forwarded to the selected factory.
-    /// @return Created instance, the fallback instance if configured, or an empty owner.
+    /// @return Created instance, the type-aware fallback instance if configured, or an empty owner.
     [[nodiscard]] Owned create(std::string_view type, Args... args) const {
         if (const Descriptor* descriptor = find(type);
             descriptor && descriptor->create) {
             return descriptor->create(args...);
         }
 
-        return fallback_ ? fallback_(args...) : Owned{};
+        return fallback_ ? fallback_(type, args...) : Owned{};
     }
 
     [[nodiscard]] constexpr const Descriptor* begin() const noexcept { return descriptors_.data(); }
@@ -103,7 +103,7 @@ public:
 
 private:
     std::span<const Descriptor> descriptors_;
-    Creator fallback_ = nullptr;
+    Fallback fallback_ = nullptr;
 };
 
 /// @brief Provides polymorphic registry metadata for a type.
