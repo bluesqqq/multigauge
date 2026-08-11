@@ -161,8 +161,6 @@ public:
         const std::string& path
     ) const;
 
-    //----------[ HISTORY ]----------//
-
     /// @brief Gets one element property.
     Result getElementProperty(
         ElementRef element,
@@ -180,6 +178,8 @@ public:
         ElementRef element,
         const std::string& path = ""
     ) const;
+
+    //----------[ HISTORY ]----------//
 
     /// @brief Returns whether undo is available.
     bool canUndo() const { return history_.canUndo(); }
