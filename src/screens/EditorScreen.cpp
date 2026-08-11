@@ -2,16 +2,13 @@
 
 namespace mg {
 
-namespace editor {
-gauge::GaugeFace* getFace(EditorId editorId, NodeId faceId);
+EditorScreen::EditorScreen(editor::EditorId editorId, editor::NodeId faceId)
+    : editorId(editorId), faceId(faceId) {
 }
 
-EditorScreen::EditorScreen(editor::EditorId editorId, editor::NodeId faceId)
-    : editorId(editorId), faceId(faceId) {}
-
-void EditorScreen::setFace(editor::EditorId newEditorId, editor::NodeId newFaceId) {
-    editorId = newEditorId;
-    faceId = newFaceId;
+void EditorScreen::setFace(editor::EditorId editor, editor::NodeId face) {
+    editorId = editor;
+    faceId = face;
     lastFace = nullptr;
 }
 
@@ -57,4 +54,4 @@ void EditorScreen::draw(RuntimeContext& ctx, graphics::Graphics& g) {
     face->draw(g);
 }
 
-}
+} // namespace mg
