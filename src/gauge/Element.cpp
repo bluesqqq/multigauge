@@ -1,213 +1,76 @@
-#include <multigauge/App.h>
 #include <multigauge/gauge/Element.h>
-#include <multigauge/gauge/GaugeFace.h>
 
-#include <algorithm>
-
-#include <multigauge/gauge/elements/primitives/TextElement.h>
-#include <multigauge/gauge/elements/primitives/RectangleElement.h>
-#include <multigauge/gauge/elements/primitives/CircleElement.h>
-#include <multigauge/gauge/elements/primitives/ImageElement.h>
-#include <multigauge/gauge/elements/Horizon.h>
+#include <multigauge/gauge/elements/CustomElement.h>
+#include <multigauge/gauge/elements/FrameElement.h>
 #include <multigauge/gauge/elements/Graph.h>
+#include <multigauge/gauge/elements/Horizon.h>
 #include <multigauge/gauge/elements/circular/CircularElement.h>
 #include <multigauge/gauge/elements/circular/CircularNeedle.h>
 #include <multigauge/gauge/elements/circular/CircularScale.h>
+#include <multigauge/gauge/elements/primitives/CircleElement.h>
+#include <multigauge/gauge/elements/primitives/ImageElement.h>
+#include <multigauge/gauge/elements/primitives/RectangleElement.h>
+#include <multigauge/gauge/elements/primitives/TextElement.h>
 
 namespace mg::gauge {
 
 namespace {
-    template <typename T>
-    OwnedElement createElement(Element* parent) {
-        return std::make_unique<T>(parent);
-    }
 
-    OwnedElement createDefaultElement(Element* parent) {
-        return std::make_unique<Element>(parent);
-    }
+using Owned = Element::OwnedElement;
 
-    using ElementTypeDescriptor = MgPolymorphicTypeDescriptor<OwnedElement, Element*>;
-
-    static const ElementTypeDescriptor ELEMENT_TYPES[] = {
-        makePolymorphicTypeDescriptor<RectangleElement, OwnedElement, Element*>(&createElement<RectangleElement>),
-        makePolymorphicTypeDescriptor<CircleElement, OwnedElement, Element*>(&createElement<CircleElement>),
-        makePolymorphicTypeDescriptor<ImageElement, OwnedElement, Element*>(&createElement<ImageElement>),
-        makePolymorphicTypeDescriptor<TextElement, OwnedElement, Element*>(&createElement<TextElement>),
-        makePolymorphicTypeDescriptor<Horizon, OwnedElement, Element*>(&createElement<Horizon>),
-        makePolymorphicTypeDescriptor<Graph, OwnedElement, Element*>(&createElement<Graph>),
-        makePolymorphicTypeDescriptor<CircularElement, OwnedElement, Element*>(&createElement<CircularElement>),
-        makePolymorphicTypeDescriptor<CircularNeedle, OwnedElement, Element*>(&createElement<CircularNeedle>),
-        makePolymorphicTypeDescriptor<CircularScale, OwnedElement, Element*>(&createElement<CircularScale>),
-    };
+template <typename T> Owned create() {
+    return std::make_unique<T>();
 }
+
+Owned createCustom(std::string_view type) {
+    return std::make_unique<CustomElement>(std::string(type));
+}
+
+using Descriptor = MgPolymorphicTypeDescriptor<Owned>;
+constexpr Descriptor types[] = {
+    makePolymorphicTypeDescriptor<FrameElement, Owned>(&create<FrameElement>),
+    makePolymorphicTypeDescriptor<RectangleElement, Owned>(&create<RectangleElement>),
+    makePolymorphicTypeDescriptor<CircleElement, Owned>(&create<CircleElement>),
+    makePolymorphicTypeDescriptor<TextElement, Owned>(&create<TextElement>),
+    makePolymorphicTypeDescriptor<ImageElement, Owned>(&create<ImageElement>),
+    makePolymorphicTypeDescriptor<CircularElement, Owned>(&create<CircularElement>),
+    makePolymorphicTypeDescriptor<CircularNeedle, Owned>(&create<CircularNeedle>),
+    makePolymorphicTypeDescriptor<CircularScale, Owned>(&create<CircularScale>),
+    makePolymorphicTypeDescriptor<Graph, Owned>(&create<Graph>),
+    makePolymorphicTypeDescriptor<Horizon, Owned>(&create<Horizon>),
+};
+
+} // namespace
 
 const Element::Registry& Element::registry() {
-    static const Registry registry(ELEMENT_TYPES, &createDefaultElement);
+    static const Registry registry(types, &createCustom);
     return registry;
-}
-
-Element::Element(Element* p) : parent(p), node(YGNodeNewWithConfig(mg::getYogaConfig())) {
-    YGNodeSetContext(node, this);
-}
-
-Element::~Element() {
-    children.clear();
-
-    if (node) {
-        YGNodeSetContext(node, nullptr);
-        YGNodeFree(node);
-        node = nullptr;
-    }
-}
-
-namespace {
-    std::size_t clampChildIndex(const Element* parent, std::size_t index) {
-        return std::min(index, parent ? parent->childCount() : std::size_t{0});
-    }
-}
-
-bool Element::setChildren(::mg::PropertyObject* obj, json::Reader value) {
-    auto* self = static_cast<Element*>(obj);
-
-    std::vector<OwnedElement> decoded;
-    if (!decodeAny(value, decoded)) return false;
-
-    while (!self->children.empty()) {
-        self->removeChild(self->children.back().get());
-    }
-
-    for (auto& child : decoded) {
-        if (!self->insertChild(std::move(child), self->children.size())) return false;
-    }
-
-    return true;
-}
-
-bool Element::getChildren(const ::mg::PropertyObject* obj, json::Writer& writer) {
-    const auto* self = static_cast<const Element*>(obj);
-    return encodeAny(writer, self->children);
-}
-
-bool Element::insertChild(OwnedElement child, std::size_t index) {
-    constexpr const char* TAG = "Element::insertChild";
-    if (!child) {
-        LOG_WARN(TAG, "Called with null child");
-        return false;
-    }
-
-    Element* rawChild = child.get();
-    const std::size_t childIndex = clampChildIndex(this, index);
-
-    rawChild->parent = this;
-    if (node && rawChild->node) {
-        if (YGNodeRef owner = YGNodeGetOwner(rawChild->node); owner != node) {
-            if (owner) {
-                YGNodeRemoveChild(owner, rawChild->node);
-            }
-            YGNodeInsertChild(node, rawChild->node, static_cast<std::uint32_t>(childIndex));
-        }
-    }
-
-    children.insert(children.begin() + static_cast<std::ptrdiff_t>(childIndex), std::move(child));
-    markLayoutDirty();
-    return true;
-}
-
-OwnedElement Element::removeChild(Element* child) {
-    constexpr const char* TAG = "Element::removeChild";
-    if (!child) {
-        LOG_WARN(TAG, "Called with null child");
-        return nullptr;
-    }
-
-    for (size_t i = 0; i < children.size(); ++i) {
-        if (children[i].get() != child) continue;
-
-        if (node && child->node && YGNodeGetOwner(child->node) == node)
-            YGNodeRemoveChild(node, child->node);
-
-        OwnedElement detached = std::move(children[i]);
-        children.erase(children.begin() + static_cast<std::ptrdiff_t>(i));
-
-        detached->parent = nullptr;
-        detached->face = nullptr;
-        markLayoutDirty();
-        
-        return detached;
-    }
-
-    LOG_WARN(TAG, "Child=%p not found under parent=%p", (void*)child, (void*)this);
-    return nullptr;
-}
-
-bool Element::initRecursive(AssetManager &assetManager, GraphicsContext& context) {
-    bool success = init(assetManager, context);
-    for (auto const& c : children) if (!c->initRecursive(assetManager, context)) success = false;
-    return success;
-}
-
-void Element::drawRecursive(Graphics &g) const {
-    draw(g);
-    for (auto const& c : children) c->drawRecursive(g);
-}
-
-void Element::updateRecursive(std::chrono::microseconds delta) {
-    update(delta);
-    for (auto& c : children) c->updateRecursive(delta);
-}
-
-void Element::markLayoutDirty() {
-    layoutDirty = true;
-    markLayoutSubtreeDirty();
-}
-
-void Element::markLayoutSubtreeDirty() {
-    if (subtreeLayoutDirty) return;
-
-    subtreeLayoutDirty = true;
-    if (parent) {
-        parent->markLayoutSubtreeDirty();
-    } else if (face) {
-        face->markLayoutSubtreeDirty();
-    }
-}
-
-void Element::syncLayoutRecursive() {
-    if (!subtreeLayoutDirty) return;
-    if (layoutDirty) {
-        style.apply(node);
-        layoutDirty = false;
-    }
-
-    for (auto& child : children) child->syncLayoutRecursive();
 }
 
 } // namespace mg::gauge
 
 namespace mg {
 
-DECODE_IMPL(gauge::OwnedElement) {
+DECODE_IMPL(gauge::Element::OwnedElement) {
     if (v.isNull()) {
-        out = nullptr;
+        out.reset();
         return true;
     }
 
     if (!v.isObject()) return false;
 
-    std::string_view typeView;
-    (void)v.member("type").read(typeView);
-    gauge::OwnedElement decoded = gauge::Element::registry().create(typeView, nullptr);
-    if (!decoded || !decoded->loadProperties(v)) return false;
-    out = std::move(decoded);
+    std::string_view type;
+    if (!v.member(TYPE_KEY).read(type) || type.empty()) return false;
+    auto element = gauge::Element::registry().create(type);
+
+    if (!element || !element->loadProperties(v)) return false;
+
+    out = std::move(element);
     return true;
 }
 
-ENCODE_IMPL(gauge::OwnedElement) {
-    if (!v) {
-        return out.null();
-    }
-
-    return v->saveProperties(out);
+ENCODE_IMPL(gauge::Element::OwnedElement) {
+    return v ? v->saveProperties(out) : out.null();
 }
 
 } // namespace mg
