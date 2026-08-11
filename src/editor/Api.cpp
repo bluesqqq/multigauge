@@ -1,320 +1,429 @@
 #include <multigauge/editor/Api.h>
-#include <multigauge/editor/Clipboard.h>
-#include <multigauge/editor/Editor.h>
 
 #include <cstdint>
 
 #include <multigauge/container/HandlePool.h>
+#include <multigauge/editor/Clipboard.h>
+#include <multigauge/editor/Editor.h>
+#include <multigauge/value/ValueRegistry.h>
 
 namespace mg::editor {
-
-using ::mg::Result;
-
 namespace {
-
 HandlePool<Editor, EditorId> editors;
 ClipboardState clipboard;
 
-Editor* getEditor(EditorId EditorId) {
-    return editors.get(EditorId);
+Editor* editor(EditorId id) {
+    return editors.get(id);
 }
 
-Result invalidEditorId() {
-    return Error("Invalid editor EditorId");
+Result invalidEditor() {
+    return Error("Invalid editor ID");
 }
 
-Result saveJsonResult(const std::string& json) {
+Result jsonResult(const std::string& json) {
     Result result = OkObject();
     json::Writer writer = result.data.writer();
-    return writer.writeObject([&](json::ObjectWriter& object) { return object.write("json", json); }) ? std::move(result) : Error("Failed to build JSON result");
+    return writer.writeObject(
+               [&](json::ObjectWriter& object) { return object.write("json", json); })
+               ? std::move(result)
+               : Error("Failed to build JSON result");
 }
 
 Result packageInfoResult(const Editor::PackageInfo& info) {
-    Result result = OkObject(); json::Writer writer = result.data.writer();
-    return writer.writeObject([&](json::ObjectWriter& object) { return object.write("name", info.name) && object.write("author", info.author) && object.write("description", info.description); }) ? std::move(result) : Error("Failed to build package info result");
+    Result result = OkObject();
+    json::Writer writer = result.data.writer();
+    return writer.writeObject([&](json::ObjectWriter& object) {
+        return object.write("name", info.name) && object.write("author", info.author) &&
+               object.write("description", info.description);
+    })
+               ? std::move(result)
+               : Error("Failed to build package result");
 }
-
-Result faceNameResult(NodeId faceId, const std::string& name) {
-    Result result = OkObject(); json::Writer writer = result.data.writer();
-    return writer.writeObject([&](json::ObjectWriter& object) { return object.write("id", static_cast<std::uint64_t>(faceId)) && object.write("name", name); }) ? std::move(result) : Error("Failed to build face result");
-}
-
-}
-
-gauge::GaugeFace* getFace(EditorId EditorId, NodeId faceId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor || !editor->isFace(faceId)) return nullptr;
-
-    for (std::size_t i = 0; i < editor->faceCount(); ++i) {
-        if (editor->faceAt(i) && editor->idOf(editor->faceAt(i)) == faceId) {
-            return editor->faceAt(i);
-        }
-    }
-
-    return nullptr;
-}
+} // namespace
 
 EditorId create() {
     return editors.emplace();
 }
 
-bool destroy(EditorId EditorId) {
-    return editors.remove(EditorId);
+bool destroy(EditorId id) {
+    return editors.remove(id);
 }
 
-bool exists(EditorId EditorId) {
-    return getEditor(EditorId) != nullptr;
+bool exists(EditorId id) {
+    return editor(id) != nullptr;
 }
 
-bool clear(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return false;
-    editor->clear();
-    return true;
+bool clear(EditorId id) {
+    if (auto* value = editor(id)) {
+        value->clear();
+        return true;
+    }
+    return false;
 }
 
-Result setPackageInfo(EditorId EditorId, const std::string& name, const std::string& author, const std::string& description) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-    if (!editor->setPackageInfo(name, author, description)) return Error("Failed to set package info");
-    return packageInfoResult(editor->getPackageInfo());
+Result setPackageInfo(
+    EditorId id,
+    const std::string& name,
+    const std::string& author,
+    const std::string& description
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    const Editor::PackageInfo info{name, author, description};
+    return value->setPackageInfo(info)
+               ? packageInfoResult(value->packageInfo())
+               : Error("Failed to set package info");
 }
 
-Result getPackageInfo(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-    return packageInfoResult(editor->getPackageInfo());
+Result getPackageInfo(EditorId id) {
+    auto* value = editor(id);
+    return value ? packageInfoResult(value->packageInfo()) : invalidEditor();
 }
 
-Result setFaceName(EditorId EditorId, NodeId faceId, const std::string& name) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-    if (!editor->setFaceName(faceId, name)) return Error("Invalid face id");
-    return faceNameResult(faceId, editor->getFaceName(faceId));
+Result setFaceName(
+    EditorId id,
+    NodeId faceId,
+    const std::string& name
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    return value->setFaceName(faceId, name) ? OkObject() : Error("Invalid face ID");
 }
 
-Result getFaceName(EditorId EditorId, NodeId faceId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-    if (!editor->isFace(faceId)) return Error("Invalid face id");
-    return faceNameResult(faceId, editor->getFaceName(faceId));
+Result getFaceName(
+    EditorId id,
+    NodeId faceId
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    if (!value->getFace(faceId)) return Error("Invalid face ID");
+    Result result = OkObject();
+    json::Writer writer = result.data.writer();
+    return writer.writeObject([&](json::ObjectWriter& object) {
+        return object.write("id", static_cast<std::uint64_t>(faceId)) &&
+               object.write("name", value->getFaceName(faceId));
+    })
+               ? std::move(result)
+               : Error("Failed to build face result");
 }
 
-Result loadPackage(EditorId EditorId, const std::string& json) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-    if (!editor->loadPackage(json)) return Error("Invalid JSON");
-    return OkObject();
+Result loadPackage(
+    EditorId id,
+    const std::string& text
+) {
+    auto* value = editor(id);
+    return !value ? invalidEditor()
+                  : (value->loadPackage(text) ? OkObject() : Error("Invalid package JSON"));
 }
 
-Result exportPackage(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-    return saveJsonResult(editor->exportPackage());
+Result exportPackage(EditorId id) {
+    auto* value = editor(id);
+    return value ? jsonResult(value->exportPackage()) : invalidEditor();
 }
 
-Result getHierarchy(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->getHierarchy() : invalidEditorId();
+gauge::GaugeFace* getFace(
+    EditorId id,
+    NodeId faceId
+) {
+    auto* value = editor(id);
+    return value ? value->getFace(faceId) : nullptr;
 }
 
-Result getHistory(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->getHistory() : invalidEditorId();
+bool isFace(
+    EditorId id,
+    NodeId faceId
+) {
+    return getFace(id, faceId) != nullptr;
 }
 
-ClipboardSummary getClipboardSummary(EditorId EditorId) {
-    (void)EditorId;
-    return { clipboard.kind };
+std::size_t faceCount(EditorId id) {
+    auto* value = editor(id);
+    return value ? value->faceCount() : 0;
 }
 
-void clearClipboard(EditorId EditorId) {
-    (void)EditorId;
+NodeId faceAt(
+    EditorId id,
+    std::size_t index
+) {
+    auto* value = editor(id);
+    return !value || index >= value->faceCount() ? 0 : value->faceIdAt(index);
+}
+
+Result getHierarchy(EditorId id) {
+    auto* value = editor(id);
+    return value ? value->getHierarchy() : invalidEditor();
+}
+
+Result listElementTypes(EditorId id) {
+    auto* value = editor(id);
+    return value ? value->listElementTypes() : invalidEditor();
+}
+
+Result listValueIDs(EditorId id) {
+    if (!editor(id)) return invalidEditor();
+
+    Result result = OkArray();
+    json::Writer writer = result.data.writer();
+    return writer.writeArray([&](json::ArrayWriter& entries) {
+        bool written = true;
+        ValueRegistry::forEach([&](ValueHandle handle) {
+            written = written && entries.write(ValueRegistry::id(handle));
+        });
+        return written;
+    })
+               ? std::move(result)
+               : Error("Failed to list value IDs");
+}
+
+Result createFace(
+    EditorId id,
+    const std::string& text,
+    FacePlacement where
+) {
+    auto* value = editor(id);
+    return value ? value->createFace(text, where) : invalidEditor();
+}
+
+Result removeFace(
+    EditorId id,
+    NodeId faceId
+) {
+    auto* value = editor(id);
+    return value ? value->removeFace(faceId) : invalidEditor();
+}
+
+Result reorderFace(
+    EditorId id,
+    NodeId faceId,
+    std::size_t index
+) {
+    auto* value = editor(id);
+    return value ? value->reorderFace(faceId, index) : invalidEditor();
+}
+
+Result createElement(
+    EditorId id,
+    const ElementPlacement& where,
+    const std::string& text
+) {
+    auto* value = editor(id);
+    return value ? value->createElement(where, text) : invalidEditor();
+}
+
+Result removeElement(
+    EditorId id,
+    ElementRef ref
+) {
+    auto* value = editor(id);
+    return value ? value->removeElement(ref) : invalidEditor();
+}
+
+Result reorderElement(
+    EditorId id,
+    ElementRef ref,
+    std::size_t index
+) {
+    auto* value = editor(id);
+    return value ? value->reorderElement(ref, index) : invalidEditor();
+}
+
+Result moveElement(
+    EditorId id,
+    ElementRef ref,
+    const ElementPlacement& where
+) {
+    auto* value = editor(id);
+    return value ? value->moveElement(ref, where) : invalidEditor();
+}
+
+Result replaceElement(
+    EditorId id,
+    ElementRef ref,
+    const std::string& text
+) {
+    auto* value = editor(id);
+    return value ? value->replaceElement(ref, text) : invalidEditor();
+}
+
+Result setFaceProperty(
+    EditorId id,
+    NodeId faceId,
+    const std::string& path,
+    const std::string& text
+) {
+    auto* value = editor(id);
+    return value ? value->setFaceProperty(faceId, path, text) : invalidEditor();
+}
+
+Result getFaceProperty(
+    EditorId id,
+    NodeId faceId,
+    const std::string& path
+) {
+    auto* value = editor(id);
+    return value ? value->getFaceProperty(faceId, path) : invalidEditor();
+}
+
+Result getFacePropertiesMeta(
+    EditorId id,
+    NodeId faceId,
+    const std::string& path
+) {
+    auto* value = editor(id);
+    return value ? value->getFacePropertiesMeta(faceId, path) : invalidEditor();
+}
+
+Result setElementProperty(
+    EditorId id,
+    ElementRef ref,
+    const std::string& path,
+    const std::string& text
+) {
+    auto* value = editor(id);
+    return value ? value->setElementProperty(ref, path, text) : invalidEditor();
+}
+
+Result getElementProperty(
+    EditorId id,
+    ElementRef ref,
+    const std::string& path
+) {
+    auto* value = editor(id);
+    return value ? value->getElementProperty(ref, path) : invalidEditor();
+}
+
+Result getElementPropertiesMeta(
+    EditorId id,
+    ElementRef ref,
+    const std::string& path
+) {
+    auto* value = editor(id);
+    return value ? value->getElementPropertiesMeta(ref, path) : invalidEditor();
+}
+
+ClipboardSummary getClipboardSummary(EditorId) {
+    return {clipboard.kind};
+}
+
+void clearClipboard(EditorId) {
     clipboard.clear();
 }
 
-std::size_t faceCount(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->faceCount() : 0;
-}
-
-NodeId faceAt(EditorId EditorId, std::size_t index) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor || index >= editor->faceCount()) return 0;
-    return editor->idOf(editor->faceAt(index));
-}
-
-Result listElementTypes(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->listElementTypes() : invalidEditorId();
-}
-
-Result listValueIDs(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->listValueIDs() : invalidEditorId();
-}
-
-bool hasNode(EditorId EditorId, NodeId id) {
-    Editor* editor = getEditor(EditorId);
-    return editor && editor->hasNode(id);
-}
-
-bool isFace(EditorId EditorId, NodeId id) {
-    Editor* editor = getEditor(EditorId);
-    return editor && editor->isFace(id);
-}
-
-bool isElement(EditorId EditorId, NodeId id) {
-    Editor* editor = getEditor(EditorId);
-    return editor && editor->isElement(id);
-}
-
-Result createFace(EditorId EditorId, const std::string& json, FacePlacement where) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->createFace(json, where) : invalidEditorId();
-}
-
-Result removeFace(EditorId EditorId, NodeId faceId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->removeFace(faceId) : invalidEditorId();
-}
-
-Result reorderFace(EditorId EditorId, NodeId faceId, std::size_t index) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->reorderFace(faceId, index) : invalidEditorId();
-}
-
-Result createElement(EditorId EditorId, const ElementPlacement& where, const std::string& json) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->createElement(where, json) : invalidEditorId();
-}
-
-Result removeElement(EditorId EditorId, NodeId elementId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->removeElement(elementId) : invalidEditorId();
-}
-
-Result reorderElement(EditorId EditorId, NodeId elementId, std::size_t index) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->reorderElement(elementId, index) : invalidEditorId();
-}
-
-Result moveElement(EditorId EditorId, NodeId elementId, const ElementPlacement& where) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->moveElement(elementId, where) : invalidEditorId();
-}
-
-Result replaceElement(EditorId EditorId, NodeId elementId, const std::string& json) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->replaceElement(elementId, json) : invalidEditorId();
-}
-
-Result setProperty(EditorId EditorId, NodeId id, const std::string& path, const std::string& json) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->setProperty(id, path, json) : invalidEditorId();
-}
-
-Result getProperty(EditorId EditorId, NodeId id, const std::string& path) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->getProperty(id, path) : invalidEditorId();
-}
-
-Result getPropertiesMeta(EditorId EditorId, NodeId id, const std::string& path) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->getPropertiesMeta(id, path) : invalidEditorId();
-}
-
-Result copyFace(EditorId EditorId, NodeId faceId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-
-    Result serialized = editor->serializeFace(faceId);
-    if (!serialized.ok) return serialized;
-
-    clipboard.kind = ClipboardState::Kind::Face;
-    std::string_view json; if (!serialized.data.root().member("json").read(json)) return Error("Invalid serialized face"); clipboard.json.assign(json);
+Result copyFace(
+    EditorId id,
+    NodeId faceId
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    Result result = value->serializeFace(faceId);
+    if (!result.ok) return result;
+    std::string_view text;
+    if (!result.data.root().member("json").read(text)) return Error("Invalid serialized face");
+    clipboard = {ClipboardState::Kind::Face, std::string(text)};
     return OkObject();
 }
 
-Result cutFace(EditorId EditorId, NodeId faceId) {
-    Result copied = copyFace(EditorId, faceId);
-    if (!copied.ok) return copied;
-
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->removeFace(faceId) : invalidEditorId();
+Result cutFace(
+    EditorId id,
+    NodeId faceId
+) {
+    Result result = copyFace(id, faceId);
+    if (!result.ok) return std::move(result);
+    return removeFace(id, faceId);
 }
 
-Result pasteFace(EditorId EditorId, FacePlacement where) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-
-    if (clipboard.kind != ClipboardState::Kind::Face) {
-        return Error("Clipboard does not contain a face");
-    }
-
-    return editor->createFace(clipboard.json, where);
+Result pasteFace(
+    EditorId id,
+    FacePlacement where
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    return clipboard.kind == ClipboardState::Kind::Face
+               ? value->createFace(clipboard.json, where)
+               : Error("Clipboard does not contain a face");
 }
 
-Result copyElement(EditorId EditorId, NodeId elementId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-
-    Result serialized = editor->serializeElement(elementId);
-    if (!serialized.ok) return serialized;
-
-    clipboard.kind = ClipboardState::Kind::Element;
-    std::string_view json; if (!serialized.data.root().member("json").read(json)) return Error("Invalid serialized element"); clipboard.json.assign(json);
+Result copyElement(
+    EditorId id,
+    ElementRef ref
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    Result result = value->serializeElement(ref);
+    if (!result.ok) return result;
+    std::string_view text;
+    if (!result.data.root().member("json").read(text)) return Error("Invalid serialized element");
+    clipboard = {ClipboardState::Kind::Element, std::string(text)};
     return OkObject();
 }
 
-Result cutElement(EditorId EditorId, NodeId elementId) {
-    Result copied = copyElement(EditorId, elementId);
-    if (!copied.ok) return copied;
-
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->removeElement(elementId) : invalidEditorId();
+Result cutElement(
+    EditorId id,
+    ElementRef ref
+) {
+    Result result = copyElement(id, ref);
+    if (!result.ok) return std::move(result);
+    return removeElement(id, ref);
 }
 
-Result pasteElement(EditorId EditorId, const ElementPlacement& where) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-
-    if (clipboard.kind != ClipboardState::Kind::Element) {
-        return Error("Clipboard does not contain an element");
-    }
-
-    return editor->createElement(where, clipboard.json);
+Result pasteElement(
+    EditorId id,
+    const ElementPlacement& where
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    return clipboard.kind == ClipboardState::Kind::Element
+               ? value->createElement(where, clipboard.json)
+               : Error("Clipboard does not contain an element");
 }
 
-Result pasteToReplaceElement(EditorId EditorId, NodeId elementId) {
-    Editor* editor = getEditor(EditorId);
-    if (!editor) return invalidEditorId();
-
-    if (clipboard.kind != ClipboardState::Kind::Element) {
-        return Error("Clipboard does not contain an element");
-    }
-
-    return editor->replaceElement(elementId, clipboard.json);
+Result pasteToReplaceElement(
+    EditorId id,
+    ElementRef ref
+) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor();
+    return clipboard.kind == ClipboardState::Kind::Element
+               ? value->replaceElement(ref, clipboard.json)
+               : Error("Clipboard does not contain an element");
 }
 
-bool undo(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor && editor->undo();
+bool undo(EditorId id) {
+    auto* value = editor(id);
+    return value && value->undo();
 }
 
-bool redo(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor && editor->redo();
+bool redo(EditorId id) {
+    auto* value = editor(id);
+    return value && value->redo();
 }
 
-bool jumpTo(EditorId EditorId, std::size_t index) {
-    Editor* editor = getEditor(EditorId);
-    return editor && editor->jumpTo(index);
+bool jumpTo(
+    EditorId id,
+    std::size_t index
+) {
+    auto* value = editor(id);
+    return value && value->jumpTo(index);
 }
 
-std::size_t historyIndex(EditorId EditorId) {
-    Editor* editor = getEditor(EditorId);
-    return editor ? editor->historyIndex() : 0;
+std::size_t historyIndex(EditorId id) {
+    auto* value = editor(id);
+    return value ? value->historyIndex() : 0;
 }
 
+Result getHistory(EditorId id) {
+    auto* value = editor(id);
+    return value ? value->getHistory() : invalidEditor();
 }
+
+bool canUndo(EditorId id) {
+    auto* value = editor(id);
+    return value && value->canUndo();
+}
+
+bool canRedo(EditorId id) {
+    auto* value = editor(id);
+    return value && value->canRedo();
+}
+
+} // namespace mg::editor

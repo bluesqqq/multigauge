@@ -1,189 +1,278 @@
 #pragma once
 
 #include <cstddef>
-#include <memory>
 #include <string>
 
-#include <multigauge/editor/Types.h>
 #include <multigauge/editor/Result.h>
+#include <multigauge/editor/Types.h>
+
+namespace mg::gauge {
+class GaugeFace;
+}
 
 namespace mg::editor {
 
-using ::mg::Result;
-
 struct ClipboardSummary;
 
-//----------[ EDITORS ]----------//
+//----------[ LIFETIME ]----------//
 
-/// Creates a new editor instance.
+/// @brief Creates an editor instance.
 EditorId create();
 
-/// Destroys the editor instance with `id`.
-bool destroy(EditorId);
+/// @brief Destroys an editor instance.
+bool destroy(EditorId id);
 
-/// Returns whether an editor instance with `id` exists.
-bool exists(EditorId);
+/// @brief Tests whether an editor instance is live.
+bool exists(EditorId id);
+
+/// @brief Clears an editor's package and history state.
+bool clear(EditorId id);
 
 //----------[ PACKAGE ]----------//
 
-/// Clears the loaded package, history, and node IDs for the editor.
-bool clear(EditorId);
+/// @brief Updates package metadata.
+Result setPackageInfo(
+    EditorId id,
+    const std::string& name,
+    const std::string& author,
+    const std::string& description
+);
 
-/// Updates the package-level metadata.
-Result setPackageInfo(EditorId, const std::string& name, const std::string& author, const std::string& description);
+/// @brief Returns package metadata.
+Result getPackageInfo(EditorId id);
 
-/// Returns the package-level metadata.
-Result getPackageInfo(EditorId);
+/// @brief Updates one face name.
+Result setFaceName(
+    EditorId id,
+    NodeId faceId,
+    const std::string& name
+);
 
-/// Updates the face name for `faceId`.
-Result setFaceName(EditorId, NodeId faceId, const std::string& name);
+/// @brief Returns one face name.
+Result getFaceName(
+    EditorId id,
+    NodeId faceId
+);
 
-/// Returns the face name for `faceId`.
-Result getFaceName(EditorId, NodeId faceId);
+/// @brief Loads a package document.
+Result loadPackage(
+    EditorId id,
+    const std::string& json
+);
 
-/// Loads a package object.
-Result loadPackage(EditorId, const std::string& json);
+/// @brief Exports a package document.
+Result exportPackage(EditorId id);
 
-/// Saves the current package as a package object.
-Result exportPackage(EditorId);
+//----------[ FACES ]----------//
 
-/// Backwards-compatible alias for `loadPackage`.
-inline Result loadDocument(EditorId editorId, const std::string& json) { return loadPackage(editorId, json); }
+/// @brief Returns a borrowed face pointer for native rendering.
+/// @details The pointer remains valid until its face is removed, the package is cleared or
+/// loaded, a history operation restores a snapshot, or the editor is destroyed.
+gauge::GaugeFace* getFace(
+    EditorId id,
+    NodeId faceId
+);
 
-/// Backwards-compatible alias for `exportPackage`.
-inline Result saveDocument(EditorId editorId) { return exportPackage(editorId); }
+/// @brief Tests whether a face ID belongs to an editor.
+bool isFace(
+    EditorId id,
+    NodeId faceId
+);
 
-//----------[ QUERIES ]----------//
+/// @brief Returns the number of faces in an editor.
+std::size_t faceCount(EditorId id);
 
-/// Returns the face and element hierarchy as a flat JSON payload.
-/// @return `{ "roots": [uint...], "nodes": { "id": { "kind": string, "name": string, "children": [uint...] }, ... } }`
-Result getHierarchy(EditorId);
+/// @brief Returns the face ID at an index.
+NodeId faceAt(
+    EditorId id,
+    std::size_t index
+);
 
-/// Returns the available element type descriptors.
-/// @return `[ { "name": string, "type": string }, ... ]`
-Result listElementTypes(EditorId);
+/// @brief Creates a face from serialized JSON.
+Result createFace(
+    EditorId id,
+    const std::string& json,
+    FacePlacement where = FacePlacement{}
+);
 
-/// Returns the available value IDs.
-/// @return `[ string, ... ]`
-Result listValueIDs(EditorId);
+/// @brief Removes a face.
+Result removeFace(
+    EditorId id,
+    NodeId faceId
+);
 
-/// Returns whether a face or element with `id` exists.
-bool hasNode(EditorId, NodeId id);
-
-/// Returns whether `id` refers to a face.
-bool isFace(EditorId, NodeId id);
-
-/// Returns whether `id` refers to an element.
-bool isElement(EditorId, NodeId id);
-
-//----------[ GAUGE FACES ]----------//
-
-/// Creates a new face in the face list.
-/// @note `where.index` appends when set to `Append` or greater than the face count.
-/// @return `{ "id": uint }` for the inserted face.
-Result createFace(EditorId, const std::string& json, FacePlacement where = FacePlacement());
-
-/// Removes a face from the face list.
-Result removeFace(EditorId, NodeId faceId);
-
-/// Reorders a face within the face list.
-/// @note `index` is zero-based and clamps to the valid face range.
-Result reorderFace(EditorId, NodeId faceId, std::size_t index);
-
-/// Returns the number of faces in the editor.
-std::size_t faceCount(EditorId);
-
-/// Returns the face ID at `index`.
-NodeId faceAt(EditorId, std::size_t index);
+/// @brief Reorders a face.
+Result reorderFace(
+    EditorId id,
+    NodeId faceId,
+    std::size_t index
+);
 
 //----------[ ELEMENTS ]----------//
 
-/// Creates an element under a face or element parent from JSON.
-/// @note `where.parentId` may refer to either a face or an element.
-/// @note `where.index` appends when set to `Append` or greater than the parent child count.
-/// @return `{ "id": uint, "parentId": uint }` for the inserted element.
-Result createElement(EditorId, const ElementPlacement& where, const std::string& json);
+/// @brief Returns the editor hierarchy as JSON.
+Result getHierarchy(EditorId id);
 
-/// Removes an element from its current parent.
-Result removeElement(EditorId, NodeId elementId);
+/// @brief Lists registered element types.
+Result listElementTypes(EditorId id);
 
-/// Reorders an element within its current parent.
-/// @note `index` is zero-based and clamps to the valid sibling range.
-Result reorderElement(EditorId, NodeId elementId, std::size_t index);
+/// @brief Lists registered value IDs.
+Result listValueIDs(EditorId id);
 
-/// Moves an element to a new face or element parent.
-/// @note `where.parentId` may refer to either a face or an element.
-/// @note `where.index` appends when set to `Append` or greater than the destination child count.
-/// @return `{ "id": uint, "parentId": uint }` for the moved element.
-Result moveElement(EditorId, NodeId elementId, const ElementPlacement& where);
+/// @brief Creates an element from serialized JSON.
+Result createElement(
+    EditorId id,
+    const ElementPlacement& where,
+    const std::string& json
+);
 
-/// Replaces an element with a new element loaded from JSON.
-/// @return `{ "id": uint }` for the replaced element.
-Result replaceElement(EditorId, NodeId elementId, const std::string& json);
+/// @brief Removes an element subtree.
+Result removeElement(
+    EditorId id,
+    ElementRef element
+);
+
+/// @brief Reorders an element within its parent.
+Result reorderElement(
+    EditorId id,
+    ElementRef element,
+    std::size_t index
+);
+
+/// @brief Moves an element within its face.
+Result moveElement(
+    EditorId id,
+    ElementRef element,
+    const ElementPlacement& where
+);
+
+/// @brief Replaces an element while preserving its handle.
+Result replaceElement(
+    EditorId id,
+    ElementRef element,
+    const std::string& json
+);
 
 //----------[ PROPERTIES ]----------//
 
-/// Sets a property on a face or element from JSON.
-/// @param path Dotted property path such as `"style.margin.left"`.
-/// @return `{ "id": uint, "path": string, "value": any }`.
-Result setProperty(EditorId, NodeId id, const std::string& path, const std::string& json);
+/// @brief Sets a face property from JSON.
+Result setFaceProperty(
+    EditorId id,
+    NodeId faceId,
+    const std::string& path,
+    const std::string& json
+);
 
-/// Gets a property from a face or element.
-/// @param path Dotted property path such as `"style.margin.left"`.
-/// @return `{ "id": uint, "path": string, "value": any }`.
-Result getProperty(EditorId, NodeId id, const std::string& path);
+/// @brief Returns a face property as JSON.
+Result getFaceProperty(
+    EditorId id,
+    NodeId faceId,
+    const std::string& path
+);
 
-/// Gets property metadata from a face or element.
-/// @param path Dotted property path, or empty to describe the whole object.
-/// @return `{ "id": uint, "meta": object }` for an empty `path`, or
-/// `{ "id": uint, "path": string, "meta": object }` for a resolved property.
-Result getPropertiesMeta(EditorId, NodeId id, const std::string& path = "");
+/// @brief Returns face property metadata.
+Result getFacePropertiesMeta(
+    EditorId id,
+    NodeId faceId,
+    const std::string& path = ""
+);
+
+/// @brief Sets an element property from JSON.
+Result setElementProperty(
+    EditorId id,
+    ElementRef element,
+    const std::string& path,
+    const std::string& json
+);
+
+/// @brief Returns an element property as JSON.
+Result getElementProperty(
+    EditorId id,
+    ElementRef element,
+    const std::string& path
+);
+
+/// @brief Returns element property metadata.
+Result getElementPropertiesMeta(
+    EditorId id,
+    ElementRef element,
+    const std::string& path = ""
+);
 
 //----------[ CLIPBOARD ]----------//
 
-/// Returns the current clipboard summary.
-/// @return A summary of the clipboard contents.
-ClipboardSummary getClipboardSummary(EditorId);
+/// @brief Returns the clipboard state.
+ClipboardSummary getClipboardSummary(EditorId id);
 
-/// Clears the clipboard for the editor.
-void clearClipboard(EditorId);
+/// @brief Clears the clipboard.
+void clearClipboard(EditorId id);
 
-/// Copies a face into the clipboard.
-Result copyFace(EditorId, NodeId faceId);
+/// @brief Copies a face to the clipboard.
+Result copyFace(
+    EditorId id,
+    NodeId faceId
+);
 
-/// Cuts a face into the clipboard.
-Result cutFace(EditorId, NodeId faceId);
+/// @brief Cuts a face to the clipboard.
+Result cutFace(
+    EditorId id,
+    NodeId faceId
+);
 
-/// Pastes a face from the clipboard.
-Result pasteFace(EditorId, FacePlacement where = FacePlacement());
+/// @brief Pastes a face from the clipboard.
+Result pasteFace(
+    EditorId id,
+    FacePlacement where = FacePlacement{}
+);
 
-/// Copies an element into the clipboard.
-Result copyElement(EditorId, NodeId elementId);
+/// @brief Copies an element to the clipboard.
+Result copyElement(
+    EditorId id,
+    ElementRef element
+);
 
-/// Cuts an element into the clipboard.
-Result cutElement(EditorId, NodeId elementId);
+/// @brief Cuts an element to the clipboard.
+Result cutElement(
+    EditorId id,
+    ElementRef element
+);
 
-/// Pastes an element from the clipboard.
-Result pasteElement(EditorId, const ElementPlacement& where);
+/// @brief Pastes an element from the clipboard.
+Result pasteElement(
+    EditorId id,
+    const ElementPlacement& where
+);
 
-/// Replaces an element with the element stored in the clipboard.
-Result pasteToReplaceElement(EditorId, NodeId elementId);
+/// @brief Replaces an element with the clipboard element.
+Result pasteToReplaceElement(
+    EditorId id,
+    ElementRef element
+);
 
 //----------[ HISTORY ]----------//
 
-/// Undoes the most recent committed edit.
-bool undo(EditorId);
+/// @brief Undoes the preceding edit.
+bool undo(EditorId id);
 
-/// Redoes the next committed edit.
-bool redo(EditorId);
+/// @brief Redoes the next edit.
+bool redo(EditorId id);
 
-/// Jumps the history cursor to `index`.
-bool jumpTo(EditorId, std::size_t index);
+/// @brief Moves the history cursor to an index.
+bool jumpTo(
+    EditorId id,
+    std::size_t index
+);
 
-std::size_t historyIndex(EditorId);
+/// @brief Returns the current history index.
+std::size_t historyIndex(EditorId id);
 
-/// Returns the history command names in order.
-/// @return `[ string, ... ]`
-Result getHistory(EditorId);
+/// @brief Returns history command names.
+Result getHistory(EditorId id);
 
-}
+/// @brief Returns whether an undo operation is available.
+bool canUndo(EditorId id);
+
+/// @brief Returns whether a redo operation is available.
+bool canRedo(EditorId id);
+
+} // namespace mg::editor
