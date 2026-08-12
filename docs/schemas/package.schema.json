@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/package.schema.json",
+  "title": "Multigauge Package Schema",
+  "description": "Schema for the canonical package used by importPackage, exportPackage, and the editor package loader/saver. The package contains only user-facing data and no internal ids or storage paths.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "name": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "author": {
+      "$ref": "#/$defs/nonEmptyString"
+    },
+    "description": {
+      "type": "string"
+    },
+    "faces": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/faceEntry"
+      }
+    }
+  },
+  "required": [
+    "name",
+    "author",
+    "description",
+    "faces"
+  ],
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "faceDocument": {
+      "type": "object",
+      "description": "Opaque face payload loaded by GaugeFace; the runtime accepts the normal gauge face object shape here.",
+      "additionalProperties": true
+    },
+    "faceEntry": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "face": {
+          "$ref": "#/$defs/faceDocument"
+        }
+      },
+      "required": [
+        "name",
+        "face"
+      ],
+      "additionalProperties": false
+    }
+  }
+}
