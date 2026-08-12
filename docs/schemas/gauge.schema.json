@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/gauge.schema.json",
+  "title": "Gauge Face Schema",
+  "description": "Serialized GaugeFace documents and registered element properties.",
+  "type": "object",
+  "properties": {
+    "$schema": { "type": "string" },
+    "layout": { "$ref": "#/$defs/layout" },
+    "bgColor": { "$ref": "#/$defs/color" },
+    "children": { "$ref": "#/$defs/children" }
+  },
+  "additionalProperties": true,
+  "$defs": {
+    "numberOrNull": { "type": ["number", "null"] },
+    "integerOrNull": { "type": ["integer", "null"] },
+    "stringOrNull": { "type": ["string", "null"] },
+    "layoutSize": {
+      "type": "object",
+      "properties": {
+        "mode": { "enum": ["fit", "grow", "fixed", "percent"] },
+        "value": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "layout": {
+      "type": "object",
+      "properties": {
+        "width": { "$ref": "#/$defs/layoutSize" },
+        "height": { "$ref": "#/$defs/layoutSize" },
+        "direction": { "enum": ["left-to-right", "top-to-bottom"] },
+        "paddingLeft": { "type": "integer" },
+        "paddingRight": { "type": "integer" },
+        "paddingTop": { "type": "integer" },
+        "paddingBottom": { "type": "integer" },
+        "childGap": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "rgba": {
+      "type": "string",
+      "description": "Color string accepted by Codec<rgba>."
+    },
+    "color": {
+      "description": "Null, an rgba string, or a registered polymorphic color.",
+      "anyOf": [
+        { "type": "null" },
+        { "$ref": "#/$defs/rgba" },
+        { "$ref": "#/$defs/staticColor" },
+        { "$ref": "#/$defs/valueColor" },
+        { "$ref": "#/$defs/timeColor" },
+        { "$ref": "#/$defs/userColor" }
+      ]
+    },
+    "staticColor": {
+      "type": "object",
+      "properties": { "type": { "const": "static" }, "color": { "$ref": "#/$defs/rgba" } },
+      "required": ["type"],
+      "additionalProperties": true
+    },
+    "colorStop": {
+      "type": "object",
+      "properties": { "pos": { "type": "number" }, "color": { "$ref": "#/$defs/color" } },
+      "additionalProperties": true
+    },
+    "colorTimeline": {
+      "oneOf": [
+        { "$ref": "#/$defs/color" },
+        { "type": "object", "properties": { "keyframes": { "type": "array", "items": { "$ref": "#/$defs/colorStop" } } }, "required": ["keyframes"], "additionalProperties": true }
+      ]
+    },
+    "valueColor": {
+      "type": "object",
+      "properties": { "type": { "const": "value" }, "timeline": { "$ref": "#/$defs/colorTimeline" }, "id": { "$ref": "#/$defs/stringOrNull" } },
+      "required": ["type"],
+      "additionalProperties": true
+    },
+    "timeColor": {
+      "type": "object",
+      "properties": { "type": { "const": "time" }, "timeline": { "$ref": "#/$defs/colorTimeline" }, "loop": { "enum": ["forward", "reverse", "pingpong"] }, "periodMs": { "type": "number" } },
+      "required": ["type"],
+      "additionalProperties": true
+    },
+    "userColor": {
+      "type": "object",
+      "properties": { "type": { "const": "user" }, "slot": { "enum": ["primary", "secondary", "background"] } },
+      "required": ["type"],
+      "additionalProperties": true
+    },
+    "paint": {
+      "type": "object",
+      "properties": { "fill": { "$ref": "#/$defs/color" }, "stroke": { "$ref": "#/$defs/color" }, "thickness": { "type": "number" } },
+      "additionalProperties": true
+    },
+    "paintTimeline": {
+      "type": "object",
+      "properties": { "fill": { "$ref": "#/$defs/colorTimeline" }, "stroke": { "$ref": "#/$defs/colorTimeline" }, "thickness": { "type": "number" } },
+      "additionalProperties": true
+    },
+    "textPaint": {
+      "type": "object",
+      "properties": { "family": { "type": "string" }, "pt": { "type": "number" }, "color": { "$ref": "#/$defs/color" } },
+      "additionalProperties": true
+    },
+    "valueView": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "object", "properties": { "id": { "$ref": "#/$defs/stringOrNull" }, "min": { "$ref": "#/$defs/numberOrNull" }, "max": { "$ref": "#/$defs/numberOrNull" }, "unitIndex": { "$ref": "#/$defs/integerOrNull" } }, "additionalProperties": true }
+      ]
+    },
+    "rootTick": {
+      "type": "object",
+      "properties": { "divisions": { "type": "integer" }, "interval": { "type": "number" }, "useDivisions": { "type": "boolean" }, "length": { "type": "number" }, "thickness": { "type": "number" }, "paint": { "$ref": "#/$defs/paintTimeline" } },
+      "additionalProperties": true
+    },
+    "subTick": {
+      "type": "object",
+      "properties": { "divisions": { "type": "integer" }, "length": { "$ref": "#/$defs/numberOrNull" }, "thickness": { "$ref": "#/$defs/numberOrNull" }, "paint": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/paintTimeline" }] } },
+      "additionalProperties": true
+    },
+    "tickList": {
+      "type": "object",
+      "properties": { "root": { "$ref": "#/$defs/rootTick" }, "subs": { "type": "array", "items": { "$ref": "#/$defs/subTick" } }, "offset": { "type": "number" } },
+      "additionalProperties": true
+    },
+    "element": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "minLength": 1 },
+        "layout": { "$ref": "#/$defs/layout" },
+        "children": { "$ref": "#/$defs/children" },
+        "fill": { "$ref": "#/$defs/rgba" },
+        "paint": { "$ref": "#/$defs/paint" },
+        "radius": { "type": "number" },
+        "path": { "type": "string" },
+        "text": { "type": "string" },
+        "ellipses": { "type": "boolean" },
+        "hyphens": { "type": "boolean" },
+        "seconds": { "type": "number" },
+        "bgColor": { "$ref": "#/$defs/color" },
+        "secondsColor": { "$ref": "#/$defs/color" },
+        "graphColor": { "$ref": "#/$defs/color" },
+        "groundColor": { "$ref": "#/$defs/color" },
+        "horizonColor": { "$ref": "#/$defs/color" },
+        "borderColor": { "$ref": "#/$defs/color" },
+        "value": { "anyOf": [{ "$ref": "#/$defs/valueView" }, { "type": "null" }] },
+        "startAngle": { "$ref": "#/$defs/numberOrNull" },
+        "endAngle": { "$ref": "#/$defs/numberOrNull" },
+        "ticks": { "$ref": "#/$defs/tickList" }
+      },
+      "required": ["type"],
+      "additionalProperties": true
+    },
+    "children": { "type": "array", "items": { "$ref": "#/$defs/element" } }
+  }
+}

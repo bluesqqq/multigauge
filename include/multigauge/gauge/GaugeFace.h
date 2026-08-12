@@ -125,11 +125,13 @@ public:
     //----------[ SERIALIZATION ]----------//
 
     /// @brief Replaces face properties and hierarchy from a property-system payload.
+    /// @see docs/schemas/gauge.schema.json for the document shape.
     /// @param value JSON object containing face properties and flat recursive children.
     /// @return True when all properties and element payloads decode successfully.
     bool load(json::Reader value);
 
     /// @brief Serializes face properties and hierarchy through the property system.
+    /// @see docs/schemas/gauge.schema.json for the document shape.
     /// @param writer Destination JSON writer.
     /// @return True when every property and element payload encodes successfully.
     bool save(json::Writer& writer) const;

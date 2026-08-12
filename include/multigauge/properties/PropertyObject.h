@@ -78,6 +78,7 @@ class PropertyObject {
         bool savePropertyMembers(json::ObjectWriter& object) const;
 
         /// Builds editor metadata for every visible property on this object.
+        /// @see docs/schemas/rules.schema.json for emitted rule data.
         bool writePropertiesMeta(json::Writer& writer) const;
 
         /// Builds editor metadata for a single property.

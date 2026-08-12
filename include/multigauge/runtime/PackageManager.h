@@ -60,11 +60,13 @@ public:
     //----------[ MUTATION ]----------//
 
     /// Imports a package JSON payload into storage.
+    /// @see docs/schemas/package.schema.json for the accepted document shape.
     /// @param json Package JSON to import.
     /// @return Imported package document, or an error result.
     Result importPackage(const std::string& json);
 
     /// Imports a package JSON payload into storage.
+    /// @see docs/schemas/package.schema.json for the accepted document shape.
     /// @param package Package JSON to import.
     /// @return Imported package document, or an error result.
     Result importPackage(json::Reader package);
