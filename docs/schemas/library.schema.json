@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/library.schema.json",
+  "title": "Multigauge Library Index Schema",
+  "description": "Schema for the device library index. It lists installed packages using stable internal IDs and display metadata only.",
+  "type": "object",
+  "properties": {
+    "packages": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/packageSummary"
+      }
+    }
+  },
+  "required": [
+    "packages"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "nonEmptyString": {
+      "type": "string",
+      "minLength": 1
+    },
+    "packageSummary": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "name": {
+          "$ref": "#/$defs/nonEmptyString"
+        },
+        "author": {
+          "$ref": "#/$defs/nonEmptyString"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "author"
+      ],
+      "additionalProperties": false
+    }
+  }
+}

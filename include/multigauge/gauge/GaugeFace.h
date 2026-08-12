@@ -40,7 +40,12 @@ class GaugeFace : public ::mg::PropertyObject {
         GaugeFace();
         ~GaugeFace();
 
+        /// Loads a gauge face document.
+        /// @see docs/schemas/gauge.schema.json for the serialized shape.
         bool load(json::Reader value);
+
+        /// Saves a gauge face document.
+        /// @see docs/schemas/gauge.schema.json for the serialized shape.
         bool save(json::Writer& writer) const;
 
         //----------[ LIFETIME ]----------//
