@@ -11,6 +11,10 @@
 #include <multigauge/gauge/elements/FrameElement.h>
 #include <multigauge/gauge/elements/circular/CircularElement.h>
 
+#ifndef MG_GAUGE_MAX_LAYOUT_ELEMENTS
+#define MG_GAUGE_MAX_LAYOUT_ELEMENTS 64
+#endif
+
 namespace mg::gauge {
 
 namespace {
@@ -67,7 +71,7 @@ std::uint32_t nextNodeGeneration() noexcept {
 } // namespace
 
 GaugeFace::GaugeFace() : nodes_(nextNodeGeneration()) {
-    constexpr std::size_t maxElements = 64;
+    constexpr std::size_t maxElements = MG_GAUGE_MAX_LAYOUT_ELEMENTS;
     const std::size_t requestedElements = maxElements;
     const std::size_t cappedElements =
         std::min<std::size_t>(

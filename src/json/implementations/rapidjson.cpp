@@ -67,7 +67,9 @@ Reader element(const void* raw, std::size_t index) noexcept {
 
 std::size_t size(const void* raw) noexcept {
     const auto& value = *static_cast<const RapidValue*>(raw);
-    return value.IsArray() || value.IsObject() ? value.Size() : 0;
+    if (value.IsArray()) return value.Size();
+    if (value.IsObject()) return value.MemberCount();
+    return 0;
 }
 
 bool forEachMember(const void* raw, Reader::MemberVisitor visitor, void* context) noexcept {
@@ -87,7 +89,7 @@ bool DomWriter::append(RapidValue value, RapidValue** inserted) noexcept {
         if (hasRoot) return false;
         document.CopyFrom(value, allocator);
         hasRoot = true;
-        if (inserted) *inserted = &document;
+        if (inserted) *inserted = static_cast<RapidValue*>(&document);
         return true;
     }
     Frame& frame = frames.back();

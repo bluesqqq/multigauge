@@ -10,7 +10,12 @@
 
 namespace mg::json::implementations::rapidjson {
 
-using RapidValue = ::rapidjson::Value;
+struct RapidAllocator : ::rapidjson::MemoryPoolAllocator<> {
+    RapidAllocator() : ::rapidjson::MemoryPoolAllocator<>(4 * 1024) {}
+};
+
+using RapidDocument = ::rapidjson::GenericDocument<::rapidjson::UTF8<>, RapidAllocator, ::rapidjson::CrtAllocator>;
+using RapidValue = RapidDocument::ValueType;
 
 struct DomWriter {
     struct Frame {
@@ -19,7 +24,7 @@ struct DomWriter {
         std::string key;
     };
 
-    ::rapidjson::Document& document;
+    RapidDocument& document;
     std::vector<Frame> frames;
     bool hasRoot = false;
 
@@ -27,9 +32,12 @@ struct DomWriter {
 };
 
 struct Storage {
-    ::rapidjson::Document document;
+    RapidAllocator allocator;
+    RapidDocument document;
     std::string buffer;
     DomWriter writer{document};
+
+    Storage() : allocator(), document(&allocator), buffer(), writer(document) {}
 };
 
 extern const ::mg::json::ReaderBackend readerBackend;
