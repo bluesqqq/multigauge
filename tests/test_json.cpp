@@ -3,6 +3,7 @@
 #include <multigauge/json/Json.h>
 
 #include <ostream>
+#include <sstream>
 #include <string>
 
 TEST_CASE("JSON document writer builds and copies nested values") {
@@ -39,4 +40,27 @@ TEST_CASE("JSON readers have strict types and invalid parses have no root") {
     CHECK(document.root().member("text").read(text));
     CHECK(text == "ok");
     CHECK_FALSE(mg::json::parse("{").valid());
+}
+
+TEST_CASE("JSON parser handles larger nested documents") {
+    std::ostringstream json;
+    json << R"({"name":"bulk","author":"tester","description":"expanded","faces":[)";
+    for (int i = 0; i < 96; ++i) {
+        if (i != 0) {
+            json << ',';
+        }
+        json << R"({"name":"face-)" << i << R"(","face":{"type":"basic","layers":[)" << i << R"(,)" << (i + 1) << R"(]}})";
+    }
+    json << "]}";
+
+    const mg::json::Document document = mg::json::parse(json.str());
+    REQUIRE(document.valid());
+    const mg::json::Reader root = document.root();
+    REQUIRE(root.isObject());
+    CHECK(root.size() == 4);
+    std::string_view name;
+    CHECK(root.member("name").read(name));
+    CHECK(name == "bulk");
+    CHECK(root.member("faces").size() == 96);
+    CHECK(root.member("faces").element(95).member("face").member("layers").size() == 2);
 }
