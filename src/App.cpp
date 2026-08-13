@@ -34,31 +34,50 @@ io::Time* g_time = nullptr;
 } // namespace
 
 bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logger* logger) {
-    if (initialized) return true;
+    constexpr const char* TAG = "init";
+
+    io::setLogger(logger);
+
+    if (initialized) {
+        LOG_WARN(TAG, "Runtime already initialized.");
+        return true;
+    }
+
+    if (logger && !logger->init()) return false;
+
+    LOG_INFO(TAG, "Logger successfully initialized, now initializing the runtime...");
 
     g_fs = &fs;
     g_time = &time;
     g_dataRoot = config.dataRoot.empty() ? "/multigauge" : config.dataRoot;
 
-    io::setLogger(logger);
+    LOG_INFO(TAG, "Initializing filesystem...");
 
-    if (logger) {
-        if (!logger->init()) return false;
+    if (!g_fs->init()) {
+        LOG_ERROR(TAG, "Failed to initialize filesystem.");
+        return false;
     }
 
-    if (!g_fs->init()) return false;
+    LOG_INFO(TAG, "Filesystem successfully initialized.");
 
     g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
     g_packages->rebuildLibrary();
-    contexts.clear();
-    initialized = true;
 
+    contexts.clear();
+
+    initialized = true;
     lastElapsed = g_time->elapsed();
+
+    LOG_INFO(TAG, "Runtime successfully initialized.");
 
     return true;
 }
 
 void shutdown() {
+    constexpr const char* TAG = "shutdown";
+
+    LOG_INFO(TAG, "Shutting the runtime down...");
+
     contexts.clear();
     g_packages.reset();
     initialized = false;
@@ -88,11 +107,26 @@ graphics::rgba getUserColor(std::size_t slot) {
 }
 
 ContextId addContext(graphics::GraphicsContext& graphics) {
+    constexpr const char* TAG = "addContext";
+
+    if (!initialized) {
+        LOG_ERROR(TAG, "Cannot add context: runtime is not initialized.");
+        return {};
+    }
+
     return contexts.emplace(graphics, *g_fs, userPalette);
 }
 
 bool removeContext(ContextId id) {
-    return contexts.remove(id);
+    constexpr const char* TAG = "removeContext";
+
+    if (!contexts.remove(id)) {
+        LOG_WARN(TAG, "Cannot remove invalid graphics context.");
+        return false;
+    }
+
+    LOG_DEBUG(TAG, "Graphics context removed.");
+    return true;
 }
 
 RuntimeContext* getContext(ContextId id) {
@@ -108,22 +142,53 @@ std::size_t contextCount() {
 }
 
 bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
+    constexpr const char* TAG = "setScreen";
+
     RuntimeContext* context = getContext(id);
-    if (!context || !screen) return false;
-    return context->setScreen(std::move(screen));
+
+    if (!context) {
+        LOG_WARN(TAG, "Cannot set screen: invalid context.");
+        return false;
+    }
+
+    if (!screen) {
+        LOG_WARN(TAG, "Cannot set screen: screen is null.");
+        return false;
+    }
+
+    if (!context->setScreen(std::move(screen))) {
+        LOG_ERROR(TAG, "Failed to set screen.");
+        return false;
+    }
+
+    LOG_DEBUG(TAG, "Screen set.");
+    return true;
 }
 
 bool clearScreen(ContextId id) {
+    constexpr const char* TAG = "clearSceen";
+
     RuntimeContext* context = getContext(id);
-    if (!context) return false;
+
+    if (!context) {
+        LOG_WARN(TAG, "Cannot clear screen: invalid context.");
+        return false;
+    }
 
     context->clearScreen();
+
     return true;
 }
 
 bool hasScreen(ContextId id) {
+    constexpr const char* TAG = "hasScreen";
+
     RuntimeContext* context = getContext(id);
-    if (!context) return false;
+    
+    if (!context) {
+        LOG_WARN(TAG, "invalid context.");
+        return false;
+    }
 
     return context->getScreen();
 }
@@ -155,10 +220,17 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
 }
 
 bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) {
-    if (!g_packages) return false;
+    constexpr const char* TAG = "setGaugeSceen";
+    
+    if (!g_packages) {
+        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        return false;
+    }
 
     Result faceResult = g_packages->getFace(packageId, faceId);
-    if (!faceResult.ok) return false;
+    if (!faceResult.ok) {
+        return false;
+    }
 
     std::unique_ptr<gauge::GaugeFace> face;
     if (!loadGaugeFaceFromValue(faceResult.data.root(), face)) return false;
