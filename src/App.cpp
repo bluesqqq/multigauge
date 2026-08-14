@@ -43,9 +43,10 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
         return true;
     }
 
-    if (logger && !logger->init()) return false;
-
-    LOG_INFO(TAG, "Logger successfully initialized.");
+    if (logger) {
+        if (!logger->init()) return false;
+        LOG_INFO(TAG, "Logger successfully initialized.");
+    }
 
     g_fs = &fs;
     g_time = &time;
@@ -123,7 +124,7 @@ bool removeContext(ContextId id) {
     constexpr const char* TAG = "removeContext";
 
     if (!contexts.remove(id)) {
-        LOG_WARN(TAG, "Cannot remove invalid graphics context.");
+        LOG_WARN(TAG, "Cannot remove graphics context: invalid context.");
         return false;
     }
 
