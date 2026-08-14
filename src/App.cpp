@@ -45,11 +45,13 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
 
     if (logger && !logger->init()) return false;
 
-    LOG_INFO(TAG, "Logger successfully initialized, now initializing the runtime...");
+    LOG_INFO(TAG, "Logger successfully initialized.");
 
     g_fs = &fs;
     g_time = &time;
     g_dataRoot = config.dataRoot.empty() ? "/multigauge" : config.dataRoot;
+
+    LOG_INFO(TAG, "Initializing runtime: dataRoot=`{}`.", g_dataRoot.c_str());
 
     LOG_INFO(TAG, "Initializing filesystem...");
 
@@ -156,7 +158,7 @@ bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
     }
 
     if (!context->setScreen(std::move(screen))) {
-        LOG_ERROR(TAG, "Failed to set screen.");
+        LOG_ERROR(TAG, "Failed to install screen into context.");
         return false;
     }
 
@@ -165,7 +167,7 @@ bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
 }
 
 bool clearScreen(ContextId id) {
-    constexpr const char* TAG = "clearSceen";
+    constexpr const char* TAG = "clearScreen";
 
     RuntimeContext* context = getContext(id);
     if (!context) {
@@ -183,10 +185,7 @@ bool hasScreen(ContextId id) {
     constexpr const char* TAG = "hasScreen";
 
     RuntimeContext* context = getContext(id);
-    if (!context) {
-        LOG_WARN(TAG, "invalid context.");
-        return false;
-    }
+    if (!context) return false;
 
     return context->getScreen();
 }
@@ -203,7 +202,7 @@ bool loadGaugeFaceFromValue(json::Reader value, std::unique_ptr<gauge::GaugeFace
 } // namespace
 
 bool setGaugeScreen(ContextId id, const std::string& json) {
-    constexpr const char* TAG = "setGaugeSceen";
+    constexpr const char* TAG = "setGaugeScreen";
 
     RuntimeContext* context = getContext(id);
     if (!context) {
@@ -227,7 +226,7 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
     screen->setFace(std::move(face));
 
     if (!context->setScreen(std::move(screen))) {
-        LOG_ERROR(TAG, "Failed to set screen.");
+        LOG_ERROR(TAG, "Failed to install gauge screen into context.");
         return false;
     }
 
@@ -236,10 +235,10 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
 }
 
 bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) {
-    constexpr const char* TAG = "setGaugeSceen";
+    constexpr const char* TAG = "setGaugeScreen";
 
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot set gauge screen: runtime is not initialized.");
         return false;
     }
 
@@ -270,7 +269,7 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
     screen->setFace(std::move(face));
 
     if (!context->setScreen(std::move(screen))) {
-        LOG_ERROR(TAG, "Failed to set screen.");
+        LOG_ERROR(TAG, "Failed to install gauge screen into context.");
         return false;
     }
 
@@ -300,10 +299,11 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
     auto screen = std::make_unique<EditorScreen>(editorId, faceId);
 
     if (!context->setScreen(std::move(screen))) {
-        LOG_WARN(TAG, "Failed to set screen.");
+        LOG_ERROR(TAG, "Failed to install editor screen into context.");
         return false;
     }
 
+    LOG_DEBUG(TAG, "Editor screen set.");
     return true;
 }
 
@@ -311,7 +311,7 @@ bool listPackages(std::vector<PackageSummary>& out) {
     constexpr const char* TAG = "listPackages";
     
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot list packages: runtime is not initialized.");
         return false;
     }
 
@@ -322,7 +322,7 @@ bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out) {
     constexpr const char* TAG = "listFaces";
     
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot list faces: runtime is not initialized.");
         return false;
     }
 
@@ -333,7 +333,7 @@ Result getPackage(const std::string& packageId) {
     constexpr const char* TAG = "getPackage";
 
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot get package: runtime is not initialized.");
         return Error("App not initialized");
     }
 
@@ -344,7 +344,7 @@ Result importPackage(const std::string& json) {
     constexpr const char* TAG = "importPackage";
 
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot import package: runtime is not initialized.");
         return Error("App not initialized");
     }
 
@@ -355,7 +355,7 @@ Result importPackage(json::Reader package) {
     constexpr const char* TAG = "importPackage";
 
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot import package: runtime is not initialized.");
         return Error("App not initialized");
     }
 
@@ -366,7 +366,7 @@ Result exportPackage(const std::string& packageId) {
     constexpr const char* TAG = "exportPackage";
 
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot export package: runtime is not initialized.");
         return Error("App not initialized");
     }
 
@@ -377,7 +377,7 @@ Result removePackage(const std::string& packageId) {
     constexpr const char* TAG = "removePackage";
 
     if (!g_packages) {
-        LOG_ERROR(TAG, "No package manager exists in g_packages, returning...");
+        LOG_ERROR(TAG, "Cannot remove package: runtime is not initialized.");
         return Error("App not initialized");
     }
     
