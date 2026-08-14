@@ -253,9 +253,10 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
     if (!faceResult.ok) {
         LOG_ERROR(
             TAG,
-            "Failed to load gauge face: package=`{}`, face=`{}`.",
+            "Failed to load gauge face: package=`{}`, face=`{}`, error=`{}`.",
             packageId.c_str(),
-            faceId.c_str()
+            faceId.c_str(),
+            faceResult.error.c_str()
         );
         return false;
     }
