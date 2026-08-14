@@ -34,31 +34,53 @@ io::Time* g_time = nullptr;
 } // namespace
 
 bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logger* logger) {
-    if (initialized) return true;
+    constexpr const char* TAG = "init";
+
+    io::setLogger(logger);
+
+    if (initialized) {
+        LOG_WARN(TAG, "Runtime already initialized.");
+        return true;
+    }
+
+    if (logger) {
+        if (!logger->init()) return false;
+        LOG_INFO(TAG, "Logger successfully initialized.");
+    }
 
     g_fs = &fs;
     g_time = &time;
     g_dataRoot = config.dataRoot.empty() ? "/multigauge" : config.dataRoot;
 
-    io::setLogger(logger);
+    LOG_INFO(TAG, "Initializing runtime: dataRoot=`{}`.", g_dataRoot.c_str());
 
-    if (logger) {
-        if (!logger->init()) return false;
+    LOG_INFO(TAG, "Initializing filesystem...");
+
+    if (!g_fs->init()) {
+        LOG_ERROR(TAG, "Failed to initialize filesystem.");
+        return false;
     }
 
-    if (!g_fs->init()) return false;
+    LOG_INFO(TAG, "Filesystem successfully initialized.");
 
     g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
     g_packages->rebuildLibrary();
-    contexts.clear();
-    initialized = true;
 
+    contexts.clear();
+
+    initialized = true;
     lastElapsed = g_time->elapsed();
+
+    LOG_INFO(TAG, "Runtime successfully initialized.");
 
     return true;
 }
 
 void shutdown() {
+    constexpr const char* TAG = "shutdown";
+
+    LOG_INFO(TAG, "Shutting the runtime down...");
+
     contexts.clear();
     g_packages.reset();
     initialized = false;
@@ -88,11 +110,26 @@ graphics::rgba getUserColor(std::size_t slot) {
 }
 
 ContextId addContext(graphics::GraphicsContext& graphics) {
+    constexpr const char* TAG = "addContext";
+
+    if (!initialized) {
+        LOG_ERROR(TAG, "Cannot add context: runtime is not initialized.");
+        return {};
+    }
+
     return contexts.emplace(graphics, *g_fs, userPalette);
 }
 
 bool removeContext(ContextId id) {
-    return contexts.remove(id);
+    constexpr const char* TAG = "removeContext";
+
+    if (!contexts.remove(id)) {
+        LOG_WARN(TAG, "Cannot remove graphics context: invalid context.");
+        return false;
+    }
+
+    LOG_DEBUG(TAG, "Graphics context removed.");
+    return true;
 }
 
 RuntimeContext* getContext(ContextId id) {
@@ -108,20 +145,46 @@ std::size_t contextCount() {
 }
 
 bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
+    constexpr const char* TAG = "setScreen";
+
+    if (!screen) {
+        LOG_WARN(TAG, "Cannot set screen: screen is null.");
+        return false;
+    }
+
     RuntimeContext* context = getContext(id);
-    if (!context || !screen) return false;
-    return context->setScreen(std::move(screen));
+    if (!context) {
+        LOG_WARN(TAG, "Cannot set screen: invalid context.");
+        return false;
+    }
+
+    if (!context->setScreen(std::move(screen))) {
+        LOG_ERROR(TAG, "Failed to install screen into context.");
+        return false;
+    }
+
+    LOG_DEBUG(TAG, "Screen set.");
+    return true;
 }
 
 bool clearScreen(ContextId id) {
+    constexpr const char* TAG = "clearScreen";
+
     RuntimeContext* context = getContext(id);
-    if (!context) return false;
+    if (!context) {
+        LOG_WARN(TAG, "Cannot clear screen: invalid context.");
+        return false;
+    }
 
     context->clearScreen();
+
+    LOG_DEBUG(TAG, "Screen cleared.");
     return true;
 }
 
 bool hasScreen(ContextId id) {
+    constexpr const char* TAG = "hasScreen";
+
     RuntimeContext* context = getContext(id);
     if (!context) return false;
 
@@ -140,77 +203,186 @@ bool loadGaugeFaceFromValue(json::Reader value, std::unique_ptr<gauge::GaugeFace
 } // namespace
 
 bool setGaugeScreen(ContextId id, const std::string& json) {
+    constexpr const char* TAG = "setGaugeScreen";
+
     RuntimeContext* context = getContext(id);
-    if (!context) return false;
+    if (!context) {
+        LOG_WARN(TAG, "Cannot set gauge screen: invalid context.");
+        return false;
+    }
 
     json::Document doc = json::parse(json);
-    if (!doc.valid() || !doc.root().isObject()) return false;
+    if (!doc.valid() || !doc.root().isObject()) {
+        LOG_ERROR(TAG, "Cannot set gauge screen: invalid gauge JSON.");
+        return false;
+    }
 
     std::unique_ptr<gauge::GaugeFace> face;
-    if (!loadGaugeFaceFromValue(doc.root(), face)) return false;
+    if (!loadGaugeFaceFromValue(doc.root(), face)) {
+        LOG_ERROR(TAG, "Cannot set gauge screen: failed to load gauge face.");
+        return false;
+    }
 
     auto screen = std::make_unique<GaugeScreen>();
     screen->setFace(std::move(face));
-    return context->setScreen(std::move(screen));
+
+    if (!context->setScreen(std::move(screen))) {
+        LOG_ERROR(TAG, "Failed to install gauge screen into context.");
+        return false;
+    }
+
+    LOG_DEBUG(TAG, "Gauge screen set from JSON.");
+    return true;
 }
 
 bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) {
-    if (!g_packages) return false;
+    constexpr const char* TAG = "setGaugeScreen";
+
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot set gauge screen: runtime is not initialized.");
+        return false;
+    }
+
+    RuntimeContext* context = getContext(id);
+    if (!context) {
+        LOG_WARN(TAG, "Cannot set gauge screen: invalid context.");
+        return false;
+    }
 
     Result faceResult = g_packages->getFace(packageId, faceId);
-    if (!faceResult.ok) return false;
+    if (!faceResult.ok) {
+        LOG_ERROR(
+            TAG,
+            "Failed to load gauge face: package=`{}`, face=`{}`, error=`{}`.",
+            packageId.c_str(),
+            faceId.c_str(),
+            faceResult.error.c_str()
+        );
+        return false;
+    }
 
     std::unique_ptr<gauge::GaugeFace> face;
-    if (!loadGaugeFaceFromValue(faceResult.data.root(), face)) return false;
+    if (!loadGaugeFaceFromValue(faceResult.data.root(), face)) {
+        LOG_ERROR(TAG, "Cannot set gauge screen: failed to load gauge face.");
+        return false;
+    }
 
     auto screen = std::make_unique<GaugeScreen>();
     screen->setFace(std::move(face));
-    RuntimeContext* context = getContext(id);
-    if (!context) return false;
-    return context->setScreen(std::move(screen));
+
+    if (!context->setScreen(std::move(screen))) {
+        LOG_ERROR(TAG, "Failed to install gauge screen into context.");
+        return false;
+    }
+
+    LOG_DEBUG(TAG, "Gauge screen set from package.");
+    return true;
 }
 
 bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
+    constexpr const char* TAG = "setEditorScreen";
+
     RuntimeContext* context = getContext(id);
-    if (!context) return false;
-    if (!editor::exists(editorId) || !editor::isFace(editorId, faceId)) return false;
+    if (!context) {
+        LOG_WARN(TAG, "Cannot set editor screen: invalid context.");
+        return false;
+    }
+
+    if (!editor::exists(editorId)) {
+        LOG_WARN(TAG, "Cannot set editor screen: invalid editor.");
+        return false;
+    }
+
+    if (!editor::isFace(editorId, faceId)) {
+        LOG_WARN(TAG, "Cannot set editor screen: node is not a valid face.");
+        return false;
+    }
 
     auto screen = std::make_unique<EditorScreen>(editorId, faceId);
-    return context->setScreen(std::move(screen));
+
+    if (!context->setScreen(std::move(screen))) {
+        LOG_ERROR(TAG, "Failed to install editor screen into context.");
+        return false;
+    }
+
+    LOG_DEBUG(TAG, "Editor screen set.");
+    return true;
 }
 
 bool listPackages(std::vector<PackageSummary>& out) {
-    if (!g_packages) return false;
+    constexpr const char* TAG = "listPackages";
+    
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot list packages: runtime is not initialized.");
+        return false;
+    }
+
     return g_packages->listPackages(out);
 }
 
 bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out) {
-    if (!g_packages) return false;
+    constexpr const char* TAG = "listFaces";
+    
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot list faces: runtime is not initialized.");
+        return false;
+    }
+
     return g_packages->listFaces(packageId, out);
 }
 
 Result getPackage(const std::string& packageId) {
-    if (!g_packages) return Error("App not initialized");
+    constexpr const char* TAG = "getPackage";
+
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot get package: runtime is not initialized.");
+        return Error("App not initialized");
+    }
+
     return g_packages->getPackage(packageId);
 }
 
 Result importPackage(const std::string& json) {
-    if (!g_packages) return Error("App not initialized");
+    constexpr const char* TAG = "importPackage";
+
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot import package: runtime is not initialized.");
+        return Error("App not initialized");
+    }
+
     return g_packages->importPackage(json);
 }
 
 Result importPackage(json::Reader package) {
-    if (!g_packages) return Error("App not initialized");
+    constexpr const char* TAG = "importPackage";
+
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot import package: runtime is not initialized.");
+        return Error("App not initialized");
+    }
+
     return g_packages->importPackage(package);
 }
 
 Result exportPackage(const std::string& packageId) {
-    if (!g_packages) return Error("App not initialized");
+    constexpr const char* TAG = "exportPackage";
+
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot export package: runtime is not initialized.");
+        return Error("App not initialized");
+    }
+
     return g_packages->exportPackage(packageId);
 }
 
 Result removePackage(const std::string& packageId) {
-    if (!g_packages) return Error("App not initialized");
+    constexpr const char* TAG = "removePackage";
+
+    if (!g_packages) {
+        LOG_ERROR(TAG, "Cannot remove package: runtime is not initialized.");
+        return Error("App not initialized");
+    }
+    
     return g_packages->removePackage(packageId);
 }
 
