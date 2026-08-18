@@ -267,7 +267,7 @@ private:
 
     NodePool nodes_;                             ///< Pool that owns all elements and tree metadata.
     NodeHandle firstRoot_;                       ///< First root in sibling order.
-    Layout layout_;                              ///< Layout options.
+    layout::Layout layout_;                      ///< Layout options.
     ::mg::graphics::OwnedColor backgroundColor_; ///< Serialized face background color.
     std::vector<std::byte> clayMemory_;          ///< Backing storage for the Clay arena.
     void* clayContext_ = nullptr;                ///< Opaque Clay context allocated in clayMemory_.
