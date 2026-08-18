@@ -74,14 +74,14 @@ private:
     //----------[ LAYOUT ]----------//
 
     /// @brief Returns mutable layout property state for face layout declaration.
-    [[nodiscard]] Layout& layout() noexcept { return layout_; }
+    [[nodiscard]] layout::Layout& layout() noexcept { return layout_; }
 
     /// @brief Returns layout property state for read-only face layout declaration.
-    [[nodiscard]] const Layout& layout() const noexcept { return layout_; }
+    [[nodiscard]] const layout::Layout& layout() const noexcept { return layout_; }
 
 private:
     std::string_view typeId_; ///< Stable registry string for built-in types.
-    Layout layout_;           ///< Layout configuration.
+    layout::Layout layout_;   ///< Layout configuration.
 
     MG_PROPS_BEGIN()
         MG_PROP(layout_, "layout", "Layout", "Layout options.")
