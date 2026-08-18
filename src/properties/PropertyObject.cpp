@@ -52,14 +52,21 @@ bool PropertyObject::writePropertiesMeta(json::Writer& writer) const {
 #if !MG_ENABLE_EDITOR_REFLECTION
     return writer.writeArray([](json::ArrayWriter&) { return true; });
 #else
-    return writer.writeArray([&](json::ArrayWriter& array) {
-        bool success = true;
-        propertyList().forEach(this, [&](const Property& property) {
-            if (!success || !property.key || !property.meta.inspectorVisible || findProperty(property.key) != &property) return;
-            success = writePropertyMeta(array.writer(), property);
-        });
-        return success;
+    return writer.writeArray([&](json::ArrayWriter& array) { return writePropertiesMeta(array); });
+#endif
+}
+
+bool PropertyObject::writePropertiesMeta(json::ArrayWriter& writer) const {
+#if !MG_ENABLE_EDITOR_REFLECTION
+    (void)writer;
+    return true;
+#else
+    bool success = true;
+    propertyList().forEach(this, [&](const Property& property) {
+        if (!success || !property.key || !property.meta.inspectorVisible || findProperty(property.key) != &property) return;
+        success = writePropertyMeta(writer.writer(), property);
     });
+    return success;
 #endif
 }
 
@@ -80,7 +87,7 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
             const PropertyObject* child = prop.getChild(this);
             return object.writeArray("properties", [&](json::ArrayWriter& properties) {
                 if (!child) return true;
-                return child->writePropertiesMeta(properties.writer());
+                return child->writePropertiesMeta(properties);
             });
         }
         return object.writeValue("value", [&](json::Writer& value) { return prop.get ? prop.get(this, value) : value.null(); });
