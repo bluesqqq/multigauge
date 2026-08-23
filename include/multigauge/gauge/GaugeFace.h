@@ -139,8 +139,10 @@ public:
     //----------[ LIFECYCLE ]----------//
 
     /// @brief Initializes external resources for every element in depth-first order.
+    /// @param packageId Installed package ID, or empty for raw/editor assets.
     /// @return False if any element initialization fails.
     bool init(
+        std::string_view packageId,
         ::mg::AssetManager& assetManager,
         ::mg::graphics::GraphicsContext& context
     );
@@ -219,6 +221,7 @@ private:
     /// @brief Initializes one subtree and accumulates initialization failures.
     bool initSubtree(
         NodeHandle root,
+        std::string_view packageId,
         ::mg::AssetManager& assetManager,
         ::mg::graphics::GraphicsContext& context
     );
