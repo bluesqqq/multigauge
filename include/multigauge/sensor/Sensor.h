@@ -2,43 +2,52 @@
 
 #include <string_view>
 
-#include <multigauge/sensor/SensorTypes.h>
+#include <multigauge/sensor/Reading.h>
 
-namespace mg {
+namespace mg::sensor {
 
-/// Read-only view of a logical sensor.
-///
-/// Sensors are intentionally passive from the caller's point of view:
-/// providers own polling and cache management, and consumers only read
-/// metadata plus the most recent sample.
+/// @brief Read-only view of a logical sensor.
 class Sensor {
 public:
+    /// @brief Destroys the sensor view.
     virtual ~Sensor() = default;
 
-    /// Stable identifier for registry/editor use.
-    /// The returned view must remain valid for the lifetime of the sensor.
+    //----------[ IDENTITY ]----------//
+
+    /// @brief Returns the stable identifier used by registries and editors.
+    /// @return A view valid for the lifetime of this sensor.
     [[nodiscard]]
     virtual std::string_view id() const noexcept = 0;
 
-    /// Human-readable display name.
-    /// The returned view must remain valid for the lifetime of the sensor.
+    /// @brief Returns the human-readable display name.
+    /// @return A view valid for the lifetime of this sensor.
     [[nodiscard]]
     virtual std::string_view name() const noexcept = 0;
 
-    /// Native output unit of the sensor, if it has one.
-    /// Returns nullptr when the sensor is unitless or unknown.
-    /// The pointed-to UnitType must outlive the sensor.
+    //----------[ UNIT AND RANGE ]----------//
+
+    /// @brief Returns the native output unit.
+    /// @return The unit type, or nullptr when the sensor is unitless or unknown.
+    /// @note The returned UnitType must outlive this sensor.
     [[nodiscard]]
     virtual const UnitType* unit() const noexcept = 0;
 
-    /// Native bounds reported by the sensor.
-    /// Unknown limits are represented by an empty optional inside the range.
+    /// @brief Returns the unit index used by cached readings.
+    /// @return The native unit index; defaults to the UnitType base unit.
     [[nodiscard]]
-    virtual SensorRange nativeRange() const noexcept = 0;
+    virtual UnitIndex unitIndex() const noexcept { return 0; }
 
-    /// Cached reading after the provider's last update cycle.
+    /// @brief Returns the native measurement bounds.
+    /// @return A range whose unknown limits have empty optionals.
     [[nodiscard]]
-    virtual SensorReading reading() const noexcept = 0;
+    virtual Range nativeRange() const noexcept = 0;
+
+    //----------[ READING ]----------//
+    
+    /// @brief Returns the cached reading from the provider's last update.
+    /// @return The current cached reading.
+    [[nodiscard]]
+    virtual Reading reading() const noexcept = 0;
 };
 
-} // namespace mg
+} // namespace mg::sensor

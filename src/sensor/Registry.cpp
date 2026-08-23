@@ -1,6 +1,6 @@
-#include <multigauge/sensor/SensorManager.h>
+#include <multigauge/sensor/Registry.h>
 
-namespace mg {
+namespace mg::sensor {
 namespace {
 
 template<typename Entry>
@@ -20,8 +20,8 @@ bool hasDuplicateIdImpl(
 
 } // namespace
 
-bool SensorManager::hasDuplicatePointer(
-    const SensorProvider* provider,
+bool Registry::hasDuplicatePointer(
+    const Provider* provider,
     const ProviderEntry* entries,
     std::size_t count
 ) noexcept {
@@ -34,7 +34,7 @@ bool SensorManager::hasDuplicatePointer(
     return false;
 }
 
-bool SensorManager::hasDuplicateSensorPointer(
+bool Registry::hasDuplicateSensorPointer(
     const Sensor* sensor,
     const SensorEntry* entries,
     std::size_t count
@@ -48,7 +48,7 @@ bool SensorManager::hasDuplicateSensorPointer(
     return false;
 }
 
-bool SensorManager::hasDuplicateSensorPointer(
+bool Registry::hasDuplicateSensorPointer(
     const Sensor* sensor,
     const Sensor* const* entries,
     std::size_t count
@@ -62,7 +62,7 @@ bool SensorManager::hasDuplicateSensorPointer(
     return false;
 }
 
-bool SensorManager::hasDuplicateId(
+bool Registry::hasDuplicateId(
     std::string_view id,
     const ProviderEntry* entries,
     std::size_t count
@@ -70,7 +70,7 @@ bool SensorManager::hasDuplicateId(
     return hasDuplicateIdImpl(id, entries, count);
 }
 
-bool SensorManager::hasDuplicateId(
+bool Registry::hasDuplicateId(
     std::string_view id,
     const SensorEntry* entries,
     std::size_t count
@@ -78,8 +78,8 @@ bool SensorManager::hasDuplicateId(
     return hasDuplicateIdImpl(id, entries, count);
 }
 
-bool SensorManager::registerProvider(SensorProvider& provider) noexcept {
-    SensorProvider* providerPtr = &provider;
+bool Registry::registerProvider(Provider& provider) noexcept {
+    Provider* providerPtr = &provider;
     const std::string_view providerId = provider.id();
 
     if (providerId.empty()) {
@@ -154,7 +154,56 @@ bool SensorManager::registerProvider(SensorProvider& provider) noexcept {
     return true;
 }
 
-bool SensorManager::unregisterProvider(std::string_view providerId) noexcept {
+bool Registry::refreshProvider(Provider& provider) noexcept {
+    std::size_t providerIndex = providerCount_;
+    for (std::size_t index = 0; index < providerCount_; ++index) {
+        if (providers_[index].provider == &provider) {
+            providerIndex = index;
+            break;
+        }
+    }
+
+    if (providerIndex == providerCount_ || provider.id() != providers_[providerIndex].id) {
+        return false;
+    }
+
+    std::array<SensorEntry, MaxSensors> staged{};
+    std::size_t stagedCount = 0;
+    for (std::size_t index = 0; index < sensorCount_; ++index) {
+        if (sensors_[index].provider != &provider) {
+            staged[stagedCount++] = sensors_[index];
+        }
+    }
+
+    const std::size_t providerSensors = provider.sensorCount();
+    if (providerSensors > MaxSensors - stagedCount) {
+        return false;
+    }
+
+    for (std::size_t index = 0; index < providerSensors; ++index) {
+        const Sensor* sensor = provider.sensorAt(index);
+        if (!sensor || sensor->id().empty() ||
+            hasDuplicateSensorPointer(sensor, staged.data(), stagedCount) ||
+            hasDuplicateId(sensor->id(), staged.data(), stagedCount)) {
+            return false;
+        }
+
+        for (std::size_t stagedIndex = 0; stagedIndex < index; ++stagedIndex) {
+            if (staged[stagedCount + stagedIndex].sensor == sensor ||
+                staged[stagedCount + stagedIndex].id == sensor->id()) {
+                return false;
+            }
+        }
+
+        staged[stagedCount + index] = { &provider, sensor, sensor->id() };
+    }
+
+    sensors_ = staged;
+    sensorCount_ = stagedCount + providerSensors;
+    return true;
+}
+
+bool Registry::unregisterProvider(std::string_view providerId) noexcept {
     if (providerId.empty()) {
         return false;
     }
@@ -171,7 +220,7 @@ bool SensorManager::unregisterProvider(std::string_view providerId) noexcept {
         return false;
     }
 
-    SensorProvider* provider = providers_[providerIndex].provider;
+    Provider* provider = providers_[providerIndex].provider;
 
     for (std::size_t index = providerIndex + 1; index < providerCount_; ++index) {
         providers_[index - 1] = providers_[index];
@@ -191,48 +240,54 @@ bool SensorManager::unregisterProvider(std::string_view providerId) noexcept {
     return true;
 }
 
-void SensorManager::clear() noexcept {
+void Registry::clear() noexcept {
     providerCount_ = 0;
     sensorCount_ = 0;
 }
 
-void SensorManager::update(std::chrono::microseconds elapsed) noexcept {
+void Registry::update(std::chrono::microseconds elapsed) noexcept {
     for (std::size_t index = 0; index < providerCount_; ++index) {
         providers_[index].provider->update(elapsed);
     }
 }
 
-std::size_t SensorManager::providerCount() const noexcept {
+std::size_t Registry::providerCount() const noexcept {
     return providerCount_;
 }
 
-std::size_t SensorManager::sensorCount() const noexcept {
+std::size_t Registry::sensorCount() const noexcept {
     return sensorCount_;
 }
 
-const SensorProvider* SensorManager::providerAt(std::size_t index) const noexcept {
+Provider* Registry::providerAt(std::size_t index) noexcept {
     return index < providerCount_ ? providers_[index].provider : nullptr;
 }
 
-const Sensor* SensorManager::sensorAt(std::size_t index) const noexcept {
+const Provider* Registry::providerAt(std::size_t index) const noexcept {
+    return index < providerCount_ ? providers_[index].provider : nullptr;
+}
+
+const Sensor* Registry::sensorAt(std::size_t index) const noexcept {
     return index < sensorCount_ ? sensors_[index].sensor : nullptr;
 }
 
-const SensorProvider* SensorManager::findProvider(std::string_view providerId) const noexcept {
-    if (providerId.empty()) {
-        return nullptr;
-    }
-
+Provider* Registry::findProvider(std::string_view providerId) noexcept {
+    if (providerId.empty()) return nullptr;
     for (std::size_t index = 0; index < providerCount_; ++index) {
-        if (providers_[index].id == providerId) {
-            return providers_[index].provider;
-        }
+        if (providers_[index].id == providerId) return providers_[index].provider;
     }
-
     return nullptr;
 }
 
-const Sensor* SensorManager::findSensor(std::string_view sensorId) const noexcept {
+const Provider* Registry::findProvider(std::string_view providerId) const noexcept {
+    if (providerId.empty()) return nullptr;
+    for (std::size_t index = 0; index < providerCount_; ++index) {
+        if (providers_[index].id == providerId) return providers_[index].provider;
+    }
+    return nullptr;
+}
+
+const Sensor* Registry::findSensor(std::string_view sensorId) const noexcept {
     if (sensorId.empty()) {
         return nullptr;
     }
@@ -246,4 +301,4 @@ const Sensor* SensorManager::findSensor(std::string_view sensorId) const noexcep
     return nullptr;
 }
 
-} // namespace mg
+} // namespace mg::sensor

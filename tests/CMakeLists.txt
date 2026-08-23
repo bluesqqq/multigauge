@@ -11,6 +11,7 @@ add_executable(multigauge_core_tests
   test_gauge.cpp
   test_assets.cpp
   test_colors.cpp
+  test_sensors.cpp
 )
 
 target_include_directories(multigauge_core_tests PRIVATE

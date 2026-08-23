@@ -66,7 +66,6 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
 
     g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
     g_packages->rebuildLibrary();
-
     contexts.clear();
 
     initialized = true;
