@@ -1,0 +1,221 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/state.schema.json",
+  "title": "Multigauge Runtime State Schema",
+  "description": "Device-local core configuration for user values, telemetry providers, sensor bindings, and derived values. It is not part of an importable gauge package and never stores live sensor readings.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "Schema version."
+    },
+    "userValues": {
+      "type": "array",
+      "description": "Definitions for dashboard values created by the user. Built-in values are not serialized.",
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/userValue"
+      }
+    },
+    "providers": {
+      "type": "array",
+      "description": "Configured telemetry-provider instances. Provider-specific configuration is validated by the registered provider, not by the core schema.",
+      "maxItems": 8,
+      "items": {
+        "$ref": "#/$defs/provider"
+      }
+    },
+    "bindings": {
+      "type": "array",
+      "description": "Mappings from provider sensors to dashboard-facing values.",
+      "maxItems": 64,
+      "items": {
+        "$ref": "#/$defs/binding"
+      }
+    },
+    "derivedValues": {
+      "type": "array",
+      "description": "Core-evaluated values derived from other resolved values.",
+      "maxItems": 16,
+      "items": {
+        "$ref": "#/$defs/derivedValue"
+      }
+    }
+  },
+  "required": [
+    "version",
+    "userValues",
+    "providers",
+    "bindings",
+    "derivedValues"
+  ],
+  "$defs": {
+    "stableId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 63,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "valueId": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 31
+    },
+    "userValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/valueId"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 31
+        },
+        "unitType": {
+          "enum": [
+            "temperature",
+            "distance",
+            "pressure",
+            "velocity",
+            "acceleration",
+            "volume",
+            "volumePerTime",
+            "revolutions",
+            "angle",
+            "percentage"
+          ]
+        },
+        "minimum": {
+          "type": "number"
+        },
+        "maximum": {
+          "type": "number"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "unitType",
+        "minimum",
+        "maximum"
+      ]
+    },
+    "provider": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "type": {
+          "enum": [
+            "obd2",
+            "aux",
+            "link",
+            "custom"
+          ]
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "config": {
+          "type": "object",
+          "description": "Opaque provider-specific configuration. For example, OBD-II CAN request settings, AUX pin calibration, or LINK bus/node settings."
+        }
+      },
+      "required": [
+        "id",
+        "type",
+        "enabled",
+        "config"
+      ]
+    },
+    "binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "providerId": {
+          "$ref": "#/$defs/stableId"
+        },
+        "sensorId": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 63
+        },
+        "valueId": {
+          "$ref": "#/$defs/valueId"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        },
+        "staleAfterMs": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3600000
+        }
+      },
+      "required": [
+        "id",
+        "providerId",
+        "sensorId",
+        "valueId",
+        "enabled",
+        "priority",
+        "staleAfterMs"
+      ]
+    },
+    "derivedValue": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/stableId"
+        },
+        "outputValueId": {
+          "$ref": "#/$defs/valueId"
+        },
+        "operation": {
+          "enum": [
+            "add",
+            "subtract",
+            "multiply",
+            "divide",
+            "minimum",
+            "maximum",
+            "average",
+            "clamp"
+          ]
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/valueId"
+          }
+        },
+        "enabled": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "id",
+        "outputValueId",
+        "operation",
+        "inputs",
+        "enabled"
+      ]
+    }
+  }
+}

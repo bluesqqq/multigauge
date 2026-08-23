@@ -19,3 +19,8 @@ reconstructs the package document without those internal IDs.
 [manifest.schema.json](./schemas/manifest.schema.json),
 [library.schema.json](./schemas/library.schema.json), and
 [gauge.schema.json](./schemas/gauge.schema.json), respectively.
+
+`state.json` follows [state.schema.json](./schemas/state.schema.json). It is
+device-local runtime configuration for telemetry providers, user-defined values,
+sensor bindings, and derived values. It is not included when importing or
+exporting a gauge package and does not store live sensor readings.
