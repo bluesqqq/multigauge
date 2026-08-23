@@ -210,6 +210,10 @@ std::size_t SensorManager::sensorCount() const noexcept {
     return sensorCount_;
 }
 
+SensorProvider* SensorManager::providerAt(std::size_t index) noexcept {
+    return index < providerCount_ ? providers_[index].provider : nullptr;
+}
+
 const SensorProvider* SensorManager::providerAt(std::size_t index) const noexcept {
     return index < providerCount_ ? providers_[index].provider : nullptr;
 }
@@ -218,17 +222,19 @@ const Sensor* SensorManager::sensorAt(std::size_t index) const noexcept {
     return index < sensorCount_ ? sensors_[index].sensor : nullptr;
 }
 
-const SensorProvider* SensorManager::findProvider(std::string_view providerId) const noexcept {
-    if (providerId.empty()) {
-        return nullptr;
-    }
-
+SensorProvider* SensorManager::findProvider(std::string_view providerId) noexcept {
+    if (providerId.empty()) return nullptr;
     for (std::size_t index = 0; index < providerCount_; ++index) {
-        if (providers_[index].id == providerId) {
-            return providers_[index].provider;
-        }
+        if (providers_[index].id == providerId) return providers_[index].provider;
     }
+    return nullptr;
+}
 
+const SensorProvider* SensorManager::findProvider(std::string_view providerId) const noexcept {
+    if (providerId.empty()) return nullptr;
+    for (std::size_t index = 0; index < providerCount_; ++index) {
+        if (providers_[index].id == providerId) return providers_[index].provider;
+    }
     return nullptr;
 }
 

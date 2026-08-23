@@ -39,12 +39,14 @@ public:
     [[nodiscard]] std::size_t sensorCount() const noexcept;
 
     /// Returns the provider at `index`, or nullptr when out of range.
+    [[nodiscard]] SensorProvider* providerAt(std::size_t index) noexcept;
     [[nodiscard]] const SensorProvider* providerAt(std::size_t index) const noexcept;
 
     /// Returns the sensor at `index`, or nullptr when out of range.
     [[nodiscard]] const Sensor* sensorAt(std::size_t index) const noexcept;
 
     /// Finds a provider by stable ID.
+    [[nodiscard]] SensorProvider* findProvider(std::string_view providerId) noexcept;
     [[nodiscard]] const SensorProvider* findProvider(std::string_view providerId) const noexcept;
 
     /// Finds a sensor by globally unique sensor ID.
