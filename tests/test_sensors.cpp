@@ -16,8 +16,11 @@ public:
     bool readBytes(const std::string& path, std::vector<std::uint8_t>& out) override {
         const auto found = files_.find(path); if (found == files_.end()) return false; out = found->second; return true;
     }
-    bool writeBytes(const std::string& path, const std::uint8_t* data, size_t length) override {
+    bool writeBytes(const std::string& path, const std::uint8_t* data, size_t length) {
         files_[path] = std::vector<std::uint8_t>(data, data + length); return true;
+    }
+    bool writeBytesImpl(const std::string& path, const std::uint8_t* data, size_t length) {
+        return writeBytes(path, data, length);
     }
     bool exists(const std::string& path) override { return files_.contains(path) || directories_.contains(path); }
     bool size(const std::string& path, size_t& out) override { const auto found = files_.find(path); if (found == files_.end()) return false; out = found->second.size(); return true; }
