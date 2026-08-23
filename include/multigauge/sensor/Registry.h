@@ -31,6 +31,10 @@ public:
     /// Enumeration order for the remaining entries is preserved.
     [[nodiscard]] bool unregisterProvider(std::string_view providerId) noexcept;
 
+    /// Reindexes a registered provider after its configuration changes.
+    /// The refresh is atomic: failure leaves the existing index unchanged.
+    [[nodiscard]] bool refreshProvider(Provider& provider) noexcept;
+
     /// Clears every provider and sensor registration.
     void clear() noexcept;
 

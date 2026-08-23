@@ -154,6 +154,55 @@ bool Registry::registerProvider(Provider& provider) noexcept {
     return true;
 }
 
+bool Registry::refreshProvider(Provider& provider) noexcept {
+    std::size_t providerIndex = providerCount_;
+    for (std::size_t index = 0; index < providerCount_; ++index) {
+        if (providers_[index].provider == &provider) {
+            providerIndex = index;
+            break;
+        }
+    }
+
+    if (providerIndex == providerCount_ || provider.id() != providers_[providerIndex].id) {
+        return false;
+    }
+
+    std::array<SensorEntry, MaxSensors> staged{};
+    std::size_t stagedCount = 0;
+    for (std::size_t index = 0; index < sensorCount_; ++index) {
+        if (sensors_[index].provider != &provider) {
+            staged[stagedCount++] = sensors_[index];
+        }
+    }
+
+    const std::size_t providerSensors = provider.sensorCount();
+    if (providerSensors > MaxSensors - stagedCount) {
+        return false;
+    }
+
+    for (std::size_t index = 0; index < providerSensors; ++index) {
+        const Sensor* sensor = provider.sensorAt(index);
+        if (!sensor || sensor->id().empty() ||
+            hasDuplicateSensorPointer(sensor, staged.data(), stagedCount) ||
+            hasDuplicateId(sensor->id(), staged.data(), stagedCount)) {
+            return false;
+        }
+
+        for (std::size_t stagedIndex = 0; stagedIndex < index; ++stagedIndex) {
+            if (staged[stagedCount + stagedIndex].sensor == sensor ||
+                staged[stagedCount + stagedIndex].id == sensor->id()) {
+                return false;
+            }
+        }
+
+        staged[stagedCount + index] = { &provider, sensor, sensor->id() };
+    }
+
+    sensors_ = staged;
+    sensorCount_ = stagedCount + providerSensors;
+    return true;
+}
+
 bool Registry::unregisterProvider(std::string_view providerId) noexcept {
     if (providerId.empty()) {
         return false;
