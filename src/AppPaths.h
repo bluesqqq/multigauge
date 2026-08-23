@@ -66,15 +66,21 @@ inline std::string assetsPath(std::string_view root, std::string_view packageId)
 }
 
 /// Returns the directory for one asset type. An empty package ID denotes raw assets.
-inline std::string assetDirectory(std::string_view root, std::string_view packageId, std::string_view assetType) {
+inline std::string assetDirectory(
+    std::string_view root,
+    std::string_view packageId,
+    std::string_view assetType
+) {
     return packageId.empty() ? joinPath("/assets", assetType) : joinPath(assetsPath(root, packageId), assetType);
 }
 
 /// Returns the path for one named asset within its typed asset directory.
-inline std::string assetPath(std::string_view root,
-                             std::string_view packageId,
-                             std::string_view assetType,
-                             std::string_view name) {
+inline std::string assetPath(
+    std::string_view root,
+    std::string_view packageId,
+    std::string_view assetType,
+    std::string_view name
+) {
     return joinPath(assetDirectory(root, packageId, assetType), name);
 }
 
