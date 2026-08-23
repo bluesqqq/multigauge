@@ -12,6 +12,7 @@
 #include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/screens/EditorScreen.h>
 #include <multigauge/screens/GaugeScreen.h>
+#include <multigauge/sensor/Manager.h>
 #include <multigauge/utils/Json.h>
 
 #include <chrono>
@@ -22,6 +23,7 @@ namespace mg {
 namespace {
 std::string g_dataRoot = "/multigauge";
 std::unique_ptr<PackageManager> g_packages;
+std::unique_ptr<sensor::Manager> g_sensors;
 
 HandlePool<RuntimeContext, ContextId> contexts;
 bool initialized = false;
@@ -65,6 +67,12 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
 
     g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
     g_packages->rebuildLibrary();
+    g_sensors = std::make_unique<sensor::Manager>(*g_fs, g_dataRoot);
+    if (!g_sensors->load()) {
+        g_sensors.reset();
+        g_packages.reset();
+        return false;
+    }
 
     contexts.clear();
 
@@ -82,6 +90,8 @@ void shutdown() {
     LOG_INFO(TAG, "Shutting the runtime down...");
 
     contexts.clear();
+    if (g_sensors) (void)g_sensors->save();
+    g_sensors.reset();
     g_packages.reset();
     initialized = false;
     lastElapsed = {};
@@ -96,6 +106,8 @@ void frame() {
     const std::chrono::microseconds delta =
         now >= lastElapsed ? now - lastElapsed : std::chrono::microseconds{};
     lastElapsed = now;
+
+    g_sensors->update(delta, now);
 
     for (auto& context : contexts)
         context.frame(delta, now);
