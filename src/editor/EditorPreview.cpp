@@ -42,13 +42,17 @@ void EditorPreview::prepare(RuntimeContext& context, EditorId editorId, NodeId f
         } else {
             for (const auto& change : changes) {
                 if (change.kind == Editor::AssetChange::Kind::Remove) {
-                    (void)assets.removeAsset({}, change.asset.name);
-                    stagedAssetNames.erase(std::remove(stagedAssetNames.begin(), stagedAssetNames.end(), change.asset.name),
+                    (void)assets.removeAsset({}, change.name);
+                    stagedAssetNames.erase(std::remove(stagedAssetNames.begin(), stagedAssetNames.end(), change.name),
                                            stagedAssetNames.end());
-                } else if (change.kind == Editor::AssetChange::Kind::Upsert &&
-                           assets.writeAsset({}, change.asset.name, change.asset.data) &&
-                           std::find(stagedAssetNames.begin(), stagedAssetNames.end(), change.asset.name) == stagedAssetNames.end()) {
-                    stagedAssetNames.push_back(change.asset.name);
+                } else if (change.kind == Editor::AssetChange::Kind::Upsert) {
+                    const auto asset = std::find_if(editorAssets.begin(), editorAssets.end(), [&](const auto& current) {
+                        return current.name == change.name;
+                    });
+                    if (asset != editorAssets.end() && assets.writeAsset({}, asset->name, asset->data) &&
+                        std::find(stagedAssetNames.begin(), stagedAssetNames.end(), asset->name) == stagedAssetNames.end()) {
+                        stagedAssetNames.push_back(asset->name);
+                    }
                 }
             }
         }
