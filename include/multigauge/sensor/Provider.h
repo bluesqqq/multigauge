@@ -7,17 +7,19 @@
 #include <multigauge/sensor/Sensor.h>
 #include <multigauge/json/Json.h>
 
-namespace mg {
+namespace mg::sensor {
 
 /// Owns a group of related sensors and refreshes them from shared hardware.
 ///
 /// Providers are responsible for polling, decoding, and cache invalidation.
 /// A single provider may update multiple logical sensors from one hardware
 /// transaction, so the caller only asks the provider to refresh once per cycle.
-class SensorProvider {
+class Provider {
 public:
-    virtual ~SensorProvider() = default;
+    virtual ~Provider() = default;
 
+    //----------[ IDENTITY ]----------//
+    
     /// Stable identifier for registry/editor use.
     /// The returned view must remain valid for the lifetime of the provider.
     [[nodiscard]]
@@ -31,6 +33,8 @@ public:
     /// Stable implementation type used by persisted core configuration.
     [[nodiscard]] virtual std::string_view type() const noexcept { return "custom"; }
 
+    //----------[ UPDATE ]----------//
+
     /// Refreshes all supplied sensors from the provider's backing hardware.
     ///
     /// Providers update each sensor's cached reading directly. Partial success
@@ -39,6 +43,8 @@ public:
     /// update call.
     virtual void update(std::chrono::microseconds elapsed) noexcept = 0;
 
+    //----------[ SENSORS ]----------//
+
     /// Number of sensors currently supplied by the provider.
     [[nodiscard]]
     virtual std::size_t sensorCount() const noexcept = 0;
@@ -46,6 +52,8 @@ public:
     /// Returns a borrowed sensor pointer for the given index, or nullptr.
     [[nodiscard]]
     virtual const Sensor* sensorAt(std::size_t index) const noexcept = 0;
+
+    //----------[ CONFIGURATION ]----------//
 
     /// Applies provider-specific persisted configuration. The core treats the
     /// document as opaque; implementations validate their own fields.
@@ -60,4 +68,4 @@ public:
     }
 };
 
-} // namespace mg
+} // namespace mg::sensor

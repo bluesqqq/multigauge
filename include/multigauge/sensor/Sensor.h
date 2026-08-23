@@ -2,9 +2,9 @@
 
 #include <string_view>
 
-#include <multigauge/sensor/SensorTypes.h>
+#include <multigauge/sensor/Reading.h>
 
-namespace mg {
+namespace mg::sensor {
 
 /// Read-only view of a logical sensor.
 ///
@@ -15,6 +15,8 @@ class Sensor {
 public:
     virtual ~Sensor() = default;
 
+    //----------[ IDENTITY ]----------//
+
     /// Stable identifier for registry/editor use.
     /// The returned view must remain valid for the lifetime of the sensor.
     [[nodiscard]]
@@ -24,6 +26,8 @@ public:
     /// The returned view must remain valid for the lifetime of the sensor.
     [[nodiscard]]
     virtual std::string_view name() const noexcept = 0;
+
+    //----------[ UNIT AND RANGE ]----------//
 
     /// Native output unit of the sensor, if it has one.
     /// Returns nullptr when the sensor is unitless or unknown.
@@ -39,11 +43,13 @@ public:
     /// Native bounds reported by the sensor.
     /// Unknown limits are represented by an empty optional inside the range.
     [[nodiscard]]
-    virtual SensorRange nativeRange() const noexcept = 0;
+    virtual Range nativeRange() const noexcept = 0;
 
+    //----------[ READING ]----------//
+    
     /// Cached reading after the provider's last update cycle.
     [[nodiscard]]
-    virtual SensorReading reading() const noexcept = 0;
+    virtual Reading reading() const noexcept = 0;
 };
 
-} // namespace mg
+} // namespace mg::sensor
