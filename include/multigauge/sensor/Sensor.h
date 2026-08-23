@@ -31,6 +31,11 @@ public:
     [[nodiscard]]
     virtual const UnitType* unit() const noexcept = 0;
 
+    /// Index of the unit in `unit()` used by the cached reading. The default
+    /// is the UnitType base unit, which is also the ValueRegistry storage unit.
+    [[nodiscard]]
+    virtual UnitIndex unitIndex() const noexcept { return 0; }
+
     /// Native bounds reported by the sensor.
     /// Unknown limits are represented by an empty optional inside the range.
     [[nodiscard]]
