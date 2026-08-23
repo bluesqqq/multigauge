@@ -5,6 +5,7 @@
 #include <multigauge/value/ValueRegistry.h>
 
 #include <map>
+#include <memory>
 #include <set>
 #include <vector>
 
@@ -45,6 +46,9 @@ public:
 
 class FakeProvider final : public mg::sensor::Provider {
 public:
+    explicit FakeProvider(int* destructionCount = nullptr) : destructionCount(destructionCount) {}
+    ~FakeProvider() override { if (destructionCount) ++*destructionCount; }
+
     std::string_view id() const noexcept override { return "aux-main"; }
     std::string_view name() const noexcept override { return "Auxiliary"; }
     std::string_view type() const noexcept override { return "aux"; }
@@ -64,6 +68,7 @@ public:
     FakeSensor sensor;
     int updates = 0;
     int loadedMode = 0;
+    int* destructionCount = nullptr;
 };
 
 TEST_CASE("sensor registry borrows providers and maintains its index") {
@@ -97,28 +102,29 @@ TEST_CASE("sensor manager persists provider configuration and resolves bindings"
     mg::sensor::Manager manager(fs, "/telemetry");
     REQUIRE(manager.load());
 
-    FakeProvider provider;
-    REQUIRE(manager.registerProvider(provider));
+    auto provider = std::make_unique<FakeProvider>();
+    FakeProvider* providerView = provider.get();
+    REQUIRE(manager.registerProvider(std::move(provider)));
     CHECK_FALSE(manager.load());
     const auto config = mg::json::parse(R"({"mode":7})");
     REQUIRE(config.valid());
     REQUIRE(manager.configureProvider("aux-main", config.root()).ok);
-    CHECK(provider.loadedMode == 7);
+    CHECK(providerView->loadedMode == 7);
     const auto invalidConfig = mg::json::parse(R"({"mode":-1})");
     REQUIRE(invalidConfig.valid());
     CHECK_FALSE(manager.configureProvider("aux-main", invalidConfig.root()).ok);
-    CHECK(manager.findProvider("aux-main") == &provider);
-    CHECK(provider.loadedMode == 7);
+    CHECK(manager.findProvider("aux-main") == providerView);
+    CHECK(providerView->loadedMode == 7);
 
     REQUIRE(manager.defineUserValue({"customRPM", "Custom RPM", "revolutions", 0.0F, 10000.0F}).ok);
     REQUIRE(manager.upsertBinding({"aux-rpm", "aux-main", "rpm", "customRPM", true, 10, std::chrono::milliseconds(100)}).ok);
     CHECK_FALSE(manager.removeUserValue("customRPM"));
 
     manager.update(std::chrono::milliseconds(16), std::chrono::microseconds{});
-    CHECK(provider.updates == 1);
+    CHECK(providerView->updates == 1);
     CHECK(mg::ValueRegistry::value(mg::ValueRegistry::resolve("customRPM")) == doctest::Approx(4000.0F));
 
-    provider.sensor.reading_.status = mg::sensor::Status::Unavailable;
+    providerView->sensor.reading_.status = mg::sensor::Status::Unavailable;
     manager.update(std::chrono::milliseconds(16), std::chrono::milliseconds(101));
     CHECK_FALSE(mg::ValueRegistry::available(mg::ValueRegistry::resolve("customRPM")));
     REQUIRE(manager.save());
@@ -129,9 +135,22 @@ TEST_CASE("sensor manager persists provider configuration and resolves bindings"
     std::vector<mg::sensor::UserValueConfig> values;
     REQUIRE(restoredManager.listUserValues(values));
     CHECK(values.size() == 1);
-    FakeProvider restored;
-    REQUIRE(restoredManager.registerProvider(restored));
-    CHECK(restored.loadedMode == 7);
+    auto restored = std::make_unique<FakeProvider>();
+    FakeProvider* restoredView = restored.get();
+    REQUIRE(restoredManager.registerProvider(std::move(restored)));
+    CHECK(restoredView->loadedMode == 7);
+}
+
+TEST_CASE("sensor manager owns registered provider lifetimes") {
+    MemoryFileSystem fs;
+    mg::sensor::Manager manager(fs, "/telemetry");
+    REQUIRE(manager.load());
+
+    int destructionCount = 0;
+    REQUIRE(manager.registerProvider(std::make_unique<FakeProvider>(&destructionCount)));
+    REQUIRE(manager.unregisterProvider("aux-main"));
+    CHECK(destructionCount == 1);
+    CHECK(manager.findProvider("aux-main") == nullptr);
 }
 
 TEST_CASE("sensor manager rejects malformed state without replacing current state") {
