@@ -5,6 +5,7 @@
 #include <string_view>
 
 #include <multigauge/sensor/Sensor.h>
+#include <multigauge/json/Json.h>
 
 namespace mg {
 
@@ -27,6 +28,9 @@ public:
     [[nodiscard]]
     virtual std::string_view name() const noexcept = 0;
 
+    /// Stable implementation type used by persisted core configuration.
+    [[nodiscard]] virtual std::string_view type() const noexcept { return "custom"; }
+
     /// Refreshes all supplied sensors from the provider's backing hardware.
     ///
     /// Providers update each sensor's cached reading directly. Partial success
@@ -42,6 +46,18 @@ public:
     /// Returns a borrowed sensor pointer for the given index, or nullptr.
     [[nodiscard]]
     virtual const Sensor* sensorAt(std::size_t index) const noexcept = 0;
+
+    /// Applies provider-specific persisted configuration. The core treats the
+    /// document as opaque; implementations validate their own fields.
+    [[nodiscard]] virtual bool loadConfiguration(json::Reader config) {
+        (void)config;
+        return true;
+    }
+
+    /// Writes provider-specific persisted configuration as one JSON object.
+    [[nodiscard]] virtual bool saveConfiguration(json::Writer& writer) const {
+        return writer.writeObject([](json::ObjectWriter&) { return true; });
+    }
 };
 
 } // namespace mg
