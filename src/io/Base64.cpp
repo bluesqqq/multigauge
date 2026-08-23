@@ -99,4 +99,12 @@ bool base64Decode(std::string_view input, uint8_t *output, size_t outputCap, siz
     return true;
 }
 
+bool base64Decode(std::string_view input, std::vector<uint8_t>& output) {
+    output.resize(base64DecodedMaxSize(input));
+    size_t outputLength = 0;
+    if (!base64Decode(input, output.data(), output.size(), outputLength)) return false;
+    output.resize(outputLength);
+    return true;
+}
+
 } // namespace mg::io
