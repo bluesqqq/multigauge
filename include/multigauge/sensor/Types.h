@@ -7,6 +7,7 @@
 
 namespace mg::sensor {
 
+/// @brief Definition of a user-created value.
 struct UserValueConfig {
     std::string id;
     std::string name;
@@ -15,6 +16,7 @@ struct UserValueConfig {
     Measurement maximum = 0.0F;
 };
 
+/// @brief Maps one provider sensor to a value.
 struct SensorBinding {
     std::string id;
     std::string providerId;
