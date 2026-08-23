@@ -25,48 +25,6 @@ constexpr std::size_t maxPackageAssetBytes = 128 * 1024;
 
 using mg::json::getStringMember;
 
-bool makeDirectoryChain(io::FileSystem& fs, const std::string& path) {
-    if (path.empty() || fs.exists(path)) return true;
-
-    std::string current;
-    size_t index = 0;
-
-    if (path.size() >= 2 && path[1] == ':') {
-        current = path.substr(0, 2);
-        index = 2;
-        if (index < path.size() && mg::utils::isPathSeparator(path[index])) {
-            current.push_back(path[index]);
-            ++index;
-        }
-    } else if (mg::utils::isPathSeparator(path[0])) {
-        current.push_back(path[0]);
-        index = 1;
-    }
-
-    while (index < path.size()) {
-        while (index < path.size() && mg::utils::isPathSeparator(path[index])) ++index;
-        if (index >= path.size()) break;
-
-        const size_t end = path.find_first_of("/\\", index);
-        const std::string segment = path.substr(index, end == std::string::npos ? std::string::npos : end - index);
-        if (segment.empty()) return false;
-
-        if (!current.empty() && !mg::utils::isPathSeparator(current.back())) {
-            current.push_back('/');
-        }
-        current.append(segment);
-
-        if (!fs.exists(current) && !fs.makeDirectory(current)) {
-            return false;
-        }
-
-        if (end == std::string::npos) break;
-        index = end + 1;
-    }
-
-    return true;
-}
-
 struct LibraryIndexPackage {
     std::string id;
     std::string name;
@@ -79,26 +37,6 @@ bool writePackageEntry(json::ArrayWriter& writer, const LibraryIndexPackage& pac
     });
 }
 
-bool isSafeId(std::string_view value) {
-    if (value.empty()) return false;
-
-    for (unsigned char c : value) {
-        if (!(std::isalnum(c) || c == '-')) {
-            return false;
-        }
-    }
-
-    return true;
-}
-
-bool isSafeAssetName(std::string_view value) {
-    if (value.empty() || value == "." || value == "..") return false;
-    for (unsigned char c : value) {
-        if (!(std::isalnum(c) || c == '.' || c == '_' || c == '-')) return false;
-    }
-    return true;
-}
-
 bool isSupportedAssetMediaType(std::string_view value) {
     return value == "image/png" || value == "image/jpeg" || value == "image/bmp";
 }
@@ -107,8 +45,6 @@ struct AssetMetadata {
     std::string name;
     std::string mediaType;
 };
-
-bool decodeAsset(std::string_view encoded, std::vector<uint8_t>& out);
 
 bool readAssetMetadata(json::Reader assets, std::vector<AssetMetadata>& out, std::string& error) {
     if (!assets.valid()) return true;
@@ -125,7 +61,7 @@ bool readAssetMetadata(json::Reader assets, std::vector<AssetMetadata>& out, std
         AssetMetadata entry;
         std::string_view data;
         if (!asset.isObject() || asset.size() != 3 ||
-            !getStringMember(asset, "name", entry.name) || !isSafeAssetName(entry.name) ||
+            !getStringMember(asset, "name", entry.name) || !utils::isSafeFileName(entry.name) ||
             !getStringMember(asset, "mediaType", entry.mediaType) || !isSupportedAssetMediaType(entry.mediaType) ||
             !asset.member("data").read(data) || data.empty() || data.size() > maxAssetEncodedBytes) {
             error = "Package contains an invalid embedded asset";
@@ -143,7 +79,7 @@ bool readAssetMetadata(json::Reader assets, std::vector<AssetMetadata>& out, std
             return false;
         }
         std::vector<uint8_t> decoded;
-        if (!decodeAsset(data, decoded) || decoded.empty()) {
+        if (!io::base64Decode(data, decoded) || decoded.empty()) {
             error = "Package contains invalid embedded asset data";
             return false;
         }
@@ -162,21 +98,13 @@ bool readInstalledAssetMetadata(json::Reader assets, std::vector<AssetMetadata>&
         const json::Reader asset = assets.element(index);
         AssetMetadata entry;
         if (!asset.isObject() || asset.size() != 2 ||
-            !getStringMember(asset, "name", entry.name) || !isSafeAssetName(entry.name) ||
+            !getStringMember(asset, "name", entry.name) || !utils::isSafeFileName(entry.name) ||
             !getStringMember(asset, "mediaType", entry.mediaType) || !isSupportedAssetMediaType(entry.mediaType)) {
             return false;
         }
         metadata.push_back(std::move(entry));
     }
     out = std::move(metadata);
-    return true;
-}
-
-bool decodeAsset(std::string_view encoded, std::vector<uint8_t>& out) {
-    out.resize(io::base64DecodedMaxSize(encoded));
-    std::size_t decodedLength = 0;
-    if (!io::base64Decode(encoded, out.data(), out.size(), decodedLength)) return false;
-    out.resize(decodedLength);
     return true;
 }
 
@@ -292,7 +220,7 @@ PackageManager::PackageManager(io::FileSystem& fs, std::string dataRoot) : fs(fs
 std::vector<PackageManager::PackageRecord> PackageManager::readInstalledPackages(io::FileSystem& fs, std::string_view dataRoot) {
     std::vector<PackageRecord> installedPackages;
     for (const auto& packageId : readPackageDirectories(fs, paths::packagesRootPath(dataRoot))) {
-        if (!isSafeId(packageId)) {
+        if (!utils::isSafeId(packageId)) {
             LOG_WARN(TAG, "rebuildLibrary: skipping unsafe package id %s", packageId.c_str());
             continue;
         }
@@ -375,11 +303,6 @@ bool PackageManager::writeLibraryIndexFromCache() const {
         return false;
     }
 
-    if (!makeDirectoryChain(fs, std::string(dataRoot)) ||
-        !makeDirectoryChain(fs, paths::packagesRootPath(dataRoot))) {
-        return false;
-    }
-
     json::Document document = json::object();
     json::Writer writer = document.writer();
     if (!writer.writeObject([&](json::ObjectWriter& object) { return object.writeArray("packages", [&](json::ArrayWriter& packages) {
@@ -408,7 +331,7 @@ bool PackageManager::listPackages(std::vector<PackageSummary>& out) const {
 }
 
 Result PackageManager::getPackage(const std::string& packageId) const {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
 
@@ -417,7 +340,7 @@ Result PackageManager::getPackage(const std::string& packageId) const {
 }
 
 bool PackageManager::listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         LOG_WARN(TAG, "listFaces: invalid package id %s", packageId.c_str());
         return false;
     }
@@ -446,7 +369,7 @@ bool PackageManager::listFaces(const std::string& packageId, std::vector<FaceSum
 }
 
 Result PackageManager::getFace(const std::string& packageId, const std::string& faceId) const {
-    if (!isSafeId(packageId) || !isSafeId(faceId)) {
+    if (!utils::isSafeId(packageId) || !utils::isSafeId(faceId)) {
         return Error("Invalid face id");
     }
 
@@ -583,15 +506,6 @@ Result PackageManager::importPackage(json::Reader input) {
              static_cast<unsigned>(input.member("faces").size()));
 
     const std::string packageRoot = paths::packagePath(dataRoot, packageId);
-    if (!makeDirectoryChain(fs, dataRoot) ||
-        !makeDirectoryChain(fs, paths::packagesRootPath(dataRoot)) ||
-        !makeDirectoryChain(fs, packageRoot) ||
-        !makeDirectoryChain(fs, paths::facesRootPath(dataRoot, packageId)) ||
-        !makeDirectoryChain(fs, paths::assetsPath(dataRoot, packageId))) {
-        LOG_ERROR(TAG, "importPackage: failed to create package directories for %s", packageId.c_str());
-        return Error("Failed to create package directories");
-    }
-
     const json::Reader inputAssets = input.member("assets");
     for (std::size_t index = 0; index < assetMetadata.size(); ++index) {
         std::string_view encoded;
@@ -601,12 +515,12 @@ Result PackageManager::importPackage(json::Reader input) {
         }
 
         std::vector<uint8_t> decoded;
-        if (!decodeAsset(encoded, decoded)) {
+        if (!io::base64Decode(encoded, decoded)) {
             removeTree(fs, packageRoot);
             return Error("Invalid embedded asset data");
         }
 
-        const std::string path = paths::joinPath(paths::assetsPath(dataRoot, packageId), assetMetadata[index].name);
+        const std::string path = paths::assetPath(dataRoot, packageId, paths::imagesDir, assetMetadata[index].name);
         if (!fs.writeBytes(path, decoded.data(), decoded.size())) {
             removeTree(fs, packageRoot);
             return Error("Failed to write embedded asset");
@@ -708,7 +622,7 @@ Result PackageManager::importPackage(json::Reader input) {
 }
 
 Result PackageManager::exportPackage(const std::string& packageId) const {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
 
@@ -739,7 +653,7 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
                object.writeArray("assets", [&](json::ArrayWriter& outputAssets) {
                    for (const auto& asset : assets) {
                        std::vector<uint8_t> bytes;
-                       const std::string path = paths::joinPath(paths::assetsPath(dataRoot, packageId), asset.name);
+                       const std::string path = paths::assetPath(dataRoot, packageId, paths::imagesDir, asset.name);
                        if (!fs.readBytes(path, bytes) || bytes.empty()) return false;
                        std::string encoded;
                        if (!encodeAsset(bytes, encoded)) return false;
@@ -780,7 +694,7 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
 }
 
 Result PackageManager::removePackage(const std::string& packageId) {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
 
