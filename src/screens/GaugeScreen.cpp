@@ -7,12 +7,13 @@ namespace mg {
 
 GaugeScreen::GaugeScreen() = default;
 
-void GaugeScreen::setFace(std::unique_ptr<::mg::gauge::GaugeFace> newFace) {
+void GaugeScreen::setFace(std::unique_ptr<::mg::gauge::GaugeFace> newFace, std::string newPackageId) {
     face = std::move(newFace);
+    packageId = std::move(newPackageId);
 }
 
 void GaugeScreen::onShow(RuntimeContext& ctx) {
-    if (face) face->init(ctx.getAssetManager(), ctx.getGraphicsContext());
+    if (face) face->init(packageId, ctx.getAssetManager(), ctx.getGraphicsContext());
 }
 
 void GaugeScreen::onHide(RuntimeContext& ctx) {}
