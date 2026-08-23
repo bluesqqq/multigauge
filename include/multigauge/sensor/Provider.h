@@ -56,13 +56,17 @@ public:
     //----------[ CONFIGURATION ]----------//
 
     /// Applies provider-specific persisted configuration. The core treats the
-    /// document as opaque; implementations validate their own fields.
+    /// document as opaque; implementations validate their own fields. A false
+    /// result must leave the provider unchanged. A successful call may change
+    /// its sensor set; Manager will reindex it before accepting the change.
     [[nodiscard]] virtual bool loadConfiguration(json::Reader config) {
         (void)config;
         return true;
     }
 
     /// Writes provider-specific persisted configuration as one JSON object.
+    /// The emitted object must be accepted later by loadConfiguration so the
+    /// manager can restore the provider if a reconfiguration cannot be indexed.
     [[nodiscard]] virtual bool saveConfiguration(json::Writer& writer) const {
         return writer.writeObject([](json::ObjectWriter&) { return true; });
     }
