@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 
 #include <multigauge/editor/Api.h>
+#include <multigauge/editor/EditorRegistry.h>
 #include <multigauge/editor/Editor.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/gauge/elements/CustomElement.h>
@@ -327,6 +328,34 @@ TEST_CASE("gauge element codec owns type and property serialization") {
     REQUIRE(mg::decodeAny(document.root(), decoded));
     REQUIRE(decoded != nullptr);
     CHECK(std::string_view(decoded->typeId()) == "rectangle");
+}
+
+TEST_CASE("image element serializes its fit mode") {
+    auto element = mg::gauge::Element::registry().create("image");
+    REQUIRE(element != nullptr);
+    const auto path = mg::json::parse("\"logo.png\"");
+    const auto fit = mg::json::parse("\"fill\"");
+    REQUIRE(path.valid());
+    REQUIRE(fit.valid());
+    REQUIRE(element->setProperty("path", path.root()));
+    REQUIRE(element->setProperty("fit", fit.root()));
+
+    auto document = mg::json::object();
+    auto documentWriter = document.writer();
+    REQUIRE(mg::encodeAny(documentWriter, element));
+    std::string_view serializedFit;
+    REQUIRE(document.root().member("fit").read(serializedFit));
+    CHECK(serializedFit == "fill");
+
+    mg::gauge::Element::OwnedElement decoded;
+    REQUIRE(mg::decodeAny(document.root(), decoded));
+    REQUIRE(decoded != nullptr);
+    auto restoredFit = mg::json::object();
+    auto restoredFitWriter = restoredFit.writer();
+    REQUIRE(decoded->getProperty("fit", restoredFitWriter));
+    std::string_view restoredFitValue;
+    REQUIRE(restoredFit.root().read(restoredFitValue));
+    CHECK(restoredFitValue == "fill");
 }
 
 TEST_CASE("gauge editor preserves hierarchy invariants through editing and history") {
