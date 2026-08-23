@@ -19,7 +19,62 @@
       "type": "object",
       "properties": {
         "mode": { "enum": ["fit", "grow", "fixed", "percent"] },
-        "value": { "type": "number" }
+        "value": { "type": "number" },
+        "limit": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "padding": {
+      "type": "object",
+      "properties": {
+        "left": { "type": "integer" },
+        "right": { "type": "integer" },
+        "top": { "type": "integer" },
+        "bottom": { "type": "integer" }
+      },
+      "additionalProperties": true
+    },
+    "childAlignment": {
+      "type": "object",
+      "properties": {
+        "x": { "enum": ["left", "center", "right"] },
+        "y": { "enum": ["top", "center", "bottom"] }
+      },
+      "additionalProperties": true
+    },
+    "offset": {
+      "type": "object",
+      "properties": {
+        "x": { "type": "number" },
+        "y": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "expand": {
+      "type": "object",
+      "properties": {
+        "width": { "type": "number" },
+        "height": { "type": "number" }
+      },
+      "additionalProperties": true
+    },
+    "floatingAnchor": {
+      "enum": [
+        "left-top", "left-center", "left-bottom",
+        "center-top", "center", "center-bottom",
+        "right-top", "right-center", "right-bottom"
+      ]
+    },
+    "floating": {
+      "type": "object",
+      "properties": {
+        "attachTo": { "enum": ["none", "parent", "root"] },
+        "elementAnchor": { "$ref": "#/$defs/floatingAnchor" },
+        "parentAnchor": { "$ref": "#/$defs/floatingAnchor" },
+        "offset": { "$ref": "#/$defs/offset" },
+        "expand": { "$ref": "#/$defs/expand" },
+        "zIndex": { "type": "integer" },
+        "fillParent": { "type": "boolean" }
       },
       "additionalProperties": true
     },
@@ -29,11 +84,11 @@
         "width": { "$ref": "#/$defs/layoutSize" },
         "height": { "$ref": "#/$defs/layoutSize" },
         "direction": { "enum": ["left-to-right", "top-to-bottom"] },
-        "paddingLeft": { "type": "integer" },
-        "paddingRight": { "type": "integer" },
-        "paddingTop": { "type": "integer" },
-        "paddingBottom": { "type": "integer" },
-        "childGap": { "type": "integer" }
+        "padding": { "$ref": "#/$defs/padding" },
+        "childGap": { "type": "integer" },
+        "childAlignment": { "$ref": "#/$defs/childAlignment" },
+        "floating": { "$ref": "#/$defs/floating" },
+        "aspectRatio": { "type": "number", "minimum": 0 }
       },
       "additionalProperties": true
     },
@@ -133,6 +188,7 @@
         "paint": { "$ref": "#/$defs/paint" },
         "radius": { "type": "number" },
         "path": { "type": "string" },
+        "fit": { "enum": ["fit", "fill", "stretch"] },
         "text": { "type": "string" },
         "ellipses": { "type": "boolean" },
         "hyphens": { "type": "boolean" },

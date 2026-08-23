@@ -19,34 +19,121 @@ namespace mg::gauge {
 
 namespace {
 
-Clay_SizingAxis toClaySize(LayoutSize size) {
+Clay_SizingAxis toClaySize(layout::Size size) {
     switch (size.mode) {
-    case LayoutSizeMode::Fit:
+    case layout::SizeMode::Fit:
         return CLAY_SIZING_FIT(size.value, size.limit);
-    case LayoutSizeMode::Grow:
+    case layout::SizeMode::Grow:
         return CLAY_SIZING_GROW(size.value, size.limit);
-    case LayoutSizeMode::Fixed:
+    case layout::SizeMode::Fixed:
         return CLAY_SIZING_FIXED(size.value);
-    case LayoutSizeMode::Percent:
+    case layout::SizeMode::Percent:
         return CLAY_SIZING_PERCENT(size.value);
     }
 
     return CLAY_SIZING_FIT(0, 0);
 }
 
-Clay_LayoutConfig toClayLayout(const Layout& layout) {
+Clay_LayoutAlignmentX toClayAlignment(layout::AlignmentX alignment) {
+    switch (alignment) {
+    case layout::AlignmentX::Left:
+        return CLAY_ALIGN_X_LEFT;
+    case layout::AlignmentX::Center:
+        return CLAY_ALIGN_X_CENTER;
+    case layout::AlignmentX::Right:
+        return CLAY_ALIGN_X_RIGHT;
+    }
+
+    return CLAY_ALIGN_X_LEFT;
+}
+
+Clay_LayoutAlignmentY toClayAlignment(layout::AlignmentY alignment) {
+    switch (alignment) {
+    case layout::AlignmentY::Top:
+        return CLAY_ALIGN_Y_TOP;
+    case layout::AlignmentY::Center:
+        return CLAY_ALIGN_Y_CENTER;
+    case layout::AlignmentY::Bottom:
+        return CLAY_ALIGN_Y_BOTTOM;
+    }
+
+    return CLAY_ALIGN_Y_TOP;
+}
+
+Clay_FloatingAttachPointType toClayAnchor(layout::FloatingAnchor anchor) {
+    switch (anchor) {
+    case layout::FloatingAnchor::LeftTop:
+        return CLAY_ATTACH_POINT_LEFT_TOP;
+    case layout::FloatingAnchor::LeftCenter:
+        return CLAY_ATTACH_POINT_LEFT_CENTER;
+    case layout::FloatingAnchor::LeftBottom:
+        return CLAY_ATTACH_POINT_LEFT_BOTTOM;
+    case layout::FloatingAnchor::CenterTop:
+        return CLAY_ATTACH_POINT_CENTER_TOP;
+    case layout::FloatingAnchor::Center:
+        return CLAY_ATTACH_POINT_CENTER_CENTER;
+    case layout::FloatingAnchor::CenterBottom:
+        return CLAY_ATTACH_POINT_CENTER_BOTTOM;
+    case layout::FloatingAnchor::RightTop:
+        return CLAY_ATTACH_POINT_RIGHT_TOP;
+    case layout::FloatingAnchor::RightCenter:
+        return CLAY_ATTACH_POINT_RIGHT_CENTER;
+    case layout::FloatingAnchor::RightBottom:
+        return CLAY_ATTACH_POINT_RIGHT_BOTTOM;
+    }
+
+    return CLAY_ATTACH_POINT_LEFT_TOP;
+}
+
+Clay_FloatingAttachToElement toClayAttachTo(layout::FloatingAttachTo attachTo) {
+    switch (attachTo) {
+    case layout::FloatingAttachTo::None:
+        return CLAY_ATTACH_TO_NONE;
+    case layout::FloatingAttachTo::Parent:
+        return CLAY_ATTACH_TO_PARENT;
+    case layout::FloatingAttachTo::Root:
+        return CLAY_ATTACH_TO_ROOT;
+    }
+
+    return CLAY_ATTACH_TO_NONE;
+}
+
+Clay_LayoutConfig toClayLayout(const layout::Layout& layoutState) {
     return {
-        .sizing = {toClaySize(layout.width), toClaySize(layout.height)},
+        .sizing = {toClaySize(layoutState.width), toClaySize(layoutState.height)},
         .padding =
             {
-                .left = static_cast<std::uint16_t>(std::max(0, layout.paddingLeft)),
-                .right = static_cast<std::uint16_t>(std::max(0, layout.paddingRight)),
-                .top = static_cast<std::uint16_t>(std::max(0, layout.paddingTop)),
-                .bottom = static_cast<std::uint16_t>(std::max(0, layout.paddingBottom)),
+                .left = static_cast<std::uint16_t>(std::max(0, layoutState.padding.left)),
+                .right = static_cast<std::uint16_t>(std::max(0, layoutState.padding.right)),
+                .top = static_cast<std::uint16_t>(std::max(0, layoutState.padding.top)),
+                .bottom = static_cast<std::uint16_t>(std::max(0, layoutState.padding.bottom)),
             },
-        .childGap = static_cast<std::uint16_t>(std::max(0, layout.childGap)),
-        .layoutDirection = layout.direction == LayoutDirection::LeftToRight ? CLAY_LEFT_TO_RIGHT
-                                                                            : CLAY_TOP_TO_BOTTOM,
+        .childGap = static_cast<std::uint16_t>(std::max(0, layoutState.childGap)),
+        .childAlignment =
+            {
+                .x = toClayAlignment(layoutState.childAlignment.x),
+                .y = toClayAlignment(layoutState.childAlignment.y),
+            },
+        .layoutDirection = layoutState.direction == layout::Direction::LeftToRight
+                               ? CLAY_LEFT_TO_RIGHT
+                               : CLAY_TOP_TO_BOTTOM,
+    };
+}
+
+Clay_FloatingElementConfig toClayFloating(const layout::Floating& floating) {
+    return {
+        .offset = {floating.offset.x, floating.offset.y},
+        .expand = {floating.expand.width, floating.expand.height},
+        .zIndex = static_cast<std::int16_t>(std::clamp(
+            floating.zIndex,
+            static_cast<int>(std::numeric_limits<std::int16_t>::min()),
+            static_cast<int>(std::numeric_limits<std::int16_t>::max()))),
+        .attachPoints =
+            {
+                .element = toClayAnchor(floating.elementAnchor),
+                .parent = toClayAnchor(floating.parentAnchor),
+            },
+        .attachTo = toClayAttachTo(floating.attachTo),
     };
 }
 
@@ -232,12 +319,12 @@ void GaugeFace::update(std::chrono::microseconds delta) {
     }
 }
 
-bool GaugeFace::init(::mg::AssetManager& assetManager, ::mg::graphics::GraphicsContext& context) {
+bool GaugeFace::init(std::string_view packageId, ::mg::AssetManager& assetManager, ::mg::graphics::GraphicsContext& context) {
     bool result = true;
     for (NodeHandle root = firstRoot_; root.valid();) {
         const Node* rootNode = node(root);
         const NodeHandle next = rootNode ? rootNode->nextSibling : NodeHandle::invalid();
-        if (rootNode && !initSubtree(root, assetManager, context)) result = false;
+        if (rootNode && !initSubtree(root, packageId, assetManager, context)) result = false;
         root = next;
     }
     return result;
@@ -277,15 +364,16 @@ void GaugeFace::updateSubtree(NodeHandle root, std::chrono::microseconds delta) 
 }
 
 bool GaugeFace::initSubtree(NodeHandle root,
+                            std::string_view packageId,
                             ::mg::AssetManager& assetManager,
                             ::mg::graphics::GraphicsContext& context) {
     Node* rootNode = node(root);
     if (!rootNode) return false;
-    bool result = rootNode->element->init(assetManager, context);
+    bool result = rootNode->element->init(packageId, assetManager, context);
     for (NodeHandle child = rootNode->firstChild; child.valid();) {
         Node* childNode = node(child);
         const NodeHandle next = childNode ? childNode->nextSibling : NodeHandle::invalid();
-        if (childNode && !initSubtree(child, assetManager, context)) result = false;
+        if (childNode && !initSubtree(child, packageId, assetManager, context)) result = false;
         child = next;
     }
     return result;
@@ -315,6 +403,8 @@ void GaugeFace::declareClaySubtree(NodeHandle root) const {
     CLAY({
         .id = clayId(root, *rootNode->element),
         .layout = toClayLayout(rootNode->element->layout()),
+        .aspectRatio = {.aspectRatio = rootNode->element->layout().aspectRatio},
+        .floating = toClayFloating(rootNode->element->layout().floating),
     }) {
         for (NodeHandle child = rootNode->firstChild; child.valid();) {
             const Node* childNode = node(child);
@@ -329,14 +419,21 @@ void GaugeFace::updateBoundsSubtree(NodeHandle root) {
     Node* rootNode = node(root);
     if (!rootNode) return;
 
-    const Clay_ElementData data = Clay_GetElementData(clayId(root, *rootNode->element));
-    if (data.found) {
-        rootNode->bounds = {
-            data.boundingBox.x,
-            data.boundingBox.y,
-            data.boundingBox.width,
-            data.boundingBox.height,
-        };
+    const layout::Layout& layoutState = rootNode->element->layout();
+    const Node* parentNode = node(rootNode->parent);
+    if (layoutState.floating.fillParent &&
+        layoutState.floating.attachTo == layout::FloatingAttachTo::Parent && parentNode) {
+        rootNode->bounds = parentNode->bounds;
+    } else {
+        const Clay_ElementData data = Clay_GetElementData(clayId(root, *rootNode->element));
+        if (data.found) {
+            rootNode->bounds = {
+                data.boundingBox.x,
+                data.boundingBox.y,
+                data.boundingBox.width,
+                data.boundingBox.height,
+            };
+        }
     }
 
     for (NodeHandle child = rootNode->firstChild; child.valid();) {

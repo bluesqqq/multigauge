@@ -6,6 +6,7 @@
 
 #include <multigauge/container/HandlePool.h>
 #include <multigauge/editor/Api.h>
+#include <multigauge/editor/EditorRegistry.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/graphics/UserPalette.h>
 #include <multigauge/io/Log.h>
@@ -116,7 +117,7 @@ ContextId addContext(graphics::GraphicsContext& graphics) {
         return {};
     }
 
-    return contexts.emplace(graphics, *g_fs, userPalette);
+    return contexts.emplace(graphics, *g_fs, g_dataRoot, userPalette);
 }
 
 bool removeContext(ContextId id) {
@@ -267,7 +268,7 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
     }
 
     auto screen = std::make_unique<GaugeScreen>();
-    screen->setFace(std::move(face));
+    screen->setFace(std::move(face), packageId);
 
     if (!context->setScreen(std::move(screen))) {
         LOG_ERROR(TAG, "Failed to install gauge screen into context.");

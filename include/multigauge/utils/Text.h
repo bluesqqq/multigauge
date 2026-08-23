@@ -5,6 +5,31 @@
 
 namespace mg::utils {
 
+/// @brief Returns whether `value` is a non-empty flat filename containing only letters, digits, `.`, `_`, and `-`.
+inline bool isSafeFileName(std::string_view value) {
+    if (value.empty() || value == "." || value == "..") return false;
+    for (const unsigned char c : value) {
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') || c == '.' || c == '_' || c == '-')) {
+            return false;
+        }
+    }
+    return true;
+}
+
+/// @brief Returns whether `value` is an ID containing only letters, digits, and `-`.
+/// @param allowEmpty Whether an empty ID is accepted.
+inline bool isSafeId(std::string_view value, bool allowEmpty = false) {
+    if (value.empty()) return allowEmpty;
+    for (const unsigned char c : value) {
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') || c == '-')) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /// @brief Returns true if c is a path separator.
 static inline bool isPathSeparator(char c) { return c == '/' || c == '\\'; }
 

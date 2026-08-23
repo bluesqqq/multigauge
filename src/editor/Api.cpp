@@ -2,21 +2,31 @@
 
 #include <cstdint>
 
-#include <multigauge/container/HandlePool.h>
 #include <multigauge/editor/Clipboard.h>
 #include <multigauge/editor/Editor.h>
 #include <multigauge/value/ValueRegistry.h>
+#include <multigauge/io/Log.h>
+
+#include <multigauge/editor/EditorRegistry.h>
 
 namespace mg::editor {
 namespace {
-HandlePool<Editor, EditorId> editors;
 ClipboardState clipboard;
 
 Editor* editor(EditorId id) {
-    return editors.get(id);
+    return find(id);
 }
 
-Result invalidEditor() {
+Result invalidEditor(EditorId id) {
+    constexpr const char* TAG = "EditorApi";
+
+    LOG_WARN(
+        TAG,
+        "Invalid editor ID: slot=%u generation=%u",
+        id.slot(),
+        id.generation()
+    );
+
     return Error("Invalid editor ID");
 }
 
@@ -41,18 +51,6 @@ Result packageInfoResult(const Editor::PackageInfo& info) {
 }
 } // namespace
 
-EditorId create() {
-    return editors.emplace();
-}
-
-bool destroy(EditorId id) {
-    return editors.remove(id);
-}
-
-bool exists(EditorId id) {
-    return editor(id) != nullptr;
-}
-
 bool clear(EditorId id) {
     if (auto* value = editor(id)) {
         value->clear();
@@ -68,7 +66,7 @@ Result setPackageInfo(
     const std::string& description
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     const Editor::PackageInfo info{name, author, description};
     return value->setPackageInfo(info)
                ? packageInfoResult(value->packageInfo())
@@ -77,7 +75,37 @@ Result setPackageInfo(
 
 Result getPackageInfo(EditorId id) {
     auto* value = editor(id);
-    return value ? packageInfoResult(value->packageInfo()) : invalidEditor();
+    return value ? packageInfoResult(value->packageInfo()) : invalidEditor(id);
+}
+
+Result getAssets(EditorId id) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor(id);
+
+    Result result = OkArray();
+    json::Writer writer = result.data.writer();
+    return writer.writeArray([&](json::ArrayWriter& output) {
+        for (const auto& asset : value->assets()) {
+            if (!output.writeObject([&](json::ObjectWriter& item) {
+                    return item.write("name", asset.name) && item.write("mediaType", asset.mediaType) &&
+                           item.write("data", asset.data);
+                }))
+                return false;
+        }
+        return true;
+    }) ? std::move(result) : Error("Failed to build asset result");
+}
+
+Result setAsset(EditorId id, const std::string& name, const std::string& mediaType, const std::string& data) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor(id);
+    return value->setAsset({name, mediaType, data}) ? OkObject() : Error("Invalid package asset");
+}
+
+Result removeAsset(EditorId id, const std::string& name) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor(id);
+    return value->removeAsset(name) ? OkObject() : Error("Asset is unknown or still in use");
 }
 
 Result setFaceName(
@@ -86,7 +114,7 @@ Result setFaceName(
     const std::string& name
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     return value->setFaceName(faceId, name) ? OkObject() : Error("Invalid face ID");
 }
 
@@ -95,7 +123,7 @@ Result getFaceName(
     NodeId faceId
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     if (!value->getFace(faceId)) return Error("Invalid face ID");
     Result result = OkObject();
     json::Writer writer = result.data.writer();
@@ -112,13 +140,13 @@ Result loadPackage(
     const std::string& text
 ) {
     auto* value = editor(id);
-    return !value ? invalidEditor()
+    return !value ? invalidEditor(id)
                   : (value->loadPackage(text) ? OkObject() : Error("Invalid package JSON"));
 }
 
 Result exportPackage(EditorId id) {
     auto* value = editor(id);
-    return value ? jsonResult(value->exportPackage()) : invalidEditor();
+    return value ? jsonResult(value->exportPackage()) : invalidEditor(id);
 }
 
 gauge::GaugeFace* getFace(
@@ -151,16 +179,16 @@ NodeId faceAt(
 
 Result getHierarchy(EditorId id) {
     auto* value = editor(id);
-    return value ? value->getHierarchy() : invalidEditor();
+    return value ? value->getHierarchy() : invalidEditor(id);
 }
 
 Result listElementTypes(EditorId id) {
     auto* value = editor(id);
-    return value ? value->listElementTypes() : invalidEditor();
+    return value ? value->listElementTypes() : invalidEditor(id);
 }
 
 Result listValueIDs(EditorId id) {
-    if (!editor(id)) return invalidEditor();
+    if (!editor(id)) return invalidEditor(id);
 
     Result result = OkArray();
     json::Writer writer = result.data.writer();
@@ -181,7 +209,7 @@ Result createFace(
     FacePlacement where
 ) {
     auto* value = editor(id);
-    return value ? value->createFace(text, where) : invalidEditor();
+    return value ? value->createFace(text, where) : invalidEditor(id);
 }
 
 Result removeFace(
@@ -189,7 +217,7 @@ Result removeFace(
     NodeId faceId
 ) {
     auto* value = editor(id);
-    return value ? value->removeFace(faceId) : invalidEditor();
+    return value ? value->removeFace(faceId) : invalidEditor(id);
 }
 
 Result reorderFace(
@@ -198,7 +226,7 @@ Result reorderFace(
     std::size_t index
 ) {
     auto* value = editor(id);
-    return value ? value->reorderFace(faceId, index) : invalidEditor();
+    return value ? value->reorderFace(faceId, index) : invalidEditor(id);
 }
 
 Result createElement(
@@ -207,7 +235,7 @@ Result createElement(
     const std::string& text
 ) {
     auto* value = editor(id);
-    return value ? value->createElement(where, text) : invalidEditor();
+    return value ? value->createElement(where, text) : invalidEditor(id);
 }
 
 Result removeElement(
@@ -215,7 +243,7 @@ Result removeElement(
     ElementRef ref
 ) {
     auto* value = editor(id);
-    return value ? value->removeElement(ref) : invalidEditor();
+    return value ? value->removeElement(ref) : invalidEditor(id);
 }
 
 Result reorderElement(
@@ -224,7 +252,7 @@ Result reorderElement(
     std::size_t index
 ) {
     auto* value = editor(id);
-    return value ? value->reorderElement(ref, index) : invalidEditor();
+    return value ? value->reorderElement(ref, index) : invalidEditor(id);
 }
 
 Result moveElement(
@@ -233,7 +261,7 @@ Result moveElement(
     const ElementPlacement& where
 ) {
     auto* value = editor(id);
-    return value ? value->moveElement(ref, where) : invalidEditor();
+    return value ? value->moveElement(ref, where) : invalidEditor(id);
 }
 
 Result replaceElement(
@@ -242,7 +270,7 @@ Result replaceElement(
     const std::string& text
 ) {
     auto* value = editor(id);
-    return value ? value->replaceElement(ref, text) : invalidEditor();
+    return value ? value->replaceElement(ref, text) : invalidEditor(id);
 }
 
 Result setFaceProperty(
@@ -252,7 +280,7 @@ Result setFaceProperty(
     const std::string& text
 ) {
     auto* value = editor(id);
-    return value ? value->setFaceProperty(faceId, path, text) : invalidEditor();
+    return value ? value->setFaceProperty(faceId, path, text) : invalidEditor(id);
 }
 
 Result getFaceProperty(
@@ -261,7 +289,7 @@ Result getFaceProperty(
     const std::string& path
 ) {
     auto* value = editor(id);
-    return value ? value->getFaceProperty(faceId, path) : invalidEditor();
+    return value ? value->getFaceProperty(faceId, path) : invalidEditor(id);
 }
 
 Result getFacePropertiesMeta(
@@ -270,7 +298,7 @@ Result getFacePropertiesMeta(
     const std::string& path
 ) {
     auto* value = editor(id);
-    return value ? value->getFacePropertiesMeta(faceId, path) : invalidEditor();
+    return value ? value->getFacePropertiesMeta(faceId, path) : invalidEditor(id);
 }
 
 Result setElementProperty(
@@ -280,7 +308,7 @@ Result setElementProperty(
     const std::string& text
 ) {
     auto* value = editor(id);
-    return value ? value->setElementProperty(ref, path, text) : invalidEditor();
+    return value ? value->setElementProperty(ref, path, text) : invalidEditor(id);
 }
 
 Result getElementProperty(
@@ -289,7 +317,7 @@ Result getElementProperty(
     const std::string& path
 ) {
     auto* value = editor(id);
-    return value ? value->getElementProperty(ref, path) : invalidEditor();
+    return value ? value->getElementProperty(ref, path) : invalidEditor(id);
 }
 
 Result getElementPropertiesMeta(
@@ -298,7 +326,7 @@ Result getElementPropertiesMeta(
     const std::string& path
 ) {
     auto* value = editor(id);
-    return value ? value->getElementPropertiesMeta(ref, path) : invalidEditor();
+    return value ? value->getElementPropertiesMeta(ref, path) : invalidEditor(id);
 }
 
 ClipboardSummary getClipboardSummary(EditorId) {
@@ -314,7 +342,7 @@ Result copyFace(
     NodeId faceId
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     Result result = value->serializeFace(faceId);
     if (!result.ok) return result;
     std::string_view text;
@@ -337,7 +365,7 @@ Result pasteFace(
     FacePlacement where
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     return clipboard.kind == ClipboardState::Kind::Face
                ? value->createFace(clipboard.json, where)
                : Error("Clipboard does not contain a face");
@@ -348,7 +376,7 @@ Result copyElement(
     ElementRef ref
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     Result result = value->serializeElement(ref);
     if (!result.ok) return result;
     std::string_view text;
@@ -371,7 +399,7 @@ Result pasteElement(
     const ElementPlacement& where
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     return clipboard.kind == ClipboardState::Kind::Element
                ? value->createElement(where, clipboard.json)
                : Error("Clipboard does not contain an element");
@@ -382,7 +410,7 @@ Result pasteToReplaceElement(
     ElementRef ref
 ) {
     auto* value = editor(id);
-    if (!value) return invalidEditor();
+    if (!value) return invalidEditor(id);
     return clipboard.kind == ClipboardState::Kind::Element
                ? value->replaceElement(ref, clipboard.json)
                : Error("Clipboard does not contain an element");
@@ -413,7 +441,7 @@ std::size_t historyIndex(EditorId id) {
 
 Result getHistory(EditorId id) {
     auto* value = editor(id);
-    return value ? value->getHistory() : invalidEditor();
+    return value ? value->getHistory() : invalidEditor(id);
 }
 
 bool canUndo(EditorId id) {

@@ -1,22 +1,25 @@
 #pragma once
 
+#include <memory>
+
 #include <multigauge/editor/Api.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/screens/Screen.h>
 
 namespace mg {
+namespace editor { class EditorPreview; }
 
 class EditorScreen : public Screen {
     private:
         editor::EditorId editorId{};
         editor::NodeId faceId = 0;
-        gauge::GaugeFace* lastFace = nullptr;
+        std::unique_ptr<editor::EditorPreview> preview;
 
         gauge::GaugeFace* resolveFace() const;
-        void ensureFaceInitialized(RuntimeContext& ctx, gauge::GaugeFace* face);
 
     public:
         explicit EditorScreen(editor::EditorId editorId = editor::EditorId{}, editor::NodeId faceId = 0);
+        ~EditorScreen() override;
 
         void setFace(editor::EditorId editorId, editor::NodeId faceId);
 

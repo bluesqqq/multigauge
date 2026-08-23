@@ -81,6 +81,10 @@ class PropertyObject {
         /// @see docs/schemas/rules.schema.json for emitted rule data.
         bool writePropertiesMeta(json::Writer& writer) const;
 
+        /// Appends editor metadata for every visible property to an open array.
+        /// @param writer Destination array already opened by the caller.
+        bool writePropertiesMeta(json::ArrayWriter& writer) const;
+
         /// Builds editor metadata for a single property.
         /// @param prop The property to describe.
         bool writePropertyMeta(json::Writer& writer, const Property& prop) const;
