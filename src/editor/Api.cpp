@@ -2,19 +2,19 @@
 
 #include <cstdint>
 
-#include <multigauge/container/HandlePool.h>
 #include <multigauge/editor/Clipboard.h>
 #include <multigauge/editor/Editor.h>
 #include <multigauge/value/ValueRegistry.h>
 #include <multigauge/io/Log.h>
 
+#include <multigauge/editor/EditorRegistry.h>
+
 namespace mg::editor {
 namespace {
-HandlePool<Editor, EditorId> editors;
 ClipboardState clipboard;
 
 Editor* editor(EditorId id) {
-    return editors.get(id);
+    return find(id);
 }
 
 Result invalidEditor(EditorId id) {
@@ -51,48 +51,6 @@ Result packageInfoResult(const Editor::PackageInfo& info) {
 }
 } // namespace
 
-EditorId create() {
-    constexpr const char* TAG = "EditorApi";
-
-    EditorId id = editors.emplace();
-
-    LOG_INFO(
-        TAG,
-        "Created editor: slot=%u generation=%u",
-        id.slot(),
-        id.generation()
-    );
-
-    return id;
-}
-
-bool destroy(EditorId id) {
-    constexpr const char* TAG = "EditorApi";
-
-    if (!editors.remove(id)) {
-        LOG_WARN(
-            TAG,
-            "Failed to destroy editor: slot=%u generation=%u",
-            id.slot(),
-            id.generation()
-        );
-        return false;
-    }
-
-    LOG_INFO(
-        TAG,
-        "Destroyed editor: slot=%u generation=%u",
-        id.slot(),
-        id.generation()
-    );
-
-    return true;
-}
-
-bool exists(EditorId id) {
-    return editor(id) != nullptr;
-}
-
 bool clear(EditorId id) {
     if (auto* value = editor(id)) {
         value->clear();
@@ -118,6 +76,40 @@ Result setPackageInfo(
 Result getPackageInfo(EditorId id) {
     auto* value = editor(id);
     return value ? packageInfoResult(value->packageInfo()) : invalidEditor(id);
+}
+
+Result getAssets(EditorId id) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor(id);
+
+    Result result = OkArray();
+    json::Writer writer = result.data.writer();
+    return writer.writeArray([&](json::ArrayWriter& output) {
+        for (const auto& asset : value->assets()) {
+            if (!output.writeObject([&](json::ObjectWriter& item) {
+                    return item.write("name", asset.name) && item.write("mediaType", asset.mediaType) &&
+                           item.write("data", asset.data);
+                }))
+                return false;
+        }
+        return true;
+    }) ? std::move(result) : Error("Failed to build asset result");
+}
+
+Result setAsset(EditorId id, const std::string& name, const std::string& mediaType, const std::string& data) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor(id);
+    return value->setAsset({name, mediaType, data}) ? OkObject() : Error("Invalid package asset");
+}
+
+Result removeAsset(EditorId id, const std::string& name) {
+    auto* value = editor(id);
+    if (!value) return invalidEditor(id);
+    const std::size_t references = value->assetUseCount(name);
+    if (references != 0) {
+        return Error("Asset is used by " + std::to_string(references) + " image element(s)");
+    }
+    return value->removeAsset(name) ? OkObject() : Error("Unknown package asset");
 }
 
 Result setFaceName(

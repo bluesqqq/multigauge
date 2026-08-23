@@ -14,17 +14,6 @@ namespace mg::editor {
 
 struct ClipboardSummary;
 
-//----------[ LIFETIME ]----------//
-
-/// @brief Creates an editor instance.
-EditorId create();
-
-/// @brief Destroys an editor instance.
-bool destroy(EditorId id);
-
-/// @brief Tests whether an editor instance is live.
-bool exists(EditorId id);
-
 /// @brief Clears an editor's package and history state.
 bool clear(EditorId id);
 
@@ -40,6 +29,15 @@ Result setPackageInfo(
 
 /// @brief Returns package metadata.
 Result getPackageInfo(EditorId id);
+
+/// @brief Returns the editor package's embedded asset array.
+Result getAssets(EditorId id);
+
+/// @brief Adds or replaces one editor package asset from its individual fields.
+Result setAsset(EditorId id, const std::string& name, const std::string& mediaType, const std::string& data);
+
+/// @brief Removes an unreferenced editor package asset by its logical name.
+Result removeAsset(EditorId id, const std::string& name);
 
 /// @brief Updates one face name.
 Result setFaceName(
