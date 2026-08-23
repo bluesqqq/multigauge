@@ -10,10 +10,8 @@ class EditorScreen : public Screen {
     private:
         editor::EditorId editorId{};
         editor::NodeId faceId = 0;
-        gauge::GaugeFace* lastFace = nullptr;
 
         gauge::GaugeFace* resolveFace() const;
-        void ensureFaceInitialized(RuntimeContext& ctx, gauge::GaugeFace* face);
 
     public:
         explicit EditorScreen(editor::EditorId editorId = editor::EditorId{}, editor::NodeId faceId = 0);
