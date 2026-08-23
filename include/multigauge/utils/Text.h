@@ -17,9 +17,10 @@ inline bool isSafeFileName(std::string_view value) {
     return true;
 }
 
-/// @brief Returns whether `value` is a non-empty ID containing only letters, digits, and `-`.
-inline bool isSafeId(std::string_view value) {
-    if (value.empty()) return false;
+/// @brief Returns whether `value` is an ID containing only letters, digits, and `-`.
+/// @param allowEmpty Whether an empty ID is accepted.
+inline bool isSafeId(std::string_view value, bool allowEmpty = false) {
+    if (value.empty()) return allowEmpty;
     for (const unsigned char c : value) {
         if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
               (c >= '0' && c <= '9') || c == '-')) {
