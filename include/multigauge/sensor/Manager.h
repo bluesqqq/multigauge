@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <cstdint>
+#include <memory>
 #include <string>
 #include <vector>
 
@@ -39,12 +40,12 @@ public:
 
     //----------[ PROVIDERS ]----------//
 
-    /// @brief Registers a host-owned provider and applies its saved configuration.
-    /// @param provider The provider to borrow.
+    /// @brief Takes ownership of a provider and applies its saved configuration.
+    /// @param provider The provider to register. Ownership is retained only on success.
     /// @return True when the provider is configured and registered.
-    [[nodiscard]] bool registerProvider(Provider& provider);
+    [[nodiscard]] bool registerProvider(std::unique_ptr<Provider> provider);
 
-    /// @brief Unregisters a provider while retaining its persisted configuration.
+    /// @brief Destroys a registered provider while retaining its persisted configuration.
     /// @param providerId The stable provider identifier.
     /// @return True when a registered provider was removed.
     [[nodiscard]] bool unregisterProvider(std::string_view providerId);
@@ -164,6 +165,7 @@ private:
     
     io::FileSystem& fs_;
     std::string dataRoot_;
+    std::vector<std::unique_ptr<Provider>> ownedProviders_;
     Registry registry_;
     std::vector<ProviderConfig> providers_;
     std::vector<BindingRuntime> bindings_;

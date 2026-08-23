@@ -152,23 +152,43 @@ bool Manager::writeDocument(json::Writer & w) const {
     });
 }
 
-bool Manager::registerProvider(Provider & p) {
-    if (registry_.findProvider(p.id())) return false;
-    auto * c = providerConfig(p.id());
+bool Manager::registerProvider(std::unique_ptr<Provider> p) {
+    if (!p || registry_.findProvider(p->id())) return false;
+    auto * c = providerConfig(p->id());
+    bool addedConfig = false;
     if (!c) {
-        if (providers_.size() >= Registry::MaxProviders || !id(p.id()) || !id(p.type())) return false;
+        if (providers_.size() >= Registry::MaxProviders || !id(p->id()) || !id(p->type())) return false;
         providers_.push_back({
-            std::string(p.id()),
-            std::string(p.type())
+            std::string(p->id()),
+            std::string(p->type())
         });
-        c = & providers_.back();
-        dirty_ = true;
+        c = &providers_.back();
+        addedConfig = true;
     }
-    return c -> type == p.type() && p.loadConfiguration(c -> config.root()) && registry_.registerProvider(p);
+    if (c->type != p->type() || !p->loadConfiguration(c->config.root())) {
+        if (addedConfig) providers_.pop_back();
+        return false;
+    }
+
+    ownedProviders_.push_back(std::move(p));
+    Provider& registered = *ownedProviders_.back();
+    if (!registry_.registerProvider(registered)) {
+        ownedProviders_.pop_back();
+        if (addedConfig) providers_.pop_back();
+        return false;
+    }
+
+    dirty_ = dirty_ || addedConfig;
+    return true;
 }
 
 bool Manager::unregisterProvider(std::string_view i) {
-    return registry_.unregisterProvider(i);
+    const auto provider = std::find_if(ownedProviders_.begin(), ownedProviders_.end(), [i](const auto& item) {
+        return item->id() == i;
+    });
+    if (provider == ownedProviders_.end() || !registry_.unregisterProvider(i)) return false;
+    ownedProviders_.erase(provider);
+    return true;
 }
 
 const Provider * Manager::findProvider(std::string_view i) const noexcept {
