@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://www.multi-gauge.com/schemas/state.schema.json",
   "title": "Multigauge Runtime State Schema",
-  "description": "Device-local core configuration for user values, telemetry providers, sensor bindings, and derived values. It is not part of an importable gauge package and never stores live sensor readings.",
+  "description": "Device-local core configuration for user values, telemetry providers, and sensor bindings. It is not part of an importable gauge package and never stores live sensor readings.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -33,22 +33,13 @@
       "items": {
         "$ref": "#/$defs/binding"
       }
-    },
-    "derivedValues": {
-      "type": "array",
-      "description": "Core-evaluated values derived from other resolved values.",
-      "maxItems": 16,
-      "items": {
-        "$ref": "#/$defs/derivedValue"
-      }
     }
   },
   "required": [
     "version",
     "userValues",
     "providers",
-    "bindings",
-    "derivedValues"
+    "bindings"
   ],
   "$defs": {
     "stableId": {
@@ -173,48 +164,6 @@
         "enabled",
         "priority",
         "staleAfterMs"
-      ]
-    },
-    "derivedValue": {
-      "type": "object",
-      "additionalProperties": false,
-      "properties": {
-        "id": {
-          "$ref": "#/$defs/stableId"
-        },
-        "outputValueId": {
-          "$ref": "#/$defs/valueId"
-        },
-        "operation": {
-          "enum": [
-            "add",
-            "subtract",
-            "multiply",
-            "divide",
-            "minimum",
-            "maximum",
-            "average",
-            "clamp"
-          ]
-        },
-        "inputs": {
-          "type": "array",
-          "minItems": 1,
-          "maxItems": 8,
-          "items": {
-            "$ref": "#/$defs/valueId"
-          }
-        },
-        "enabled": {
-          "type": "boolean"
-        }
-      },
-      "required": [
-        "id",
-        "outputValueId",
-        "operation",
-        "inputs",
-        "enabled"
       ]
     }
   }
