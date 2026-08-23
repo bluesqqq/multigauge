@@ -52,6 +52,7 @@ public:
         std::int64_t mode = 0;
         if (!config.isObject()) return false;
         (void)config.member("mode").read(mode);
+        if (mode < 0) return false;
         loadedMode = static_cast<int>(mode); return true;
     }
     bool saveConfiguration(mg::json::Writer& writer) const override {
@@ -76,6 +77,7 @@ TEST_CASE("sensor registry borrows providers and maintains its index") {
     CHECK(registry.sensorAt(0) == &provider.sensor);
     CHECK(registry.findProvider("aux-main") == &provider);
     CHECK(registry.findSensor("rpm") == &provider.sensor);
+    REQUIRE(registry.refreshProvider(provider));
 
     registry.update(std::chrono::milliseconds(16));
     CHECK(provider.updates == 1);
@@ -94,13 +96,20 @@ TEST_CASE("sensor manager persists provider configuration and resolves bindings"
 
     FakeProvider provider;
     REQUIRE(manager.registerProvider(provider));
+    CHECK_FALSE(manager.load());
     const auto config = mg::json::parse(R"({"mode":7})");
     REQUIRE(config.valid());
     REQUIRE(manager.configureProvider("aux-main", config.root()).ok);
     CHECK(provider.loadedMode == 7);
+    const auto invalidConfig = mg::json::parse(R"({"mode":-1})");
+    REQUIRE(invalidConfig.valid());
+    CHECK_FALSE(manager.configureProvider("aux-main", invalidConfig.root()).ok);
+    CHECK(manager.findProvider("aux-main") == &provider);
+    CHECK(provider.loadedMode == 7);
 
     REQUIRE(manager.defineUserValue({"customRPM", "Custom RPM", "revolutions", 0.0F, 10000.0F}).ok);
     REQUIRE(manager.upsertBinding({"aux-rpm", "aux-main", "rpm", "customRPM", true, 10, std::chrono::milliseconds(100)}).ok);
+    CHECK_FALSE(manager.removeUserValue("customRPM"));
 
     manager.update(std::chrono::milliseconds(16), std::chrono::microseconds{});
     CHECK(provider.updates == 1);
@@ -120,6 +129,23 @@ TEST_CASE("sensor manager persists provider configuration and resolves bindings"
     FakeProvider restored;
     REQUIRE(restoredManager.registerProvider(restored));
     CHECK(restored.loadedMode == 7);
+}
+
+TEST_CASE("sensor manager rejects malformed state without replacing current state") {
+    MemoryFileSystem fs;
+    mg::sensor::Manager manager(fs, "/telemetry");
+    REQUIRE(manager.load());
+    REQUIRE(manager.defineUserValue({"customRPM", "Custom RPM", "revolutions", 0.0F, 10000.0F}).ok);
+
+    const std::string malformed = R"({"version":1,"userValues":[})";
+    REQUIRE(fs.writeBytes("/telemetry/state.json", reinterpret_cast<const std::uint8_t*>(malformed.data()), malformed.size()));
+    CHECK_FALSE(manager.load());
+
+    std::vector<mg::sensor::UserValueConfig> values;
+    REQUIRE(manager.listUserValues(values));
+    REQUIRE(values.size() == 1);
+    CHECK(values.front().id == "customRPM");
+    mg::ValueRegistry::clearUsers();
 }
 
 } // namespace
