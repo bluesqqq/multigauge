@@ -105,11 +105,7 @@ Result setAsset(EditorId id, const std::string& name, const std::string& mediaTy
 Result removeAsset(EditorId id, const std::string& name) {
     auto* value = editor(id);
     if (!value) return invalidEditor(id);
-    const std::size_t references = value->assetUseCount(name);
-    if (references != 0) {
-        return Error("Asset is used by " + std::to_string(references) + " image element(s)");
-    }
-    return value->removeAsset(name) ? OkObject() : Error("Unknown package asset");
+    return value->removeAsset(name) ? OkObject() : Error("Asset is unknown or still in use");
 }
 
 Result setFaceName(
