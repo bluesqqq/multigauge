@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <string>
@@ -17,6 +18,8 @@ using gauge::Element;
 using gauge::GaugeFace;
 using gauge::NodeHandle;
 
+class EditorPreview;
+
 /// @brief Editor model for gauge faces.
 
 class Editor {
@@ -31,6 +34,20 @@ public:
         std::string name;
         std::string author;
         std::string description;
+    };
+
+    /// @brief An asset embedded in an editor package document.
+    /// @details `data` contains standard Base64 without a data-URL prefix. The editor
+    /// owns all fields; callers must not retain references across edits or history changes.
+    struct Asset {
+        std::string name;
+        std::string mediaType;
+        std::string data;
+
+        /// @brief Returns whether this asset has a supported image type and valid embedded data.
+        /// @details Valid assets have a safe logical file name, a supported image media type,
+        /// and non-empty standard Base64 data within the editor's size limit.
+        bool valid() const;
     };
 
     struct FaceMeta {
@@ -52,6 +69,16 @@ public:
 
     /// @brief Returns package metadata.
     const PackageInfo& packageInfo() const { return package_; }
+
+    /// @brief Adds or replaces one embedded asset without replacing the asset collection.
+    bool setAsset(const Asset& asset);
+
+    /// @brief Removes one embedded asset by its logical name.
+    /// @return False when the asset is unknown or still referenced by an image element.
+    bool removeAsset(const std::string& name);
+
+    /// @brief Returns the package's embedded assets.
+    const std::vector<Asset>& assets() const { return assets_; }
 
     //----------[ FACES ]----------//
 
@@ -203,10 +230,20 @@ public:
     Result getHistory() const;
 
 private:
+    friend class EditorPreview;
+
     struct FaceEntry {
         FaceId id = 0;
         FaceMeta meta;
         std::unique_ptr<GaugeFace> face;
+    };
+
+    struct AssetChange {
+        enum class Kind : std::uint8_t { Upsert, Remove, Reset };
+
+        std::size_t revision = 0;
+        Kind kind = Kind::Reset;
+        std::string name;
     };
 
     [[nodiscard]] GaugeFace* face(FaceId id) noexcept;
@@ -215,11 +252,20 @@ private:
     [[nodiscard]] const Element* element(ElementRef element) const noexcept;
     [[nodiscard]] std::size_t faceIndex(FaceId id) const noexcept;
     [[nodiscard]] static std::size_t clampIndex(std::size_t index, std::size_t size) noexcept;
+    std::size_t assetUseCount(const std::string& name) const;
+    std::size_t assetRevision() const { return assetRevision_; }
+    bool assetChangesSince(std::size_t revision, std::vector<AssetChange>& out) const;
+    std::size_t revision() const { return revision_; }
     bool restorePackage(const std::string& json);
     bool commit(const std::string& name, const std::function<bool()>& mutation);
+    void recordAssetChange(AssetChange::Kind kind, std::string name = {});
 
     std::vector<FaceEntry> faces_;
     PackageInfo package_;
+    std::vector<Asset> assets_;
+    std::vector<AssetChange> assetChanges_;
+    std::size_t assetRevision_ = 0;
+    std::size_t revision_ = 0;
     FaceId nextFaceId_ = 1;
     History history_;
 };

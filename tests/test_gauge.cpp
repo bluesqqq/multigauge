@@ -1,6 +1,7 @@
 #include <doctest/doctest.h>
 
 #include <multigauge/editor/Api.h>
+#include <multigauge/editor/EditorRegistry.h>
 #include <multigauge/editor/Editor.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/gauge/elements/CustomElement.h>

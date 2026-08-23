@@ -188,6 +188,7 @@
         "paint": { "$ref": "#/$defs/paint" },
         "radius": { "type": "number" },
         "path": { "type": "string" },
+        "fit": { "enum": ["fit", "fill", "stretch"] },
         "text": { "type": "string" },
         "ellipses": { "type": "boolean" },
         "hyphens": { "type": "boolean" },

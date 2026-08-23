@@ -2,12 +2,28 @@
 
 
 #include <algorithm>
+#include <cctype>
 #include <cstdint>
 #include <limits>
 
 #include <multigauge/utils/Json.h>
+#include <multigauge/io/Base64.h>
 
 namespace mg::editor {
+bool Editor::Asset::valid() const {
+    if (name.empty() || mediaType.empty() || data.empty() || data.size() > 64 * 1024) return false;
+    if (name == "." || name == ".." ||
+            !std::all_of(name.begin(), name.end(), [](unsigned char c) {
+                return std::isalnum(c) || c == '.' || c == '_' || c == '-';
+            }) ||
+            (mediaType != "image/png" && mediaType != "image/jpeg" && mediaType != "image/bmp")) {
+        return false;
+    }
+    std::vector<uint8_t> decoded(io::base64DecodedMaxSize(data));
+    std::size_t decodedLength = 0;
+    return io::base64Decode(data, decoded.data(), decoded.size(), decodedLength) && decodedLength != 0;
+}
+
 namespace {
 
 bool writeHandle(json::Writer& writer, Editor::FaceId faceId, NodeHandle handle) {
@@ -60,11 +76,70 @@ bool setPropertyPath(::mg::PropertyObject& object, const std::string& path, json
            owner->setProperty(property->key, value);
 }
 
+bool readAssets(json::Reader value, std::vector<Editor::Asset>& out) {
+    if (!value.isArray() || value.size() > 16) return false;
+
+    std::vector<Editor::Asset> assets;
+    assets.reserve(value.size());
+    std::size_t totalDataBytes = 0;
+    for (std::size_t index = 0; index < value.size(); ++index) {
+        const json::Reader item = value.element(index);
+        Editor::Asset asset;
+        if (!item.isObject() || item.size() != 3 ||
+            !json::getStringMember(item, "name", asset.name) ||
+            !json::getStringMember(item, "mediaType", asset.mediaType) ||
+            !json::getStringMember(item, "data", asset.data) || !asset.valid()) {
+            return false;
+        }
+        totalDataBytes += asset.data.size();
+        if (totalDataBytes > 128 * 1024 || std::any_of(assets.begin(), assets.end(), [&](const Editor::Asset& existing) {
+                return existing.name == asset.name;
+            })) {
+            return false;
+        }
+        assets.push_back(std::move(asset));
+    }
+
+    out = std::move(assets);
+    return true;
+}
+
+bool writeAssets(json::ArrayWriter& output, const std::vector<Editor::Asset>& assets) {
+    for (const auto& asset : assets) {
+        if (!output.writeObject([&](json::ObjectWriter& item) {
+                return item.write("name", asset.name) && item.write("mediaType", asset.mediaType) &&
+                       item.write("data", asset.data);
+            }))
+            return false;
+    }
+    return true;
+}
+
+std::size_t countAssetReferences(const GaugeFace& face, NodeHandle handle, const std::string& name) {
+    const Element* element = face.get(handle);
+    if (!element) return 0;
+
+    std::size_t count = 0;
+    if (std::string_view(element->typeId() ? element->typeId() : "") == "image") {
+        json::Document path = json::object();
+        json::Writer writer = path.writer();
+        std::string_view value;
+        if (element->getProperty("path", writer) && path.root().read(value) && value == name) ++count;
+    }
+    face.forEachChild(handle, [&](NodeHandle child, const Element&) {
+        count += countAssetReferences(face, child, name);
+    });
+    return count;
+}
+
 } // namespace
 
 void Editor::clear() {
     faces_.clear();
     package_ = {};
+    assets_.clear();
+    recordAssetChange(AssetChange::Kind::Reset);
+    ++revision_;
     nextFaceId_ = 1;
     history_ = {};
 }
@@ -74,6 +149,57 @@ bool Editor::setPackageInfo(const PackageInfo& info) {
         package_ = info;
         return true;
     });
+}
+
+bool Editor::setAsset(const Asset& asset) {
+    if (!asset.valid()) return false;
+    return commit("upsert package asset", [this, asset]() {
+        std::size_t totalDataBytes = asset.data.size();
+        auto existing = std::find_if(assets_.begin(), assets_.end(), [&](const Asset& value) {
+            return value.name == asset.name;
+        });
+        for (const auto& value : assets_) {
+            if (value.name != asset.name) totalDataBytes += value.data.size();
+        }
+        if ((existing == assets_.end() && assets_.size() >= 16) || totalDataBytes > 128 * 1024) return false;
+        if (existing == assets_.end()) assets_.push_back(asset);
+        else *existing = asset;
+        recordAssetChange(AssetChange::Kind::Upsert, asset.name);
+        return true;
+    });
+}
+
+bool Editor::removeAsset(const std::string& name) {
+    if (assetUseCount(name) != 0) return false;
+    return commit("remove package asset", [this, name]() {
+        const auto existing = std::find_if(assets_.begin(), assets_.end(), [&](const Asset& value) {
+            return value.name == name;
+        });
+        if (existing == assets_.end()) return false;
+        assets_.erase(existing);
+        recordAssetChange(AssetChange::Kind::Remove, name);
+        return true;
+    });
+}
+
+std::size_t Editor::assetUseCount(const std::string& name) const {
+    std::size_t count = 0;
+    for (const auto& entry : faces_) {
+        entry.face->forEachRoot([&](NodeHandle root, const Element&) {
+            count += countAssetReferences(*entry.face, root, name);
+        });
+    }
+    return count;
+}
+
+bool Editor::assetChangesSince(std::size_t revision, std::vector<AssetChange>& out) const {
+    out.clear();
+    if (revision == assetRevision_) return true;
+    if (assetChanges_.empty() || revision + 1 < assetChanges_.front().revision) return false;
+    for (const auto& change : assetChanges_) {
+        if (change.revision > revision) out.push_back(change);
+    }
+    return !out.empty();
 }
 
 bool Editor::setFaceName(FaceId id, const std::string& name) {
@@ -136,6 +262,10 @@ bool Editor::restorePackage(const std::string& text) {
     const json::Reader entries = json::getArrayMember(document.root(), "faces");
     if (!entries.valid()) return false;
 
+    std::vector<Asset> assets;
+    const json::Reader assetsValue = document.root().member("assets");
+    if (assetsValue.valid() && !readAssets(assetsValue, assets)) return false;
+
     std::vector<FaceEntry> loaded;
     loaded.reserve(entries.size());
     FaceId nextId = 1;
@@ -165,7 +295,10 @@ bool Editor::restorePackage(const std::string& text) {
 
     faces_ = std::move(loaded);
     package_ = std::move(package);
+    assets_ = std::move(assets);
+    recordAssetChange(AssetChange::Kind::Reset);
     nextFaceId_ = nextId;
+    ++revision_;
     return true;
 }
 
@@ -181,6 +314,9 @@ std::string Editor::exportPackage() const {
     if (!writer.writeObject([&](json::ObjectWriter& object) {
             return object.write("name", package_.name) && object.write("author", package_.author) &&
                    object.write("description", package_.description) &&
+                   object.writeArray("assets", [&](json::ArrayWriter& assets) {
+                       return writeAssets(assets, assets_);
+                   }) &&
                    object.writeArray("faces", [&](json::ArrayWriter& entries) {
                        for (const FaceEntry& entry : faces_) {
                            if (!entries.writeObject([&](json::ObjectWriter& item) {
@@ -211,11 +347,22 @@ bool Editor::commit(const std::string& name, const std::function<bool()>& mutati
         [this, mutation, after]() {
             if (!after->empty()) return restorePackage(*after);
             if (!mutation()) return false;
+            ++revision_;
             *after = exportPackage();
             return !after->empty();
         },
         [this, before]() { return restorePackage(before); },
     });
+}
+
+void Editor::recordAssetChange(AssetChange::Kind kind, std::string name) {
+    constexpr std::size_t MaxChanges = 32;
+    AssetChange change;
+    change.revision = ++assetRevision_;
+    change.kind = kind;
+    change.name = std::move(name);
+    assetChanges_.push_back(std::move(change));
+    if (assetChanges_.size() > MaxChanges) assetChanges_.erase(assetChanges_.begin());
 }
 
 Result Editor::createFace(const std::string& text, FacePlacement where) {

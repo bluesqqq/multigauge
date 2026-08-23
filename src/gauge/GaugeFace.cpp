@@ -319,12 +319,12 @@ void GaugeFace::update(std::chrono::microseconds delta) {
     }
 }
 
-bool GaugeFace::init(::mg::AssetManager& assetManager, ::mg::graphics::GraphicsContext& context) {
+bool GaugeFace::init(std::string_view packageId, ::mg::AssetManager& assetManager, ::mg::graphics::GraphicsContext& context) {
     bool result = true;
     for (NodeHandle root = firstRoot_; root.valid();) {
         const Node* rootNode = node(root);
         const NodeHandle next = rootNode ? rootNode->nextSibling : NodeHandle::invalid();
-        if (rootNode && !initSubtree(root, assetManager, context)) result = false;
+        if (rootNode && !initSubtree(root, packageId, assetManager, context)) result = false;
         root = next;
     }
     return result;
@@ -364,15 +364,16 @@ void GaugeFace::updateSubtree(NodeHandle root, std::chrono::microseconds delta) 
 }
 
 bool GaugeFace::initSubtree(NodeHandle root,
+                            std::string_view packageId,
                             ::mg::AssetManager& assetManager,
                             ::mg::graphics::GraphicsContext& context) {
     Node* rootNode = node(root);
     if (!rootNode) return false;
-    bool result = rootNode->element->init(assetManager, context);
+    bool result = rootNode->element->init(packageId, assetManager, context);
     for (NodeHandle child = rootNode->firstChild; child.valid();) {
         Node* childNode = node(child);
         const NodeHandle next = childNode ? childNode->nextSibling : NodeHandle::invalid();
-        if (childNode && !initSubtree(child, assetManager, context)) result = false;
+        if (childNode && !initSubtree(child, packageId, assetManager, context)) result = false;
         child = next;
     }
     return result;

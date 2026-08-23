@@ -1,55 +1,46 @@
 #include <multigauge/screens/EditorScreen.h>
 
+#include "../editor/EditorPreview.h"
+
+#include <multigauge/editor/Editor.h>
+#include <multigauge/runtime/RuntimeContext.h>
+
 namespace mg {
 
 EditorScreen::EditorScreen(editor::EditorId editorId, editor::NodeId faceId)
-    : editorId(editorId), faceId(faceId) {
+    : editorId(editorId), faceId(faceId), preview(std::make_unique<editor::EditorPreview>()) {
 }
+
+EditorScreen::~EditorScreen() = default;
 
 void EditorScreen::setFace(editor::EditorId editor, editor::NodeId face) {
     editorId = editor;
     faceId = face;
-    lastFace = nullptr;
 }
 
 gauge::GaugeFace* EditorScreen::resolveFace() const {
     return editor::getFace(editorId, faceId);
 }
 
-void EditorScreen::ensureFaceInitialized(RuntimeContext& ctx, gauge::GaugeFace* face) {
-    if (!face || face == lastFace) return;
-
-    face->init(ctx.getAssetManager(), ctx.getGraphicsContext());
-    lastFace = face;
-}
-
 void EditorScreen::onShow(RuntimeContext& ctx) {
-    ensureFaceInitialized(ctx, resolveFace());
+    if (auto* face = resolveFace()) preview->prepare(ctx, editorId, faceId, *face);
 }
 
-void EditorScreen::onHide(RuntimeContext& ctx) {
-    lastFace = nullptr;
-}
+void EditorScreen::onHide(RuntimeContext&) {}
 
 void EditorScreen::update(RuntimeContext& ctx, std::chrono::microseconds delta) {
     gauge::GaugeFace* face = resolveFace();
-    if (!face) {
-        lastFace = nullptr;
-        return;
-    }
+    if (!face) return;
 
-    ensureFaceInitialized(ctx, face);
+    preview->prepare(ctx, editorId, faceId, *face);
     face->update(delta);
 }
 
 void EditorScreen::draw(RuntimeContext& ctx, graphics::Graphics& g) {
     gauge::GaugeFace* face = resolveFace();
-    if (!face) {
-        lastFace = nullptr;
-        return;
-    }
+    if (!face) return;
 
-    ensureFaceInitialized(ctx, face);
+    preview->prepare(ctx, editorId, faceId, *face);
     face->layout(g);
     face->draw(g);
 }

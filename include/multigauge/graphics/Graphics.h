@@ -7,7 +7,6 @@
 
 #include <multigauge/graphics/GraphicsContext.h>
 #include <multigauge/graphics/image/Image.h>
-#include <multigauge/graphics/image/NineSlice.h>
 #include <multigauge/graphics/TextPaint.h>
 #include <multigauge/graphics/colors/ColorTimeline.h>
 
@@ -23,7 +22,6 @@ using ::mg::Line;
 using ::mg::Point;
 using ::mg::Rect;
 using ::mg::images::Image;
-using ::mg::images::NineSlice;
 
 struct PaintState {
     bool enabled = false;
@@ -219,11 +217,6 @@ class Graphics final {
         void drawImageRegion(const Image& image, int srcX, int srcY, int srcW, int srcH, int destX, int destY, int destW, int destH) const;
         /// @brief Draws a region of an image fit within a specific rectangle.
         void drawImageRegion(const Image& image, Rect<int> srcRect, Rect<int> destRect) const;
-
-        //----------[ NINE-SLICE ]----------//
-
-        void drawNineSlice(const NineSlice& nineSlice, int x, int y, int width, int height) const;
-        void drawNineSlice(const NineSlice& nineSlice, Rect<int> rectangle) const;
 
         //----------[ CLIP ]----------//
 

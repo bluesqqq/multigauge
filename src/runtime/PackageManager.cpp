@@ -3,6 +3,7 @@
 #include "../AppPaths.h"
 
 #include <multigauge/io/FileSystem.h>
+#include <multigauge/io/Base64.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/utils/Json.h>
 #include <multigauge/utils/Text.h>
@@ -18,50 +19,11 @@ namespace mg {
 namespace {
 
 constexpr const char* TAG = "PackageManager";
+constexpr std::size_t maxAssetCount = 16;
+constexpr std::size_t maxAssetEncodedBytes = 64 * 1024;
+constexpr std::size_t maxPackageAssetBytes = 128 * 1024;
 
 using mg::json::getStringMember;
-
-bool makeDirectoryChain(io::FileSystem& fs, const std::string& path) {
-    if (path.empty() || fs.exists(path)) return true;
-
-    std::string current;
-    size_t index = 0;
-
-    if (path.size() >= 2 && path[1] == ':') {
-        current = path.substr(0, 2);
-        index = 2;
-        if (index < path.size() && mg::utils::isPathSeparator(path[index])) {
-            current.push_back(path[index]);
-            ++index;
-        }
-    } else if (mg::utils::isPathSeparator(path[0])) {
-        current.push_back(path[0]);
-        index = 1;
-    }
-
-    while (index < path.size()) {
-        while (index < path.size() && mg::utils::isPathSeparator(path[index])) ++index;
-        if (index >= path.size()) break;
-
-        const size_t end = path.find_first_of("/\\", index);
-        const std::string segment = path.substr(index, end == std::string::npos ? std::string::npos : end - index);
-        if (segment.empty()) return false;
-
-        if (!current.empty() && !mg::utils::isPathSeparator(current.back())) {
-            current.push_back('/');
-        }
-        current.append(segment);
-
-        if (!fs.exists(current) && !fs.makeDirectory(current)) {
-            return false;
-        }
-
-        if (end == std::string::npos) break;
-        index = end + 1;
-    }
-
-    return true;
-}
 
 struct LibraryIndexPackage {
     std::string id;
@@ -75,15 +37,82 @@ bool writePackageEntry(json::ArrayWriter& writer, const LibraryIndexPackage& pac
     });
 }
 
-bool isSafeId(std::string_view value) {
-    if (value.empty()) return false;
+bool isSupportedAssetMediaType(std::string_view value) {
+    return value == "image/png" || value == "image/jpeg" || value == "image/bmp";
+}
 
-    for (unsigned char c : value) {
-        if (!(std::isalnum(c) || c == '-')) {
-            return false;
-        }
+struct AssetMetadata {
+    std::string name;
+    std::string mediaType;
+};
+
+bool readAssetMetadata(json::Reader assets, std::vector<AssetMetadata>& out, std::string& error) {
+    if (!assets.valid()) return true;
+    if (!assets.isArray() || assets.size() > maxAssetCount) {
+        error = "Package assets must be an array with at most " + std::to_string(maxAssetCount) + " entries";
+        return false;
     }
 
+    std::vector<AssetMetadata> metadata;
+    metadata.reserve(assets.size());
+    std::size_t totalEncodedBytes = 0;
+    for (std::size_t index = 0; index < assets.size(); ++index) {
+        const json::Reader asset = assets.element(index);
+        AssetMetadata entry;
+        std::string_view data;
+        if (!asset.isObject() || asset.size() != 3 ||
+            !getStringMember(asset, "name", entry.name) || !utils::isSafeFileName(entry.name) ||
+            !getStringMember(asset, "mediaType", entry.mediaType) || !isSupportedAssetMediaType(entry.mediaType) ||
+            !asset.member("data").read(data) || data.empty() || data.size() > maxAssetEncodedBytes) {
+            error = "Package contains an invalid embedded asset";
+            return false;
+        }
+        if (std::any_of(metadata.begin(), metadata.end(), [&](const AssetMetadata& other) {
+                return other.name == entry.name;
+            })) {
+            error = "Package contains duplicate asset names";
+            return false;
+        }
+        totalEncodedBytes += data.size();
+        if (totalEncodedBytes > maxPackageAssetBytes) {
+            error = "Package embedded assets exceed the size limit";
+            return false;
+        }
+        std::vector<uint8_t> decoded;
+        if (!io::base64Decode(data, decoded) || decoded.empty()) {
+            error = "Package contains invalid embedded asset data";
+            return false;
+        }
+        metadata.push_back(std::move(entry));
+    }
+    out = std::move(metadata);
+    return true;
+}
+
+bool readInstalledAssetMetadata(json::Reader assets, std::vector<AssetMetadata>& out) {
+    if (!assets.valid()) return true;
+    if (!assets.isArray() || assets.size() > maxAssetCount) return false;
+    std::vector<AssetMetadata> metadata;
+    metadata.reserve(assets.size());
+    for (std::size_t index = 0; index < assets.size(); ++index) {
+        const json::Reader asset = assets.element(index);
+        AssetMetadata entry;
+        if (!asset.isObject() || asset.size() != 2 ||
+            !getStringMember(asset, "name", entry.name) || !utils::isSafeFileName(entry.name) ||
+            !getStringMember(asset, "mediaType", entry.mediaType) || !isSupportedAssetMediaType(entry.mediaType)) {
+            return false;
+        }
+        metadata.push_back(std::move(entry));
+    }
+    out = std::move(metadata);
+    return true;
+}
+
+bool encodeAsset(const std::vector<uint8_t>& bytes, std::string& out) {
+    out.resize(io::base64EncodedSize(bytes.size()));
+    std::size_t encodedLength = 0;
+    if (!io::base64Encode(bytes.data(), bytes.size(), out.data(), out.size(), encodedLength)) return false;
+    out.resize(encodedLength);
     return true;
 }
 
@@ -138,8 +167,7 @@ Result readJsonFile(io::FileSystem& fs, const std::string& path) {
     }
 
     LOG_DEBUG(TAG, "readJsonFile: parsed %s", path.c_str());
-    Result result;
-    result.ok = true;
+    Result result = OkObject();
     result.data = std::move(json);
     return result;
 }
@@ -192,7 +220,7 @@ PackageManager::PackageManager(io::FileSystem& fs, std::string dataRoot) : fs(fs
 std::vector<PackageManager::PackageRecord> PackageManager::readInstalledPackages(io::FileSystem& fs, std::string_view dataRoot) {
     std::vector<PackageRecord> installedPackages;
     for (const auto& packageId : readPackageDirectories(fs, paths::packagesRootPath(dataRoot))) {
-        if (!isSafeId(packageId)) {
+        if (!utils::isSafeId(packageId)) {
             LOG_WARN(TAG, "rebuildLibrary: skipping unsafe package id %s", packageId.c_str());
             continue;
         }
@@ -275,11 +303,6 @@ bool PackageManager::writeLibraryIndexFromCache() const {
         return false;
     }
 
-    if (!makeDirectoryChain(fs, std::string(dataRoot)) ||
-        !makeDirectoryChain(fs, paths::packagesRootPath(dataRoot))) {
-        return false;
-    }
-
     json::Document document = json::object();
     json::Writer writer = document.writer();
     if (!writer.writeObject([&](json::ObjectWriter& object) { return object.writeArray("packages", [&](json::ArrayWriter& packages) {
@@ -308,7 +331,7 @@ bool PackageManager::listPackages(std::vector<PackageSummary>& out) const {
 }
 
 Result PackageManager::getPackage(const std::string& packageId) const {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
 
@@ -317,7 +340,7 @@ Result PackageManager::getPackage(const std::string& packageId) const {
 }
 
 bool PackageManager::listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         LOG_WARN(TAG, "listFaces: invalid package id %s", packageId.c_str());
         return false;
     }
@@ -346,7 +369,7 @@ bool PackageManager::listFaces(const std::string& packageId, std::vector<FaceSum
 }
 
 Result PackageManager::getFace(const std::string& packageId, const std::string& faceId) const {
-    if (!isSafeId(packageId) || !isSafeId(faceId)) {
+    if (!utils::isSafeId(packageId) || !utils::isSafeId(faceId)) {
         return Error("Invalid face id");
     }
 
@@ -355,7 +378,7 @@ Result PackageManager::getFace(const std::string& packageId, const std::string& 
     return readJsonFile(fs, path);
 }
 
-bool validatePackageDocument(json::Reader input, std::string& error) {
+bool validatePackageDocument(json::Reader input, std::vector<AssetMetadata>& assets, std::string& error) {
     if (!input.isObject()) {
         error = "Invalid package JSON";
         return false;
@@ -369,7 +392,7 @@ bool validatePackageDocument(json::Reader input, std::string& error) {
         }
     }
 
-    if (input.size() != 4) {
+    if (input.size() != 4 && input.size() != 5) {
         error = "Package JSON contains unsupported fields";
         return false;
     }
@@ -389,6 +412,10 @@ bool validatePackageDocument(json::Reader input, std::string& error) {
 
     if (!input.member("description").read(description)) {
         error = "Package description must be a string";
+        return false;
+    }
+
+    if (!readAssetMetadata(input.member("assets"), assets, error)) {
         return false;
     }
 
@@ -444,7 +471,8 @@ Result PackageManager::importPackage(const std::string& json) {
 
 Result PackageManager::importPackage(json::Reader input) {
     std::string validationError;
-    if (!validatePackageDocument(input, validationError)) {
+    std::vector<AssetMetadata> assetMetadata;
+    if (!validatePackageDocument(input, assetMetadata, validationError)) {
         LOG_ERROR(TAG, "importPackage: %s", validationError.c_str());
         return Error(validationError);
     }
@@ -478,12 +506,25 @@ Result PackageManager::importPackage(json::Reader input) {
              static_cast<unsigned>(input.member("faces").size()));
 
     const std::string packageRoot = paths::packagePath(dataRoot, packageId);
-    if (!makeDirectoryChain(fs, dataRoot) ||
-        !makeDirectoryChain(fs, paths::packagesRootPath(dataRoot)) ||
-        !makeDirectoryChain(fs, packageRoot) ||
-        !makeDirectoryChain(fs, paths::facesRootPath(dataRoot, packageId))) {
-        LOG_ERROR(TAG, "importPackage: failed to create package directories for %s", packageId.c_str());
-        return Error("Failed to create package directories");
+    const json::Reader inputAssets = input.member("assets");
+    for (std::size_t index = 0; index < assetMetadata.size(); ++index) {
+        std::string_view encoded;
+        if (!inputAssets.element(index).member("data").read(encoded)) {
+            removeTree(fs, packageRoot);
+            return Error("Invalid embedded asset");
+        }
+
+        std::vector<uint8_t> decoded;
+        if (!io::base64Decode(encoded, decoded)) {
+            removeTree(fs, packageRoot);
+            return Error("Invalid embedded asset data");
+        }
+
+        const std::string path = paths::assetPath(dataRoot, packageId, paths::imagesDir, assetMetadata[index].name);
+        if (!fs.writeBytes(path, decoded.data(), decoded.size())) {
+            removeTree(fs, packageRoot);
+            return Error("Failed to write embedded asset");
+        }
     }
 
     std::vector<std::string> usedFaceIds;
@@ -522,7 +563,30 @@ Result PackageManager::importPackage(json::Reader input) {
         manifestFaces.emplace_back(faceId, faceName);
     }
 
-    if (!manifestWriter.writeObject([&](json::ObjectWriter& object) { return object.write("name", packageName) && object.write("author", packageAuthor) && object.write("description", packageDescription) && object.writeArray("faces", [&](json::ArrayWriter& faces) { for (const auto& face : manifestFaces) if (!faces.writeObject([&](json::ObjectWriter& entry) { return entry.write("id", face.first) && entry.write("name", face.second); })) return false; return true; }); })) return Error("Failed to create package manifest");
+    if (!manifestWriter.writeObject([&](json::ObjectWriter& object) {
+            return object.write("name", packageName) && object.write("author", packageAuthor) &&
+                   object.write("description", packageDescription) &&
+                   object.writeArray("assets", [&](json::ArrayWriter& assets) {
+                       for (const auto& asset : assetMetadata) {
+                           if (!assets.writeObject([&](json::ObjectWriter& entry) {
+                                   return entry.write("name", asset.name) &&
+                                          entry.write("mediaType", asset.mediaType);
+                               }))
+                               return false;
+                       }
+                       return true;
+                   }) &&
+                   object.writeArray("faces", [&](json::ArrayWriter& faces) {
+                       for (const auto& face : manifestFaces) {
+                           if (!faces.writeObject([&](json::ObjectWriter& entry) {
+                                   return entry.write("id", face.first) && entry.write("name", face.second);
+                               }))
+                               return false;
+                       }
+                       return true;
+                   });
+        }))
+        return Error("Failed to create package manifest");
     const std::string manifestJson = manifest.toString();
     LOG_INFO(TAG, "importPackage: writing manifest %s (%u bytes)", paths::manifestPath(dataRoot, packageId).c_str(), static_cast<unsigned>(manifestJson.size()));
     if (!fs.writeText(paths::manifestPath(dataRoot, packageId), manifestJson)) {
@@ -558,7 +622,7 @@ Result PackageManager::importPackage(json::Reader input) {
 }
 
 Result PackageManager::exportPackage(const std::string& packageId) const {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
 
@@ -574,12 +638,34 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
         return Error("Package manifest is invalid");
     }
 
-    Result result;
-    result.ok = true;
+    std::vector<AssetMetadata> assets;
+    if (!readInstalledAssetMetadata(manifest.root().member("assets"), assets)) {
+        return Error("Package manifest has invalid assets");
+    }
+
+    Result result = OkObject();
     std::string name, author, description;
     if (!getStringMember(manifest.root(), "name", name) || !getStringMember(manifest.root(), "author", author) || !getStringMember(manifest.root(), "description", description)) return Error("Package manifest is invalid");
     json::Writer writer = result.data.writer();
-    if (!writer.writeObject([&](json::ObjectWriter& object) { return object.write("name", name) && object.write("author", author) && object.write("description", description) && object.writeArray("faces", [&](json::ArrayWriter& outputFaces) {
+    if (!writer.writeObject([&](json::ObjectWriter& object) {
+        return object.write("name", name) && object.write("author", author) &&
+               object.write("description", description) &&
+               object.writeArray("assets", [&](json::ArrayWriter& outputAssets) {
+                   for (const auto& asset : assets) {
+                       std::vector<uint8_t> bytes;
+                       const std::string path = paths::assetPath(dataRoot, packageId, paths::imagesDir, asset.name);
+                       if (!fs.readBytes(path, bytes) || bytes.empty()) return false;
+                       std::string encoded;
+                       if (!encodeAsset(bytes, encoded)) return false;
+                       if (!outputAssets.writeObject([&](json::ObjectWriter& output) {
+                               return output.write("name", asset.name) &&
+                                      output.write("mediaType", asset.mediaType) && output.write("data", encoded);
+                           }))
+                           return false;
+                   }
+                   return true;
+               }) &&
+               object.writeArray("faces", [&](json::ArrayWriter& outputFaces) {
     for (std::size_t index = 0; index < facesValue.size(); ++index) {
         const json::Reader faceEntry = facesValue.element(index);
         if (!faceEntry.isObject()) return false;
@@ -601,13 +687,14 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
 
         if (!outputFaces.writeObject([&](json::ObjectWriter& faceOut) { return faceOut.write("name", faceName) && faceOut.write("face", faceDoc.root()); })) return false;
     }
-    return true;
-    }); })) return Error("Failed to export package");
+                   return true;
+               });
+    })) return Error("Failed to export package");
     return result;
 }
 
 Result PackageManager::removePackage(const std::string& packageId) {
-    if (!isSafeId(packageId)) {
+    if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
 

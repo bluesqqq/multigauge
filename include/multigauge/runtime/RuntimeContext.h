@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <memory>
+#include <string>
 
 #include <multigauge/graphics/Graphics.h>
 #include <multigauge/runtime/AssetManager.h>
@@ -24,7 +25,7 @@ class RuntimeContext {
         const graphics::UserPalette* userPalette;
 
     public:
-        explicit RuntimeContext(graphics::GraphicsContext& graphicsContext, io::FileSystem& fs, const graphics::UserPalette& userPalette);
+        explicit RuntimeContext(graphics::GraphicsContext& graphicsContext, io::FileSystem& fs, std::string dataRoot, const graphics::UserPalette& userPalette);
         ~RuntimeContext();
 
         RuntimeContext(const RuntimeContext&) = delete;

@@ -60,10 +60,12 @@ public:
     }
 
     /// @brief Loads any external resources required before drawing.
+    /// @param packageId Installed package ID, or empty for raw/editor assets.
     /// @param assetManager Asset provider for element resources.
     /// @param context Graphics backend context that owns loaded resources.
     /// @return True when initialization succeeds.
     virtual bool init(
+        std::string_view,
         ::mg::AssetManager&,
         ::mg::graphics::GraphicsContext&
     ) { return true; }

@@ -6,8 +6,8 @@
 
 namespace mg {
 
-RuntimeContext::RuntimeContext(graphics::GraphicsContext& context, io::FileSystem& fs, const graphics::UserPalette& userPalette)
-    : context(&context), graphics(context), assets(fs), userPalette(&userPalette) {}
+RuntimeContext::RuntimeContext(graphics::GraphicsContext& context, io::FileSystem& fs, std::string dataRoot, const graphics::UserPalette& userPalette)
+    : context(&context), graphics(context), assets(fs, std::move(dataRoot)), userPalette(&userPalette) {}
 
 RuntimeContext::~RuntimeContext() = default;
 
