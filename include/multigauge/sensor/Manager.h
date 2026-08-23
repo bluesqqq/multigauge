@@ -22,10 +22,16 @@ struct ProviderConfig {
 
 class Manager {
 public:
+    /// Creates the sensor system. The supplied filesystem and its configured
+    /// data root must outlive this manager. User values live in the process-
+    /// global ValueRegistry, so use only one active manager at a time.
     explicit Manager(io::FileSystem& fs, std::string dataRoot);
 
     //----------[ PERSISTENCE ]----------//
 
+    /// Replaces persisted user values, provider configuration, and bindings.
+    /// Call before registering providers; loading while providers are
+    /// registered fails without changing the current state.
     [[nodiscard]] bool load();
     [[nodiscard]] bool save();
 
@@ -42,6 +48,8 @@ public:
     //----------[ USER VALUES ]----------//
 
     [[nodiscard]] Result defineUserValue(const UserValueConfig& value);
+    /// Removes an unbound user value. Returns false when a binding still
+    /// references it, preventing an invalid persisted configuration.
     [[nodiscard]] bool removeUserValue(std::string_view valueId);
     [[nodiscard]] bool listUserValues(std::vector<UserValueConfig>& out) const;
 

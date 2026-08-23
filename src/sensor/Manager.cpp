@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <limits>
 
 namespace mg::sensor {
@@ -31,9 +32,15 @@ bool str(json::Reader o, std::string_view k, std::string & v) {
 Manager::Manager(io::FileSystem & fs, std::string root): fs_(fs), dataRoot_(std::move(root)) {}
 
 bool Manager::load() {
-    ValueRegistry::clearUsers();
+    if (registry_.providerCount() != 0) return false;
     const auto p = paths::statePath(dataRoot_);
-    if (!fs_.exists(p)) return true;
+    if (!fs_.exists(p)) {
+        ValueRegistry::clearUsers();
+        providers_.clear();
+        bindings_.clear();
+        dirty_ = false;
+        return true;
+    }
     json::Document d;
     return json::readJsonFile(fs_, p, d) && loadDocument(d.root());
 }
@@ -57,6 +64,14 @@ bool Manager::loadDocument(json::Reader r) {
     std::uint64_t v = 0;
     auto values = json::getArrayMember(r, "userValues"), providers = json::getArrayMember(r, "providers"), bindings = json::getArrayMember(r, "bindings");
     if (!r.isObject() || !r.member("version").read(v) || v != 1 || !values.valid() || !providers.valid() || !bindings.valid() || values.size() > ValueRegistry::MaxUserValues || providers.size() > Registry::MaxProviders || bindings.size() > Registry::MaxSensors) return false;
+
+    std::vector<UserValueConfig> loadedValues;
+    std::vector<ProviderConfig> loadedProviders;
+    std::vector<BindingRuntime> loadedBindings;
+    loadedValues.reserve(values.size());
+    loadedProviders.reserve(providers.size());
+    loadedBindings.reserve(bindings.size());
+
     for (size_t i = 0; i < values.size(); ++i) {
         UserValueConfig x;
         auto e = values.element(i);
@@ -65,14 +80,20 @@ bool Manager::loadDocument(json::Reader r) {
         x.minimum = (float) lo;
         x.maximum = (float) hi;
         auto * u = UnitType::find(x.unitType);
-        if (!u || x.minimum > x.maximum || !ValueRegistry::add(x.id, x.name, * u, x.minimum, x.maximum).valid()) return false;
+        const auto existing = ValueRegistry::resolve(x.id);
+        const bool duplicate = std::any_of(loadedValues.begin(), loadedValues.end(), [&](const UserValueConfig & value) { return value.id == x.id; });
+        if (!u || x.id.empty() || x.id.size() > ValueRegistry::MaxUserIdLength || x.name.empty() || x.name.size() > ValueRegistry::MaxUserNameLength || !std::isfinite(lo) || !std::isfinite(hi) || x.minimum > x.maximum || (existing.valid() && existing.isBuiltIn()) || duplicate) return false;
+        loadedValues.push_back(std::move(x));
     }
+
     for (size_t i = 0; i < providers.size(); ++i) {
         ProviderConfig x;
         auto e = providers.element(i);
-        if (!e.isObject() || !str(e, "id", x.id) || !str(e, "type", x.type) || !e.member("enabled").read(x.enabled) || !id(x.id) || !id(x.type) || !copy(e.member("config"), x.config)) return false;
-        providers_.push_back(std::move(x));
+        const bool duplicate = std::any_of(loadedProviders.begin(), loadedProviders.end(), [&](const ProviderConfig & provider) { return provider.id == x.id; });
+        if (!e.isObject() || !str(e, "id", x.id) || !str(e, "type", x.type) || !e.member("enabled").read(x.enabled) || !id(x.id) || !id(x.type) || !copy(e.member("config"), x.config) || duplicate) return false;
+        loadedProviders.push_back(std::move(x));
     }
+
     for (size_t i = 0; i < bindings.size(); ++i) {
         BindingRuntime x;
         auto e = bindings.element(i);
@@ -80,9 +101,21 @@ bool Manager::loadDocument(json::Reader r) {
         if (!e.isObject() || !str(e, "id", x.binding.id) || !str(e, "providerId", x.binding.providerId) || !str(e, "sensorId", x.binding.sensorId) || !str(e, "valueId", x.binding.valueId) || !e.member("enabled").read(x.binding.enabled) || !e.member("priority").read(p) || !e.member("staleAfterMs").read(s) || p > 255 || s > 3600000) return false;
         x.binding.priority = (uint8_t) p;
         x.binding.staleAfter = std::chrono::milliseconds(s);
-        if (!validateBinding(x.binding) || !providerConfig(x.binding.providerId)) return false;
-        bindings_.push_back(std::move(x));
+        const bool duplicate = std::any_of(loadedBindings.begin(), loadedBindings.end(), [&](const BindingRuntime & binding) { return binding.binding.id == x.binding.id; });
+        const bool providerExists = std::any_of(loadedProviders.begin(), loadedProviders.end(), [&](const ProviderConfig & provider) { return provider.id == x.binding.providerId; });
+        const bool userValueExists = std::any_of(loadedValues.begin(), loadedValues.end(), [&](const UserValueConfig & value) { return value.id == x.binding.valueId; });
+        const bool builtInValueExists = ValueRegistry::resolve(x.binding.valueId).isBuiltIn();
+        if (!id(x.binding.id) || !id(x.binding.providerId) || !id(x.binding.sensorId) || x.binding.valueId.empty() || x.binding.valueId.size() > ValueRegistry::MaxUserIdLength || !providerExists || (!userValueExists && !builtInValueExists) || duplicate) return false;
+        loadedBindings.push_back(std::move(x));
     }
+
+    ValueRegistry::clearUsers();
+    for (const UserValueConfig & value : loadedValues) {
+        const UnitType * unit = UnitType::find(value.unitType);
+        if (!unit || !ValueRegistry::add(value.id, value.name, *unit, value.minimum, value.maximum).valid()) return false;
+    }
+    providers_ = std::move(loadedProviders);
+    bindings_ = std::move(loadedBindings);
     dirty_ = false;
     return true;
 }
@@ -120,6 +153,7 @@ bool Manager::writeDocument(json::Writer & w) const {
 }
 
 bool Manager::registerProvider(Provider & p) {
+    if (registry_.findProvider(p.id())) return false;
     auto * c = providerConfig(p.id());
     if (!c) {
         if (providers_.size() >= Registry::MaxProviders || !id(p.id()) || !id(p.type())) return false;
@@ -154,10 +188,16 @@ const Sensor * Manager::findSensor(std::string_view p, std::string_view s) const
 Result Manager::configureProvider(std::string_view i, json::Reader c) {
     auto * s = providerConfig(i);
     auto * p = registry_.findProvider(i);
-    json::Document d;
-    if (!s || !p || !copy(c, d)) return Error("Provider is not registered or configuration is invalid");
-    if (!registry_.unregisterProvider(i) || !p -> loadConfiguration(d.root()) || !registry_.registerProvider( * p)) return Error("Provider rejected configuration");
-    s -> config = std::move(d);
+    json::Document next;
+    json::Document previous = json::object();
+    auto previousWriter = previous.writer();
+    if (!s || !p || !copy(c, next) || !p->saveConfiguration(previousWriter)) return Error("Provider is not registered or configuration is invalid");
+    if (!p->loadConfiguration(next.root())) return Error("Provider rejected configuration");
+    if (!registry_.refreshProvider(*p)) {
+        (void)p->loadConfiguration(previous.root());
+        return Error("Provider configuration produces an invalid sensor set");
+    }
+    s->config = std::move(next);
     dirty_ = true;
     return OkObject();
 }
@@ -168,7 +208,8 @@ Result Manager::providerConfiguration(std::string_view i) const {
     Result r;
     r.ok = true;
     auto w = r.data.writer();
-    if (!w.write(c -> config.root())) return Error("Failed to copy provider configuration");
+    const Provider * provider = registry_.findProvider(i);
+    if (provider ? !provider->saveConfiguration(w) : !w.write(c->config.root())) return Error("Failed to copy provider configuration");
     return r;
 }
 
@@ -188,6 +229,10 @@ Result Manager::defineUserValue(const UserValueConfig & v) {
 }
 
 bool Manager::removeUserValue(std::string_view i) {
+    const auto binding = std::find_if(bindings_.begin(), bindings_.end(), [&](const BindingRuntime & runtime) {
+        return runtime.binding.valueId == i;
+    });
+    if (binding != bindings_.end()) return false;
     bool r = ValueRegistry::remove(i);
     dirty_ |= r;
     return r;
