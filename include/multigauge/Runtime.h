@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#include <multigauge/container/GenerationalHandle.h>
+#include <multigauge/context/Manager.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/editor/Manager.h>
 #include <multigauge/graphics/UserPalette.h>
@@ -22,8 +22,6 @@ namespace mg {
 
 class Screen;
 namespace graphics { class GraphicsContext; }
-
-using ContextId = GenerationalHandle<struct ContextTag>;
 
 /// @brief Configures a Runtime instance.
 struct RuntimeConfig {
@@ -49,6 +47,8 @@ public:
     /// Returns this runtime's installed-package manager.
     [[nodiscard]] PackageManager& packages();
     [[nodiscard]] const PackageManager& packages() const;
+    [[nodiscard]] context::Manager& contexts();
+    [[nodiscard]] const context::Manager& contexts() const;
     /// Returns this runtime's sensor manager.
     [[nodiscard]] sensor::Manager& sensors();
     [[nodiscard]] const sensor::Manager& sensors() const;
@@ -58,18 +58,6 @@ public:
 
     [[nodiscard]] bool setUserColor(std::size_t slot, graphics::rgba color);
     [[nodiscard]] graphics::rgba userColor(std::size_t slot) const;
-
-    [[nodiscard]] ContextId addContext(graphics::GraphicsContext& graphics);
-    [[nodiscard]] bool removeContext(ContextId id);
-    [[nodiscard]] bool hasContext(ContextId id) const;
-    [[nodiscard]] std::size_t contextCount() const noexcept;
-
-    [[nodiscard]] bool setScreen(ContextId id, std::unique_ptr<Screen> screen);
-    [[nodiscard]] bool clearScreen(ContextId id);
-    [[nodiscard]] bool hasScreen(ContextId id) const;
-    [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& json);
-    [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId);
-    [[nodiscard]] bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId);
 
 private:
     std::unique_ptr<State> state_;
