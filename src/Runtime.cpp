@@ -1,4 +1,4 @@
-#include <multigauge/App.h>
+#include <multigauge/Runtime.h>
 
 #include "AppPaths.h"
 
@@ -20,38 +20,59 @@
 
 namespace mg {
 
+class Runtime::State {
+public:
+    State(io::FileSystem& fs, io::Time& time, RuntimeConfig config, io::Logger* logger)
+        : dataRoot(config.dataRoot.empty() ? "/multigauge" : std::move(config.dataRoot)), fs(&fs), time(&time), logger(logger) {}
+
+    std::string dataRoot;
+    std::unique_ptr<PackageManager> packages;
+    HandlePool<RuntimeContext, ContextId> contexts;
+    bool initialized = false;
+    std::chrono::microseconds lastElapsed{};
+    graphics::UserPalette userPalette;
+    io::FileSystem* fs;
+    io::Time* time;
+    io::Logger* logger;
+};
+
 namespace {
-std::string g_dataRoot = "/multigauge";
-std::unique_ptr<PackageManager> g_packages;
+Runtime::State* activeState = nullptr;
 
-HandlePool<RuntimeContext, ContextId> contexts;
-bool initialized = false;
-std::chrono::microseconds lastElapsed{};
-graphics::UserPalette userPalette;
+Runtime::State& state() { return *activeState; }
 
-io::FileSystem* g_fs = nullptr;
-io::Time* g_time = nullptr;
+#define g_dataRoot state().dataRoot
+#define g_packages state().packages
+#define contexts state().contexts
+#define initialized state().initialized
+#define lastElapsed state().lastElapsed
+#define userPalette state().userPalette
+#define g_fs state().fs
+#define g_time state().time
 
 } // namespace
 
-bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logger* logger) {
+Runtime::Runtime(io::FileSystem& fs, io::Time& time, RuntimeConfig config, io::Logger* logger)
+    : state_(std::make_unique<State>(fs, time, std::move(config), logger)) {}
+
+Runtime::~Runtime() { shutdown(); }
+
+bool Runtime::init() {
     constexpr const char* TAG = "init";
 
-    io::setLogger(logger);
+    if (activeState && activeState != state_.get()) return false;
+    activeState = state_.get();
+    io::setLogger(state().logger);
 
     if (initialized) {
         LOG_WARN(TAG, "Runtime already initialized.");
         return true;
     }
 
-    if (logger) {
-        if (!logger->init()) return false;
+    if (state().logger) {
+        if (!state().logger->init()) return false;
         LOG_INFO(TAG, "Logger successfully initialized.");
     }
-
-    g_fs = &fs;
-    g_time = &time;
-    g_dataRoot = config.dataRoot.empty() ? "/multigauge" : config.dataRoot;
 
     LOG_INFO(TAG, "Initializing runtime: dataRoot=`{}`.", g_dataRoot.c_str());
 
@@ -76,8 +97,10 @@ bool init(io::FileSystem& fs, io::Time& time, const AppConfig& config, io::Logge
     return true;
 }
 
-void shutdown() {
+void Runtime::shutdown() {
     constexpr const char* TAG = "shutdown";
+
+    if (activeState != state_.get()) return;
 
     LOG_INFO(TAG, "Shutting the runtime down...");
 
@@ -87,9 +110,12 @@ void shutdown() {
     lastElapsed = {};
     g_time = nullptr;
     g_fs = nullptr;
+    if (activeState == state_.get()) activeState = nullptr;
 }
 
-void frame() {
+bool Runtime::initialized() const noexcept { return state_->initialized; }
+
+void Runtime::frame() {
     if (!initialized) return;
 
     const std::chrono::microseconds now = g_time->elapsed();
@@ -101,15 +127,15 @@ void frame() {
         context.frame(delta, now);
 }
 
-bool setUserColor(std::size_t slot, graphics::rgba color) {
+bool Runtime::setUserColor(std::size_t slot, graphics::rgba color) {
     return userPalette.setColor(slot, color);
 }
 
-graphics::rgba getUserColor(std::size_t slot) {
+graphics::rgba Runtime::userColor(std::size_t slot) const {
     return userPalette.color(slot);
 }
 
-ContextId addContext(graphics::GraphicsContext& graphics) {
+ContextId Runtime::addContext(graphics::GraphicsContext& graphics) {
     constexpr const char* TAG = "addContext";
 
     if (!initialized) {
@@ -120,7 +146,7 @@ ContextId addContext(graphics::GraphicsContext& graphics) {
     return contexts.emplace(graphics, *g_fs, g_dataRoot, userPalette);
 }
 
-bool removeContext(ContextId id) {
+bool Runtime::removeContext(ContextId id) {
     constexpr const char* TAG = "removeContext";
 
     if (!contexts.remove(id)) {
@@ -136,15 +162,15 @@ RuntimeContext* getContext(ContextId id) {
     return contexts.get(id);
 }
 
-bool hasContext(ContextId id) {
+bool Runtime::hasContext(ContextId id) const {
     return contexts.exists(id);
 }
 
-std::size_t contextCount() {
+std::size_t Runtime::contextCount() const noexcept {
     return contexts.size();
 }
 
-bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
+bool Runtime::setScreen(ContextId id, std::unique_ptr<Screen> screen) {
     constexpr const char* TAG = "setScreen";
 
     if (!screen) {
@@ -167,7 +193,7 @@ bool setScreen(ContextId id, std::unique_ptr<Screen> screen) {
     return true;
 }
 
-bool clearScreen(ContextId id) {
+bool Runtime::clearScreen(ContextId id) {
     constexpr const char* TAG = "clearScreen";
 
     RuntimeContext* context = getContext(id);
@@ -182,7 +208,7 @@ bool clearScreen(ContextId id) {
     return true;
 }
 
-bool hasScreen(ContextId id) {
+bool Runtime::hasScreen(ContextId id) const {
     constexpr const char* TAG = "hasScreen";
 
     RuntimeContext* context = getContext(id);
@@ -202,7 +228,7 @@ bool loadGaugeFaceFromValue(json::Reader value, std::unique_ptr<gauge::GaugeFace
 }
 } // namespace
 
-bool setGaugeScreen(ContextId id, const std::string& json) {
+bool Runtime::setGaugeScreen(ContextId id, const std::string& json) {
     constexpr const char* TAG = "setGaugeScreen";
 
     RuntimeContext* context = getContext(id);
@@ -235,7 +261,7 @@ bool setGaugeScreen(ContextId id, const std::string& json) {
     return true;
 }
 
-bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) {
+bool Runtime::setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) {
     constexpr const char* TAG = "setGaugeScreen";
 
     if (!g_packages) {
@@ -279,7 +305,7 @@ bool setGaugeScreen(ContextId id, const std::string& packageId, const std::strin
     return true;
 }
 
-bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
+bool Runtime::setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
     constexpr const char* TAG = "setEditorScreen";
 
     RuntimeContext* context = getContext(id);
@@ -309,7 +335,7 @@ bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId fac
     return true;
 }
 
-bool listPackages(std::vector<PackageSummary>& out) {
+bool Runtime::listPackages(std::vector<PackageSummary>& out) const {
     constexpr const char* TAG = "listPackages";
     
     if (!g_packages) {
@@ -320,7 +346,7 @@ bool listPackages(std::vector<PackageSummary>& out) {
     return g_packages->listPackages(out);
 }
 
-bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out) {
+bool Runtime::listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const {
     constexpr const char* TAG = "listFaces";
     
     if (!g_packages) {
@@ -331,7 +357,7 @@ bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out) {
     return g_packages->listFaces(packageId, out);
 }
 
-Result getPackage(const std::string& packageId) {
+Result Runtime::getPackage(const std::string& packageId) const {
     constexpr const char* TAG = "getPackage";
 
     if (!g_packages) {
@@ -342,7 +368,7 @@ Result getPackage(const std::string& packageId) {
     return g_packages->getPackage(packageId);
 }
 
-Result importPackage(const std::string& json) {
+Result Runtime::importPackage(const std::string& json) {
     constexpr const char* TAG = "importPackage";
 
     if (!g_packages) {
@@ -353,7 +379,7 @@ Result importPackage(const std::string& json) {
     return g_packages->importPackage(json);
 }
 
-Result importPackage(json::Reader package) {
+Result Runtime::importPackage(json::Reader package) {
     constexpr const char* TAG = "importPackage";
 
     if (!g_packages) {
@@ -364,7 +390,7 @@ Result importPackage(json::Reader package) {
     return g_packages->importPackage(package);
 }
 
-Result exportPackage(const std::string& packageId) {
+Result Runtime::exportPackage(const std::string& packageId) const {
     constexpr const char* TAG = "exportPackage";
 
     if (!g_packages) {
@@ -375,7 +401,7 @@ Result exportPackage(const std::string& packageId) {
     return g_packages->exportPackage(packageId);
 }
 
-Result removePackage(const std::string& packageId) {
+Result Runtime::removePackage(const std::string& packageId) {
     constexpr const char* TAG = "removePackage";
 
     if (!g_packages) {
@@ -385,5 +411,14 @@ Result removePackage(const std::string& packageId) {
     
     return g_packages->removePackage(packageId);
 }
+
+#undef g_dataRoot
+#undef g_packages
+#undef contexts
+#undef initialized
+#undef lastElapsed
+#undef userPalette
+#undef g_fs
+#undef g_time
 
 } // namespace mg

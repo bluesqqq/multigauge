@@ -5,7 +5,7 @@ This repository is the portable multigauge core library.
 ## Portability and public contracts
 
 - Build as C++20. Keep headers and sources platform-independent: no Arduino/ESP32, Emscripten/DOM, OS filesystem, or concrete graphics-backend APIs.
-- Express platform needs through the interfaces in `include/multigauge/graphics/GraphicsContext.h` and `include/multigauge/io/`; initialization flows through `mg::init`.
+- Express platform needs through the interfaces in `include/multigauge/graphics/GraphicsContext.h` and `include/multigauge/io/`; initialization flows through an explicit `mg::Runtime` instance.
 - `include/multigauge/` is public; `src/` is implementation-only. Preserve source compatibility unless a break is intentional, and document non-obvious public contracts in the headers themselves.
 - The core uses value types plus `std::unique_ptr` for exclusive ownership of screens, gauge elements, faces, and colors, and `std::shared_ptr` for shared editor-history state. Treat raw pointers/references as borrowed unless the API explicitly says otherwise. Preserve documented lifetime rules such as `Value`'s borrowed `std::string_view` identity/name and `UnitType` reference.
 - Dynamic allocation is supported and common; there is no repository rule banning it. Still avoid unnecessary allocation/copying in per-frame `update`/`draw`, image decode, and other hot paths.
