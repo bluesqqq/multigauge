@@ -6,7 +6,10 @@
 #include <string>
 
 #include <multigauge/container/GenerationalHandle.h>
+#include <multigauge/Config.h>
+#if MG_BUILD_EDITOR
 #include <multigauge/editor/Types.h>
+#endif
 
 namespace mg {
 namespace package { class Manager; }
@@ -36,7 +39,9 @@ public:
     [[nodiscard]] bool hasScreen(ContextId id) const;
     [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& json);
     [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId);
+#if MG_BUILD_EDITOR
     [[nodiscard]] bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId);
+#endif
 
     void frame(std::chrono::microseconds delta, std::chrono::microseconds elapsed);
     void clear();

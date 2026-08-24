@@ -16,7 +16,9 @@ public:
     std::string dataRoot;
     std::unique_ptr<package::Manager> packages;
     sensor::Manager sensors;
+#if MG_BUILD_EDITOR
     editor::Manager editors;
+#endif
     graphics::UserPalette userPalette;
     std::unique_ptr<context::Manager> contexts;
     bool initialized = false;
@@ -81,8 +83,10 @@ context::Manager& Runtime::contexts() { return *state_->contexts; }
 const context::Manager& Runtime::contexts() const { return *state_->contexts; }
 sensor::Manager& Runtime::sensors() { return state_->sensors; }
 const sensor::Manager& Runtime::sensors() const { return state_->sensors; }
+#if MG_BUILD_EDITOR
 editor::Manager& Runtime::editors() { return state_->editors; }
 const editor::Manager& Runtime::editors() const { return state_->editors; }
+#endif
 
 bool Runtime::setUserColor(std::size_t slot, graphics::rgba color) {
     return state_->userPalette.setColor(slot, color);

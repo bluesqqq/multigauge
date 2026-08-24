@@ -31,7 +31,7 @@ constexpr ::mg::PropertyObject::PropertyList::ParentGetter parentPropertyListGet
 
 namespace mg::props {
 
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
 using RuleListGetter = ::mg::PropertyMetadata::RuleListGetter;
 #else
 using RuleListGetter = bool (*)(::mg::json::Writer&);
@@ -178,7 +178,7 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
         p.getChild = &detail::getChildObject<MemberPtr>;
     }
 
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
     meta.name = name ? name : key;
     meta.description = description ? description : "No description.";
@@ -207,7 +207,7 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
 /// @param set Custom setter function.
 /// @param get Custom getter function.
 inline ::mg::Property makeCustomProperty(const char* key, const char* name, const char* description, RuleListGetter visibleWhen, RuleListGetter interactableWhen, bool inspectorVisible, ::mg::Property::Setter set, ::mg::Property::Getter get) {
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
     meta.name = name ? name : key;
     meta.description = description ? description : "No description.";

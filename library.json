@@ -4,7 +4,9 @@
     "srcDir": ".",
     "includeDir": "include",
     "srcFilter": [
-      "+<src/**>"
+      "+<src/**>",
+      "-<src/editor/**>",
+      "-<src/screens/EditorScreen.cpp>"
     ]
   },
   "dependencies": [

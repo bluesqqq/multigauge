@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <multigauge/editor/History.h>
-#include <multigauge/editor/Result.h>
+#include <multigauge/Result.h>
 #include <multigauge/editor/Types.h>
 #include <multigauge/gauge/GaugeFace.h>
 

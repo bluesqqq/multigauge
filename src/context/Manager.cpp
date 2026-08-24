@@ -1,13 +1,16 @@
 #include <multigauge/context/Manager.h>
 
 #include <multigauge/container/HandlePool.h>
+#include <multigauge/Config.h>
+#if MG_BUILD_EDITOR
 #include <multigauge/editor/Api.h>
+#include <multigauge/screens/EditorScreen.h>
+#endif
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/graphics/UserPalette.h>
 #include <multigauge/io/FileSystem.h>
 #include <multigauge/package/Manager.h>
 #include <multigauge/runtime/RuntimeContext.h>
-#include <multigauge/screens/EditorScreen.h>
 #include <multigauge/screens/GaugeScreen.h>
 #include <multigauge/utils/Json.h>
 
@@ -36,7 +39,9 @@ bool Manager::hasScreen(ContextId id) const { const auto* c = state_->contexts.g
 namespace { bool loadFace(json::Reader value, std::unique_ptr<gauge::GaugeFace>& face) { if (!value.isObject()) return false; auto next = std::make_unique<gauge::GaugeFace>(); if (!next->load(value)) return false; face = std::move(next); return true; } }
 bool Manager::setGaugeScreen(ContextId id, const std::string& json) { auto* c = state_->contexts.get(id); auto document = json::parse(json); std::unique_ptr<gauge::GaugeFace> face; if (!c || !document.valid() || !loadFace(document.root(), face)) return false; auto screen = std::make_unique<GaugeScreen>(); screen->setFace(std::move(face)); return c->setScreen(std::move(screen)); }
 bool Manager::setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) { auto* c = state_->contexts.get(id); if (!c) return false; Result result = state_->packages.getFace(packageId, faceId); std::unique_ptr<gauge::GaugeFace> face; if (!result.ok || !loadFace(result.data.root(), face)) return false; auto screen = std::make_unique<GaugeScreen>(); screen->setFace(std::move(face), packageId); return c->setScreen(std::move(screen)); }
+#if MG_BUILD_EDITOR
 bool Manager::setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) { auto* c = state_->contexts.get(id); if (!c || !editor::isFace(editorId, faceId)) return false; return c->setScreen(std::make_unique<EditorScreen>(editorId, faceId)); }
+#endif
 void Manager::frame(std::chrono::microseconds delta, std::chrono::microseconds elapsed) { for (auto& c : state_->contexts) c.frame(delta, elapsed); }
 void Manager::clear() { state_->contexts.clear(); }
 } // namespace mg::context

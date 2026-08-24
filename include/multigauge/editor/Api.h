@@ -3,7 +3,7 @@
 #include <cstddef>
 #include <string>
 
-#include <multigauge/editor/Result.h>
+#include <multigauge/Result.h>
 #include <multigauge/editor/Types.h>
 
 namespace mg::gauge {

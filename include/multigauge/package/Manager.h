@@ -6,7 +6,7 @@
 
 #include <multigauge/json/Json.h>
 
-#include <multigauge/editor/Result.h>
+#include <multigauge/Result.h>
 
 namespace mg::io {
 class FileSystem;

@@ -49,7 +49,7 @@ bool PropertyObject::savePropertyMembers(json::ObjectWriter& object) const {
 }
 
 bool PropertyObject::writePropertiesMeta(json::Writer& writer) const {
-#if !MG_ENABLE_EDITOR_REFLECTION
+#if !MG_BUILD_EDITOR
     return writer.writeArray([](json::ArrayWriter&) { return true; });
 #else
     return writer.writeArray([&](json::ArrayWriter& array) { return writePropertiesMeta(array); });
@@ -57,7 +57,7 @@ bool PropertyObject::writePropertiesMeta(json::Writer& writer) const {
 }
 
 bool PropertyObject::writePropertiesMeta(json::ArrayWriter& writer) const {
-#if !MG_ENABLE_EDITOR_REFLECTION
+#if !MG_BUILD_EDITOR
     (void)writer;
     return true;
 #else
@@ -71,7 +71,7 @@ bool PropertyObject::writePropertiesMeta(json::ArrayWriter& writer) const {
 }
 
 bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& prop) const {
-#if !MG_ENABLE_EDITOR_REFLECTION
+#if !MG_BUILD_EDITOR
     (void)prop;
     return writer.writeObject([](json::ObjectWriter&) { return true; });
 #else

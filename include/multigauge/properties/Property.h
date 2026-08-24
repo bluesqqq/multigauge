@@ -4,7 +4,7 @@
 
 #include <multigauge/properties/EnumTraits.h>
 #include <multigauge/Config.h>
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
 #include <multigauge/properties/meta/PropertyMetadata.h>
 #endif
 
@@ -30,7 +30,7 @@ struct Property {
     /// The returned object must be owned by the supplied property object.
     ChildGetter getChild = nullptr;
 
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
     const PropertyMetadata meta; ///< Property metadata.
 
     bool writeBaseMeta(json::ObjectWriter& object) const;

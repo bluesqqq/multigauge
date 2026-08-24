@@ -22,8 +22,8 @@ option(
 )
 
 option(
-  MULTIGAUGE_ENABLE_EDITOR_REFLECTION
-  "Include editor-facing property metadata and reflection"
+  MULTIGAUGE_BUILD_EDITOR
+  "Build editor APIs, screens, and editor-facing property metadata"
   ON
 )
 
@@ -136,6 +136,11 @@ file(
   "${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp"
 )
 
+if(NOT MULTIGAUGE_BUILD_EDITOR)
+  list(FILTER CORE_SOURCES EXCLUDE REGEX "/src/editor/.*\\.cpp$")
+  list(FILTER CORE_SOURCES EXCLUDE REGEX "/src/screens/EditorScreen\\.cpp$")
+endif()
+
 add_library(multigauge STATIC)
 
 target_sources(
@@ -170,7 +175,7 @@ target_link_libraries(
 target_compile_definitions(
   multigauge
   PUBLIC
-    MG_ENABLE_EDITOR_REFLECTION=$<BOOL:${MULTIGAUGE_ENABLE_EDITOR_REFLECTION}>
+    MG_BUILD_EDITOR=$<BOOL:${MULTIGAUGE_BUILD_EDITOR}>
 )
 
 #----------[ TESTS ]----------#

@@ -100,7 +100,7 @@ TEST_CASE("property metadata respects the reflection configuration") {
     mg::json::Document metadata = mg::json::array();
     mg::json::Writer writer = metadata.writer();
     REQUIRE(child.writePropertiesMeta(writer));
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
     CHECK(metadata.root().size() == 1);
     std::string_view key;
     REQUIRE(metadata.root().element(0).member("key").read(key));
@@ -116,7 +116,7 @@ TEST_CASE("property metadata writes nested children directly into their group") 
     mg::json::Writer writer = metadata.writer();
     REQUIRE(parent.writePropertiesMeta(writer));
 
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
     const mg::json::Reader child = metadata.root().element(0);
     REQUIRE(child.isObject());
     REQUIRE(child.member("properties").isArray());
