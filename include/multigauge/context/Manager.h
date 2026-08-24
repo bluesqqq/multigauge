@@ -9,7 +9,7 @@
 #include <multigauge/editor/Types.h>
 
 namespace mg {
-class PackageManager;
+namespace package { class Manager; }
 class Screen;
 namespace graphics { class GraphicsContext; class UserPalette; }
 namespace io { class FileSystem; }
@@ -23,7 +23,7 @@ namespace mg::context {
 class Manager {
 public:
     Manager(io::FileSystem& fs, std::string dataRoot, const graphics::UserPalette& palette,
-            PackageManager& packages);
+            package::Manager& packages);
     ~Manager();
 
     [[nodiscard]] ContextId add(graphics::GraphicsContext& graphics);

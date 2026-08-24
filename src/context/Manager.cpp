@@ -5,7 +5,7 @@
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/graphics/UserPalette.h>
 #include <multigauge/io/FileSystem.h>
-#include <multigauge/runtime/PackageManager.h>
+#include <multigauge/package/Manager.h>
 #include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/screens/EditorScreen.h>
 #include <multigauge/screens/GaugeScreen.h>
@@ -14,16 +14,16 @@
 namespace mg::context {
 class Manager::State {
 public:
-    State(io::FileSystem& fs, std::string root, const graphics::UserPalette& palette, PackageManager& packages)
+    State(io::FileSystem& fs, std::string root, const graphics::UserPalette& palette, package::Manager& packages)
         : fs(fs), root(std::move(root)), palette(palette), packages(packages) {}
     io::FileSystem& fs;
     std::string root;
     const graphics::UserPalette& palette;
-    PackageManager& packages;
+    package::Manager& packages;
     HandlePool<RuntimeContext, ContextId> contexts;
 };
 
-Manager::Manager(io::FileSystem& fs, std::string root, const graphics::UserPalette& palette, PackageManager& packages)
+Manager::Manager(io::FileSystem& fs, std::string root, const graphics::UserPalette& palette, package::Manager& packages)
     : state_(std::make_unique<State>(fs, std::move(root), palette, packages)) {}
 Manager::~Manager() = default;
 ContextId Manager::add(graphics::GraphicsContext& graphics) { return state_->contexts.emplace(graphics, state_->fs, state_->root, state_->palette); }

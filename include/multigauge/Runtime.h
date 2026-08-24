@@ -15,7 +15,7 @@
 #include <multigauge/io/Logger.h>
 #include <multigauge/io/Time.h>
 #include <multigauge/json/Json.h>
-#include <multigauge/runtime/PackageManager.h>
+#include <multigauge/package/Manager.h>
 #include <multigauge/sensor/Manager.h>
 
 namespace mg {
@@ -45,8 +45,8 @@ public:
     void frame();
 
     /// Returns this runtime's installed-package manager.
-    [[nodiscard]] PackageManager& packages();
-    [[nodiscard]] const PackageManager& packages() const;
+    [[nodiscard]] package::Manager& packages();
+    [[nodiscard]] const package::Manager& packages() const;
     [[nodiscard]] context::Manager& contexts();
     [[nodiscard]] const context::Manager& contexts() const;
     /// Returns this runtime's sensor manager.

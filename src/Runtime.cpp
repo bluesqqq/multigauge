@@ -14,7 +14,7 @@ public:
           sensors(fs, dataRoot), fs(&fs), time(&time), logger(logger) {}
 
     std::string dataRoot;
-    std::unique_ptr<PackageManager> packages;
+    std::unique_ptr<package::Manager> packages;
     sensor::Manager sensors;
     editor::Manager editors;
     graphics::UserPalette userPalette;
@@ -43,7 +43,7 @@ bool Runtime::init() {
         return false;
     }
 
-    state.packages = std::make_unique<PackageManager>(*state.fs, state.dataRoot);
+    state.packages = std::make_unique<package::Manager>(*state.fs, state.dataRoot);
     state.packages->rebuildLibrary();
     if (!state.sensors.load()) return false;
     state.contexts = std::make_unique<context::Manager>(
@@ -75,8 +75,8 @@ void Runtime::frame() {
     state.contexts->frame(delta, now);
 }
 
-PackageManager& Runtime::packages() { return *state_->packages; }
-const PackageManager& Runtime::packages() const { return *state_->packages; }
+package::Manager& Runtime::packages() { return *state_->packages; }
+const package::Manager& Runtime::packages() const { return *state_->packages; }
 context::Manager& Runtime::contexts() { return *state_->contexts; }
 const context::Manager& Runtime::contexts() const { return *state_->contexts; }
 sensor::Manager& Runtime::sensors() { return state_->sensors; }
