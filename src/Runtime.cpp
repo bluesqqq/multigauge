@@ -7,12 +7,14 @@
 #include <multigauge/container/HandlePool.h>
 #include <multigauge/editor/Api.h>
 #include <multigauge/editor/EditorRegistry.h>
+#include <multigauge/editor/Manager.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/graphics/UserPalette.h>
 #include <multigauge/io/Log.h>
 #include <multigauge/runtime/RuntimeContext.h>
 #include <multigauge/screens/EditorScreen.h>
 #include <multigauge/screens/GaugeScreen.h>
+#include <multigauge/sensor/Manager.h>
 #include <multigauge/utils/Json.h>
 
 #include <chrono>
@@ -23,10 +25,12 @@ namespace mg {
 class Runtime::State {
 public:
     State(io::FileSystem& fs, io::Time& time, RuntimeConfig config, io::Logger* logger)
-        : dataRoot(config.dataRoot.empty() ? "/multigauge" : std::move(config.dataRoot)), fs(&fs), time(&time), logger(logger) {}
+        : dataRoot(config.dataRoot.empty() ? "/multigauge" : std::move(config.dataRoot)), sensors(fs, dataRoot), fs(&fs), time(&time), logger(logger) {}
 
     std::string dataRoot;
     std::unique_ptr<PackageManager> packages;
+    sensor::Manager sensors;
+    editor::Manager editors;
     HandlePool<RuntimeContext, ContextId> contexts;
     bool initialized = false;
     std::chrono::microseconds lastElapsed{};
@@ -44,7 +48,7 @@ Runtime::State& state() { return *activeState; }
 #define g_dataRoot state().dataRoot
 #define g_packages state().packages
 #define contexts state().contexts
-#define initialized state().initialized
+#define runtimeInitialized state().initialized
 #define lastElapsed state().lastElapsed
 #define userPalette state().userPalette
 #define g_fs state().fs
@@ -64,7 +68,7 @@ bool Runtime::init() {
     activeState = state_.get();
     io::setLogger(state().logger);
 
-    if (initialized) {
+    if (runtimeInitialized) {
         LOG_WARN(TAG, "Runtime already initialized.");
         return true;
     }
@@ -87,9 +91,10 @@ bool Runtime::init() {
 
     g_packages = std::make_unique<PackageManager>(*g_fs, g_dataRoot);
     g_packages->rebuildLibrary();
+    if (!state().sensors.load()) return false;
     contexts.clear();
 
-    initialized = true;
+    runtimeInitialized = true;
     lastElapsed = g_time->elapsed();
 
     LOG_INFO(TAG, "Runtime successfully initialized.");
@@ -106,7 +111,7 @@ void Runtime::shutdown() {
 
     contexts.clear();
     g_packages.reset();
-    initialized = false;
+    runtimeInitialized = false;
     lastElapsed = {};
     g_time = nullptr;
     g_fs = nullptr;
@@ -116,7 +121,7 @@ void Runtime::shutdown() {
 bool Runtime::initialized() const noexcept { return state_->initialized; }
 
 void Runtime::frame() {
-    if (!initialized) return;
+    if (!runtimeInitialized) return;
 
     const std::chrono::microseconds now = g_time->elapsed();
     const std::chrono::microseconds delta =
@@ -125,7 +130,15 @@ void Runtime::frame() {
 
     for (auto& context : contexts)
         context.frame(delta, now);
+    state().sensors.update(delta, now);
 }
+
+PackageManager& Runtime::packages() { return *state_->packages; }
+const PackageManager& Runtime::packages() const { return *state_->packages; }
+sensor::Manager& Runtime::sensors() { return state_->sensors; }
+const sensor::Manager& Runtime::sensors() const { return state_->sensors; }
+editor::Manager& Runtime::editors() { return state_->editors; }
+const editor::Manager& Runtime::editors() const { return state_->editors; }
 
 bool Runtime::setUserColor(std::size_t slot, graphics::rgba color) {
     return userPalette.setColor(slot, color);
@@ -138,7 +151,7 @@ graphics::rgba Runtime::userColor(std::size_t slot) const {
 ContextId Runtime::addContext(graphics::GraphicsContext& graphics) {
     constexpr const char* TAG = "addContext";
 
-    if (!initialized) {
+    if (!runtimeInitialized) {
         LOG_ERROR(TAG, "Cannot add context: runtime is not initialized.");
         return {};
     }
@@ -335,87 +348,10 @@ bool Runtime::setEditorScreen(ContextId id, editor::EditorId editorId, editor::N
     return true;
 }
 
-bool Runtime::listPackages(std::vector<PackageSummary>& out) const {
-    constexpr const char* TAG = "listPackages";
-    
-    if (!g_packages) {
-        LOG_ERROR(TAG, "Cannot list packages: runtime is not initialized.");
-        return false;
-    }
-
-    return g_packages->listPackages(out);
-}
-
-bool Runtime::listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const {
-    constexpr const char* TAG = "listFaces";
-    
-    if (!g_packages) {
-        LOG_ERROR(TAG, "Cannot list faces: runtime is not initialized.");
-        return false;
-    }
-
-    return g_packages->listFaces(packageId, out);
-}
-
-Result Runtime::getPackage(const std::string& packageId) const {
-    constexpr const char* TAG = "getPackage";
-
-    if (!g_packages) {
-        LOG_ERROR(TAG, "Cannot get package: runtime is not initialized.");
-        return Error("App not initialized");
-    }
-
-    return g_packages->getPackage(packageId);
-}
-
-Result Runtime::importPackage(const std::string& json) {
-    constexpr const char* TAG = "importPackage";
-
-    if (!g_packages) {
-        LOG_ERROR(TAG, "Cannot import package: runtime is not initialized.");
-        return Error("App not initialized");
-    }
-
-    return g_packages->importPackage(json);
-}
-
-Result Runtime::importPackage(json::Reader package) {
-    constexpr const char* TAG = "importPackage";
-
-    if (!g_packages) {
-        LOG_ERROR(TAG, "Cannot import package: runtime is not initialized.");
-        return Error("App not initialized");
-    }
-
-    return g_packages->importPackage(package);
-}
-
-Result Runtime::exportPackage(const std::string& packageId) const {
-    constexpr const char* TAG = "exportPackage";
-
-    if (!g_packages) {
-        LOG_ERROR(TAG, "Cannot export package: runtime is not initialized.");
-        return Error("App not initialized");
-    }
-
-    return g_packages->exportPackage(packageId);
-}
-
-Result Runtime::removePackage(const std::string& packageId) {
-    constexpr const char* TAG = "removePackage";
-
-    if (!g_packages) {
-        LOG_ERROR(TAG, "Cannot remove package: runtime is not initialized.");
-        return Error("App not initialized");
-    }
-    
-    return g_packages->removePackage(packageId);
-}
-
 #undef g_dataRoot
 #undef g_packages
 #undef contexts
-#undef initialized
+#undef runtimeInitialized
 #undef lastElapsed
 #undef userPalette
 #undef g_fs

@@ -9,12 +9,14 @@
 
 #include <multigauge/container/GenerationalHandle.h>
 #include <multigauge/editor/Api.h>
+#include <multigauge/editor/Manager.h>
 #include <multigauge/graphics/UserPalette.h>
 #include <multigauge/io/FileSystem.h>
 #include <multigauge/io/Logger.h>
 #include <multigauge/io/Time.h>
 #include <multigauge/json/Json.h>
 #include <multigauge/runtime/PackageManager.h>
+#include <multigauge/sensor/Manager.h>
 
 namespace mg {
 
@@ -44,6 +46,16 @@ public:
     [[nodiscard]] bool initialized() const noexcept;
     void frame();
 
+    /// Returns this runtime's installed-package manager.
+    [[nodiscard]] PackageManager& packages();
+    [[nodiscard]] const PackageManager& packages() const;
+    /// Returns this runtime's sensor manager.
+    [[nodiscard]] sensor::Manager& sensors();
+    [[nodiscard]] const sensor::Manager& sensors() const;
+    /// Returns this runtime's editor-instance manager.
+    [[nodiscard]] editor::Manager& editors();
+    [[nodiscard]] const editor::Manager& editors() const;
+
     [[nodiscard]] bool setUserColor(std::size_t slot, graphics::rgba color);
     [[nodiscard]] graphics::rgba userColor(std::size_t slot) const;
 
@@ -58,14 +70,6 @@ public:
     [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& json);
     [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId);
     [[nodiscard]] bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId);
-
-    [[nodiscard]] bool listPackages(std::vector<PackageSummary>& out) const;
-    [[nodiscard]] bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const;
-    [[nodiscard]] Result getPackage(const std::string& packageId) const;
-    [[nodiscard]] Result importPackage(const std::string& json);
-    [[nodiscard]] Result importPackage(json::Reader package);
-    [[nodiscard]] Result exportPackage(const std::string& packageId) const;
-    [[nodiscard]] Result removePackage(const std::string& packageId);
 
 private:
     std::unique_ptr<State> state_;
