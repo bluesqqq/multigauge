@@ -44,15 +44,15 @@ public:
     [[nodiscard]] bool initialized() const noexcept;
     void frame();
 
-    /// Returns this runtime's installed-package manager.
     [[nodiscard]] package::Manager& packages();
     [[nodiscard]] const package::Manager& packages() const;
+
     [[nodiscard]] context::Manager& contexts();
     [[nodiscard]] const context::Manager& contexts() const;
-    /// Returns this runtime's sensor manager.
+
     [[nodiscard]] sensor::Manager& sensors();
     [[nodiscard]] const sensor::Manager& sensors() const;
-    /// Returns this runtime's editor-instance manager.
+
     [[nodiscard]] editor::Manager& editors();
     [[nodiscard]] const editor::Manager& editors() const;
 
