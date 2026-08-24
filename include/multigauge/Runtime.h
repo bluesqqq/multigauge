@@ -8,8 +8,10 @@
 #include <vector>
 
 #include <multigauge/context/Manager.h>
-#include <multigauge/editor/Api.h>
+#include <multigauge/Config.h>
+#if MG_BUILD_EDITOR
 #include <multigauge/editor/Manager.h>
+#endif
 #include <multigauge/graphics/UserPalette.h>
 #include <multigauge/io/FileSystem.h>
 #include <multigauge/io/Logger.h>
@@ -53,8 +55,10 @@ public:
     [[nodiscard]] sensor::Manager& sensors();
     [[nodiscard]] const sensor::Manager& sensors() const;
 
+#if MG_BUILD_EDITOR
     [[nodiscard]] editor::Manager& editors();
     [[nodiscard]] const editor::Manager& editors() const;
+#endif
 
     [[nodiscard]] bool setUserColor(std::size_t slot, graphics::rgba color);
     [[nodiscard]] graphics::rgba userColor(std::size_t slot) const;
