@@ -2,19 +2,24 @@
 
 #include <chrono>
 
-#include <multigauge/runtime/RuntimeContext.h>
-
 namespace mg {
 
+namespace context { class Context; }
+namespace graphics { class Graphics; }
+
 class Screen {
-    public:
-        virtual ~Screen() = default;
+public:
+    //----------[ CTOR ]----------//
 
-        virtual void onShow(RuntimeContext& context) {};
-        virtual void onHide(RuntimeContext& context) {};
+    virtual ~Screen() = default;
 
-        virtual void update(RuntimeContext& context, std::chrono::microseconds delta) = 0;
-        virtual void draw(RuntimeContext& context, graphics::Graphics& g) = 0;
+    //----------[ LIFECYCLE ]----------//
+
+    virtual void onShow(context::Context& context) {};
+    virtual void onHide(context::Context& context) {};
+
+    virtual void update(context::Context& context, std::chrono::microseconds delta) = 0;
+    virtual void draw(context::Context& context, graphics::Graphics& g) = 0;
 };
 
 }

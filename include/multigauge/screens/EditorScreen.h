@@ -7,26 +7,41 @@
 #include <multigauge/screens/Screen.h>
 
 namespace mg {
-namespace editor { class EditorPreview; }
+namespace editor { class EditorPreview; class Manager; }
 
 class EditorScreen : public Screen {
-    private:
-        editor::EditorId editorId{};
-        editor::NodeId faceId = 0;
-        std::unique_ptr<editor::EditorPreview> preview;
+public:
+    //----------[ CTOR + DTOR ]----------//
 
-        gauge::GaugeFace* resolveFace() const;
+    EditorScreen(
+        editor::Manager& editors,
+        editor::EditorId editorId = editor::EditorId{},
+        editor::NodeId faceId = 0
+    );
 
-    public:
-        explicit EditorScreen(editor::EditorId editorId = editor::EditorId{}, editor::NodeId faceId = 0);
-        ~EditorScreen() override;
+    ~EditorScreen() override;
 
-        void setFace(editor::EditorId editorId, editor::NodeId faceId);
+    //----------[ FACE ]----------//
 
-        void onShow(RuntimeContext& ctx) override;
-        void onHide(RuntimeContext& ctx) override;
-        void update(RuntimeContext& ctx, std::chrono::microseconds delta) override;
-        void draw(RuntimeContext& ctx, graphics::Graphics& g) override;
+    void setFace(editor::EditorId editorId, editor::NodeId faceId);
+
+    //----------[ LIFECYCLE ]----------//
+
+    void onShow(context::Context& ctx) override;
+    void onHide(context::Context& ctx) override;
+
+    void update(context::Context& ctx, std::chrono::microseconds delta) override;
+    void draw(context::Context& ctx, graphics::Graphics& g) override;
+
+private:
+    gauge::GaugeFace* resolveFace() const;
+
+private:
+    editor::Manager& editors;
+    editor::EditorId editorId{};
+    editor::NodeId faceId = 0;
+    std::unique_ptr<editor::EditorPreview> preview;
+
 };
 
 }
