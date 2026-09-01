@@ -26,7 +26,7 @@ public:
 
     void update(context::Context& ctx, std::chrono::microseconds delta) override;
     void draw(context::Context& ctx, graphics::Graphics& g) override;
-    
+
 private:
     std::unique_ptr<::mg::gauge::GaugeFace> face = nullptr;
     std::string packageId;
