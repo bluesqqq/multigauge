@@ -2,7 +2,7 @@
 
 #include <memory>
 
-#include <multigauge/editor/Api.h>
+#include <multigauge/editor/Manager.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/screens/Screen.h>
 

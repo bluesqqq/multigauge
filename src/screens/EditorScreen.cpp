@@ -25,7 +25,7 @@ void EditorScreen::setFace(editor::EditorId editor, editor::NodeId face) {
 }
 
 gauge::GaugeFace* EditorScreen::resolveFace() const {
-    return editor::getFace(editors, editorId, faceId);
+    return editors.getFace(editorId, faceId);
 }
 
 void EditorScreen::onShow(context::Context& ctx) {
