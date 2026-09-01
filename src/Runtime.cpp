@@ -7,93 +7,91 @@
 
 namespace mg {
 
-class Runtime::State {
-public:
-    State(io::FileSystem& fs, io::Time& time, RuntimeConfig config, io::Logger* logger)
-        : dataRoot(config.dataRoot.empty() ? "/multigauge" : std::move(config.dataRoot)),
-          sensors(fs, dataRoot), fs(&fs), time(&time), logger(logger) {}
-
-    std::string dataRoot;
-    std::unique_ptr<package::Manager> packages;
-    sensor::Manager sensors;
-#if MG_BUILD_EDITOR
-    editor::Manager editors;
-#endif
-    graphics::UserPalette userPalette;
-    std::unique_ptr<context::Manager> contexts;
-    bool initialized = false;
-    std::chrono::microseconds lastElapsed{};
-    io::FileSystem* fs;
-    io::Time* time;
-    io::Logger* logger;
-};
-
-Runtime::Runtime(io::FileSystem& fs, io::Time& time, RuntimeConfig config, io::Logger* logger)
-    : state_(std::make_unique<State>(fs, time, std::move(config), logger)) {}
+Runtime::Runtime(
+    io::FileSystem& fs,
+    io::Time& time,
+    RuntimeConfig config,
+    io::Logger* logger
+) : dataRoot_(config.dataRoot.empty() ? "/multigauge" : std::move(config.dataRoot)),
+    sensors_(fs, dataRoot_),
+    fs_(fs),
+    time_(time),
+    logger_(logger) {}
 
 Runtime::~Runtime() { shutdown(); }
 
 bool Runtime::init() {
     constexpr const char* TAG = "init";
-    State& state = *state_;
-
-    if (state.initialized) return true;
-    io::setLogger(state.logger);
-    if (state.logger && !state.logger->init()) return false;
-    if (!state.fs->init()) {
+    if (initialized_) return true;
+    
+    io::setLogger(logger_);
+    if (logger_ && !logger_->init()) return false;
+    
+    if (!fs_.init()) {
         LOG_ERROR(TAG, "Failed to initialize filesystem.");
         return false;
     }
 
-    state.packages = std::make_unique<package::Manager>(*state.fs, state.dataRoot);
-    state.packages->rebuildLibrary();
-    if (!state.sensors.load()) return false;
-    state.contexts = std::make_unique<context::Manager>(
-        *state.fs, state.dataRoot, state.userPalette, *state.packages
+    packages_ = std::make_unique<package::Manager>(fs_, dataRoot_);
+    packages_->rebuildLibrary();
+    
+    if (!sensors_.load()) return false;
+
+    contexts_ = std::make_unique<context::Manager>(
+        fs_, dataRoot_, userPalette_, *packages_
+#if MG_BUILD_EDITOR
+        , editors_
+#endif
     );
-    state.lastElapsed = state.time->elapsed();
-    state.initialized = true;
+    lastElapsed_ = time_.elapsed();
+    initialized_ = true;
     return true;
 }
 
 void Runtime::shutdown() {
-    State& state = *state_;
-    if (!state.initialized) return;
-    state.contexts.reset();
-    state.packages.reset();
-    state.initialized = false;
-    state.lastElapsed = {};
+    if (!initialized_) return;
+    contexts_.reset();
+    packages_.reset();
+    initialized_ = false;
+    lastElapsed_ = {};
 }
 
-bool Runtime::initialized() const noexcept { return state_->initialized; }
+bool Runtime::initialized() const noexcept { return initialized_; }
 
 void Runtime::frame() {
-    State& state = *state_;
-    if (!state.initialized) return;
-    const auto now = state.time->elapsed();
-    const auto delta = now >= state.lastElapsed ? now - state.lastElapsed : std::chrono::microseconds{};
-    state.lastElapsed = now;
-    state.sensors.update(delta, now);
-    state.contexts->frame(delta, now);
+    if (!initialized_) return;
+
+    const auto now = time_.elapsed();
+    const auto delta = now >= lastElapsed_ ? now - lastElapsed_ : std::chrono::microseconds{};
+    lastElapsed_ = now;
+    sensors_.update(delta, now);
+    contexts_->frame(delta, now);
 }
 
-package::Manager& Runtime::packages() { return *state_->packages; }
-const package::Manager& Runtime::packages() const { return *state_->packages; }
-context::Manager& Runtime::contexts() { return *state_->contexts; }
-const context::Manager& Runtime::contexts() const { return *state_->contexts; }
-sensor::Manager& Runtime::sensors() { return state_->sensors; }
-const sensor::Manager& Runtime::sensors() const { return state_->sensors; }
+package::Manager& Runtime::packages() { return *packages_; }
+
+const package::Manager& Runtime::packages() const { return *packages_; }
+
+context::Manager& Runtime::contexts() { return *contexts_; }
+
+const context::Manager& Runtime::contexts() const { return *contexts_; }
+
+sensor::Manager& Runtime::sensors() { return sensors_; }
+
+const sensor::Manager& Runtime::sensors() const { return sensors_; }
+
 #if MG_BUILD_EDITOR
-editor::Manager& Runtime::editors() { return state_->editors; }
-const editor::Manager& Runtime::editors() const { return state_->editors; }
+editor::Manager& Runtime::editors() { return editors_; }
+
+const editor::Manager& Runtime::editors() const { return editors_; }
 #endif
 
 bool Runtime::setUserColor(std::size_t slot, graphics::rgba color) {
-    return state_->userPalette.setColor(slot, color);
+    return userPalette_.setColor(slot, color);
 }
 
 graphics::rgba Runtime::userColor(std::size_t slot) const {
-    return state_->userPalette.color(slot);
+    return userPalette_.color(slot);
 }
 
 } // namespace mg
