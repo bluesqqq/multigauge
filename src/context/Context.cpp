@@ -69,7 +69,7 @@ void Context::frame(std::chrono::microseconds delta, std::chrono::microseconds e
         graphics_.beginFrame(colorFrame_);
         graphics_.fillAll(backgroundColor_);
     }
-    
+
     graphics_.endFrame();
     graphicsContext_->endFrame();
 }

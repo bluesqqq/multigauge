@@ -61,7 +61,7 @@ public:
     bool setScreen(OwnedScreen screen);
 
     Screen* getScreen();
-    
+
     const Screen* getScreen() const;
 
     //----------[ LIFECYCLE ]----------//

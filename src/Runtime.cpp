@@ -23,10 +23,10 @@ Runtime::~Runtime() { shutdown(); }
 bool Runtime::init() {
     constexpr const char* TAG = "init";
     if (initialized_) return true;
-    
+
     io::setLogger(logger_);
     if (logger_ && !logger_->init()) return false;
-    
+
     if (!fs_.init()) {
         LOG_ERROR(TAG, "Failed to initialize filesystem.");
         return false;
@@ -34,7 +34,7 @@ bool Runtime::init() {
 
     packages_ = std::make_unique<package::Manager>(fs_, dataRoot_);
     packages_->rebuildLibrary();
-    
+
     if (!sensors_.load()) return false;
 
     contexts_ = std::make_unique<context::Manager>(
