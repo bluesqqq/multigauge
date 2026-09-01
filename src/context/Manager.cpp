@@ -2,7 +2,6 @@
 
 #include <multigauge/Config.h>
 #if MG_BUILD_EDITOR
-#include <multigauge/editor/Api.h>
 #include <multigauge/editor/Manager.h>
 #include <multigauge/screens/EditorScreen.h>
 #endif
@@ -92,7 +91,7 @@ bool Manager::setGaugeScreen(ContextId id, const std::string& packageId, const s
 #if MG_BUILD_EDITOR
 bool Manager::setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
     auto* c = contexts_.get(id);
-    if (!c || !editor::isFace(editors_, editorId, faceId)) return false;
+    if (!c || !editors_.isFace(editorId, faceId)) return false;
     return c->setScreen(std::make_unique<EditorScreen>(editors_, editorId, faceId));
 }
 #endif
