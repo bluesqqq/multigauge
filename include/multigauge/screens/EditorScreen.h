@@ -7,7 +7,7 @@
 #include <multigauge/screens/Screen.h>
 
 namespace mg {
-namespace editor { class EditorPreview; class Manager; }
+namespace editor { class Manager; class Preview; }
 
 class EditorScreen : public Screen {
 public:
@@ -40,7 +40,7 @@ private:
     editor::Manager& editors;
     editor::EditorId editorId{};
     editor::NodeId faceId = 0;
-    std::unique_ptr<editor::EditorPreview> preview;
+    std::unique_ptr<editor::Preview> preview;
 
 };
 

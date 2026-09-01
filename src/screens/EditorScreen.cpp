@@ -1,6 +1,6 @@
 #include <multigauge/screens/EditorScreen.h>
 
-#include "../editor/EditorPreview.h"
+#include "../editor/Preview.h"
 
 #include <multigauge/editor/Editor.h>
 #include <multigauge/editor/Manager.h>
@@ -15,7 +15,7 @@ EditorScreen::EditorScreen(
 ) : editors(editors),
     editorId(editorId),
     faceId(faceId),
-    preview(std::make_unique<editor::EditorPreview>()) {}
+    preview(std::make_unique<editor::Preview>()) {}
 
 EditorScreen::~EditorScreen() = default;
 
