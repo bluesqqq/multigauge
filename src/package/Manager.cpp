@@ -1,4 +1,4 @@
-#include <multigauge/runtime/PackageManager.h>
+#include <multigauge/package/Manager.h>
 
 #include "../AppPaths.h"
 
@@ -14,7 +14,7 @@
 #include <utility>
 #include <vector>
 
-namespace mg {
+namespace mg::package {
 
 namespace {
 
@@ -215,9 +215,9 @@ std::vector<std::string> readPackageDirectories(io::FileSystem& fs, const std::s
 
 } // namespace
 
-PackageManager::PackageManager(io::FileSystem& fs, std::string dataRoot) : fs(fs), dataRoot(std::move(dataRoot)) {}
+Manager::Manager(io::FileSystem& fs, std::string dataRoot) : fs(fs), dataRoot(std::move(dataRoot)) {}
 
-std::vector<PackageManager::PackageRecord> PackageManager::readInstalledPackages(io::FileSystem& fs, std::string_view dataRoot) {
+std::vector<Manager::PackageRecord> Manager::readInstalledPackages(io::FileSystem& fs, std::string_view dataRoot) {
     std::vector<PackageRecord> installedPackages;
     for (const auto& packageId : readPackageDirectories(fs, paths::packagesRootPath(dataRoot))) {
         if (!utils::isSafeId(packageId)) {
@@ -272,13 +272,13 @@ std::vector<PackageManager::PackageRecord> PackageManager::readInstalledPackages
     return installedPackages;
 }
 
-void PackageManager::sortCache(std::vector<PackageRecord>& cache) {
+void Manager::sortCache(std::vector<PackageRecord>& cache) {
     std::sort(cache.begin(), cache.end(), [](const auto& a, const auto& b) {
         return a.summary.id < b.summary.id;
     });
 }
 
-void PackageManager::rebuildDisplayNames(std::vector<PackageRecord>& cache) {
+void Manager::rebuildDisplayNames(std::vector<PackageRecord>& cache) {
     std::vector<std::string> usedNames;
     usedNames.reserve(cache.size());
 
@@ -288,7 +288,7 @@ void PackageManager::rebuildDisplayNames(std::vector<PackageRecord>& cache) {
     }
 }
 
-bool PackageManager::refreshCacheFromDisk() const {
+bool Manager::refreshCacheFromDisk() const {
     LOG_INFO(TAG, "refreshCacheFromDisk: scanning installed manifests");
     cache = readInstalledPackages(fs, dataRoot);
     rebuildDisplayNames(cache);
@@ -297,7 +297,7 @@ bool PackageManager::refreshCacheFromDisk() const {
     return true;
 }
 
-bool PackageManager::writeLibraryIndexFromCache() const {
+bool Manager::writeLibraryIndexFromCache() const {
     if (!cacheReady) {
         LOG_WARN(TAG, "writeLibraryIndexFromCache: cache not ready");
         return false;
@@ -314,7 +314,7 @@ bool PackageManager::writeLibraryIndexFromCache() const {
     return fs.writeText(paths::libraryPath(dataRoot), document.toString());
 }
 
-bool PackageManager::listPackages(std::vector<PackageSummary>& out) const {
+bool Manager::listPackages(std::vector<PackageSummary>& out) const {
     if (!cacheReady) {
         LOG_WARN(TAG, "listPackages: cache not ready");
         return false;
@@ -330,7 +330,7 @@ bool PackageManager::listPackages(std::vector<PackageSummary>& out) const {
     return true;
 }
 
-Result PackageManager::getPackage(const std::string& packageId) const {
+Result Manager::getPackage(const std::string& packageId) const {
     if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
@@ -339,7 +339,7 @@ Result PackageManager::getPackage(const std::string& packageId) const {
     return readJsonFile(fs, paths::manifestPath(dataRoot, packageId));
 }
 
-bool PackageManager::listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const {
+bool Manager::listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const {
     if (!utils::isSafeId(packageId)) {
         LOG_WARN(TAG, "listFaces: invalid package id %s", packageId.c_str());
         return false;
@@ -368,7 +368,7 @@ bool PackageManager::listFaces(const std::string& packageId, std::vector<FaceSum
     return true;
 }
 
-Result PackageManager::getFace(const std::string& packageId, const std::string& faceId) const {
+Result Manager::getFace(const std::string& packageId, const std::string& faceId) const {
     if (!utils::isSafeId(packageId) || !utils::isSafeId(faceId)) {
         return Error("Invalid face id");
     }
@@ -457,7 +457,7 @@ bool validatePackageDocument(json::Reader input, std::vector<AssetMetadata>& ass
     return true;
 }
 
-Result PackageManager::importPackage(const std::string& json) {
+Result Manager::importPackage(const std::string& json) {
     LOG_INFO(TAG, "importPackage: input bytes=%u", static_cast<unsigned>(json.size()));
 
     json::Document input = json::parse(json);
@@ -469,7 +469,7 @@ Result PackageManager::importPackage(const std::string& json) {
     return importPackage(input.root());
 }
 
-Result PackageManager::importPackage(json::Reader input) {
+Result Manager::importPackage(json::Reader input) {
     std::string validationError;
     std::vector<AssetMetadata> assetMetadata;
     if (!validatePackageDocument(input, assetMetadata, validationError)) {
@@ -621,7 +621,7 @@ Result PackageManager::importPackage(json::Reader input) {
     return OkObject();
 }
 
-Result PackageManager::exportPackage(const std::string& packageId) const {
+Result Manager::exportPackage(const std::string& packageId) const {
     if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
@@ -693,7 +693,7 @@ Result PackageManager::exportPackage(const std::string& packageId) const {
     return result;
 }
 
-Result PackageManager::removePackage(const std::string& packageId) {
+Result Manager::removePackage(const std::string& packageId) {
     if (!utils::isSafeId(packageId)) {
         return Error("Invalid package id");
     }
@@ -726,10 +726,10 @@ Result PackageManager::removePackage(const std::string& packageId) {
     return OkObject();
 }
 
-void PackageManager::rebuildLibrary() const {
+void Manager::rebuildLibrary() const {
     LOG_INFO(TAG, "rebuildLibrary: full rescan");
     (void)refreshCacheFromDisk();
     (void)writeLibraryIndexFromCache();
 }
 
-} // namespace mg
+} // namespace mg::package

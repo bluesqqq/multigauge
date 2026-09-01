@@ -8,7 +8,7 @@
 #include <vector>
 
 #include <multigauge/editor/History.h>
-#include <multigauge/editor/Result.h>
+#include <multigauge/Result.h>
 #include <multigauge/editor/Types.h>
 #include <multigauge/gauge/GaugeFace.h>
 
@@ -18,7 +18,7 @@ using gauge::Element;
 using gauge::GaugeFace;
 using gauge::NodeHandle;
 
-class EditorPreview;
+class Preview;
 
 /// @brief Editor model for gauge faces.
 
@@ -230,7 +230,7 @@ public:
     Result getHistory() const;
 
 private:
-    friend class EditorPreview;
+    friend class Preview;
 
     struct FaceEntry {
         FaceId id = 0;

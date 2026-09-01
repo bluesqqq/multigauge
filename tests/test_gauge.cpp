@@ -1,7 +1,6 @@
 #include <doctest/doctest.h>
 
-#include <multigauge/editor/Api.h>
-#include <multigauge/editor/EditorRegistry.h>
+#include <multigauge/editor/Manager.h>
 #include <multigauge/editor/Editor.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/gauge/elements/CustomElement.h>
@@ -417,27 +416,28 @@ TEST_CASE("gauge editor preserves hierarchy invariants through editing and histo
 }
 
 TEST_CASE("editor API drives the screen-facing gauge face") {
-    const auto id = mg::editor::create();
+    mg::editor::Manager editors;
+    const auto id = editors.create();
     REQUIRE(id.valid());
-    CHECK_FALSE(mg::editor::canUndo(id));
-    CHECK_FALSE(mg::editor::canRedo(id));
-    const auto values = mg::editor::listValueIDs(id);
+    CHECK_FALSE(editors.canUndo(id));
+    CHECK_FALSE(editors.canRedo(id));
+    const auto values = editors.listValueIDs(id);
     REQUIRE(values.ok);
     CHECK(values.data.root().size() == mg::ValueRegistry::size());
     std::string_view secondValueId;
     REQUIRE(values.data.root().element(1).read(secondValueId));
     CHECK(secondValueId == "engineRPM");
-    const auto created = mg::editor::createFace(id, "{}");
+    const auto created = editors.createFace(id, "{}");
     REQUIRE(created.ok);
-    CHECK(mg::editor::canUndo(id));
+    CHECK(editors.canUndo(id));
     std::uint64_t rawFaceId = 0;
     REQUIRE(created.data.root().member("id").read(rawFaceId));
     const auto faceId = static_cast<mg::editor::NodeId>(rawFaceId);
-    CHECK(mg::editor::isFace(id, faceId));
-    CHECK(mg::editor::getFace(id, faceId) != nullptr);
-    CHECK(mg::editor::getFacePropertiesMeta(id, faceId).ok);
-    CHECK(mg::editor::exportPackage(id).ok);
-    CHECK(mg::editor::destroy(id));
+    CHECK(editors.isFace(id, faceId));
+    CHECK(editors.getFace(id, faceId) != nullptr);
+    CHECK(editors.getFacePropertiesMeta(id, faceId).ok);
+    CHECK(editors.exportPackage(id).ok);
+    CHECK(editors.destroy(id));
 }
 
 } // namespace

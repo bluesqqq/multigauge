@@ -2,7 +2,7 @@
 
 namespace mg {
 
-#if MG_ENABLE_EDITOR_REFLECTION
+#if MG_BUILD_EDITOR
 bool Property::writeBaseMeta(json::ObjectWriter& object) const {
     if (!object.write("key", key ? key : "") || !object.write("name", meta.name ? meta.name : key ? key : "") ||
         !object.write("description", meta.description ? meta.description : "") || !object.write("widget", meta.widget ? meta.widget : "json") ||

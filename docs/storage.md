@@ -11,7 +11,7 @@ Multigauge stores runtime data below an implementation-selected data root:
     faces/<face-id>.json
 ```
 
-`PackageManager::importPackage` accepts [package.schema.json](./schemas/package.schema.json), assigns
+`package::Manager::importPackage` accepts [package.schema.json](./schemas/package.schema.json), assigns
 internal package and face IDs, and writes individual face documents. `exportPackage`
 reconstructs the package document without those internal IDs.
 

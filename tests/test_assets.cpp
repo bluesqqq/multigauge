@@ -4,7 +4,7 @@
 #include <multigauge/io/FileSystem.h>
 #include <multigauge/json/Json.h>
 #include <multigauge/runtime/AssetManager.h>
-#include <multigauge/runtime/PackageManager.h>
+#include <multigauge/package/Manager.h>
 
 #include <map>
 #include <set>
@@ -84,7 +84,7 @@ TEST_CASE("editor refuses to remove an asset used by an image element") {
 
 TEST_CASE("package manager installs and exports embedded assets") {
     MemoryFileSystem fs;
-    mg::PackageManager packages(fs, "/data");
+    mg::package::Manager packages(fs, "/data");
     const std::string input = R"({"name":"Package","author":"Author","description":"Test","assets":[{"name":"logo.png","mediaType":"image/png","data":"AQID"}],"faces":[{"name":"Face","face":{"children":[]}}]})";
 
     const mg::Result imported = packages.importPackage(input);

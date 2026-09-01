@@ -6,7 +6,7 @@
 #include <string>
 #include <vector>
 
-#include <multigauge/editor/Result.h>
+#include <multigauge/Result.h>
 #include <multigauge/sensor/Types.h>
 #include <multigauge/sensor/Registry.h>
 

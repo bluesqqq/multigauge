@@ -6,7 +6,7 @@
 
 #include <multigauge/json/Json.h>
 
-#include <multigauge/editor/Result.h>
+#include <multigauge/Result.h>
 
 namespace mg::io {
 class FileSystem;
@@ -25,13 +25,17 @@ struct PackageSummary {
     std::string author;
 };
 
+} // namespace mg
+
+namespace mg::package {
+
 /// Manages installed package storage under the configured data root.
-class PackageManager {
+class Manager {
 public:
     /// Creates a package manager for `dataRoot`.
     /// @param fs File system used for package storage.
     /// @param dataRoot Base directory for package data.
-    PackageManager(io::FileSystem& fs, std::string dataRoot);
+    Manager(io::FileSystem& fs, std::string dataRoot);
 
     //----------[ QUERY ]----------//
 
@@ -105,4 +109,4 @@ private:
     mutable std::vector<PackageRecord> cache;
 };
 
-} // namespace mg
+} // namespace mg::package

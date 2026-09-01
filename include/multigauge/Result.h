@@ -1,8 +1,8 @@
 #pragma once
 
-#include <multigauge/json/Json.h>
-
 #include <string>
+
+#include <multigauge/json/Json.h>
 
 namespace mg {
 

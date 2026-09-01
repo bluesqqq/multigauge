@@ -10,19 +10,27 @@
 namespace mg {
 
 class GaugeScreen : public Screen {
-    private:
-        std::unique_ptr<::mg::gauge::GaugeFace> face = nullptr;
-        std::string packageId;
+public:
+    //----------[ CTOR ]----------//
 
-    public:
-        explicit GaugeScreen();
+    explicit GaugeScreen();
 
-        void setFace(std::unique_ptr<::mg::gauge::GaugeFace> face, std::string packageId = {});
+    //----------[ FACE ]----------//
 
-        void onShow(RuntimeContext& ctx) override;
-        void onHide(RuntimeContext& ctx) override;
-        void update(RuntimeContext& ctx, std::chrono::microseconds delta) override;
-        void draw(RuntimeContext& ctx, graphics::Graphics& g) override;
+    void setFace(std::unique_ptr<::mg::gauge::GaugeFace> face, std::string packageId = {});
+
+    //----------[ LIFECYCLE ]----------//
+
+    void onShow(context::Context& ctx) override;
+    void onHide(context::Context& ctx) override;
+
+    void update(context::Context& ctx, std::chrono::microseconds delta) override;
+    void draw(context::Context& ctx, graphics::Graphics& g) override;
+
+private:
+    std::unique_ptr<::mg::gauge::GaugeFace> face = nullptr;
+    std::string packageId;
+
 };
 
 }
