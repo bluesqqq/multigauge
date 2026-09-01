@@ -292,8 +292,8 @@ Result getElementPropertiesMeta(
     return value ? value->getElementPropertiesMeta(ref, path) : invalidEditor(id);
 }
 
-ClipboardSummary getClipboardSummary(Manager& manager, EditorId) {
-    return {manager.clipboard().kind};
+ClipboardState::Kind clipboardKind(const Manager& manager, EditorId) {
+    return manager.clipboard().kind;
 }
 
 void clearClipboard(Manager& manager, EditorId) {
@@ -416,7 +416,7 @@ Result Manager::getFacePropertiesMeta(EditorId id, NodeId faceId, const std::str
 Result Manager::setElementProperty(EditorId id, ElementRef element, const std::string& path, const std::string& json) { return detail::setElementProperty(*this, id, element, path, json); }
 Result Manager::getElementProperty(EditorId id, ElementRef element, const std::string& path) { return detail::getElementProperty(*this, id, element, path); }
 Result Manager::getElementPropertiesMeta(EditorId id, ElementRef element, const std::string& path) { return detail::getElementPropertiesMeta(*this, id, element, path); }
-ClipboardSummary Manager::getClipboardSummary(EditorId id) const { return detail::getClipboardSummary(const_cast<Manager&>(*this), id); }
+ClipboardState::Kind Manager::clipboardKind(EditorId id) const { return detail::clipboardKind(*this, id); }
 void Manager::clearClipboard(EditorId id) { detail::clearClipboard(*this, id); }
 Result Manager::copyFace(EditorId id, NodeId faceId) { return detail::copyFace(*this, id, faceId); }
 Result Manager::cutFace(EditorId id, NodeId faceId) { return detail::cutFace(*this, id, faceId); }
