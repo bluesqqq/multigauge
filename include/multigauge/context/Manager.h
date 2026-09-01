@@ -8,7 +8,7 @@
 #include <multigauge/container/GenerationalHandle.h>
 #include <multigauge/container/HandlePool.h>
 #include <multigauge/Config.h>
-#include <multigauge/runtime/RuntimeContext.h>
+#include <multigauge/context/Context.h>
 #if MG_BUILD_EDITOR
 #include <multigauge/editor/Types.h>
 #endif
@@ -96,7 +96,7 @@ private:
 #if MG_BUILD_EDITOR
     editor::Manager& editors_;
 #endif
-    HandlePool<RuntimeContext, ContextId> contexts_;
+    HandlePool<Context, ContextId> contexts_;
 };
 
 } // namespace context
