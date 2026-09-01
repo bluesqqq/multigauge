@@ -8,9 +8,14 @@
 
 namespace mg {
 
-EditorScreen::EditorScreen(editor::Manager& editors, editor::EditorId editorId, editor::NodeId faceId)
-    : editors(editors), editorId(editorId), faceId(faceId), preview(std::make_unique<editor::EditorPreview>()) {
-}
+EditorScreen::EditorScreen(
+    editor::Manager& editors,
+    editor::EditorId editorId,
+    editor::NodeId faceId
+) : editors(editors),
+    editorId(editorId),
+    faceId(faceId),
+    preview(std::make_unique<editor::EditorPreview>()) {}
 
 EditorScreen::~EditorScreen() = default;
 
