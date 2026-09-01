@@ -74,8 +74,8 @@ public:
     [[nodiscard]] Result getElementProperty(EditorId id, ElementRef element, const std::string& path);
     [[nodiscard]] Result getElementPropertiesMeta(EditorId id, ElementRef element, const std::string& path = "");
 
-    [[nodiscard]] ClipboardState::Kind clipboardKind(EditorId id) const;
-    void clearClipboard(EditorId id);
+    [[nodiscard]] ClipboardState::Kind clipboardKind() const;
+    void clearClipboard();
     [[nodiscard]] Result copyFace(EditorId id, NodeId faceId);
     [[nodiscard]] Result cutFace(EditorId id, NodeId faceId);
     [[nodiscard]] Result pasteFace(EditorId id, FacePlacement where = FacePlacement{});

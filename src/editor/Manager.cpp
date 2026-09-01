@@ -4,9 +4,8 @@
 
 #include <multigauge/editor/Clipboard.h>
 #include <multigauge/editor/Editor.h>
-#include <multigauge/editor/Manager.h>
-#include <multigauge/value/ValueRegistry.h>
 #include <multigauge/io/Log.h>
+#include <multigauge/value/ValueRegistry.h>
 
 namespace mg::editor {
 namespace {
@@ -15,7 +14,7 @@ Editor* editor(Manager& manager, EditorId id) {
 }
 
 Result invalidEditor(EditorId id) {
-    constexpr const char* TAG = "EditorApi";
+    constexpr const char* TAG = "EditorManager";
 
     LOG_WARN(
         TAG,
@@ -48,6 +47,7 @@ Result packageInfoResult(const Editor::PackageInfo& info) {
 }
 } // namespace
 
+namespace {
 namespace detail {
 
 Result setPackageInfo(
@@ -292,11 +292,11 @@ Result getElementPropertiesMeta(
     return value ? value->getElementPropertiesMeta(ref, path) : invalidEditor(id);
 }
 
-ClipboardState::Kind clipboardKind(const Manager& manager, EditorId) {
+ClipboardState::Kind clipboardKind(const Manager& manager) {
     return manager.clipboard().kind;
 }
 
-void clearClipboard(Manager& manager, EditorId) {
+void clearClipboard(Manager& manager) {
     manager.clipboard().clear();
 }
 
@@ -385,6 +385,7 @@ Result getHistory(Manager& manager, EditorId id) {
 }
 
 } // namespace detail
+} // namespace
 
 } // namespace mg::editor
 
@@ -416,8 +417,8 @@ Result Manager::getFacePropertiesMeta(EditorId id, NodeId faceId, const std::str
 Result Manager::setElementProperty(EditorId id, ElementRef element, const std::string& path, const std::string& json) { return detail::setElementProperty(*this, id, element, path, json); }
 Result Manager::getElementProperty(EditorId id, ElementRef element, const std::string& path) { return detail::getElementProperty(*this, id, element, path); }
 Result Manager::getElementPropertiesMeta(EditorId id, ElementRef element, const std::string& path) { return detail::getElementPropertiesMeta(*this, id, element, path); }
-ClipboardState::Kind Manager::clipboardKind(EditorId id) const { return detail::clipboardKind(*this, id); }
-void Manager::clearClipboard(EditorId id) { detail::clearClipboard(*this, id); }
+ClipboardState::Kind Manager::clipboardKind() const { return detail::clipboardKind(*this); }
+void Manager::clearClipboard() { detail::clearClipboard(*this); }
 Result Manager::copyFace(EditorId id, NodeId faceId) { return detail::copyFace(*this, id, faceId); }
 Result Manager::cutFace(EditorId id, NodeId faceId) { return detail::cutFace(*this, id, faceId); }
 Result Manager::pasteFace(EditorId id, FacePlacement where) { return detail::pasteFace(*this, id, where); }
