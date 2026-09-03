@@ -155,18 +155,17 @@ TEST_CASE("Clay layout properties serialize grouped padding and floating placeme
     const auto source = mg::json::parse(R"({
         "width":{"mode":"percent","value":1,"limit":320},
         "height":{"mode":"grow","value":8,"limit":480},
-        "direction":"top-to-bottom",
+        "direction":"vertical",
         "padding":{"left":4,"right":8,"top":12,"bottom":16},
         "childGap":6,
         "childAlignment":{"x":"center","y":"bottom"},
         "floating":{
-            "attachTo":"parent",
+            "mode":"relative",
             "elementAnchor":"center",
             "parentAnchor":"center",
             "offset":{"x":3,"y":-2},
             "expand":{"width":4,"height":5},
-            "zIndex":7,
-            "fillParent":true
+            "zIndex":7
         },
         "aspectRatio":1.25
     })");
@@ -177,24 +176,54 @@ TEST_CASE("Clay layout properties serialize grouped padding and floating placeme
     CHECK(layout.width.mode == mg::gauge::layout::SizeMode::Percent);
     CHECK(layout.width.value == 1.0F);
     CHECK(layout.width.limit == 320.0F);
+    CHECK(layout.direction == mg::gauge::layout::Direction::Vertical);
     CHECK(layout.padding.left == 4);
     CHECK(layout.padding.bottom == 16);
     CHECK(layout.childAlignment.x == mg::gauge::layout::AlignmentX::Center);
     CHECK(layout.childAlignment.y == mg::gauge::layout::AlignmentY::Bottom);
-    CHECK(layout.floating.attachTo == mg::gauge::layout::FloatingAttachTo::Parent);
+    CHECK(layout.floating.mode == mg::gauge::layout::FloatingMode::Relative);
     CHECK(layout.floating.zIndex == 7);
-    CHECK(layout.floating.fillParent);
     CHECK(layout.aspectRatio == 1.25F);
 
     auto saved = mg::json::object();
     auto writer = saved.writer();
     REQUIRE(layout.saveProperties(writer));
     CHECK(saved.root().member("padding").member("left").type() == mg::json::Type::Int);
-    CHECK(saved.root().member("floating").member("attachTo").type() == mg::json::Type::String);
+    CHECK(saved.root().member("floating").member("mode").type() == mg::json::Type::String);
     CHECK(saved.root().member("width").member("limit").type() == mg::json::Type::Number);
 }
 
-TEST_CASE("floating children share their padded parent's bounds") {
+TEST_CASE("layout emits an authoritative structured inspector") {
+    mg::gauge::layout::Layout layout;
+    auto document = mg::json::object();
+    auto writer = document.writer();
+    REQUIRE(layout.writeInspectorMeta(writer));
+
+    const auto inspector = document.root();
+    REQUIRE(inspector.member("properties").isArray());
+    const auto presentation = inspector.member("layout");
+    REQUIRE(presentation.isArray());
+    REQUIRE(presentation.size() == 3);
+
+    const auto position = presentation.element(2);
+    std::string_view title;
+    REQUIRE(position.member("title").read(title));
+    CHECK(title == "Position");
+    const auto positionNodes = position.member("children");
+    REQUIRE(positionNodes.isArray());
+    REQUIRE(positionNodes.size() == 5);
+    const auto anchors = positionNodes.element(1);
+    std::string_view widget;
+    REQUIRE(anchors.member("widget").read(widget));
+    CHECK(widget == "anchor-pair");
+    std::string_view path;
+    REQUIRE(anchors.member("bindings").member("target").read(path));
+    CHECK(path == "floating.parentAnchor");
+    REQUIRE(anchors.member("visibleWhen").element(0).member("path").read(path));
+    CHECK(path == "floating.mode");
+}
+
+TEST_CASE("floating children with grow sizing share their padded parent's bounds") {
     const auto source = mg::json::parse(R"({
         "layout":{"padding":{"left":10,"right":10,"top":10,"bottom":10}},
         "children":[{
@@ -204,9 +233,9 @@ TEST_CASE("floating children share their padded parent's bounds") {
                 {
                     "type":"rectangle",
                     "layout":{
-                        "width":{"mode":"percent","value":1},
-                        "height":{"mode":"percent","value":1},
-                        "floating":{"attachTo":"parent","fillParent":true}
+                        "width":{"mode":"grow"},
+                        "height":{"mode":"grow"},
+                        "floating":{"mode":"relative"}
                     },
                     "paint":{"fill":"#FF0000FF"},
                     "radius":8
@@ -214,9 +243,9 @@ TEST_CASE("floating children share their padded parent's bounds") {
                 {
                     "type":"rectangle",
                     "layout":{
-                        "width":{"mode":"percent","value":1},
-                        "height":{"mode":"percent","value":1},
-                        "floating":{"attachTo":"parent","fillParent":true,"zIndex":1}
+                        "width":{"mode":"grow"},
+                        "height":{"mode":"grow"},
+                        "floating":{"mode":"relative","zIndex":1}
                     },
                     "paint":{"fill":"#00FF00FF"},
                     "radius":8
@@ -385,8 +414,8 @@ TEST_CASE("gauge editor preserves hierarchy invariants through editing and histo
     REQUIRE(hierarchy.ok);
     CHECK(hierarchy.data.root().member("faces").size() == 1);
     CHECK(editor.listElementTypes().ok);
-    CHECK(editor.getFacePropertiesMeta(faceId).ok);
-    CHECK(editor.getElementPropertiesMeta(rootRef).ok);
+    CHECK(editor.getFaceInspector(faceId).ok);
+    CHECK(editor.getElementInspector(rootRef).ok);
 
     const std::string package = editor.exportPackage();
     REQUIRE_FALSE(package.empty());
@@ -435,7 +464,7 @@ TEST_CASE("editor API drives the screen-facing gauge face") {
     const auto faceId = static_cast<mg::editor::NodeId>(rawFaceId);
     CHECK(mg::editor::isFace(id, faceId));
     CHECK(mg::editor::getFace(id, faceId) != nullptr);
-    CHECK(mg::editor::getFacePropertiesMeta(id, faceId).ok);
+    CHECK(mg::editor::getFaceInspector(id, faceId).ok);
     CHECK(mg::editor::exportPackage(id).ok);
     CHECK(mg::editor::destroy(id));
 }
