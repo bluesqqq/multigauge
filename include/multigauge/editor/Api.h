@@ -168,12 +168,8 @@ Result getFaceProperty(
     const std::string& path
 );
 
-/// @brief Returns face property metadata.
-Result getFacePropertiesMeta(
-    EditorId id,
-    NodeId faceId,
-    const std::string& path = ""
-);
+/// @brief Returns the complete inspector document for one face.
+Result getFaceInspector(EditorId id, NodeId faceId);
 
 /// @brief Sets an element property from JSON.
 Result setElementProperty(
@@ -190,12 +186,8 @@ Result getElementProperty(
     const std::string& path
 );
 
-/// @brief Returns element property metadata.
-Result getElementPropertiesMeta(
-    EditorId id,
-    ElementRef element,
-    const std::string& path = ""
-);
+/// @brief Returns the complete inspector document for one element.
+Result getElementInspector(EditorId id, ElementRef element);
 
 //----------[ CLIPBOARD ]----------//
 

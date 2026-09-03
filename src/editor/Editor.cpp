@@ -612,37 +612,24 @@ Result Editor::getElementProperty(ElementRef reference, const std::string& path)
                : Error("Failed to get element property");
 }
 
-Result Editor::getFacePropertiesMeta(FaceId id, const std::string& path) const {
+Result Editor::getFaceInspector(FaceId id) const {
     const GaugeFace* value = face(id);
     if (!value) return Error("Invalid face id");
-
-    const ::mg::PropertyObject* owner = value;
-    const ::mg::Property* property = nullptr;
-    if (!path.empty() && (!value->resolvePath(path, owner, property) || !owner || !property))
-        return Error("Invalid property path");
 
     Result result = OkObject();
     json::Writer writer = result.data.writer();
     return writer.writeObject([&](json::ObjectWriter& object) {
         if (!object.write("id", static_cast<std::uint64_t>(id))) return false;
-        if (!path.empty() && !object.write("path", path)) return false;
-        return object.writeValue("meta", [&](json::Writer& metaWriter) {
-            return property ? owner->writePropertyMeta(metaWriter, *property)
-                            : value->writePropertiesMeta(metaWriter);
+        return object.writeValue("inspector", [&](json::Writer& inspector) {
+            return value->writeInspectorMeta(inspector);
         });
     })
-               ? std::move(result)
-               : Error("Failed to get face property metadata");
+               ? std::move(result) : Error("Failed to get face inspector");
 }
 
-Result Editor::getElementPropertiesMeta(ElementRef reference, const std::string& path) const {
+Result Editor::getElementInspector(ElementRef reference) const {
     const Element* value = element(reference);
     if (!value) return Error("Invalid element");
-
-    const ::mg::PropertyObject* owner = value;
-    const ::mg::Property* property = nullptr;
-    if (!path.empty() && (!value->resolvePath(path, owner, property) || !owner || !property))
-        return Error("Invalid property path");
 
     Result result = OkObject();
     json::Writer writer = result.data.writer();
@@ -651,14 +638,11 @@ Result Editor::getElementPropertiesMeta(ElementRef reference, const std::string&
                 return writeHandle(referenceWriter, reference.faceId, reference.handle);
             }))
             return false;
-        if (!path.empty() && !object.write("path", path)) return false;
-        return object.writeValue("meta", [&](json::Writer& metaWriter) {
-            return property ? owner->writePropertyMeta(metaWriter, *property)
-                            : value->writePropertiesMeta(metaWriter);
+        return object.writeValue("inspector", [&](json::Writer& inspector) {
+            return value->writeInspectorMeta(inspector);
         });
     })
-               ? std::move(result)
-               : Error("Failed to get element property metadata");
+               ? std::move(result) : Error("Failed to get element inspector");
 }
 
 Result Editor::getHierarchy() const {

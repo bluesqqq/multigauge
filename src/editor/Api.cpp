@@ -292,13 +292,9 @@ Result getFaceProperty(
     return value ? value->getFaceProperty(faceId, path) : invalidEditor(id);
 }
 
-Result getFacePropertiesMeta(
-    EditorId id,
-    NodeId faceId,
-    const std::string& path
-) {
+Result getFaceInspector(EditorId id, NodeId faceId) {
     auto* value = editor(id);
-    return value ? value->getFacePropertiesMeta(faceId, path) : invalidEditor(id);
+    return value ? value->getFaceInspector(faceId) : invalidEditor(id);
 }
 
 Result setElementProperty(
@@ -320,13 +316,9 @@ Result getElementProperty(
     return value ? value->getElementProperty(ref, path) : invalidEditor(id);
 }
 
-Result getElementPropertiesMeta(
-    EditorId id,
-    ElementRef ref,
-    const std::string& path
-) {
+Result getElementInspector(EditorId id, ElementRef ref) {
     auto* value = editor(id);
-    return value ? value->getElementPropertiesMeta(ref, path) : invalidEditor(id);
+    return value ? value->getElementInspector(ref) : invalidEditor(id);
 }
 
 ClipboardSummary getClipboardSummary(EditorId) {

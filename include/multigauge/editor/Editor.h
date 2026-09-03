@@ -194,17 +194,11 @@ public:
         const std::string& path
     ) const;
 
-    /// @brief Gets face property metadata.
-    Result getFacePropertiesMeta(
-        FaceId faceId,
-        const std::string& path = ""
-    ) const;
+    /// @brief Gets the complete inspector document for one face.
+    Result getFaceInspector(FaceId faceId) const;
 
-    /// @brief Gets element property metadata.
-    Result getElementPropertiesMeta(
-        ElementRef element,
-        const std::string& path = ""
-    ) const;
+    /// @brief Gets the complete inspector document for one element.
+    Result getElementInspector(ElementRef element) const;
 
     //----------[ HISTORY ]----------//
 
