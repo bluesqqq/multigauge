@@ -68,13 +68,12 @@
     "floating": {
       "type": "object",
       "properties": {
-        "attachTo": { "enum": ["none", "parent", "root"] },
+        "mode": { "enum": ["flow", "relative", "absolute"] },
         "elementAnchor": { "$ref": "#/$defs/floatingAnchor" },
         "parentAnchor": { "$ref": "#/$defs/floatingAnchor" },
         "offset": { "$ref": "#/$defs/offset" },
         "expand": { "$ref": "#/$defs/expand" },
-        "zIndex": { "type": "integer" },
-        "fillParent": { "type": "boolean" }
+        "zIndex": { "type": "integer" }
       },
       "additionalProperties": true
     },
@@ -83,7 +82,7 @@
       "properties": {
         "width": { "$ref": "#/$defs/layoutSize" },
         "height": { "$ref": "#/$defs/layoutSize" },
-        "direction": { "enum": ["left-to-right", "top-to-bottom"] },
+        "direction": { "enum": ["horizontal", "vertical"] },
         "padding": { "$ref": "#/$defs/padding" },
         "childGap": { "type": "integer" },
         "childAlignment": { "$ref": "#/$defs/childAlignment" },
