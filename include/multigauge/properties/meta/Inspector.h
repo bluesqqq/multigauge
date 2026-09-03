@@ -96,11 +96,53 @@ protected: \
         }); \
     }
 
+#define MG_SECTION(title, body) \
+    do { \
+        if (!inspector.section(title, [&](auto& inspector) -> bool { \
+                body \
+                return true; \
+            })) return false; \
+    } while (false)
+
+#define MG_ROW(body) \
+    do { \
+        if (!inspector.row([&](auto& inspector) -> bool { \
+                body \
+                return true; \
+            })) return false; \
+    } while (false)
+
+#define MG_PROPERTY(path) \
+    do { \
+        if (!inspector.property(path)) return false; \
+    } while (false)
+
+#define MG_PROPERTY_IF(path, visible_when) \
+    do { \
+        if (!inspector.property(path, visible_when)) return false; \
+    } while (false)
+
+#define MG_CONTROL(widget, ...) \
+    do { \
+        if (!inspector.control(widget, __VA_ARGS__)) return false; \
+    } while (false)
+
+#define MG_CONTROL_IF(widget, visible_when, ...) \
+    do { \
+        if (!inspector.control(widget, __VA_ARGS__, visible_when)) return false; \
+    } while (false)
+
 #define MG_BIND(name, path) ::mg::inspector::Binding{name, path}
 #define MG_OPTION(key, value) ::mg::inspector::Option{key, value}
 #else
 #define MG_INSPECTOR_BEGIN()
 #define MG_INSPECTOR_END()
+#define MG_SECTION(title, body)
+#define MG_ROW(body)
+#define MG_PROPERTY(path)
+#define MG_PROPERTY_IF(path, visible_when)
+#define MG_CONTROL(widget, ...)
+#define MG_CONTROL_IF(widget, visible_when, ...)
 #define MG_BIND(name, path)
 #define MG_OPTION(key, value)
 #endif
