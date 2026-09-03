@@ -95,6 +95,23 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
 #endif
 }
 
+#if MG_BUILD_EDITOR
+bool PropertyObject::writeInspectorLayout(json::Writer&) const {
+    return false;
+}
+
+bool PropertyObject::writeInspectorMeta(json::Writer& writer) const {
+    return writer.writeObject([&](json::ObjectWriter& object) {
+        if (!object.writeValue("properties", [&](json::Writer& properties) {
+                return writePropertiesMeta(properties);
+            })) return false;
+        return !hasInspectorLayout() || object.writeValue("layout", [&](json::Writer& layout) {
+            return writeInspectorLayout(layout);
+        });
+    });
+}
+#endif
+
 std::vector<std::string> PropertyObject::splitPath(const std::string& path) {
     std::vector<std::string> parts; std::string current;
     for (char c : path) { if (c == '.') { if (!current.empty()) { parts.push_back(std::move(current)); current.clear(); } } else current.push_back(c); }
