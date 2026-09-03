@@ -9,6 +9,7 @@
 
 #include <multigauge/json/Json.h>
 #include <multigauge/properties/meta/PropertyMetadata.h>
+#include <multigauge/properties/meta/Rules.h>
 
 namespace mg {
 
@@ -24,6 +25,13 @@ struct Binding {
 struct Option {
     const char* key;
     const char* value;
+};
+
+/// @brief A simple inspector visibility condition.
+struct Rule {
+    const char* path;
+    const char* op;
+    std::initializer_list<const char*> values;
 };
 
 /// @brief Builds an editor-only inspector presentation tree for one property object.
@@ -58,15 +66,16 @@ public:
         });
     }
 
-    bool property(
-        const char* path,
-        PropertyMetadata::RuleListGetter visibleWhen = nullptr
-    );
-    
+    bool property(const char* path);
+    bool property(const char* path, const Rule& visibleWhen);
+
     bool control(
         const char* widget, std::initializer_list<Binding> bindings,
-        PropertyMetadata::RuleListGetter visibleWhen = nullptr,
         std::initializer_list<Option> options = {}
+    );
+    bool control(
+        const char* widget, std::initializer_list<Binding> bindings,
+        const Rule& visibleWhen, std::initializer_list<Option> options = {}
     );
 
 private:
@@ -132,6 +141,7 @@ protected: \
         if (!inspector.control(widget, __VA_ARGS__, visible_when)) return false; \
     } while (false)
 
+#define MG_IN(path, ...) ::mg::inspector::Rule{path, "in", {__VA_ARGS__}}
 #define MG_BIND(name, path) ::mg::inspector::Binding{name, path}
 #define MG_OPTION(key, value) ::mg::inspector::Option{key, value}
 #else
@@ -143,6 +153,7 @@ protected: \
 #define MG_PROPERTY_IF(path, visible_when)
 #define MG_CONTROL(widget, ...)
 #define MG_CONTROL_IF(widget, visible_when, ...)
+#define MG_IN(path, ...)
 #define MG_BIND(name, path)
 #define MG_OPTION(key, value)
 #endif
