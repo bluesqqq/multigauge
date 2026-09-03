@@ -1,0 +1,70 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/inspector.schema.json",
+  "title": "Inspector Metadata Schema",
+  "description": "Editor-only inspector documents emitted by PropertyObject.",
+  "type": "object",
+  "required": ["properties"],
+  "properties": {
+    "properties": { "type": "array", "description": "Canonical property metadata and current values." },
+    "layout": { "$ref": "#/$defs/nodeList" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "ruleList": { "$ref": "rules.schema.json" },
+    "bindingMap": {
+      "type": "object",
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "nodeList": { "type": "array", "items": { "$ref": "#/$defs/node" } },
+    "section": {
+      "type": "object",
+      "required": ["type", "title", "children"],
+      "properties": {
+        "type": { "const": "section" },
+        "title": { "type": "string" },
+        "children": { "$ref": "#/$defs/nodeList" }
+      },
+      "additionalProperties": false
+    },
+    "row": {
+      "type": "object",
+      "required": ["type", "children"],
+      "properties": {
+        "type": { "const": "row" },
+        "children": { "$ref": "#/$defs/nodeList" }
+      },
+      "additionalProperties": false
+    },
+    "property": {
+      "type": "object",
+      "required": ["type", "path"],
+      "properties": {
+        "type": { "const": "property" },
+        "path": { "type": "string", "minLength": 1 },
+        "visibleWhen": { "$ref": "#/$defs/ruleList" }
+      },
+      "additionalProperties": false
+    },
+    "control": {
+      "type": "object",
+      "required": ["type", "widget", "bindings"],
+      "properties": {
+        "type": { "const": "control" },
+        "widget": { "type": "string", "minLength": 1 },
+        "bindings": { "$ref": "#/$defs/bindingMap" },
+        "options": { "type": "object", "additionalProperties": { "type": "string" } },
+        "visibleWhen": { "$ref": "#/$defs/ruleList" }
+      },
+      "additionalProperties": false
+    },
+    "node": {
+      "oneOf": [
+        { "$ref": "#/$defs/section" },
+        { "$ref": "#/$defs/row" },
+        { "$ref": "#/$defs/property" },
+        { "$ref": "#/$defs/control" }
+      ]
+    }
+  }
+}

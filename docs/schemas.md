@@ -8,3 +8,4 @@
 | [library.schema.json](./schemas/library.schema.json) | Generated package index. |
 | [state.schema.json](./schemas/state.schema.json) | Device-local runtime telemetry configuration. |
 | [rules.schema.json](./schemas/rules.schema.json) | Property metadata rules. |
+| [inspector.schema.json](./schemas/inspector.schema.json) | Editor-only structured inspector metadata. |
