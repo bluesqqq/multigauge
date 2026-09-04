@@ -414,8 +414,18 @@ TEST_CASE("gauge editor preserves hierarchy invariants through editing and histo
     REQUIRE(hierarchy.ok);
     CHECK(hierarchy.data.root().member("faces").size() == 1);
     CHECK(editor.listElementTypes().ok);
-    CHECK(editor.getFaceInspector(faceId).ok);
-    CHECK(editor.getElementInspector(rootRef).ok);
+    const auto faceInspector = editor.getFaceInspector(faceId);
+    REQUIRE(faceInspector.ok);
+    CHECK(faceInspector.data.root().member("inspector").member("properties").isArray());
+#if MG_BUILD_EDITOR
+    CHECK(faceInspector.data.root().member("inspector").member("layout").isArray());
+#endif
+    const auto elementInspector = editor.getElementInspector(rootRef);
+    REQUIRE(elementInspector.ok);
+    CHECK(elementInspector.data.root().member("inspector").member("properties").isArray());
+#if MG_BUILD_EDITOR
+    CHECK(elementInspector.data.root().member("inspector").member("layout").isArray());
+#endif
 
     const std::string package = editor.exportPackage();
     REQUIRE_FALSE(package.empty());

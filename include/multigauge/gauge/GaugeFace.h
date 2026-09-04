@@ -10,6 +10,9 @@
 #include <multigauge/container/HandlePool.h>
 #include <multigauge/gauge/Element.h>
 #include <multigauge/graphics/colors/Color.h>
+#if MG_BUILD_EDITOR
+#include <multigauge/properties/meta/Inspector.h>
+#endif
 
 namespace mg {
 
@@ -280,6 +283,17 @@ private:
         MG_PROP(backgroundColor_, "bgColor", "Background Color", "Gauge face background color.")
         MG_PROP_CUSTOM_HIDDEN("children", "Children", "Face element hierarchy.", &GaugeFace::setChildren, &GaugeFace::getChildren)
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Background", {
+        MG_PROPERTY("bgColor");
+    });
+    MG_SECTION("Layout", {
+        MG_PROPERTY("layout");
+    });
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace gauge
