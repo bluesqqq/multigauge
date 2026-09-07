@@ -1,5 +1,6 @@
 #include <doctest/doctest.h>
 
+#include <multigauge/Multigauge.h>
 #include <multigauge/properties/PropertyCodec.h>
 #include <multigauge/properties/PropertyObject.h>
 
