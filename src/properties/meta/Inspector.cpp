@@ -44,6 +44,14 @@ bool Builder::property(const char* path, const Rule& visibleWhen) {
     });
 }
 
+bool Builder::include(const char* path) {
+    if (!claim(path)) return false;
+
+    return nodes_.writeObject([&](json::ObjectWriter& object) {
+        return object.write("type", "include") && object.write("path", path);
+    });
+}
+
 bool Builder::control(
     const char* widget,
     std::initializer_list<Binding> bindings,

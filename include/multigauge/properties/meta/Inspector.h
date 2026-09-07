@@ -66,8 +66,22 @@ public:
         });
     }
 
+    template <typename Fn>
+    bool row(const char* label, Fn&& fn) {
+        return nodes_.writeObject([&](json::ObjectWriter& object) {
+            return object.write("type", "row") && object.write("label", label) &&
+                   object.writeArray("children", [&](json::ArrayWriter& children) {
+                       Builder child{object_, children, bindings_};
+                       return fn(child);
+                   });
+        });
+    }
+
     bool property(const char* path);
     bool property(const char* path, const Rule& visibleWhen);
+
+    /// Includes a child property object's inspector sections at the current level.
+    bool include(const char* path);
 
     bool control(
         const char* widget, std::initializer_list<Binding> bindings,
@@ -131,6 +145,19 @@ protected: \
         if (!inspector.property(path, visible_when)) return false; \
     } while (false)
 
+#define MG_LABELED_ROW(label, body) \
+    do { \
+        if (!inspector.row(label, [&](auto& inspector) -> bool { \
+                body \
+                return true; \
+            })) return false; \
+    } while (false)
+
+#define MG_INCLUDE(path) \
+    do { \
+        if (!inspector.include(path)) return false; \
+    } while (false)
+
 #define MG_CONTROL(widget, ...) \
     do { \
         if (!inspector.control(widget, __VA_ARGS__)) return false; \
@@ -149,8 +176,10 @@ protected: \
 #define MG_INSPECTOR_END()
 #define MG_SECTION(title, body)
 #define MG_ROW(body)
+#define MG_LABELED_ROW(label, body)
 #define MG_PROPERTY(path)
 #define MG_PROPERTY_IF(path, visible_when)
+#define MG_INCLUDE(path)
 #define MG_CONTROL(widget, ...)
 #define MG_CONTROL_IF(widget, visible_when, ...)
 #define MG_IN(path, ...)
