@@ -8,7 +8,7 @@
 namespace mg::gauge::layout {
 
 /// @brief Defines the direction in which child elements are laid out.
-enum class Direction : std::uint8_t { LeftToRight, TopToBottom };
+enum class Direction : std::uint8_t { Horizontal, Vertical };
 
 } // namespace mg::gauge::layout
 
@@ -16,8 +16,8 @@ namespace mg {
 
 template <> struct EnumTraits<gauge::layout::Direction> {
     static constexpr EnumOption<gauge::layout::Direction> options[] = {
-        {gauge::layout::Direction::LeftToRight, "left-to-right", "Left to Right"},
-        {gauge::layout::Direction::TopToBottom, "top-to-bottom", "Top to Bottom"},
+        {gauge::layout::Direction::Horizontal, "horizontal", "Horizontal"},
+        {gauge::layout::Direction::Vertical, "vertical", "Vertical"},
     };
 };
 

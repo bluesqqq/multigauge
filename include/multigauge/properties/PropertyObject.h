@@ -7,6 +7,7 @@
 
 #include <multigauge/json/Json.h>
 #include <multigauge/properties/Property.h>
+#include <multigauge/Config.h>
 
 #define TYPE_KEY "type"
 
@@ -89,6 +90,11 @@ class PropertyObject {
         /// @param prop The property to describe.
         bool writePropertyMeta(json::Writer& writer, const Property& prop) const;
 
+#if MG_BUILD_EDITOR
+        /// Builds the editor inspector document for this object.
+        bool writeInspectorMeta(json::Writer& writer) const;
+#endif
+
         /// Resolves a dotted property path to its owning object and final property.
         /// @param path Dotted path such as `"layout.margin.left"`.
         /// @param owner Output pointer receiving the object that owns the final property.
@@ -104,6 +110,10 @@ class PropertyObject {
         bool resolvePath(const std::string& path, const PropertyObject*& owner, const Property*& prop) const;
 
     protected:
+#if MG_BUILD_EDITOR
+        virtual bool hasInspectorLayout() const { return false; }
+        virtual bool writeInspectorLayout(json::Writer& writer) const;
+#endif
         /// Splits a dotted property path into path segments.
         static std::vector<std::string> splitPath(const std::string& path);
 };

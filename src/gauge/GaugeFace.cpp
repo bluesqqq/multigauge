@@ -85,22 +85,22 @@ Clay_FloatingAttachPointType toClayAnchor(layout::FloatingAnchor anchor) {
     return CLAY_ATTACH_POINT_LEFT_TOP;
 }
 
-Clay_FloatingAttachToElement toClayAttachTo(layout::FloatingAttachTo attachTo) {
-    switch (attachTo) {
-    case layout::FloatingAttachTo::None:
+Clay_FloatingAttachToElement toClayFloatingMode(layout::FloatingMode mode) {
+    switch (mode) {
+    case layout::FloatingMode::Flow:
         return CLAY_ATTACH_TO_NONE;
-    case layout::FloatingAttachTo::Parent:
+    case layout::FloatingMode::Relative:
         return CLAY_ATTACH_TO_PARENT;
-    case layout::FloatingAttachTo::Root:
+    case layout::FloatingMode::Absolute:
         return CLAY_ATTACH_TO_ROOT;
     }
 
     return CLAY_ATTACH_TO_NONE;
 }
 
-Clay_LayoutConfig toClayLayout(const layout::Layout& layoutState) {
+template <typename Layout>
+Clay_LayoutConfig toClayContainerLayout(const Layout& layoutState) {
     return {
-        .sizing = {toClaySize(layoutState.width), toClaySize(layoutState.height)},
         .padding =
             {
                 .left = static_cast<std::uint16_t>(std::max(0, layoutState.padding.left)),
@@ -114,10 +114,22 @@ Clay_LayoutConfig toClayLayout(const layout::Layout& layoutState) {
                 .x = toClayAlignment(layoutState.childAlignment.x),
                 .y = toClayAlignment(layoutState.childAlignment.y),
             },
-        .layoutDirection = layoutState.direction == layout::Direction::LeftToRight
+        .layoutDirection = layoutState.direction == layout::Direction::Horizontal
                                ? CLAY_LEFT_TO_RIGHT
                                : CLAY_TOP_TO_BOTTOM,
     };
+}
+
+Clay_LayoutConfig toClayLayout(const GaugeFace::Layout& layoutState) {
+    Clay_LayoutConfig result = toClayContainerLayout(layoutState);
+    result.sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)};
+    return result;
+}
+
+Clay_LayoutConfig toClayLayout(const Element::Layout& layoutState) {
+    Clay_LayoutConfig result = toClayContainerLayout(layoutState);
+    result.sizing = {toClaySize(layoutState.width), toClaySize(layoutState.height)};
+    return result;
 }
 
 Clay_FloatingElementConfig toClayFloating(const layout::Floating& floating) {
@@ -133,7 +145,7 @@ Clay_FloatingElementConfig toClayFloating(const layout::Floating& floating) {
                 .element = toClayAnchor(floating.elementAnchor),
                 .parent = toClayAnchor(floating.parentAnchor),
             },
-        .attachTo = toClayAttachTo(floating.attachTo),
+        .attachTo = toClayFloatingMode(floating.mode),
     };
 }
 
@@ -419,21 +431,14 @@ void GaugeFace::updateBoundsSubtree(NodeHandle root) {
     Node* rootNode = node(root);
     if (!rootNode) return;
 
-    const layout::Layout& layoutState = rootNode->element->layout();
-    const Node* parentNode = node(rootNode->parent);
-    if (layoutState.floating.fillParent &&
-        layoutState.floating.attachTo == layout::FloatingAttachTo::Parent && parentNode) {
-        rootNode->bounds = parentNode->bounds;
-    } else {
-        const Clay_ElementData data = Clay_GetElementData(clayId(root, *rootNode->element));
-        if (data.found) {
-            rootNode->bounds = {
-                data.boundingBox.x,
-                data.boundingBox.y,
-                data.boundingBox.width,
-                data.boundingBox.height,
-            };
-        }
+    const Clay_ElementData data = Clay_GetElementData(clayId(root, *rootNode->element));
+    if (data.found) {
+        rootNode->bounds = {
+            data.boundingBox.x,
+            data.boundingBox.y,
+            data.boundingBox.width,
+            data.boundingBox.height,
+        };
     }
 
     for (NodeHandle child = rootNode->firstChild; child.valid();) {

@@ -110,6 +110,17 @@ TEST_CASE("property metadata respects the reflection configuration") {
 #endif
 }
 
+TEST_CASE("generic inspector falls back to property metadata") {
+#if MG_BUILD_EDITOR
+    Child child;
+    mg::json::Document inspector = mg::json::object();
+    mg::json::Writer writer = inspector.writer();
+    REQUIRE(child.writeInspectorMeta(writer));
+    CHECK(inspector.root().member("properties").isArray());
+    CHECK_FALSE(inspector.root().member("layout").valid());
+#endif
+}
+
 TEST_CASE("property metadata writes nested children directly into their group") {
     Parent parent;
     mg::json::Document metadata = mg::json::array();
