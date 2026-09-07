@@ -30,6 +30,34 @@ private:
     struct Node; // Forward Declaration
 
 public:
+    /// @brief Child arrangement settings owned by the face root.
+    struct Layout : ::mg::PropertyObject {
+        layout::Direction direction = layout::Direction::Vertical;
+        layout::Padding padding;
+        int childGap = 0;
+        layout::ChildAlignment childAlignment;
+
+        MG_PROPS_BEGIN()
+            MG_PROP(direction, "direction", "Direction", "Root element layout direction.")
+            MG_PROP(padding, "padding", "Padding", "Padding around root elements.")
+            MG_PROP(childGap, "childGap", "Child Gap", "Space between root elements.")
+            MG_PROP(childAlignment, "childAlignment", "Child Alignment", "Alignment of root elements.")
+        MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+        MG_INSPECTOR_BEGIN()
+        MG_SECTION("Layout", {
+            MG_CONTROL("direction-toggle", {MG_BIND("value", "direction")});
+            MG_ROW({
+                MG_CONTROL("alignment-grid", {MG_BIND("value", "childAlignment")});
+                MG_PROPERTY("childGap");
+            });
+            MG_CONTROL("insets", {MG_BIND("value", "padding")});
+        });
+        MG_INSPECTOR_END()
+#endif
+    };
+
     //----------[ CTOR + DTOR ]----------//
 
     /// @brief Creates an empty face and its Clay context.
@@ -273,7 +301,7 @@ private:
 
     NodePool nodes_;                             ///< Pool that owns all elements and tree metadata.
     NodeHandle firstRoot_;                       ///< First root in sibling order.
-    layout::Layout layout_;                      ///< Layout options.
+    Layout layout_;                              ///< Root child arrangement options.
     ::mg::graphics::OwnedColor backgroundColor_; ///< Serialized face background color.
     std::vector<std::byte> clayMemory_;          ///< Backing storage for the Clay arena.
     void* clayContext_ = nullptr;                ///< Opaque Clay context allocated in clayMemory_.
@@ -289,9 +317,7 @@ private:
     MG_SECTION("Background", {
         MG_PROPERTY("bgColor");
     });
-    MG_SECTION("Layout", {
-        MG_PROPERTY("layout");
-    });
+    MG_INCLUDE("layout");
     MG_INSPECTOR_END()
 #endif
 };

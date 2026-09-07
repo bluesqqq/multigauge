@@ -171,7 +171,7 @@ TEST_CASE("Clay layout properties serialize grouped padding and floating placeme
     })");
     REQUIRE(source.valid());
 
-    mg::gauge::layout::Layout layout;
+    mg::gauge::Element::Layout layout;
     REQUIRE(layout.loadProperties(source.root()));
     CHECK(layout.width.mode == mg::gauge::layout::SizeMode::Percent);
     CHECK(layout.width.value == 1.0F);
@@ -194,7 +194,7 @@ TEST_CASE("Clay layout properties serialize grouped padding and floating placeme
 }
 
 TEST_CASE("layout emits an authoritative structured inspector") {
-    mg::gauge::layout::Layout layout;
+    mg::gauge::Element::Layout layout;
     auto document = mg::json::object();
     auto writer = document.writer();
     REQUIRE(layout.writeInspectorMeta(writer));
@@ -221,6 +221,30 @@ TEST_CASE("layout emits an authoritative structured inspector") {
     CHECK(path == "floating.parentAnchor");
     REQUIRE(anchors.member("visibleWhen").element(0).member("path").read(path));
     CHECK(path == "floating.mode");
+}
+
+TEST_CASE("face inspector includes layout sections without a wrapper section") {
+    mg::gauge::GaugeFace face;
+    auto document = mg::json::object();
+    auto writer = document.writer();
+    REQUIRE(face.writeInspectorMeta(writer));
+
+    const auto inspector = document.root();
+    const auto presentation = inspector.member("layout");
+    REQUIRE(presentation.isArray());
+    REQUIRE(presentation.size() == 2);
+
+    std::string_view type;
+    std::string_view path;
+    REQUIRE(presentation.element(1).member("type").read(type));
+    REQUIRE(presentation.element(1).member("path").read(path));
+    CHECK(type == "include");
+    CHECK(path == "layout");
+
+    const auto layoutProperty = inspector.member("properties").element(0);
+    REQUIRE(layoutProperty.member("layout").isArray());
+    CHECK(layoutProperty.member("layout").size() == 1);
+    CHECK(layoutProperty.member("properties").size() == 4);
 }
 
 TEST_CASE("floating children with grow sizing share their padded parent's bounds") {

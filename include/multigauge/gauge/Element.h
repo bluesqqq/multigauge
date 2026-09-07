@@ -6,7 +6,11 @@
 #include <string_view>
 
 #include <multigauge/container/GenerationalHandle.h>
-#include <multigauge/gauge/Layout.h>
+#include <multigauge/gauge/layout/ChildAlignment.h>
+#include <multigauge/gauge/layout/Direction.h>
+#include <multigauge/gauge/layout/Floating.h>
+#include <multigauge/gauge/layout/Padding.h>
+#include <multigauge/gauge/layout/Size.h>
 #include <multigauge/graphics/geometry/Rect.h>
 #include <multigauge/properties/PolymorphicRegistry.h>
 #include <multigauge/properties/PropertyObject.h>
@@ -30,6 +34,59 @@ using NodeHandle = ::mg::GenerationalHandle<struct NodeTag>;
 /// @brief Represents a single gauge element.
 class Element : public ::mg::PropertyObject {
 public:
+    /// @brief Layout state available to elements in the face tree.
+    struct Layout : ::mg::PropertyObject {
+        layout::Size width;
+        layout::Size height;
+        layout::Direction direction = layout::Direction::Vertical;
+        layout::Padding padding;
+        int childGap = 0;
+        layout::ChildAlignment childAlignment;
+        layout::Floating floating;
+        float aspectRatio = 0.0F;
+
+        MG_PROPS_BEGIN()
+            MG_PROP(width, "width", "Width", "Clay width sizing.")
+            MG_PROP(height, "height", "Height", "Clay height sizing.")
+            MG_PROP(direction, "direction", "Direction", "Child layout direction.")
+            MG_PROP(padding, "padding", "Padding", "Padding around children.")
+            MG_PROP(childGap, "childGap", "Child Gap", "Space between children.")
+            MG_PROP(childAlignment, "childAlignment", "Child Alignment", "Alignment of children.")
+            MG_PROP(floating, "floating", "Floating", "Floating-layer placement.")
+            MG_PROP(aspectRatio, "aspectRatio", "Aspect Ratio", "Width divided by height; zero disables it.")
+        MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+        MG_INSPECTOR_BEGIN()
+        MG_SECTION("Size", {
+            MG_LABELED_ROW("Dimensions", {
+                MG_PROPERTY("width");
+                MG_PROPERTY("height");
+            });
+            MG_PROPERTY("aspectRatio");
+        });
+        MG_SECTION("Layout", {
+            MG_CONTROL("direction-toggle", {MG_BIND("value", "direction")});
+            MG_ROW({
+                MG_CONTROL("alignment-grid", {MG_BIND("value", "childAlignment")});
+                MG_PROPERTY("childGap");
+            });
+            MG_CONTROL("insets", {MG_BIND("value", "padding")});
+        });
+        MG_SECTION("Position", {
+            MG_PROPERTY("floating.mode");
+            MG_CONTROL_IF("anchor-pair", MG_IN("floating.mode", "relative", "absolute"),
+                          {MG_BIND("target", "floating.parentAnchor"),
+                           MG_BIND("element", "floating.elementAnchor")});
+            MG_CONTROL_IF("axis-pair", MG_IN("floating.mode", "relative", "absolute"),
+                          {MG_BIND("value", "floating.offset")});
+            MG_PROPERTY_IF("floating.zIndex", MG_IN("floating.mode", "relative", "absolute"));
+            MG_PROPERTY_IF("floating.expand", MG_IN("floating.mode", "relative", "absolute"));
+        });
+        MG_INSPECTOR_END()
+#endif
+    };
+
     using OwnedElement = std::unique_ptr<Element>;
     MG_POLYMORPHIC_REGISTRY(OwnedElement)
 
@@ -79,14 +136,14 @@ private:
     //----------[ LAYOUT ]----------//
 
     /// @brief Returns mutable layout property state for face layout declaration.
-    [[nodiscard]] layout::Layout& layout() noexcept { return layout_; }
+    [[nodiscard]] Layout& layout() noexcept { return layout_; }
 
     /// @brief Returns layout property state for read-only face layout declaration.
-    [[nodiscard]] const layout::Layout& layout() const noexcept { return layout_; }
+    [[nodiscard]] const Layout& layout() const noexcept { return layout_; }
 
 private:
     std::string_view typeId_; ///< Stable registry string for built-in types.
-    layout::Layout layout_;   ///< Layout configuration.
+    Layout layout_;           ///< Layout configuration.
 
     MG_PROPS_BEGIN()
         MG_PROP(layout_, "layout", "Layout", "Layout options.")
@@ -94,9 +151,7 @@ private:
 
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
-    MG_SECTION("Layout", {
-        MG_PROPERTY("layout");
-    });
+    MG_INCLUDE("layout");
     MG_INSPECTOR_END()
 #endif
 };

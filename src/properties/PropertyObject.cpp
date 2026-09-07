@@ -85,10 +85,14 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
                 return types.writeValue("all", prop.meta.getTypesMeta);
             })) return false;
             const PropertyObject* child = prop.getChild(this);
-            return object.writeArray("properties", [&](json::ArrayWriter& properties) {
+            if (!object.writeArray("properties", [&](json::ArrayWriter& properties) {
                 if (!child) return true;
                 return child->writePropertiesMeta(properties);
-            });
+            })) return false;
+            return !child || !child->hasInspectorLayout() ||
+                   object.writeValue("layout", [&](json::Writer& layout) {
+                       return child->writeInspectorLayout(layout);
+                   });
         }
         return object.writeValue("value", [&](json::Writer& value) { return prop.get ? prop.get(this, value) : value.null(); });
     });

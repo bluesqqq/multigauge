@@ -98,9 +98,9 @@ Clay_FloatingAttachToElement toClayFloatingMode(layout::FloatingMode mode) {
     return CLAY_ATTACH_TO_NONE;
 }
 
-Clay_LayoutConfig toClayLayout(const layout::Layout& layoutState) {
+template <typename Layout>
+Clay_LayoutConfig toClayContainerLayout(const Layout& layoutState) {
     return {
-        .sizing = {toClaySize(layoutState.width), toClaySize(layoutState.height)},
         .padding =
             {
                 .left = static_cast<std::uint16_t>(std::max(0, layoutState.padding.left)),
@@ -118,6 +118,18 @@ Clay_LayoutConfig toClayLayout(const layout::Layout& layoutState) {
                                ? CLAY_LEFT_TO_RIGHT
                                : CLAY_TOP_TO_BOTTOM,
     };
+}
+
+Clay_LayoutConfig toClayLayout(const GaugeFace::Layout& layoutState) {
+    Clay_LayoutConfig result = toClayContainerLayout(layoutState);
+    result.sizing = {CLAY_SIZING_GROW(0), CLAY_SIZING_GROW(0)};
+    return result;
+}
+
+Clay_LayoutConfig toClayLayout(const Element::Layout& layoutState) {
+    Clay_LayoutConfig result = toClayContainerLayout(layoutState);
+    result.sizing = {toClaySize(layoutState.width), toClaySize(layoutState.height)};
+    return result;
 }
 
 Clay_FloatingElementConfig toClayFloating(const layout::Floating& floating) {

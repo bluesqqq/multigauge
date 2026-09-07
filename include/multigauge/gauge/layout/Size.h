@@ -30,8 +30,8 @@ namespace mg {
 
 template <> struct EnumTraits<gauge::layout::SizeMode> {
     static constexpr EnumOption<gauge::layout::SizeMode> options[] = {
-        {gauge::layout::SizeMode::Fit, "fit", "Fit"},
-        {gauge::layout::SizeMode::Grow, "grow", "Grow"},
+        {gauge::layout::SizeMode::Fit, "fit", "Hug Contents"},
+        {gauge::layout::SizeMode::Grow, "grow", "Fill Container"},
         {gauge::layout::SizeMode::Fixed, "fixed", "Fixed"},
         {gauge::layout::SizeMode::Percent, "percent", "Percent"},
     };
