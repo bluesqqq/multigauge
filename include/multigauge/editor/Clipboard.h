@@ -20,12 +20,4 @@ struct ClipboardState {
     }
 };
 
-struct ClipboardSummary {
-    ClipboardState::Kind kind = ClipboardState::Kind::Empty;
-
-    bool hasValue() const {
-        return kind != ClipboardState::Kind::Empty;
-    }
-};
-
 }

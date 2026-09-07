@@ -18,7 +18,7 @@ using gauge::Element;
 using gauge::GaugeFace;
 using gauge::NodeHandle;
 
-class EditorPreview;
+class Preview;
 
 /// @brief Editor model for gauge faces.
 
@@ -224,7 +224,7 @@ public:
     Result getHistory() const;
 
 private:
-    friend class EditorPreview;
+    friend class Preview;
 
     struct FaceEntry {
         FaceId id = 0;

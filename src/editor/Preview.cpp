@@ -1,16 +1,17 @@
-#include "EditorPreview.h"
-#include <multigauge/editor/EditorRegistry.h>
+#include "Preview.h"
 
+#include <multigauge/context/Context.h>
 #include <multigauge/editor/Editor.h>
+#include <multigauge/editor/Manager.h>
 #include <multigauge/gauge/GaugeFace.h>
-#include <multigauge/runtime/RuntimeContext.h>
 
 #include <algorithm>
 
 namespace mg::editor {
 
-void EditorPreview::prepare(RuntimeContext& context, EditorId editorId, NodeId faceId, ::mg::gauge::GaugeFace& face) {
-    Editor* value = find(editorId);
+void Preview::prepare(Manager& editors, context::Context& context, EditorId editorId, NodeId faceId,
+                      ::mg::gauge::GaugeFace& face) {
+    Editor* value = editors.find(editorId);
     if (!value) return;
 
     const auto& editorAssets = value->assets();

@@ -33,18 +33,28 @@ struct RuntimeConfig {
 /// @brief Owns the long-lived state of one Multigauge runtime instance.
 class Runtime {
 public:
-    class State;
+    //----------[ CTOR + DTOR ]----------//
 
-    Runtime(io::FileSystem& fs, io::Time& time, RuntimeConfig config = {}, io::Logger* logger = nullptr);
+    Runtime(
+        io::FileSystem& fs,
+        io::Time& time,
+        RuntimeConfig config = {},
+        io::Logger* logger = nullptr
+    );
+
     ~Runtime();
 
     Runtime(const Runtime&) = delete;
     Runtime& operator=(const Runtime&) = delete;
 
+    //----------[ LIFECYCLE ]----------//
+
     [[nodiscard]] bool init();
     void shutdown();
     [[nodiscard]] bool initialized() const noexcept;
     void frame();
+
+    //----------[ MANAGERS ]----------//
 
     [[nodiscard]] package::Manager& packages();
     [[nodiscard]] const package::Manager& packages() const;
@@ -60,11 +70,29 @@ public:
     [[nodiscard]] const editor::Manager& editors() const;
 #endif
 
+    //----------[ USER COLORS ]----------//
+
     [[nodiscard]] bool setUserColor(std::size_t slot, graphics::rgba color);
     [[nodiscard]] graphics::rgba userColor(std::size_t slot) const;
 
 private:
-    std::unique_ptr<State> state_;
+    std::string dataRoot_;
+
+    std::unique_ptr<package::Manager> packages_;
+    sensor::Manager sensors_;
+#if MG_BUILD_EDITOR
+    editor::Manager editors_;
+#endif
+    std::unique_ptr<context::Manager> contexts_;
+
+    graphics::UserPalette userPalette_;
+
+    bool initialized_ = false;
+    std::chrono::microseconds lastElapsed_{};
+
+    io::FileSystem& fs_;
+    io::Time& time_;
+    io::Logger* logger_;
 };
 
 } // namespace mg
