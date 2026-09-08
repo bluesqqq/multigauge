@@ -56,8 +56,7 @@ bool Builder::include(const char* path) {
 
 bool Builder::control(
     const char* widget,
-    std::initializer_list<Binding> bindings,
-    std::initializer_list<Option> options
+    std::initializer_list<Binding> bindings
 ) {
     if (!widget || !*widget || bindings.size() == 0) return false;
 
@@ -76,22 +75,14 @@ bool Builder::control(
             })
         ) return false;
 
-        if (options.size() == 0) return true;
-
-        return object.writeObject("options", [&](json::ObjectWriter& output) {
-            for (const Option& option : options)
-                if (!option.key || !option.value || !output.write(option.key, option.value)) return false;
-
-            return true;
-        });
+        return true;
     });
 }
 
 bool Builder::control(
     const char* widget,
     std::initializer_list<Binding> bindings,
-    const Rule& visibleWhen,
-    std::initializer_list<Option> options
+    const Rule& visibleWhen
 ) {
     if (!widget || !*widget || bindings.size() == 0) return false;
 
@@ -111,14 +102,7 @@ bool Builder::control(
             !writeVisibleWhen(object, &visibleWhen)
         ) return false;
 
-        if (options.size() == 0) return true;
-
-        return object.writeObject("options", [&](json::ObjectWriter& output) {
-            for (const Option& option : options)
-                if (!option.key || !option.value || !output.write(option.key, option.value)) return false;
-
-            return true;
-        });
+        return true;
     });
 }
 

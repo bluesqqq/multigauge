@@ -55,7 +55,6 @@
         "type": { "const": "control" },
         "widget": { "type": "string", "minLength": 1 },
         "bindings": { "$ref": "#/$defs/bindingMap" },
-        "options": { "type": "object", "additionalProperties": { "type": "string" } },
         "visibleWhen": { "$ref": "#/$defs/ruleList" }
       },
       "additionalProperties": false
