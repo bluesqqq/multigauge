@@ -106,6 +106,10 @@ TEST_CASE("property metadata respects the reflection configuration") {
     std::string_view key;
     REQUIRE(metadata.root().element(0).member("key").read(key));
     CHECK(key == "value");
+    CHECK(metadata.root().element(0).member("nullable").valid());
+    CHECK_FALSE(metadata.root().element(0).member("name").valid());
+    CHECK_FALSE(metadata.root().element(0).member("description").valid());
+    CHECK_FALSE(metadata.root().element(0).member("widget").valid());
 #else
     CHECK(metadata.root().size() == 0);
 #endif

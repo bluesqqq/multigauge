@@ -31,12 +31,6 @@ constexpr ::mg::PropertyObject::PropertyList::ParentGetter parentPropertyListGet
 
 namespace mg::props {
 
-#if MG_BUILD_EDITOR
-using RuleListGetter = ::mg::PropertyMetadata::RuleListGetter;
-#else
-using RuleListGetter = bool (*)(::mg::json::Writer&);
-#endif
-
 namespace detail {
 
 //----------[ MEMBER TRAITS ]----------//
@@ -159,13 +153,8 @@ const ::mg::PropertyObject* getChildObject(const ::mg::PropertyObject* obj) {
 /// @tparam MemberPtr Pointer to the member exposed as a property.
 /// @tparam CallbackPtr Optional callback invoked after successful assignment.
 /// @param key Serialized property key.
-/// @param name Human-readable display name.
-/// @param description Editor-facing description.
-/// @param visibleWhen Optional visibility-rule provider for tooling.
-/// @param interactableWhen Optional interactability-rule provider for tooling.
-/// @param inspectorVisible Whether the property should appear in inspector metadata.
 template <auto MemberPtr, auto CallbackPtr = nullptr>
-::mg::Property makeProperty(const char* key, const char* name, const char* description, RuleListGetter visibleWhen = nullptr, RuleListGetter interactableWhen = nullptr, bool inspectorVisible = true)
+::mg::Property makeProperty(const char* key)
     requires detail::PropertyMember<MemberPtr> && detail::PropertyCallback<CallbackPtr, detail::MemberClass<MemberPtr>> {
     using T = detail::MemberType<MemberPtr>;
 
@@ -180,45 +169,25 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
 
 #if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
-    meta.name = name ? name : key;
-    meta.description = description ? description : "No description.";
-    meta.widget = MgPropWidgetTraits<T>::value;
     meta.nullable = MgPropNullableTraits<T>::value;
-    meta.inspectorVisible = inspectorVisible;
-    meta.getVisibleWhen = visibleWhen;
-    meta.getInteractableWhen = interactableWhen;
-    if constexpr (::mg::EnumDescribed<::mg::EnumTraitsTypeT<T>>) meta.getOptionsMeta = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
-    if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypesMeta = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
+    if constexpr (::mg::EnumDescribed<::mg::EnumTraitsTypeT<T>>) meta.getOptions = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
+    if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypes = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
 
     return {p.key, p.set, p.get, p.getChild, meta};
 #else
-    (void)name; (void)description; (void)visibleWhen; (void)interactableWhen; (void)inspectorVisible;
     return p;
 #endif
 }
 
 /// Builds a `Property` descriptor from custom setter and getter functions.
 /// @param key Serialized property key.
-/// @param name Human-readable display name.
-/// @param description Editor-facing description.
-/// @param visibleWhen Optional visibility-rule provider for tooling.
-/// @param interactableWhen Optional interactability-rule provider for tooling.
-/// @param inspectorVisible Whether the property should appear in inspector metadata.
 /// @param set Custom setter function.
 /// @param get Custom getter function.
-inline ::mg::Property makeCustomProperty(const char* key, const char* name, const char* description, RuleListGetter visibleWhen, RuleListGetter interactableWhen, bool inspectorVisible, ::mg::Property::Setter set, ::mg::Property::Getter get) {
+inline ::mg::Property makeCustomProperty(const char* key, ::mg::Property::Setter set, ::mg::Property::Getter get) {
 #if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
-    meta.name = name ? name : key;
-    meta.description = description ? description : "No description.";
-    meta.widget = "json";
-    meta.inspectorVisible = inspectorVisible;
-    meta.getVisibleWhen = visibleWhen;
-    meta.getInteractableWhen = interactableWhen;
-
     return {key, set, get, nullptr, meta};
 #else
-    (void)name; (void)description; (void)visibleWhen; (void)interactableWhen; (void)inspectorVisible;
     return {key, set, get, nullptr};
 #endif
 }
@@ -243,130 +212,47 @@ public: \
 
 /** Declares a standard member-backed property. */
 #define MG_PROP(member, key, display_name, description) \
-    ::mg::props::makeProperty<&Self::member, nullptr>( \
-        key, \
-        display_name, \
-        description, \
-        nullptr, \
-        nullptr, \
-        true \
-    ),
+    ::mg::props::makeProperty<&Self::member, nullptr>(key),
 
 /** Declares a member-backed property with a post-set callback. */
 #define MG_PROP_CALLBACK(member, key, display_name, description, callback) \
-    ::mg::props::makeProperty<&Self::member, callback>( \
-        key, \
-        display_name, \
-        description, \
-        nullptr, \
-        nullptr, \
-        true \
-    ),
+    ::mg::props::makeProperty<&Self::member, callback>(key),
 
-/** Declares a visible member-backed property with UI rule callbacks. */
+/** @deprecated Inspector presentation belongs in the inspector layout. */
 #define MG_PROP_UI(member, key, display_name, description, visible_when, interactable_when) \
-    ::mg::props::makeProperty<&Self::member, nullptr>( \
-        key, \
-        display_name, \
-        description, \
-        visible_when, \
-        interactable_when, \
-        true \
-    ),
+    ::mg::props::makeProperty<&Self::member, nullptr>(key),
 
-/** Declares a callback-backed property with UI rule callbacks. */
+/** @deprecated Inspector presentation belongs in the inspector layout. */
 #define MG_PROP_CALLBACK_UI(member, key, display_name, description, callback, visible_when, interactable_when) \
-    ::mg::props::makeProperty<&Self::member, callback>( \
-        key, \
-        display_name, \
-        description, \
-        visible_when, \
-        interactable_when, \
-        true \
-    ),
+    ::mg::props::makeProperty<&Self::member, callback>(key),
 
-/** Declares a hidden member-backed property. */
+/** @deprecated Inspector visibility belongs in the inspector layout. */
 #define MG_PROP_HIDDEN(member, key, display_name, description) \
-    ::mg::props::makeProperty<&Self::member, nullptr>( \
-        key, \
-        display_name, \
-        description, \
-        nullptr, \
-        nullptr, \
-        false \
-    ),
+    ::mg::props::makeProperty<&Self::member, nullptr>(key),
 
-/** Declares a hidden member-backed property with a post-set callback. */
+/** @deprecated Inspector visibility belongs in the inspector layout. */
 #define MG_PROP_CALLBACK_HIDDEN(member, key, display_name, description, callback) \
-    ::mg::props::makeProperty<&Self::member, callback>( \
-        key, \
-        display_name, \
-        description, \
-        nullptr, \
-        nullptr, \
-        false \
-    ),
+    ::mg::props::makeProperty<&Self::member, callback>(key),
 
-/** Declares a hidden member-backed property with UI rule callbacks. */
+/** @deprecated Inspector presentation belongs in the inspector layout. */
 #define MG_PROP_UI_HIDDEN(member, key, display_name, description, visible_when, interactable_when) \
-    ::mg::props::makeProperty<&Self::member, nullptr>( \
-        key, \
-        display_name, \
-        description, \
-        visible_when, \
-        interactable_when, \
-        false \
-    ),
+    ::mg::props::makeProperty<&Self::member, nullptr>(key),
 
-/** Declares a hidden callback-backed property with UI rule callbacks. */
+/** @deprecated Inspector presentation belongs in the inspector layout. */
 #define MG_PROP_CALLBACK_UI_HIDDEN(member, key, display_name, description, callback, visible_when, interactable_when) \
-    ::mg::props::makeProperty<&Self::member, callback>( \
-        key, \
-        display_name, \
-        description, \
-        visible_when, \
-        interactable_when, \
-        false \
-    ),
+    ::mg::props::makeProperty<&Self::member, callback>(key),
 
 /** Declares a property backed by explicit setter and getter functions. */
 #define MG_PROP_CUSTOM(key, display_name, description, set_fn, get_fn) \
-    ::mg::props::makeCustomProperty( \
-        key, \
-        display_name, \
-        description, \
-        nullptr, \
-        nullptr, \
-        true, \
-        set_fn, \
-        get_fn \
-    ),
+    ::mg::props::makeCustomProperty(key, set_fn, get_fn),
 
-/** Declares a custom property with UI rule callbacks. */
+/** @deprecated Inspector presentation belongs in the inspector layout. */
 #define MG_PROP_CUSTOM_UI(key, display_name, description, visible_when, interactable_when, set_fn, get_fn) \
-    ::mg::props::makeCustomProperty( \
-        key, \
-        display_name, \
-        description, \
-        visible_when, \
-        interactable_when, \
-        true, \
-        set_fn, \
-        get_fn \
-    ),
+    ::mg::props::makeCustomProperty(key, set_fn, get_fn),
 
-/** Declares a hidden custom property. */
+/** @deprecated Inspector visibility belongs in the inspector layout. */
 #define MG_PROP_CUSTOM_HIDDEN(key, display_name, description, set_fn, get_fn) \
-    ::mg::props::makeCustomProperty( \
-        key, \
-        display_name, \
-        description, \
-        nullptr, \
-        nullptr, \
-        false, \
-        set_fn, \
-        get_fn \
-    ),
+    ::mg::props::makeCustomProperty(key, set_fn, get_fn),
 
 /** Ends a `propertyList()` override and returns the static property list. */
 #define MG_PROPS_END() \

@@ -6,7 +6,7 @@
   "type": "object",
   "required": ["properties"],
   "properties": {
-    "properties": { "type": "array", "description": "Canonical property metadata and current values." },
+    "properties": { "type": "array", "description": "Canonical property constraints and current values." },
     "layout": { "$ref": "#/$defs/nodeList" }
   },
   "additionalProperties": false,
