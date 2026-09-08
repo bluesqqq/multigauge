@@ -50,7 +50,7 @@ public:
             MG_CONTROL("direction-toggle", {MG_BIND("value", "direction")});
             MG_ROW({
                 MG_CONTROL("alignment-grid", {MG_BIND("value", "childAlignment")});
-                MG_PROPERTY("childGap");
+                MG_PROPERTY("childGap", "Child Gap", "number");
             });
             MG_CONTROL("insets", {MG_BIND("value", "padding")});
         });
@@ -315,7 +315,7 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Background", {
-        MG_PROPERTY("bgColor");
+        MG_PROPERTY("bgColor", "Background Color", "json");
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

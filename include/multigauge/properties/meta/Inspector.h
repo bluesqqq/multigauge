@@ -77,8 +77,8 @@ public:
         });
     }
 
-    bool property(const char* path);
-    bool property(const char* path, const Rule& visibleWhen);
+    bool property(const char* path, const char* label, const char* widget);
+    bool property(const char* path, const char* label, const char* widget, const Rule& visibleWhen);
 
     /// Includes a child property object's inspector sections at the current level.
     bool include(const char* path);
@@ -135,14 +135,14 @@ protected: \
             })) return false; \
     } while (false)
 
-#define MG_PROPERTY(path) \
+#define MG_PROPERTY(path, label, widget) \
     do { \
-        if (!inspector.property(path)) return false; \
+        if (!inspector.property(path, label, widget)) return false; \
     } while (false)
 
-#define MG_PROPERTY_IF(path, visible_when) \
+#define MG_PROPERTY_IF(path, label, widget, visible_when) \
     do { \
-        if (!inspector.property(path, visible_when)) return false; \
+        if (!inspector.property(path, label, widget, visible_when)) return false; \
     } while (false)
 
 #define MG_LABELED_ROW(label, body) \
@@ -177,8 +177,8 @@ protected: \
 #define MG_SECTION(title, body)
 #define MG_ROW(body)
 #define MG_LABELED_ROW(label, body)
-#define MG_PROPERTY(path)
-#define MG_PROPERTY_IF(path, visible_when)
+#define MG_PROPERTY(path, label, widget)
+#define MG_PROPERTY_IF(path, label, widget, visible_when)
 #define MG_INCLUDE(path)
 #define MG_CONTROL(widget, ...)
 #define MG_CONTROL_IF(widget, visible_when, ...)

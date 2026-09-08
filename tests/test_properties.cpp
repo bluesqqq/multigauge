@@ -115,7 +115,7 @@ TEST_CASE("property metadata respects the reflection configuration") {
 #endif
 }
 
-TEST_CASE("generic inspector falls back to property metadata") {
+TEST_CASE("inspector metadata may omit presentation layout") {
 #if MG_BUILD_EDITOR
     Child child;
     mg::json::Document inspector = mg::json::object();
