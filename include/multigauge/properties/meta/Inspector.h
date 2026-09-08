@@ -8,7 +8,6 @@
 #include <unordered_set>
 
 #include <multigauge/json/Json.h>
-#include <multigauge/properties/meta/PropertyMetadata.h>
 #include <multigauge/properties/meta/Rules.h>
 
 namespace mg {
@@ -20,11 +19,6 @@ namespace inspector {
 struct Binding {
     const char* name;
     const char* path;
-};
-
-struct Option {
-    const char* key;
-    const char* value;
 };
 
 /// @brief A simple inspector visibility condition.
@@ -77,19 +71,16 @@ public:
         });
     }
 
-    bool property(const char* path);
-    bool property(const char* path, const Rule& visibleWhen);
+    bool property(const char* path, const char* label, const char* widget);
+    bool property(const char* path, const char* label, const char* widget, const Rule& visibleWhen);
 
     /// Includes a child property object's inspector sections at the current level.
     bool include(const char* path);
 
+    bool control(const char* widget, std::initializer_list<Binding> bindings);
     bool control(
         const char* widget, std::initializer_list<Binding> bindings,
-        std::initializer_list<Option> options = {}
-    );
-    bool control(
-        const char* widget, std::initializer_list<Binding> bindings,
-        const Rule& visibleWhen, std::initializer_list<Option> options = {}
+        const Rule& visibleWhen
     );
 
 private:
@@ -135,14 +126,14 @@ protected: \
             })) return false; \
     } while (false)
 
-#define MG_PROPERTY(path) \
+#define MG_PROPERTY(path, label, widget) \
     do { \
-        if (!inspector.property(path)) return false; \
+        if (!inspector.property(path, label, widget)) return false; \
     } while (false)
 
-#define MG_PROPERTY_IF(path, visible_when) \
+#define MG_PROPERTY_IF(path, label, widget, visible_when) \
     do { \
-        if (!inspector.property(path, visible_when)) return false; \
+        if (!inspector.property(path, label, widget, visible_when)) return false; \
     } while (false)
 
 #define MG_LABELED_ROW(label, body) \
@@ -170,19 +161,17 @@ protected: \
 
 #define MG_IN(path, ...) ::mg::inspector::Rule{path, "in", {__VA_ARGS__}}
 #define MG_BIND(name, path) ::mg::inspector::Binding{name, path}
-#define MG_OPTION(key, value) ::mg::inspector::Option{key, value}
 #else
 #define MG_INSPECTOR_BEGIN()
 #define MG_INSPECTOR_END()
 #define MG_SECTION(title, body)
 #define MG_ROW(body)
 #define MG_LABELED_ROW(label, body)
-#define MG_PROPERTY(path)
-#define MG_PROPERTY_IF(path, visible_when)
+#define MG_PROPERTY(path, label, widget)
+#define MG_PROPERTY_IF(path, label, widget, visible_when)
 #define MG_INCLUDE(path)
 #define MG_CONTROL(widget, ...)
 #define MG_CONTROL_IF(widget, visible_when, ...)
 #define MG_IN(path, ...)
 #define MG_BIND(name, path)
-#define MG_OPTION(key, value)
 #endif

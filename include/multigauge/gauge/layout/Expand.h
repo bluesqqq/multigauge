@@ -10,8 +10,8 @@ struct Expand : ::mg::PropertyObject {
     float height = 0.0F;
 
     MG_PROPS_BEGIN()
-        MG_PROP(width, "width", "Width", "Additional floating width in pixels.")
-        MG_PROP(height, "height", "Height", "Additional floating height in pixels.")
+        MG_PROP(width, "width")
+        MG_PROP(height, "height")
     MG_PROPS_END()
 };
 

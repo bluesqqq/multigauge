@@ -68,10 +68,10 @@ private:
     UnitIndex getUnitIndex() const noexcept;
 
     MG_PROPS_BEGIN()
-        MG_PROP(value_, "id", "ID", "Value ID.")
-        MG_PROP(minimumBase_, "min", "Minimum", "Minimum value. Make null to use default minimum.")
-        MG_PROP(maximumBase_, "max", "Maximum", "Maximum value. Make null to use default maximum.")
-        MG_PROP(unitIndex_, "unitIndex", "Unit Index", "Unit Index to display. Make null to use default index.")
+        MG_PROP(value_, "id")
+        MG_PROP(minimumBase_, "min")
+        MG_PROP(maximumBase_, "max")
+        MG_PROP(unitIndex_, "unitIndex")
     MG_PROPS_END()
 };
 

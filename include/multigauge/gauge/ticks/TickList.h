@@ -138,9 +138,9 @@ public:
     void setValueView(float value) { displayValue = value; }
 
     MG_PROPS_BEGIN()
-        MG_PROP(root, "root", "Root Tick", "First tick drawn.")
-        MG_PROP(subs, "subs", "Sub Ticks", "Sequentially drawn ticks.")
-        MG_PROP(offset, "offset", "Offset", "Value offset to start ticks from.")
+        MG_PROP(root, "root")
+        MG_PROP(subs, "subs")
+        MG_PROP(offset, "offset")
     MG_PROPS_END()
 };
 } // namespace mg::gauge

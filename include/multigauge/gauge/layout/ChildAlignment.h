@@ -20,8 +20,8 @@ struct ChildAlignment : ::mg::PropertyObject {
     AlignmentY y = AlignmentY::Top;
 
     MG_PROPS_BEGIN()
-        MG_PROP(x, "x", "Horizontal", "Horizontal child alignment.")
-        MG_PROP(y, "y", "Vertical", "Vertical child alignment.")
+        MG_PROP(x, "x")
+        MG_PROP(y, "y")
     MG_PROPS_END()
 };
 

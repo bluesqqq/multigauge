@@ -91,7 +91,8 @@ class PropertyObject {
         bool writePropertyMeta(json::Writer& writer, const Property& prop) const;
 
 #if MG_BUILD_EDITOR
-        /// Builds the editor inspector document for this object.
+        /// Builds the editor inspector document for this object. Property data
+        /// supplies values and constraints; an optional layout supplies all UI presentation.
         bool writeInspectorMeta(json::Writer& writer) const;
 #endif
 

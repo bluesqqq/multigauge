@@ -220,6 +220,13 @@ TEST_CASE("layout emits an authoritative structured inspector") {
     CHECK(path == "floating.parentAnchor");
     REQUIRE(anchors.member("visibleWhen").element(0).member("path").read(path));
     CHECK(path == "floating.mode");
+
+    const auto size = presentation.element(0);
+    const auto aspectRatio = size.member("children").element(1);
+    REQUIRE(aspectRatio.member("label").read(title));
+    CHECK(title == "Aspect Ratio");
+    REQUIRE(aspectRatio.member("widget").read(widget));
+    CHECK(widget == "number");
 }
 
 TEST_CASE("face inspector includes layout sections without a wrapper section") {

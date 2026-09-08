@@ -14,8 +14,8 @@ struct ColorKeyframe : public ::mg::PropertyObject {
     OwnedColor color;
 
     MG_PROPS_BEGIN()
-    MG_PROP(position, "pos", "Position", "Normalized gradient stop position.")
-    MG_PROP(color, "color", "Color", "Color at this stop.")
+    MG_PROP(position, "pos")
+    MG_PROP(color, "color")
     MG_PROPS_END()
 
     ColorKeyframe() = default;
@@ -34,7 +34,7 @@ class ColorTimeline : public ::mg::PropertyObject {
 
     std::vector<ColorKeyframe> keyframes;
     MG_PROPS_BEGIN()
-    MG_PROP(keyframes, "keyframes", "Stops", "Normalized gradient stops.")
+    MG_PROP(keyframes, "keyframes")
     MG_PROPS_END()
 
 public:
@@ -76,9 +76,9 @@ struct PaintTimeline : public ::mg::PropertyObject {
     float thickness = 1.0F;
 
     MG_PROPS_BEGIN()
-    MG_PROP(fill, "fill", "Fill", "Fill gradient.")
-    MG_PROP(stroke, "stroke", "Stroke", "Stroke gradient.")
-    MG_PROP(thickness, "thickness", "Thickness", "Stroke thickness.")
+    MG_PROP(fill, "fill")
+    MG_PROP(stroke, "stroke")
+    MG_PROP(thickness, "thickness")
     MG_PROPS_END()
 
     PaintTimeline() = default;
@@ -116,7 +116,5 @@ CODEC_BEGIN(graphics::ColorTimeline)
         });
     }
 CODEC_END()
-
-template <> struct MgPropWidgetTraits<graphics::ColorTimeline> { static constexpr const char* value = "gradient"; };
 
 } // namespace mg

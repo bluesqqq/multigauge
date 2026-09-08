@@ -63,7 +63,7 @@ bool PropertyObject::writePropertiesMeta(json::ArrayWriter& writer) const {
 #else
     bool success = true;
     propertyList().forEach(this, [&](const Property& property) {
-        if (!success || !property.key || !property.meta.inspectorVisible || findProperty(property.key) != &property) return;
+        if (!success || !property.key || findProperty(property.key) != &property) return;
         success = writePropertyMeta(writer.writer(), property);
     });
     return success;
@@ -78,11 +78,11 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
     return writer.writeObject([&](json::ObjectWriter& object) {
         if (!prop.writeBaseMeta(object)) return false;
         if (prop.getChild) {
-            if (prop.meta.getTypesMeta && !object.writeObject("types", [&](json::ObjectWriter& types) {
+            if (prop.meta.getTypes && !object.writeObject("types", [&](json::ObjectWriter& types) {
                 const PropertyObject* child = prop.getChild(this);
                 if (child && child->typeId()) { if (!types.write("current", child->typeId())) return false; }
                 else if (!types.writeValue("current", [](json::Writer& value) { return value.null(); })) return false;
-                return types.writeValue("all", prop.meta.getTypesMeta);
+                return types.writeValue("all", prop.meta.getTypes);
             })) return false;
             const PropertyObject* child = prop.getChild(this);
             if (!object.writeArray("properties", [&](json::ArrayWriter& properties) {

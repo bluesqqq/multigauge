@@ -34,15 +34,9 @@ private:
 
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-    MG_PROP(value_, "value", "Value", "Value to display. Make null to inherit from parent.")
-    MG_PROP(startAngle_,
-            "startAngle",
-            "Start Angle",
-            "Angle to start from. Make null to inherit from parent.")
-    MG_PROP(endAngle_,
-            "endAngle",
-            "End Angle",
-            "Angle to end at. Make null to inherit from parent.")
+    MG_PROP(value_, "value")
+    MG_PROP(startAngle_, "startAngle")
+    MG_PROP(endAngle_, "endAngle")
     MG_PROPS_END()
 };
 

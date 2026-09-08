@@ -28,10 +28,10 @@ private:
     ::mg::graphics::OwnedColor backgroundColor_, groundColor_, horizonColor_, borderColor_;
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-    MG_PROP(backgroundColor_, "bgColor", "Background Color", "Color of the background.")
-    MG_PROP(groundColor_, "groundColor", "Ground Color", "Color of the ground.")
-    MG_PROP(horizonColor_, "horizonColor", "Horizon Color", "Color of the horizon.")
-    MG_PROP(borderColor_, "borderColor", "Border Color", "Color of the border.")
+    MG_PROP(backgroundColor_, "bgColor")
+    MG_PROP(groundColor_, "groundColor")
+    MG_PROP(horizonColor_, "horizonColor")
+    MG_PROP(borderColor_, "borderColor")
     MG_PROPS_END()
 };
 } // namespace mg::gauge

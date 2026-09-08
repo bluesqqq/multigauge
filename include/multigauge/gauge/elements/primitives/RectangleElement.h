@@ -23,8 +23,8 @@ private:
 
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-    MG_PROP(paint_, "paint", "Paint", "Paint options for the rectangle.")
-    MG_PROP(radius_, "radius", "Radius", "Radius of the rectangle's corners.")
+    MG_PROP(paint_, "paint")
+    MG_PROP(radius_, "radius")
     MG_PROPS_END()
 };
 

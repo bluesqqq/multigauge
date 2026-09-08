@@ -38,10 +38,10 @@ public:
         layout::ChildAlignment childAlignment;
 
         MG_PROPS_BEGIN()
-            MG_PROP(direction, "direction", "Direction", "Root element layout direction.")
-            MG_PROP(padding, "padding", "Padding", "Padding around root elements.")
-            MG_PROP(childGap, "childGap", "Child Gap", "Space between root elements.")
-            MG_PROP(childAlignment, "childAlignment", "Child Alignment", "Alignment of root elements.")
+            MG_PROP(direction, "direction")
+            MG_PROP(padding, "padding")
+            MG_PROP(childGap, "childGap")
+            MG_PROP(childAlignment, "childAlignment")
         MG_PROPS_END()
 
 #if MG_BUILD_EDITOR
@@ -50,7 +50,7 @@ public:
             MG_CONTROL("direction-toggle", {MG_BIND("value", "direction")});
             MG_ROW({
                 MG_CONTROL("alignment-grid", {MG_BIND("value", "childAlignment")});
-                MG_PROPERTY("childGap");
+                MG_PROPERTY("childGap", "Child Gap", "number");
             });
             MG_CONTROL("insets", {MG_BIND("value", "padding")});
         });
@@ -307,15 +307,15 @@ private:
     void* clayContext_ = nullptr;                ///< Opaque Clay context allocated in clayMemory_.
 
     MG_PROPS_BEGIN()
-        MG_PROP(layout_, "layout", "Layout", "Layout options.")
-        MG_PROP(backgroundColor_, "bgColor", "Background Color", "Gauge face background color.")
-        MG_PROP_CUSTOM_HIDDEN("children", "Children", "Face element hierarchy.", &GaugeFace::setChildren, &GaugeFace::getChildren)
+        MG_PROP(layout_, "layout")
+        MG_PROP(backgroundColor_, "bgColor")
+        MG_PROP_CUSTOM("children", &GaugeFace::setChildren, &GaugeFace::getChildren)
     MG_PROPS_END()
 
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Background", {
-        MG_PROPERTY("bgColor");
+        MG_PROPERTY("bgColor", "Background Color", "json");
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

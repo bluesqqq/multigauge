@@ -18,9 +18,9 @@ struct Size : ::mg::PropertyObject {
     float limit = 0.0f;
 
     MG_PROPS_BEGIN()
-        MG_PROP(mode, "mode", "Mode", "Clay sizing mode.")
-        MG_PROP(value, "value", "Value", "Fixed size, percent, or minimum size.")
-        MG_PROP(limit, "limit", "Limit", "Maximum size for fit or grow sizing.")
+        MG_PROP(mode, "mode")
+        MG_PROP(value, "value")
+        MG_PROP(limit, "limit")
     MG_PROPS_END()
 };
 

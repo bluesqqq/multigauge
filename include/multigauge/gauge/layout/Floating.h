@@ -36,12 +36,12 @@ struct Floating : ::mg::PropertyObject {
     int zIndex = 0;
 
     MG_PROPS_BEGIN()
-        MG_PROP(mode, "mode", "Mode", "Whether this item flows normally or floats relative to its parent or root.")
-        MG_PROP(elementAnchor, "elementAnchor", "Element Anchor", "Anchor point on this floating item.")
-        MG_PROP(parentAnchor, "parentAnchor", "Parent Anchor", "Anchor point on the attached element.")
-        MG_PROP(offset, "offset", "Offset", "Pixel offset from the attached anchor.")
-        MG_PROP(expand, "expand", "Expand", "Additional outer bounds in pixels.")
-        MG_PROP(zIndex, "zIndex", "Z Index", "Floating draw order.")
+        MG_PROP(mode, "mode")
+        MG_PROP(elementAnchor, "elementAnchor")
+        MG_PROP(parentAnchor, "parentAnchor")
+        MG_PROP(offset, "offset")
+        MG_PROP(expand, "expand")
+        MG_PROP(zIndex, "zIndex")
     MG_PROPS_END()
 };
 

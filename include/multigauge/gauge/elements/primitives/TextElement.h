@@ -28,10 +28,10 @@ private:
 
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-    MG_PROP(text_, "text", "Text", "Text to display.")
-    MG_PROP(paint_, "paint", "Paint", "Paint options for the text.")
-    MG_PROP(useEllipses_, "ellipses", "Ellipses", "Use ellipses for overflowing text.")
-    MG_PROP(useHyphens_, "hyphens", "Hyphens", "Use hyphens for text justification.")
+    MG_PROP(text_, "text")
+    MG_PROP(paint_, "paint")
+    MG_PROP(useEllipses_, "ellipses")
+    MG_PROP(useHyphens_, "hyphens")
     MG_PROPS_END()
 };
 

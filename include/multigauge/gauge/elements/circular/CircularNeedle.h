@@ -23,8 +23,8 @@ private:
 
     MG_PROPS_PARENT(CircularElement)
     MG_PROPS_BEGIN()
-    MG_PROP(paint_, "paint", "Paint", "Paint options for the needle.")
-    MG_PROP(radius_, "radius", "Radius", "Radius of the needle.")
+    MG_PROP(paint_, "paint")
+    MG_PROP(radius_, "radius")
     MG_PROPS_END()
 };
 

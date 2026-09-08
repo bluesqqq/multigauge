@@ -12,7 +12,7 @@ namespace {
 struct Child final : mg::PropertyObject {
     int value = 7;
     MG_PROPS_BEGIN()
-        MG_PROP(value, "value", "Value", "Test value.")
+        MG_PROP(value, "value")
     MG_PROPS_END()
 };
 
@@ -20,8 +20,8 @@ struct Parent final : mg::PropertyObject {
     Child child;
     std::optional<Child> optionalChild;
     MG_PROPS_BEGIN()
-        MG_PROP(child, "child", "Child", "Test child.")
-        MG_PROP(optionalChild, "optionalChild", "Optional child", "Optional test child.")
+        MG_PROP(child, "child")
+        MG_PROP(optionalChild, "optionalChild")
     MG_PROPS_END()
 };
 
@@ -29,7 +29,7 @@ struct TypedChild final : mg::PropertyObject {
     int value = 11;
     MG_TYPE_ID("test-child")
     MG_PROPS_BEGIN()
-        MG_PROP(value, "value", "Value", "Test value.")
+        MG_PROP(value, "value")
     MG_PROPS_END()
 };
 
@@ -106,12 +106,16 @@ TEST_CASE("property metadata respects the reflection configuration") {
     std::string_view key;
     REQUIRE(metadata.root().element(0).member("key").read(key));
     CHECK(key == "value");
+    CHECK(metadata.root().element(0).member("nullable").valid());
+    CHECK_FALSE(metadata.root().element(0).member("name").valid());
+    CHECK_FALSE(metadata.root().element(0).member("description").valid());
+    CHECK_FALSE(metadata.root().element(0).member("widget").valid());
 #else
     CHECK(metadata.root().size() == 0);
 #endif
 }
 
-TEST_CASE("generic inspector falls back to property metadata") {
+TEST_CASE("inspector metadata may omit presentation layout") {
 #if MG_BUILD_EDITOR
     Child child;
     mg::json::Document inspector = mg::json::object();

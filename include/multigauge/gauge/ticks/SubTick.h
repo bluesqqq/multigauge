@@ -30,19 +30,10 @@ struct SubTick : public ::mg::PropertyObject {
     }
 
     MG_PROPS_BEGIN()
-    MG_PROP(divisions,
-            "divisions",
-            "Divisions",
-            "Number of times to divide ticks. Make null to inherit from parent.")
-    MG_PROP(length, "length", "Length", "Length in pixels. Make null to inherit from parent.")
-    MG_PROP(thickness,
-            "thickness",
-            "Thickness",
-            "Thickness in pixels. Make null to inherit from parent.")
-    MG_PROP(paint,
-            "paint",
-            "Paint",
-            "Paint options for this tick. Make null to inherit from parent.")
+    MG_PROP(divisions, "divisions")
+    MG_PROP(length, "length")
+    MG_PROP(thickness, "thickness")
+    MG_PROP(paint, "paint")
     MG_PROPS_END()
 };
 } // namespace mg::gauge
