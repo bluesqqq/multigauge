@@ -27,9 +27,9 @@ private:
 
     MG_PROPS_PARENT(Color)
     MG_PROPS_BEGIN()
-    MG_PROP(timeline, "timeline", "Gradient", "Normalized animated gradient.")
-    MG_PROP(loopType, "loop", "Loop", "Type of looping to use.")
-    MG_PROP(periodMs, "periodMs", "Period", "Animation period in milliseconds.")
+    MG_PROP(timeline, "timeline")
+    MG_PROP(loopType, "loop")
+    MG_PROP(periodMs, "periodMs")
     MG_PROPS_END()
 };
 

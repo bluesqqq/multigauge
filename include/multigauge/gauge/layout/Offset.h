@@ -10,8 +10,8 @@ struct Offset : ::mg::PropertyObject {
     float y = 0.0F;
 
     MG_PROPS_BEGIN()
-        MG_PROP(x, "x", "X", "Horizontal pixel offset.")
-        MG_PROP(y, "y", "Y", "Vertical pixel offset.")
+        MG_PROP(x, "x")
+        MG_PROP(y, "y")
     MG_PROPS_END()
 };
 

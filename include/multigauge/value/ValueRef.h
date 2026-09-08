@@ -1,7 +1,6 @@
 #pragma once
 
 #include <multigauge/properties/Codec.h>
-#include <multigauge/properties/WidgetTraits.h>
 #include <multigauge/value/ValueRegistry.h>
 
 namespace mg {
@@ -82,9 +81,6 @@ private:
 
     ValueHandle handle_{};
 };
-
-template<>
-struct MgPropWidgetTraits<ValueRef> { static constexpr const char* value = "value"; };
 
 CODEC_BEGIN(ValueRef)
     DECODE() {

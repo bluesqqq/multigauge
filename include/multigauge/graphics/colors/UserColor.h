@@ -21,7 +21,7 @@ private:
     Slot slot;
     MG_PROPS_PARENT(Color)
     MG_PROPS_BEGIN()
-    MG_PROP(slot, "slot", "Slot", "User palette slot.")
+    MG_PROP(slot, "slot")
     MG_PROPS_END()
 };
 

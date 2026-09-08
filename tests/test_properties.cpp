@@ -12,7 +12,7 @@ namespace {
 struct Child final : mg::PropertyObject {
     int value = 7;
     MG_PROPS_BEGIN()
-        MG_PROP(value, "value", "Value", "Test value.")
+        MG_PROP(value, "value")
     MG_PROPS_END()
 };
 
@@ -20,8 +20,8 @@ struct Parent final : mg::PropertyObject {
     Child child;
     std::optional<Child> optionalChild;
     MG_PROPS_BEGIN()
-        MG_PROP(child, "child", "Child", "Test child.")
-        MG_PROP(optionalChild, "optionalChild", "Optional child", "Optional test child.")
+        MG_PROP(child, "child")
+        MG_PROP(optionalChild, "optionalChild")
     MG_PROPS_END()
 };
 
@@ -29,7 +29,7 @@ struct TypedChild final : mg::PropertyObject {
     int value = 11;
     MG_TYPE_ID("test-child")
     MG_PROPS_BEGIN()
-        MG_PROP(value, "value", "Value", "Test value.")
+        MG_PROP(value, "value")
     MG_PROPS_END()
 };
 

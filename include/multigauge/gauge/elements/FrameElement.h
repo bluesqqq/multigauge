@@ -29,7 +29,7 @@ private:
 
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-        MG_PROP(fill_, "fill", "Fill", "Frame fill color.")
+        MG_PROP(fill_, "fill")
     MG_PROPS_END()
 };
 

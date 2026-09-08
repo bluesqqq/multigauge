@@ -49,9 +49,9 @@ struct Paint : public ::mg::PropertyObject {
     float thickness = 1.0f;
 
     MG_PROPS_BEGIN()
-    MG_PROP(fill, "fill", "Fill", "Fill color.")
-    MG_PROP(stroke, "stroke", "Stroke", "Stroke color.")
-    MG_PROP(thickness, "thickness", "Thickness", "Thickness of the stroke.")
+    MG_PROP(fill, "fill")
+    MG_PROP(stroke, "stroke")
+    MG_PROP(thickness, "thickness")
     MG_PROPS_END()
 
     Paint();
@@ -62,8 +62,7 @@ struct Paint : public ::mg::PropertyObject {
 
 namespace mg {
 
-template <> struct MgPropWidgetTraits<graphics::OwnedColor> { static constexpr const char* value = "color"; };
-template <> struct MgPropNullableTraits<graphics::OwnedColor> { static constexpr bool value = true; };
+template <> struct PropertyNullableTraits<graphics::OwnedColor> { static constexpr bool value = true; };
 
 template <> struct MgPolymorphicRegistryTraits<graphics::OwnedColor> {
     static constexpr bool supported = true;

@@ -14,8 +14,8 @@ class ValueColor final : public Color {
 
     MG_PROPS_PARENT(Color)
     MG_PROPS_BEGIN()
-    MG_PROP(timeline, "timeline", "Gradient", "Normalized value-driven gradient.")
-    MG_PROP(value, "id", "ID", "Value ID.")
+    MG_PROP(timeline, "timeline")
+    MG_PROP(value, "id")
     MG_PROPS_END()
 
 public:

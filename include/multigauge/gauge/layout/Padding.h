@@ -12,10 +12,10 @@ struct Padding : ::mg::PropertyObject {
     int bottom = 0;
 
     MG_PROPS_BEGIN()
-        MG_PROP(left, "left", "Left", "Left child padding in pixels.")
-        MG_PROP(right, "right", "Right", "Right child padding in pixels.")
-        MG_PROP(top, "top", "Top", "Top child padding in pixels.")
-        MG_PROP(bottom, "bottom", "Bottom", "Bottom child padding in pixels.")
+        MG_PROP(left, "left")
+        MG_PROP(right, "right")
+        MG_PROP(top, "top")
+        MG_PROP(bottom, "bottom")
     MG_PROPS_END()
 };
 

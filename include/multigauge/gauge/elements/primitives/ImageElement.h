@@ -35,8 +35,8 @@ private:
 
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-    MG_PROP(imagePath_, "path", "Image Path", "Filepath of image.")
-    MG_PROP(fit_, "fit", "Fit", "How the image is placed within its layout bounds.")
+    MG_PROP(imagePath_, "path")
+    MG_PROP(fit_, "fit")
     MG_PROPS_END()
 };
 

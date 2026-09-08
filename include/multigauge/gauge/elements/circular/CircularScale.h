@@ -26,8 +26,8 @@ private:
 
     MG_PROPS_PARENT(CircularElement)
     MG_PROPS_BEGIN()
-    MG_PROP(ticks_, "ticks", "Ticks", "List of ticks to draw.")
-    MG_PROP(radius_, "radius", "Radius", "Radius of the scale.")
+    MG_PROP(ticks_, "ticks")
+    MG_PROP(radius_, "radius")
     MG_PROPS_END()
 };
 

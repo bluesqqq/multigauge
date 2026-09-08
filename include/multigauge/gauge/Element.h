@@ -46,14 +46,14 @@ public:
         float aspectRatio = 0.0F;
 
         MG_PROPS_BEGIN()
-            MG_PROP(width, "width", "Width", "Clay width sizing.")
-            MG_PROP(height, "height", "Height", "Clay height sizing.")
-            MG_PROP(direction, "direction", "Direction", "Child layout direction.")
-            MG_PROP(padding, "padding", "Padding", "Padding around children.")
-            MG_PROP(childGap, "childGap", "Child Gap", "Space between children.")
-            MG_PROP(childAlignment, "childAlignment", "Child Alignment", "Alignment of children.")
-            MG_PROP(floating, "floating", "Floating", "Floating-layer placement.")
-            MG_PROP(aspectRatio, "aspectRatio", "Aspect Ratio", "Width divided by height; zero disables it.")
+            MG_PROP(width, "width")
+            MG_PROP(height, "height")
+            MG_PROP(direction, "direction")
+            MG_PROP(padding, "padding")
+            MG_PROP(childGap, "childGap")
+            MG_PROP(childAlignment, "childAlignment")
+            MG_PROP(floating, "floating")
+            MG_PROP(aspectRatio, "aspectRatio")
         MG_PROPS_END()
 
 #if MG_BUILD_EDITOR
@@ -146,7 +146,7 @@ private:
     Layout layout_;           ///< Layout configuration.
 
     MG_PROPS_BEGIN()
-        MG_PROP(layout_, "layout", "Layout", "Layout options.")
+        MG_PROP(layout_, "layout")
     MG_PROPS_END()
 
 #if MG_BUILD_EDITOR

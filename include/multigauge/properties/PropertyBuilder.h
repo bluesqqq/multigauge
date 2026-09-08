@@ -12,11 +12,21 @@
 #include <multigauge/properties/Property.h>
 #include <multigauge/properties/PropertyCodec.h>
 #include <multigauge/properties/PolymorphicRegistry.h>
-#include <multigauge/properties/WidgetTraits.h>
 
 //----------[ PARENT CHAIN ]----------//
 
 namespace mg {
+
+/// Declares whether a property value type accepts JSON null.
+template <typename T>
+struct PropertyNullableTraits {
+    static constexpr bool value = false;
+};
+
+template <typename T>
+struct PropertyNullableTraits<std::optional<T>> {
+    static constexpr bool value = true;
+};
 
 /// Resolves the parent property-list getter exposed by `MG_PROPS_PARENT`.
 template <typename T>
@@ -169,7 +179,7 @@ template <auto MemberPtr, auto CallbackPtr = nullptr>
 
 #if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
-    meta.nullable = MgPropNullableTraits<T>::value;
+    meta.nullable = PropertyNullableTraits<T>::value;
     if constexpr (::mg::EnumDescribed<::mg::EnumTraitsTypeT<T>>) meta.getOptions = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
     if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypes = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
 
@@ -211,47 +221,15 @@ public: \
         static const ::mg::Property props[] = {
 
 /** Declares a standard member-backed property. */
-#define MG_PROP(member, key, display_name, description) \
+#define MG_PROP(member, key) \
     ::mg::props::makeProperty<&Self::member, nullptr>(key),
 
 /** Declares a member-backed property with a post-set callback. */
-#define MG_PROP_CALLBACK(member, key, display_name, description, callback) \
-    ::mg::props::makeProperty<&Self::member, callback>(key),
-
-/** @deprecated Inspector presentation belongs in the inspector layout. */
-#define MG_PROP_UI(member, key, display_name, description, visible_when, interactable_when) \
-    ::mg::props::makeProperty<&Self::member, nullptr>(key),
-
-/** @deprecated Inspector presentation belongs in the inspector layout. */
-#define MG_PROP_CALLBACK_UI(member, key, display_name, description, callback, visible_when, interactable_when) \
-    ::mg::props::makeProperty<&Self::member, callback>(key),
-
-/** @deprecated Inspector visibility belongs in the inspector layout. */
-#define MG_PROP_HIDDEN(member, key, display_name, description) \
-    ::mg::props::makeProperty<&Self::member, nullptr>(key),
-
-/** @deprecated Inspector visibility belongs in the inspector layout. */
-#define MG_PROP_CALLBACK_HIDDEN(member, key, display_name, description, callback) \
-    ::mg::props::makeProperty<&Self::member, callback>(key),
-
-/** @deprecated Inspector presentation belongs in the inspector layout. */
-#define MG_PROP_UI_HIDDEN(member, key, display_name, description, visible_when, interactable_when) \
-    ::mg::props::makeProperty<&Self::member, nullptr>(key),
-
-/** @deprecated Inspector presentation belongs in the inspector layout. */
-#define MG_PROP_CALLBACK_UI_HIDDEN(member, key, display_name, description, callback, visible_when, interactable_when) \
+#define MG_PROP_CALLBACK(member, key, callback) \
     ::mg::props::makeProperty<&Self::member, callback>(key),
 
 /** Declares a property backed by explicit setter and getter functions. */
-#define MG_PROP_CUSTOM(key, display_name, description, set_fn, get_fn) \
-    ::mg::props::makeCustomProperty(key, set_fn, get_fn),
-
-/** @deprecated Inspector presentation belongs in the inspector layout. */
-#define MG_PROP_CUSTOM_UI(key, display_name, description, visible_when, interactable_when, set_fn, get_fn) \
-    ::mg::props::makeCustomProperty(key, set_fn, get_fn),
-
-/** @deprecated Inspector visibility belongs in the inspector layout. */
-#define MG_PROP_CUSTOM_HIDDEN(key, display_name, description, set_fn, get_fn) \
+#define MG_PROP_CUSTOM(key, set_fn, get_fn) \
     ::mg::props::makeCustomProperty(key, set_fn, get_fn),
 
 /** Ends a `propertyList()` override and returns the static property list. */

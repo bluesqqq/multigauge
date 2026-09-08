@@ -51,12 +51,12 @@ private:
 
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-    MG_PROP(seconds_, "seconds", "Seconds", "Number of seconds to display on the graph.")
-    MG_PROP(backgroundColor_, "bgColor", "Background Color", "Color of the background.")
-    MG_PROP(secondsColor_, "secondsColor", "Seconds Color", "Color of the seconds tick marks.")
-    MG_PROP(graphColor_, "graphColor", "Graph Color", "Color of the graph.")
-    MG_PROP(borderColor_, "borderColor", "Border Color", "Color of the border.")
-    MG_PROP(value_, "value", "Value", "Value to display.")
+    MG_PROP(seconds_, "seconds")
+    MG_PROP(backgroundColor_, "bgColor")
+    MG_PROP(secondsColor_, "secondsColor")
+    MG_PROP(graphColor_, "graphColor")
+    MG_PROP(borderColor_, "borderColor")
+    MG_PROP(value_, "value")
     MG_PROPS_END()
 };
 } // namespace mg::gauge
