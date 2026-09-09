@@ -240,14 +240,11 @@ private:
 
     //----------[ LIFECYCLE HELPERS ]----------//
 
-    /// @brief Updates one subtree after resolving inherited circular values.
+    /// @brief Updates one element subtree.
     void updateSubtree(
         NodeHandle root,
         std::chrono::microseconds delta
     );
-
-    /// @brief Resolves circular inheritance from node's handle-tracked parent.
-    void resolveInherited(Node& node);
 
     /// @brief Initializes one subtree and accumulates initialization failures.
     bool initSubtree(
@@ -257,7 +254,7 @@ private:
         ::mg::graphics::GraphicsContext& context
     );
 
-    /// @brief Draws one subtree after resolving inherited circular values.
+    /// @brief Draws one element subtree.
     void drawSubtree(
         NodeHandle root,
         ::mg::graphics::Graphics& graphics
