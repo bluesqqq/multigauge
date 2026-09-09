@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <multigauge/gauge/ticks/TickStyle.h>
+#include <multigauge/properties/meta/Inspector.h>
 #include <multigauge/utils/Math.h>
 #include <optional>
 #include <vector>
@@ -56,5 +57,24 @@ struct RootTick : public ::mg::PropertyObject {
     MG_PROP(thickness, "thickness")
     MG_PROP(paint, "paint")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Spacing", {
+        MG_PROPERTY("useDivisions", "Use Divisions", "boolean");
+        MG_PROPERTY_IF("divisions", "Divisions", "number", MG_IN("useDivisions", "true"));
+        MG_PROPERTY_IF("interval", "Interval", "number", MG_IN("useDivisions", "false"));
+    });
+    MG_SECTION("Appearance", {
+        MG_PROPERTY("length", "Length", "number");
+        MG_PROPERTY("thickness", "Thickness", "number");
+        MG_PROPERTY("paint.fill", "Fill Gradient", "gradient");
+        MG_PROPERTY("paint.stroke", "Stroke Gradient", "gradient");
+        MG_PROPERTY("paint.thickness", "Stroke Width", "number");
+    });
+    MG_INSPECTOR_END()
+#endif
+
+public:
 };
 } // namespace mg::gauge

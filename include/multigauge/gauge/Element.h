@@ -81,7 +81,8 @@ public:
             MG_CONTROL_IF("axis-pair", MG_IN("floating.mode", "relative", "absolute"),
                           {MG_BIND("value", "floating.offset")});
             MG_PROPERTY_IF("floating.zIndex", "Z Index", "number", MG_IN("floating.mode", "relative", "absolute"));
-            MG_PROPERTY_IF("floating.expand", "Expand", "json", MG_IN("floating.mode", "relative", "absolute"));
+            MG_CONTROL_IF("axis-pair", MG_IN("floating.mode", "relative", "absolute"),
+                          {MG_BIND("value", "floating.expand")});
         });
         MG_INSPECTOR_END()
 #endif

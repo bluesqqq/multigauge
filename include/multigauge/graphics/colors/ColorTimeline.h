@@ -18,6 +18,16 @@ struct ColorKeyframe : public ::mg::PropertyObject {
     MG_PROP(color, "color")
     MG_PROPS_END()
 
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Gradient Stop", {
+        MG_PROPERTY("pos", "Position", "number");
+        MG_PROPERTY("color", "Color", "color");
+    });
+    MG_INSPECTOR_END()
+#endif
+
+public:
     ColorKeyframe() = default;
     ColorKeyframe(OwnedColor color, float position);
     ColorKeyframe(const ColorKeyframe& other);
@@ -36,6 +46,14 @@ class ColorTimeline : public ::mg::PropertyObject {
     MG_PROPS_BEGIN()
     MG_PROP(keyframes, "keyframes")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Gradient", {
+        MG_PROPERTY("keyframes", "Stops", "gradient");
+    });
+    MG_INSPECTOR_END()
+#endif
 
 public:
     ColorTimeline() = default;
@@ -81,6 +99,17 @@ struct PaintTimeline : public ::mg::PropertyObject {
     MG_PROP(thickness, "thickness")
     MG_PROPS_END()
 
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Paint", {
+        MG_PROPERTY("fill", "Fill Gradient", "gradient");
+        MG_PROPERTY("stroke", "Stroke Gradient", "gradient");
+        MG_PROPERTY("thickness", "Stroke Width", "number");
+    });
+    MG_INSPECTOR_END()
+#endif
+
+public:
     PaintTimeline() = default;
     PaintTimeline(ColorTimeline fill, ColorTimeline stroke, float thickness);
     [[nodiscard]] ResolvedPaint sample(float normalizedPosition, const ColorResolver::Frame& frame) const noexcept;

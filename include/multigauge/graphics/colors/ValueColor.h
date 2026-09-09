@@ -18,6 +18,15 @@ class ValueColor final : public Color {
     MG_PROP(value, "id")
     MG_PROPS_END()
 
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Value Color", {
+        MG_PROPERTY("id", "Value ID", "text");
+        MG_PROPERTY("timeline", "Stops", "gradient");
+    });
+    MG_INSPECTOR_END()
+#endif
+
 public:
     ValueColor() = default;
     ValueColor(::mg::ValueRef value, ColorTimeline timeline);

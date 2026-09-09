@@ -38,6 +38,16 @@ private:
     MG_PROP(imagePath_, "path")
     MG_PROP(fit_, "fit")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Image", {
+        MG_PROPERTY("path", "Asset Path", "text");
+        MG_PROPERTY("fit", "Fit", "select");
+    });
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace mg::gauge

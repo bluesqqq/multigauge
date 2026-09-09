@@ -2,6 +2,7 @@
 
 #include <multigauge/graphics/font/Font.h>
 #include <multigauge/graphics/colors/Color.h>
+#include <multigauge/properties/meta/Inspector.h>
 
 
 #include <stdint.h>
@@ -25,6 +26,17 @@ struct TextPaint : public ::mg::PropertyObject {
     MG_PROP(color, "color")
     MG_PROPS_END()
 
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Typography", {
+        MG_PROPERTY("family", "Font", "text");
+        MG_PROPERTY("pt", "Size", "number");
+        MG_PROPERTY("color", "Color", "color");
+    });
+    MG_INSPECTOR_END()
+#endif
+
+public:
     TextPaint() = default;
 };
 

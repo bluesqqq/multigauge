@@ -33,6 +33,22 @@ private:
     MG_PROP(useEllipses_, "ellipses")
     MG_PROP(useHyphens_, "hyphens")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Text", {
+        MG_PROPERTY("text", "Content", "text");
+        MG_PROPERTY("paint.family", "Font", "text");
+        MG_PROPERTY("paint.pt", "Size", "number");
+        MG_PROPERTY("paint.color", "Color", "color");
+    });
+    MG_SECTION("Wrapping", {
+        MG_PROPERTY("ellipses", "Ellipses", "boolean");
+        MG_PROPERTY("hyphens", "Hyphens", "boolean");
+    });
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace mg::gauge

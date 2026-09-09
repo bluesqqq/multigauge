@@ -1,6 +1,7 @@
 #pragma once
 
 #include <multigauge/gauge/ticks/TickStyle.h>
+#include <multigauge/properties/meta/Inspector.h>
 #include <optional>
 #include <vector>
 
@@ -35,5 +36,17 @@ struct SubTick : public ::mg::PropertyObject {
     MG_PROP(thickness, "thickness")
     MG_PROP(paint, "paint")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Subticks", {
+        MG_PROPERTY("divisions", "Divisions", "number");
+        MG_PROPERTY("length", "Length", "number");
+        MG_PROPERTY("thickness", "Thickness", "number");
+    });
+    MG_INSPECTOR_END()
+#endif
+
+public:
 };
 } // namespace mg::gauge

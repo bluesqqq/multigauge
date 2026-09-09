@@ -29,6 +29,21 @@ private:
     MG_PROP(ticks_, "ticks")
     MG_PROP(radius_, "radius")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Circular", {
+        MG_PROPERTY("value", "Value", "value-ref");
+        MG_ROW({
+            MG_PROPERTY("startAngle", "Start Angle", "number");
+            MG_PROPERTY("endAngle", "End Angle", "number");
+        });
+        MG_PROPERTY("radius", "Radius", "number");
+    });
+    MG_INCLUDE("ticks");
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace mg::gauge

@@ -33,5 +33,17 @@ private:
     MG_PROP(horizonColor_, "horizonColor")
     MG_PROP(borderColor_, "borderColor")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Colors", {
+        MG_PROPERTY("bgColor", "Background", "color");
+        MG_PROPERTY("groundColor", "Ground", "color");
+        MG_PROPERTY("horizonColor", "Horizon", "color");
+        MG_PROPERTY("borderColor", "Border", "color");
+    });
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 } // namespace mg::gauge

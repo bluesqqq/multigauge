@@ -31,6 +31,15 @@ private:
     MG_PROPS_BEGIN()
         MG_PROP(fill_, "fill")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Appearance", {
+        MG_PROPERTY("fill", "Fill", "color");
+    });
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace mg::gauge

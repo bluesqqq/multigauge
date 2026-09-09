@@ -58,5 +58,21 @@ private:
     MG_PROP(borderColor_, "borderColor")
     MG_PROP(value_, "value")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Graph", {
+        MG_PROPERTY("seconds", "Window (seconds)", "number");
+        MG_PROPERTY("value", "Value", "value-ref");
+    });
+    MG_SECTION("Colors", {
+        MG_PROPERTY("bgColor", "Background", "color");
+        MG_PROPERTY("secondsColor", "Time Labels", "color");
+        MG_PROPERTY("graphColor", "Graph", "color");
+        MG_PROPERTY("borderColor", "Border", "color");
+    });
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 } // namespace mg::gauge

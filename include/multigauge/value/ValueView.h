@@ -1,6 +1,7 @@
 #pragma once
 
 #include <multigauge/properties/PropertyObject.h>
+#include <multigauge/properties/meta/Inspector.h>
 #include <multigauge/value/ValueRef.h>
 
 #include <optional>
@@ -71,8 +72,21 @@ private:
         MG_PROP(value_, "id")
         MG_PROP(minimumBase_, "min")
         MG_PROP(maximumBase_, "max")
-        MG_PROP(unitIndex_, "unitIndex")
+    MG_PROP(unitIndex_, "unitIndex")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Value", {
+        MG_PROPERTY("id", "ID", "text");
+        MG_ROW({
+            MG_PROPERTY("min", "Minimum", "number");
+            MG_PROPERTY("max", "Maximum", "number");
+        });
+        MG_PROPERTY("unitIndex", "Unit Index", "number");
+    });
+    MG_INSPECTOR_END()
+#endif
 };
 
 CODEC_BEGIN(ValueView)

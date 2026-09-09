@@ -4,8 +4,26 @@
 #include <multigauge/editor/Editor.h>
 #include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/gauge/elements/CustomElement.h>
+#include <multigauge/gauge/elements/FrameElement.h>
 #include <multigauge/gauge/elements/Graph.h>
+#include <multigauge/gauge/elements/Horizon.h>
+#include <multigauge/gauge/elements/circular/CircularNeedle.h>
+#include <multigauge/gauge/elements/circular/CircularScale.h>
+#include <multigauge/gauge/elements/primitives/CircleElement.h>
+#include <multigauge/gauge/elements/primitives/ImageElement.h>
+#include <multigauge/gauge/elements/primitives/RectangleElement.h>
+#include <multigauge/gauge/elements/primitives/TextElement.h>
+#include <multigauge/gauge/ticks/RootTick.h>
+#include <multigauge/gauge/ticks/SubTick.h>
+#include <multigauge/gauge/ticks/TickList.h>
 #include <multigauge/graphics/Graphics.h>
+#include <multigauge/graphics/TextPaint.h>
+#include <multigauge/graphics/colors/ColorTimeline.h>
+#include <multigauge/graphics/colors/StaticColor.h>
+#include <multigauge/graphics/colors/TimeColor.h>
+#include <multigauge/graphics/colors/UserColor.h>
+#include <multigauge/graphics/colors/ValueColor.h>
+#include <multigauge/value/ValueView.h>
 
 #include <string>
 #include <string_view>
@@ -115,8 +133,9 @@ public:
     };
 
     std::vector<RoundedRect> roundedRects;
+    std::vector<mg::graphics::rgba> clears;
 
-    void clear(mg::graphics::rgba) override {}
+    void clear(mg::graphics::rgba color) override { clears.push_back(color); }
     void pixel(int, int, mg::graphics::rgba) override {}
     void line(int, int, int, int, mg::graphics::rgba, float) override {}
     void rect(int, int, int, int, mg::graphics::rgba) override {}
@@ -149,6 +168,74 @@ public:
     void clip(int, int, int, int) override {}
     void clearClip() override {}
 };
+
+TEST_CASE("a face without a background clears transparently") {
+    mg::gauge::GaugeFace face;
+    RecordingGraphicsContext context;
+    REQUIRE(context.resize(250, 240));
+    mg::graphics::Graphics graphics(context);
+
+    graphics.setFill(mg::graphics::rgba(234, 53, 31));
+    face.draw(graphics);
+
+    REQUIRE(context.clears.size() == 1);
+    CHECK(context.clears[0].r == 0);
+    CHECK(context.clears[0].g == 0);
+    CHECK(context.clears[0].b == 0);
+    CHECK(context.clears[0].a == 0);
+}
+
+TEST_CASE("built-in elements provide inspector layouts") {
+    const auto checkLayout = [](mg::PropertyObject& object) {
+        auto document = mg::json::object();
+        auto writer = document.writer();
+        REQUIRE(object.writeInspectorMeta(writer));
+        CHECK(document.root().member("layout").isArray());
+    };
+
+    mg::gauge::FrameElement frame;
+    mg::gauge::Graph graph;
+    mg::gauge::Horizon horizon;
+    mg::gauge::CircleElement circle;
+    mg::gauge::ImageElement image;
+    mg::gauge::RectangleElement rectangle;
+    mg::gauge::TextElement text;
+    mg::gauge::CircularNeedle needle;
+    mg::gauge::CircularScale scale;
+    mg::graphics::Paint paint;
+    mg::graphics::TextPaint textPaint;
+    mg::graphics::StaticColor staticColor;
+    mg::graphics::TimeColor timeColor;
+    mg::graphics::UserColor userColor;
+    mg::graphics::ValueColor valueColor;
+    mg::graphics::ColorTimeline timeline;
+    mg::graphics::PaintTimeline paintTimeline;
+    mg::ValueView valueView;
+    mg::gauge::RootTick rootTick;
+    mg::gauge::SubTick subTick;
+    mg::gauge::TickList tickList;
+    checkLayout(frame);
+    checkLayout(graph);
+    checkLayout(horizon);
+    checkLayout(circle);
+    checkLayout(image);
+    checkLayout(rectangle);
+    checkLayout(text);
+    checkLayout(needle);
+    checkLayout(scale);
+    checkLayout(paint);
+    checkLayout(textPaint);
+    checkLayout(staticColor);
+    checkLayout(timeColor);
+    checkLayout(userColor);
+    checkLayout(valueColor);
+    checkLayout(timeline);
+    checkLayout(paintTimeline);
+    checkLayout(valueView);
+    checkLayout(rootTick);
+    checkLayout(subTick);
+    checkLayout(tickList);
+}
 
 TEST_CASE("Clay layout properties serialize grouped padding and floating placement") {
     const auto source = mg::json::parse(R"({
@@ -229,16 +316,58 @@ TEST_CASE("layout emits an authoritative structured inspector") {
     CHECK(widget == "number");
 }
 
+TEST_CASE("layout inspector emits enum options and accepts nested property updates") {
+    mg::gauge::Element element{"test"};
+    auto document = mg::json::object();
+    auto writer = document.writer();
+    REQUIRE(element.writeInspectorMeta(writer));
+
+    const auto layout = document.root().member("properties").element(0);
+    const auto width = layout.member("properties").element(0);
+    const auto sizeMode = width.member("properties").element(0);
+    REQUIRE(sizeMode.member("options").isArray());
+    CHECK(sizeMode.member("options").size() == 4);
+
+    const auto floating = layout.member("properties").element(6);
+    const auto mode = floating.member("properties").element(0);
+    REQUIRE(mode.member("options").isArray());
+    CHECK(mode.member("options").size() == 3);
+
+    mg::PropertyObject* owner = nullptr;
+    const mg::Property* property = nullptr;
+    REQUIRE(element.resolvePath("layout.floating.mode", owner, property));
+    const auto value = mg::json::parse(R"("relative")");
+    REQUIRE(owner->setProperty(property->key, value.root()));
+
+    REQUIRE(element.resolvePath("layout.width.mode", owner, property));
+    const auto fixed = mg::json::parse(R"("fixed")");
+    REQUIRE(owner->setProperty(property->key, fixed.root()));
+}
+
 TEST_CASE("face inspector includes layout sections without a wrapper section") {
     mg::gauge::GaugeFace face;
+    mg::PropertyObject* owner = nullptr;
+    const mg::Property* property = nullptr;
+    REQUIRE(face.resolvePath("bgColor", owner, property));
+    const auto color = mg::json::parse(R"("#336699")");
+    REQUIRE(owner->setProperty(property->key, color.root()));
+
     auto document = mg::json::object();
     auto writer = document.writer();
     REQUIRE(face.writeInspectorMeta(writer));
 
     const auto inspector = document.root();
+    std::string_view backgroundValue;
+    REQUIRE(inspector.member("properties").element(1).member("properties").element(0).member("value").read(backgroundValue));
+    CHECK(backgroundValue == "#336699FF");
     const auto presentation = inspector.member("layout");
     REQUIRE(presentation.isArray());
     REQUIRE(presentation.size() == 2);
+
+    const auto background = presentation.element(0).member("children").element(0);
+    std::string_view widget;
+    REQUIRE(background.member("widget").read(widget));
+    CHECK(widget == "color");
 
     std::string_view type;
     std::string_view path;
