@@ -26,6 +26,18 @@ private:
     MG_PROP(paint_, "paint")
     MG_PROP(radius_, "radius")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Appearance", {
+        MG_PROPERTY("paint.fill", "Fill", "color");
+        MG_PROPERTY("paint.stroke", "Stroke", "color");
+        MG_PROPERTY("paint.thickness", "Stroke Width", "number");
+        MG_PROPERTY("radius", "Corner Radius", "number");
+    });
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace mg::gauge

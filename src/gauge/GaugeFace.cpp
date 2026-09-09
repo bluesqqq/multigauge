@@ -547,7 +547,8 @@ bool GaugeFace::saveChildren(json::Writer& writer, NodeHandle parent) const {
 }
 
 void GaugeFace::draw(::mg::graphics::Graphics& graphics) {
-    graphics.fillAll(backgroundColor_.get());
+    if (backgroundColor_) graphics.fillAll(backgroundColor_.get());
+    else graphics.fillAll(::mg::graphics::rgba(0, 0, 0, 0));
 
     for (NodeHandle root = firstRoot_; root.valid();) {
         Node* rootNode = node(root);

@@ -38,6 +38,19 @@ private:
     MG_PROP(startAngle_, "startAngle")
     MG_PROP(endAngle_, "endAngle")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Circular", {
+        MG_PROPERTY("value", "Value", "value-ref");
+        MG_ROW({
+            MG_PROPERTY("startAngle", "Start Angle", "number");
+            MG_PROPERTY("endAngle", "End Angle", "number");
+        });
+    });
+    MG_INCLUDE("layout");
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace mg::gauge

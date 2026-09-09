@@ -315,7 +315,7 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Background", {
-        MG_PROPERTY("bgColor", "Background Color", "json");
+        MG_PROPERTY("bgColor", "Background Color", "color");
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

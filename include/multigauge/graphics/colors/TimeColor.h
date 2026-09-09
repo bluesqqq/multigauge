@@ -31,6 +31,18 @@ private:
     MG_PROP(loopType, "loop")
     MG_PROP(periodMs, "periodMs")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Animation", {
+        MG_PROPERTY("loop", "Loop", "select");
+        MG_PROPERTY("periodMs", "Period (ms)", "number");
+    });
+    MG_SECTION("Gradient", {
+        MG_PROPERTY("timeline", "Stops", "gradient");
+    });
+    MG_INSPECTOR_END()
+#endif
 };
 
 } // namespace mg::graphics

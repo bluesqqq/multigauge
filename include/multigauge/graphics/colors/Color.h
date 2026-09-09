@@ -1,5 +1,7 @@
 #pragma once
 
+#include <multigauge/properties/meta/Inspector.h>
+
 #include <cstdint>
 #include <memory>
 
@@ -54,6 +56,17 @@ struct Paint : public ::mg::PropertyObject {
     MG_PROP(thickness, "thickness")
     MG_PROPS_END()
 
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_SECTION("Paint", {
+        MG_PROPERTY("fill", "Fill", "color");
+        MG_PROPERTY("stroke", "Stroke", "color");
+        MG_PROPERTY("thickness", "Stroke Width", "number");
+    });
+    MG_INSPECTOR_END()
+#endif
+
+public:
     Paint();
     Paint(OwnedColor fill, OwnedColor stroke, float thickness = 1.0f);
 };

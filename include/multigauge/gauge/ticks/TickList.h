@@ -140,7 +140,19 @@ public:
     MG_PROPS_BEGIN()
         MG_PROP(root, "root")
         MG_PROP(subs, "subs")
-        MG_PROP(offset, "offset")
+    MG_PROP(offset, "offset")
     MG_PROPS_END()
+
+#if MG_BUILD_EDITOR
+    MG_INSPECTOR_BEGIN()
+    MG_INCLUDE("root");
+    MG_SECTION("Subticks", {
+        MG_PROPERTY("subs", "Levels", "tick-levels");
+        MG_PROPERTY("offset", "Offset", "number");
+    });
+    MG_INSPECTOR_END()
+#endif
+
+public:
 };
 } // namespace mg::gauge
