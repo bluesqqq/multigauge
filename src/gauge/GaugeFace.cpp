@@ -9,7 +9,6 @@
 #include <limits>
 
 #include <multigauge/gauge/elements/FrameElement.h>
-#include <multigauge/gauge/elements/circular/CircularElement.h>
 
 #ifndef MG_GAUGE_MAX_LAYOUT_ELEMENTS
 #define MG_GAUGE_MAX_LAYOUT_ELEMENTS 64
@@ -364,7 +363,6 @@ void GaugeFace::updateSubtree(NodeHandle root, std::chrono::microseconds delta) 
     Node* rootNode = node(root);
     if (!rootNode) return;
 
-    resolveInherited(*rootNode);
     rootNode->element->update(delta);
 
     for (NodeHandle child = rootNode->firstChild; child.valid();) {
@@ -389,23 +387,6 @@ bool GaugeFace::initSubtree(NodeHandle root,
         child = next;
     }
     return result;
-}
-
-void GaugeFace::resolveInherited(Node& nodeValue) {
-    auto* circular = dynamic_cast<CircularElement*>(nodeValue.element.get());
-    if (!circular) return;
-
-    ::mg::ValueView inheritedValue;
-    float inheritedStartAngle = 0.0f;
-    float inheritedEndAngle = 360.0f;
-    if (const Node* parentNode = node(nodeValue.parent)) {
-        if (const auto* parent = dynamic_cast<const CircularElement*>(parentNode->element.get())) {
-            inheritedValue = parent->resolvedValueView();
-            inheritedStartAngle = parent->resolvedStartAngle();
-            inheritedEndAngle = parent->resolvedEndAngle();
-        }
-    }
-    circular->resolveInherited(inheritedValue, inheritedStartAngle, inheritedEndAngle);
 }
 
 void GaugeFace::declareClaySubtree(NodeHandle root) const {
@@ -592,7 +573,6 @@ void GaugeFace::drawSubtree(NodeHandle root, ::mg::graphics::Graphics& graphics)
     Node* rootNode = node(root);
     if (!rootNode) return;
 
-    resolveInherited(*rootNode);
     rootNode->element->draw(graphics, rootNode->bounds);
 
     for (NodeHandle child = rootNode->firstChild; child.valid();) {

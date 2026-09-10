@@ -7,8 +7,7 @@
 #include <multigauge/gauge/elements/FrameElement.h>
 #include <multigauge/gauge/elements/Graph.h>
 #include <multigauge/gauge/elements/Horizon.h>
-#include <multigauge/gauge/elements/circular/CircularNeedle.h>
-#include <multigauge/gauge/elements/circular/CircularScale.h>
+#include <multigauge/gauge/elements/Radial.h>
 #include <multigauge/gauge/elements/primitives/CircleElement.h>
 #include <multigauge/gauge/elements/primitives/ImageElement.h>
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
@@ -200,8 +199,7 @@ TEST_CASE("built-in elements provide inspector layouts") {
     mg::gauge::ImageElement image;
     mg::gauge::RectangleElement rectangle;
     mg::gauge::TextElement text;
-    mg::gauge::CircularNeedle needle;
-    mg::gauge::CircularScale scale;
+    mg::gauge::Radial radial;
     mg::graphics::Paint paint;
     mg::graphics::TextPaint textPaint;
     mg::graphics::StaticColor staticColor;
@@ -221,8 +219,7 @@ TEST_CASE("built-in elements provide inspector layouts") {
     checkLayout(image);
     checkLayout(rectangle);
     checkLayout(text);
-    checkLayout(needle);
-    checkLayout(scale);
+    checkLayout(radial);
     checkLayout(paint);
     checkLayout(textPaint);
     checkLayout(staticColor);
@@ -438,7 +435,7 @@ TEST_CASE("floating children with grow sizing share their padded parent's bounds
     CHECK(context.roundedRects[1].height == context.roundedRects[0].height);
 }
 
-TEST_CASE("gauge registry exposes the migrated legacy element metadata") {
+TEST_CASE("gauge registry exposes radial element metadata") {
     const auto& registry = mg::gauge::Element::registry();
     const auto custom = registry.create("unknown-element");
     REQUIRE(custom != nullptr);
@@ -451,9 +448,7 @@ TEST_CASE("gauge registry exposes the migrated legacy element metadata") {
         "circle",
         "text",
         "image",
-        "circular-element",
-        "circular-needle",
-        "circular-scale",
+        "radial",
         "graph",
         "horizon",
     };
@@ -470,19 +465,24 @@ TEST_CASE("gauge registry exposes the migrated legacy element metadata") {
     REQUIRE(graph != nullptr);
     CHECK(graph->findProperty("seconds") != nullptr);
     CHECK(graph->findProperty("value") != nullptr);
+
+    const auto radial = registry.create("radial");
+    REQUIRE(radial != nullptr);
+    CHECK(radial->findProperty("parts") != nullptr);
 }
 
-TEST_CASE("gauge face round-trips polymorphic element trees") {
-    mg::gauge::GaugeFace source;
-    const auto circular = source.createElement("circular-element");
-    const auto needle = source.createElement("circular-needle");
-    const auto rectangle = source.createElement("rectangle");
-    REQUIRE(source.moveElement(needle, circular, 0));
-    REQUIRE(source.moveElement(rectangle, circular, 1));
+TEST_CASE("gauge face round-trips radial parts") {
+    const auto scalePart = mg::json::parse(R"({"type":"scale","radius":0.8,"ticks":{"root":{},"subs":[]}})");
+    REQUIRE(scalePart.valid());
+    mg::gauge::RadialPart::OwnedPart decodedPart;
+    REQUIRE(mg::decodeAny(scalePart.root(), decodedPart));
+    CHECK(dynamic_cast<mg::gauge::ScalePart*>(decodedPart.get()) != nullptr);
 
-    const auto setRadius = mg::json::parse("0.75");
-    REQUIRE(setRadius.valid());
-    REQUIRE(source.get(needle)->setProperty("radius", setRadius.root()));
+    mg::gauge::GaugeFace source;
+    const auto radial = source.createElement("radial");
+    const auto parts = mg::json::parse(R"([{"type":"scale","radius":1,"ticks":{"root":{"interval":10},"subs":[]}},{"type":"needle","radius":0.75,"paint":{"fill":"#FF0000FF","thickness":2}}])");
+    REQUIRE(parts.valid());
+    REQUIRE(source.get(radial)->setProperty("parts", parts.root()));
 
     auto document = mg::json::object();
     auto writer = document.writer();
@@ -490,6 +490,7 @@ TEST_CASE("gauge face round-trips polymorphic element trees") {
     CHECK(document.root().member("children").size() == 1);
     CHECK(document.root().member("children").element(0).member("type").type() ==
           mg::json::Type::String);
+    CHECK(document.root().member("children").element(0).member("parts").size() == 2);
 
     mg::gauge::GaugeFace restored;
     REQUIRE(restored.load(document.root()));

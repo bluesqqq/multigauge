@@ -187,6 +187,17 @@
       "properties": { "root": { "$ref": "#/$defs/rootTick" }, "subs": { "type": "array", "items": { "$ref": "#/$defs/subTick" } }, "offset": { "type": "number" } },
       "additionalProperties": true
     },
+    "radialPart": {
+      "type": "object",
+      "properties": {
+        "type": { "enum": ["needle", "scale"] },
+        "paint": { "$ref": "#/$defs/paint" },
+        "ticks": { "$ref": "#/$defs/tickList" },
+        "radius": { "type": "number" }
+      },
+      "required": ["type"],
+      "additionalProperties": true
+    },
     "element": {
       "type": "object",
       "properties": {
@@ -211,7 +222,7 @@
         "value": { "anyOf": [{ "$ref": "#/$defs/valueView" }, { "type": "null" }] },
         "startAngle": { "$ref": "#/$defs/numberOrNull" },
         "endAngle": { "$ref": "#/$defs/numberOrNull" },
-        "ticks": { "$ref": "#/$defs/tickList" }
+        "parts": { "type": "array", "items": { "$ref": "#/$defs/radialPart" } }
       },
       "required": ["type"],
       "additionalProperties": true

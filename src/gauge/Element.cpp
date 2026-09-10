@@ -4,9 +4,7 @@
 #include <multigauge/gauge/elements/FrameElement.h>
 #include <multigauge/gauge/elements/Graph.h>
 #include <multigauge/gauge/elements/Horizon.h>
-#include <multigauge/gauge/elements/circular/CircularElement.h>
-#include <multigauge/gauge/elements/circular/CircularNeedle.h>
-#include <multigauge/gauge/elements/circular/CircularScale.h>
+#include <multigauge/gauge/elements/Radial.h>
 #include <multigauge/gauge/elements/primitives/CircleElement.h>
 #include <multigauge/gauge/elements/primitives/ImageElement.h>
 #include <multigauge/gauge/elements/primitives/RectangleElement.h>
@@ -33,9 +31,7 @@ constexpr Descriptor types[] = {
     makePolymorphicTypeDescriptor<CircleElement, Owned>(&create<CircleElement>),
     makePolymorphicTypeDescriptor<TextElement, Owned>(&create<TextElement>),
     makePolymorphicTypeDescriptor<ImageElement, Owned>(&create<ImageElement>),
-    makePolymorphicTypeDescriptor<CircularElement, Owned>(&create<CircularElement>),
-    makePolymorphicTypeDescriptor<CircularNeedle, Owned>(&create<CircularNeedle>),
-    makePolymorphicTypeDescriptor<CircularScale, Owned>(&create<CircularScale>),
+    makePolymorphicTypeDescriptor<Radial, Owned>(&create<Radial>),
     makePolymorphicTypeDescriptor<Graph, Owned>(&create<Graph>),
     makePolymorphicTypeDescriptor<Horizon, Owned>(&create<Horizon>),
 };

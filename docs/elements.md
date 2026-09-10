@@ -2,7 +2,11 @@
 
 `GaugeFace` owns a tree of serializable `Element` objects. The registered built-in
 types are `frame`, `rectangle`, `circle`, `text`, `image`, `graph`, `horizon`,
-`circular-element`, `circular-needle`, and `circular-scale`.
+and `radial`.
+
+`radial` owns a polymorphic `parts` list. Built-in `needle` and `scale` parts
+share the radial's value, angle range, and layout bounds while serializing only
+their own properties.
 
 Each element has a required `type`, optional `layout`, and may contain `children`.
 Unknown types load as `CustomElement` so their type and properties can round-trip.
