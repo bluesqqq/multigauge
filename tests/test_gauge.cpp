@@ -500,6 +500,53 @@ TEST_CASE("gauge face round-trips radial parts") {
     CHECK(savedAgain.toString() == document.toString());
 }
 
+TEST_CASE("radial parts expose embedded polymorphic collection inspector metadata") {
+#if MG_BUILD_EDITOR
+    mg::gauge::Radial radial;
+    const auto parts = mg::json::parse(
+        R"([{"type":"scale","radius":1,"ticks":{"root":{},"subs":[]}},{"type":"needle","radius":0.75}])"
+    );
+    REQUIRE(parts.valid());
+    REQUIRE(radial.setProperty("parts", parts.root()));
+
+    auto metadata = mg::json::array();
+    auto writer = metadata.writer();
+    REQUIRE(radial.writePropertiesMeta(writer));
+
+    mg::json::Reader partsMeta;
+    for (std::size_t index = 0; index < metadata.root().size(); ++index) {
+        const auto candidate = metadata.root().element(index);
+        std::string_view key;
+        if (candidate.member("key").read(key) && key == "parts") {
+            partsMeta = candidate;
+            break;
+        }
+    }
+    REQUIRE(partsMeta.valid());
+    CHECK(partsMeta.member("value").isArray());
+    const auto collection = partsMeta.member("collection");
+    REQUIRE(collection.isObject());
+    REQUIRE(collection.member("types").isArray());
+    CHECK(collection.member("types").size() == 2);
+    REQUIRE(collection.member("items").isArray());
+    CHECK(collection.member("items").size() == 2);
+
+    std::string_view firstType;
+    REQUIRE(collection.member("items").element(0).member("type").read(firstType));
+    CHECK(firstType == "scale");
+    const auto scaleInspector = collection.member("items").element(0).member("inspector");
+    CHECK(scaleInspector.member("properties").isArray());
+    CHECK(scaleInspector.member("layout").isArray());
+
+    std::string_view secondType;
+    REQUIRE(collection.member("items").element(1).member("type").read(secondType));
+    CHECK(secondType == "needle");
+    const auto needleInspector = collection.member("items").element(1).member("inspector");
+    CHECK(needleInspector.member("properties").isArray());
+    CHECK(needleInspector.member("layout").isArray());
+#endif
+}
+
 TEST_CASE("gauge element codec owns type and property serialization") {
     auto element = mg::gauge::Element::registry().create("rectangle");
     REQUIRE(element != nullptr);
