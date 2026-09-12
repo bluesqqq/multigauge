@@ -30,10 +30,10 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Appearance", {
-        MG_PROPERTY("paint.fill", "Fill", "color");
-        MG_PROPERTY("paint.stroke", "Stroke", "color");
-        MG_PROPERTY("paint.thickness", "Stroke Width", "number");
-        MG_PROPERTY("radius", "Corner Radius", "number");
+        MG_PROPERTY("paint.fill", "Fill", widget::color);
+        MG_PROPERTY("paint.stroke", "Stroke", widget::color);
+        MG_PROPERTY("paint.thickness", "Stroke Width", widget::number);
+        MG_PROPERTY("radius", "Corner Radius", widget::number);
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

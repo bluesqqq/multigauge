@@ -147,8 +147,8 @@ public:
     MG_INSPECTOR_BEGIN()
     MG_INCLUDE("root");
     MG_SECTION("Subticks", {
-        MG_PROPERTY("subs", "Levels", "tick-levels");
-        MG_PROPERTY("offset", "Offset", "number");
+        MG_PROPERTY("subs", "Levels", widget::tickLevels);
+        MG_PROPERTY("offset", "Offset", widget::number);
     });
     MG_INSPECTOR_END()
 #endif

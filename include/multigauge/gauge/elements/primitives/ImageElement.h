@@ -42,8 +42,8 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Image", {
-        MG_PROPERTY("path", "Asset Path", "text");
-        MG_PROPERTY("fit", "Fit", "select");
+        MG_PROPERTY("path", "Asset Path", widget::text);
+        MG_PROPERTY("fit", "Fit", widget::select);
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

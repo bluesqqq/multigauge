@@ -37,14 +37,14 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Text", {
-        MG_PROPERTY("text", "Content", "text");
-        MG_PROPERTY("paint.family", "Font", "text");
-        MG_PROPERTY("paint.pt", "Size", "number");
-        MG_PROPERTY("paint.color", "Color", "color");
+        MG_PROPERTY("text", "Content", widget::text);
+        MG_PROPERTY("paint.family", "Font", widget::text);
+        MG_PROPERTY("paint.pt", "Size", widget::number);
+        MG_PROPERTY("paint.color", "Color", widget::color);
     });
     MG_SECTION("Wrapping", {
-        MG_PROPERTY("ellipses", "Ellipses", "boolean");
-        MG_PROPERTY("hyphens", "Hyphens", "boolean");
+        MG_PROPERTY("ellipses", "Ellipses", widget::boolean);
+        MG_PROPERTY("hyphens", "Hyphens", widget::boolean);
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

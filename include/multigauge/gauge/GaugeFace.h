@@ -47,12 +47,12 @@ public:
 #if MG_BUILD_EDITOR
         MG_INSPECTOR_BEGIN()
         MG_SECTION("Layout", {
-            MG_CONTROL("direction-toggle", {MG_BIND("value", "direction")});
+            MG_CONTROL(widget::directionToggle, {MG_BIND("value", "direction")});
             MG_ROW({
-                MG_CONTROL("alignment-grid", {MG_BIND("value", "childAlignment")});
-                MG_PROPERTY("childGap", "Child Gap", "number");
+                MG_CONTROL(widget::alignmentGrid, {MG_BIND("value", "childAlignment")});
+                MG_PROPERTY("childGap", "Child Gap", widget::number);
             });
-            MG_CONTROL("insets", {MG_BIND("value", "padding")});
+            MG_CONTROL(widget::insets, {MG_BIND("value", "padding")});
         });
         MG_INSPECTOR_END()
 #endif
@@ -312,7 +312,7 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Background", {
-        MG_PROPERTY("bgColor", "Background Color", "color");
+        MG_PROPERTY("bgColor", "Background Color", widget::color);
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

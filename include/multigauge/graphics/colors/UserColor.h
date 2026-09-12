@@ -27,7 +27,7 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Color", {
-        MG_PROPERTY("slot", "Palette Slot", "select");
+        MG_PROPERTY("slot", "Palette Slot", widget::select);
     });
     MG_INSPECTOR_END()
 #endif

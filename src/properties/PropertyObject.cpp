@@ -94,7 +94,14 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
                        return child->writeInspectorLayout(layout);
                    });
         }
-        return object.writeValue("value", [&](json::Writer& value) { return prop.get ? prop.get(this, value) : value.null(); });
+        if (!object.writeValue("value", [&](json::Writer& value) { return prop.get ? prop.get(this, value) : value.null(); })) return false;
+        if (!prop.meta.getCollectionItems) return true;
+        return object.writeObject("collection", [&](json::ObjectWriter& collection) {
+            return (!prop.meta.getTypes || collection.writeValue("types", prop.meta.getTypes)) &&
+                   collection.writeValue("items", [&](json::Writer& items) {
+                       return prop.meta.getCollectionItems(this, items);
+                   });
+        });
     });
 #endif
 }

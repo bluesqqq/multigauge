@@ -78,12 +78,12 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Value", {
-        MG_PROPERTY("id", "ID", "text");
+        MG_PROPERTY("id", "ID", widget::text);
         MG_ROW({
-            MG_PROPERTY("min", "Minimum", "number");
-            MG_PROPERTY("max", "Maximum", "number");
+            MG_PROPERTY("min", "Minimum", widget::number);
+            MG_PROPERTY("max", "Maximum", widget::number);
         });
-        MG_PROPERTY("unitIndex", "Unit Index", "number");
+        MG_PROPERTY("unitIndex", "Unit Index", widget::number);
     });
     MG_INSPECTOR_END()
 #endif

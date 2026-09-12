@@ -29,9 +29,9 @@ struct TextPaint : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Typography", {
-        MG_PROPERTY("family", "Font", "text");
-        MG_PROPERTY("pt", "Size", "number");
-        MG_PROPERTY("color", "Color", "color");
+        MG_PROPERTY("family", "Font", widget::text);
+        MG_PROPERTY("pt", "Size", widget::number);
+        MG_PROPERTY("color", "Color", widget::color);
     });
     MG_INSPECTOR_END()
 #endif

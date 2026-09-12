@@ -61,16 +61,16 @@ struct RootTick : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Spacing", {
-        MG_PROPERTY("useDivisions", "Use Divisions", "boolean");
-        MG_PROPERTY_IF("divisions", "Divisions", "number", MG_IN("useDivisions", "true"));
-        MG_PROPERTY_IF("interval", "Interval", "number", MG_IN("useDivisions", "false"));
+        MG_PROPERTY("useDivisions", "Use Divisions", widget::boolean);
+        MG_PROPERTY_IF("divisions", "Divisions", widget::number, MG_IN("useDivisions", "true"));
+        MG_PROPERTY_IF("interval", "Interval", widget::number, MG_IN("useDivisions", "false"));
     });
     MG_SECTION("Appearance", {
-        MG_PROPERTY("length", "Length", "number");
-        MG_PROPERTY("thickness", "Thickness", "number");
-        MG_PROPERTY("paint.fill", "Fill Gradient", "gradient");
-        MG_PROPERTY("paint.stroke", "Stroke Gradient", "gradient");
-        MG_PROPERTY("paint.thickness", "Stroke Width", "number");
+        MG_PROPERTY("length", "Length", widget::number);
+        MG_PROPERTY("thickness", "Thickness", widget::number);
+        MG_PROPERTY("paint.fill", "Fill Gradient", widget::gradient);
+        MG_PROPERTY("paint.stroke", "Stroke Gradient", widget::gradient);
+        MG_PROPERTY("paint.thickness", "Stroke Width", widget::number);
     });
     MG_INSPECTOR_END()
 #endif

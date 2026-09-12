@@ -21,8 +21,8 @@ struct ColorKeyframe : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Gradient Stop", {
-        MG_PROPERTY("pos", "Position", "number");
-        MG_PROPERTY("color", "Color", "color");
+        MG_PROPERTY("pos", "Position", widget::number);
+        MG_PROPERTY("color", "Color", widget::color);
     });
     MG_INSPECTOR_END()
 #endif
@@ -50,7 +50,7 @@ class ColorTimeline : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Gradient", {
-        MG_PROPERTY("keyframes", "Stops", "gradient");
+        MG_PROPERTY("keyframes", "Stops", widget::gradient);
     });
     MG_INSPECTOR_END()
 #endif
@@ -102,9 +102,9 @@ struct PaintTimeline : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Paint", {
-        MG_PROPERTY("fill", "Fill Gradient", "gradient");
-        MG_PROPERTY("stroke", "Stroke Gradient", "gradient");
-        MG_PROPERTY("thickness", "Stroke Width", "number");
+        MG_PROPERTY("fill", "Fill Gradient", widget::gradient);
+        MG_PROPERTY("stroke", "Stroke Gradient", widget::gradient);
+        MG_PROPERTY("thickness", "Stroke Width", widget::number);
     });
     MG_INSPECTOR_END()
 #endif

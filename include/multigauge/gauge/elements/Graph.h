@@ -62,14 +62,14 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Graph", {
-        MG_PROPERTY("seconds", "Window (seconds)", "number");
-        MG_PROPERTY("value", "Value", "value-ref");
+        MG_PROPERTY("seconds", "Window (seconds)", widget::number);
+        MG_PROPERTY("value", "Value", widget::valueRef);
     });
     MG_SECTION("Colors", {
-        MG_PROPERTY("bgColor", "Background", "color");
-        MG_PROPERTY("secondsColor", "Time Labels", "color");
-        MG_PROPERTY("graphColor", "Graph", "color");
-        MG_PROPERTY("borderColor", "Border", "color");
+        MG_PROPERTY("bgColor", "Background", widget::color);
+        MG_PROPERTY("secondsColor", "Time Labels", widget::color);
+        MG_PROPERTY("graphColor", "Graph", widget::color);
+        MG_PROPERTY("borderColor", "Border", widget::color);
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()
