@@ -35,7 +35,7 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Appearance", {
-        MG_PROPERTY("fill", "Fill", "color");
+        MG_PROPERTY("fill", "Fill", widget::color);
     });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()

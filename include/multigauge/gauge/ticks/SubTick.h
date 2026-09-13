@@ -40,9 +40,9 @@ struct SubTick : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Subticks", {
-        MG_PROPERTY("divisions", "Divisions", "number");
-        MG_PROPERTY("length", "Length", "number");
-        MG_PROPERTY("thickness", "Thickness", "number");
+        MG_PROPERTY("divisions", "Divisions", widget::number);
+        MG_PROPERTY("length", "Length", widget::number);
+        MG_PROPERTY("thickness", "Thickness", widget::number);
     });
     MG_INSPECTOR_END()
 #endif

@@ -17,7 +17,7 @@ class StaticColor final : public Color {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Color", {
-        MG_PROPERTY("color", "Color", "color");
+        MG_PROPERTY("color", "Color", widget::color);
     });
     MG_INSPECTOR_END()
 #endif

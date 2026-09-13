@@ -9,6 +9,7 @@
 
 #include <multigauge/json/Json.h>
 #include <multigauge/properties/meta/Rules.h>
+#include <multigauge/properties/meta/Widgets.h>
 
 namespace mg {
 

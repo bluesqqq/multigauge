@@ -59,9 +59,9 @@ struct Paint : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Paint", {
-        MG_PROPERTY("fill", "Fill", "color");
-        MG_PROPERTY("stroke", "Stroke", "color");
-        MG_PROPERTY("thickness", "Stroke Width", "number");
+        MG_PROPERTY("fill", "Fill", widget::color);
+        MG_PROPERTY("stroke", "Stroke", widget::color);
+        MG_PROPERTY("thickness", "Stroke Width", widget::number);
     });
     MG_INSPECTOR_END()
 #endif

@@ -42,10 +42,10 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Needle", {
-        MG_PROPERTY("paint.fill", "Fill", "color");
-        MG_PROPERTY("paint.stroke", "Stroke", "color");
-        MG_PROPERTY("paint.thickness", "Stroke Width", "number");
-        MG_PROPERTY("radius", "Radius", "number");
+        MG_PROPERTY("paint.fill", "Fill", widget::color);
+        MG_PROPERTY("paint.stroke", "Stroke", widget::color);
+        MG_PROPERTY("paint.thickness", "Stroke Width", widget::number);
+        MG_PROPERTY("radius", "Radius", widget::number);
     });
     MG_INSPECTOR_END()
 #endif
@@ -68,7 +68,7 @@ private:
     MG_PROPS_END()
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
-    MG_SECTION("Scale", { MG_PROPERTY("radius", "Radius", "number"); });
+    MG_SECTION("Scale", { MG_PROPERTY("radius", "Radius", widget::number); });
     MG_INCLUDE("ticks");
     MG_INSPECTOR_END()
 #endif
@@ -97,10 +97,10 @@ private:
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Radial", {
-        MG_PROPERTY("value", "Value", "value-ref");
-        MG_ROW({ MG_PROPERTY("startAngle", "Start Angle", "number"); MG_PROPERTY("endAngle", "End Angle", "number"); });
+        MG_PROPERTY("value", "Value", widget::valueRef);
+        MG_ROW({ MG_PROPERTY("startAngle", "Start Angle", widget::number); MG_PROPERTY("endAngle", "End Angle", widget::number); });
     });
-    MG_SECTION("Parts", { MG_PROPERTY("parts", "Parts", "radial-parts"); });
+    MG_SECTION("Parts", { MG_PROPERTY("parts", "Parts", widget::collection); });
     MG_INCLUDE("layout");
     MG_INSPECTOR_END()
 #endif

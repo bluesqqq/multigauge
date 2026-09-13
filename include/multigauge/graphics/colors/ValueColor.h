@@ -21,8 +21,8 @@ class ValueColor final : public Color {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Value Color", {
-        MG_PROPERTY("id", "Value ID", "text");
-        MG_PROPERTY("timeline", "Stops", "gradient");
+        MG_PROPERTY("id", "Value ID", widget::text);
+        MG_PROPERTY("timeline", "Stops", widget::gradient);
     });
     MG_INSPECTOR_END()
 #endif

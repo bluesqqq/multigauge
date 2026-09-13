@@ -60,28 +60,28 @@ public:
         MG_INSPECTOR_BEGIN()
         MG_SECTION("Size", {
             MG_LABELED_ROW("Dimensions", {
-                MG_PROPERTY("width", "Width", "layout-size");
-                MG_PROPERTY("height", "Height", "layout-size");
+                MG_PROPERTY("width", "Width", widget::layoutSize);
+                MG_PROPERTY("height", "Height", widget::layoutSize);
             });
-            MG_PROPERTY("aspectRatio", "Aspect Ratio", "number");
+            MG_PROPERTY("aspectRatio", "Aspect Ratio", widget::number);
         });
         MG_SECTION("Layout", {
-            MG_CONTROL("direction-toggle", {MG_BIND("value", "direction")});
+            MG_CONTROL(widget::directionToggle, {MG_BIND("value", "direction")});
             MG_ROW({
-                MG_CONTROL("alignment-grid", {MG_BIND("value", "childAlignment")});
-                MG_PROPERTY("childGap", "Child Gap", "number");
+                MG_CONTROL(widget::alignmentGrid, {MG_BIND("value", "childAlignment")});
+                MG_PROPERTY("childGap", "Child Gap", widget::number);
             });
-            MG_CONTROL("insets", {MG_BIND("value", "padding")});
+            MG_CONTROL(widget::insets, {MG_BIND("value", "padding")});
         });
         MG_SECTION("Position", {
-            MG_PROPERTY("floating.mode", "Mode", "select");
-            MG_CONTROL_IF("anchor-pair", MG_IN("floating.mode", "relative", "absolute"),
+            MG_PROPERTY("floating.mode", "Mode", widget::select);
+            MG_CONTROL_IF(widget::anchorPair, MG_IN("floating.mode", "relative", "absolute"),
                           {MG_BIND("target", "floating.parentAnchor"),
                            MG_BIND("element", "floating.elementAnchor")});
-            MG_CONTROL_IF("axis-pair", MG_IN("floating.mode", "relative", "absolute"),
+            MG_CONTROL_IF(widget::axisPair, MG_IN("floating.mode", "relative", "absolute"),
                           {MG_BIND("value", "floating.offset")});
-            MG_PROPERTY_IF("floating.zIndex", "Z Index", "number", MG_IN("floating.mode", "relative", "absolute"));
-            MG_CONTROL_IF("axis-pair", MG_IN("floating.mode", "relative", "absolute"),
+            MG_PROPERTY_IF("floating.zIndex", "Z Index", widget::number, MG_IN("floating.mode", "relative", "absolute"));
+            MG_CONTROL_IF(widget::axisPair, MG_IN("floating.mode", "relative", "absolute"),
                           {MG_BIND("value", "floating.expand")});
         });
         MG_INSPECTOR_END()
