@@ -160,6 +160,6 @@ TEST_CASE("nullable polymorphic color metadata provides a default value") {
     std::string_view type;
     REQUIRE(stroke.member("default").member("value").member("type").read(type));
     CHECK(type == "static");
-    CHECK(stroke.member("default").member("inspector").isNull());
+    CHECK_FALSE(stroke.member("default").member("inspector").valid());
 #endif
 }
