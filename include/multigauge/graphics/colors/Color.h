@@ -80,6 +80,7 @@ template <> struct PropertyNullableTraits<graphics::OwnedColor> { static constex
 template <> struct MgPolymorphicRegistryTraits<graphics::OwnedColor> {
     static constexpr bool supported = true;
     static bool getTypesMeta(json::Writer& writer) { return graphics::Color::registry().writeTypesMeta(writer); }
+    static bool getDefaultMeta(json::Writer& writer);
 };
 
 CODEC_BEGIN(graphics::OwnedColor)
