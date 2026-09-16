@@ -54,8 +54,7 @@ bool MgPolymorphicRegistryTraits<graphics::OwnedColor>::getDefaultMeta(json::Wri
                        return defaultValue.write("type", graphics::StaticColor::staticTypeId()) &&
                               defaultValue.writeValue("color", [&](json::Writer& rgba) { return encodeAny(rgba, color.value()); });
                    });
-               }) &&
-               object.writeValue("inspector", [&](json::Writer& inspector) { return color.writeInspectorMeta(inspector); });
+               });
     });
 }
 

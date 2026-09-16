@@ -147,7 +147,7 @@ TEST_CASE("property metadata writes nested children directly into their group") 
 #endif
 }
 
-TEST_CASE("nullable polymorphic color metadata provides a default inspector") {
+TEST_CASE("nullable polymorphic color metadata provides a default value") {
 #if MG_BUILD_EDITOR
     mg::graphics::Paint paint;
     mg::json::Document metadata = mg::json::array();
@@ -160,6 +160,6 @@ TEST_CASE("nullable polymorphic color metadata provides a default inspector") {
     std::string_view type;
     REQUIRE(stroke.member("default").member("value").member("type").read(type));
     CHECK(type == "static");
-    REQUIRE(stroke.member("default").member("inspector").member("properties").isArray());
+    CHECK(stroke.member("default").member("inspector").isNull());
 #endif
 }
