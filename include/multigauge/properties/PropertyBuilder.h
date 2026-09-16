@@ -13,8 +13,8 @@ constexpr ::mg::PropertyObject::PropertyList::ParentGetter parentPropertyListGet
     return nullptr;
 }
 
-template <auto MemberPtr, auto CallbackPtr>
-    requires PropertyMember<MemberPtr> && PropertyCallback<CallbackPtr, MemberClass<MemberPtr>>
+template <auto MemberPtr>
+    requires PropertyMember<MemberPtr>
 bool setMember(::mg::PropertyObject* obj, json::Reader value) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
@@ -29,7 +29,6 @@ bool setMember(::mg::PropertyObject* obj, json::Reader value) {
         self->*MemberPtr = std::move(decoded);
     }
 
-    if constexpr (!std::is_same_v<decltype(CallbackPtr), std::nullptr_t>) std::invoke(CallbackPtr, *self);
     return true;
 }
 
@@ -74,11 +73,11 @@ bool writeCollectionItems(const ::mg::PropertyObject* obj, json::Writer& writer)
 
 } // namespace detail
 
-template <auto MemberPtr, auto CallbackPtr = nullptr>
+template <auto MemberPtr>
 ::mg::Property makeProperty(const char* key)
-    requires detail::PropertyMember<MemberPtr> && detail::PropertyCallback<CallbackPtr, detail::MemberClass<MemberPtr>> {
+    requires detail::PropertyMember<MemberPtr> {
     using T = detail::MemberType<MemberPtr>;
-    ::mg::Property p{key, &detail::setMember<MemberPtr, CallbackPtr>, &detail::getMember<MemberPtr>, nullptr};
+    ::mg::Property p{key, &detail::setMember<MemberPtr>, &detail::getMember<MemberPtr>, nullptr};
     if constexpr (detail::ChildObjectTraits<T>::supported) p.getChild = &detail::getChildObject<MemberPtr>;
 #if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
@@ -120,9 +119,7 @@ public: \
         using Self = std::remove_cv_t<std::remove_reference_t<decltype(*this)>>; \
         static const ::mg::Property props[] = {
 
-#define MG_PROP(member, key) ::mg::props::makeProperty<&Self::member, nullptr>(key),
-
-#define MG_PROP_CALLBACK(member, key, callback) ::mg::props::makeProperty<&Self::member, callback>(key),
+#define MG_PROP(member, key) ::mg::props::makeProperty<&Self::member>(key),
 
 #define MG_PROP_CUSTOM(key, set_fn, get_fn) ::mg::props::makeCustomProperty(key, set_fn, get_fn),
 
