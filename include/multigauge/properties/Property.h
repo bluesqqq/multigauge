@@ -32,8 +32,6 @@ struct Property {
 
 #if MG_BUILD_EDITOR
     const PropertyMetadata meta; ///< Property metadata.
-
-    bool writeBaseMeta(json::ObjectWriter& object) const;
 #endif
 };
 

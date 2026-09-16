@@ -1,5 +1,4 @@
 #include <multigauge/graphics/colors/Color.h>
-
 #include <multigauge/graphics/colors/StaticColor.h>
 #include <multigauge/graphics/colors/TimeColor.h>
 #include <multigauge/graphics/colors/UserColor.h>
@@ -9,7 +8,6 @@
 #include <utility>
 
 namespace mg::graphics {
-
 namespace {
 std::atomic_uint32_t nextColorId{1};
 
@@ -47,6 +45,18 @@ Paint::Paint(OwnedColor fill, OwnedColor stroke, float thickness)
 } // namespace mg::graphics
 
 namespace mg {
+
+bool MgPolymorphicRegistryTraits<graphics::OwnedColor>::getDefaultMeta(json::Writer& writer) {
+    graphics::StaticColor color;
+    return writer.writeObject([&](json::ObjectWriter& object) {
+        return object.writeValue("value", [&](json::Writer& value) {
+            return value.writeObject([&](json::ObjectWriter& defaultValue) {
+                return defaultValue.write("type", graphics::StaticColor::staticTypeId()) &&
+                    defaultValue.writeValue("color", [&](json::Writer& rgba) { return encodeAny(rgba, color.value()); });
+            });
+        });
+    });
+}
 
 DECODE_IMPL(graphics::OwnedColor) {
     if (v.isNull()) { out = nullptr; return true; }

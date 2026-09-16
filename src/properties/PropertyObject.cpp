@@ -76,7 +76,10 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
     return writer.writeObject([](json::ObjectWriter&) { return true; });
 #else
     return writer.writeObject([&](json::ObjectWriter& object) {
-        if (!prop.writeBaseMeta(object)) return false;
+        if (!object.write("key", prop.key ? prop.key : "") ||
+            !object.write("nullable", prop.meta.nullable) ||
+            (prop.meta.getOptions && !object.writeValue("options", prop.meta.getOptions)) ||
+            (prop.meta.getDefault && !object.writeValue("default", prop.meta.getDefault))) return false;
         if (prop.getChild) {
             if (prop.meta.getTypes && !object.writeObject("types", [&](json::ObjectWriter& types) {
                 const PropertyObject* child = prop.getChild(this);
