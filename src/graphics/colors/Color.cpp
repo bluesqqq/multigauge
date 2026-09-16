@@ -50,11 +50,11 @@ bool MgPolymorphicRegistryTraits<graphics::OwnedColor>::getDefaultMeta(json::Wri
     graphics::StaticColor color;
     return writer.writeObject([&](json::ObjectWriter& object) {
         return object.writeValue("value", [&](json::Writer& value) {
-                   return value.writeObject([&](json::ObjectWriter& defaultValue) {
-                       return defaultValue.write("type", graphics::StaticColor::staticTypeId()) &&
-                              defaultValue.writeValue("color", [&](json::Writer& rgba) { return encodeAny(rgba, color.value()); });
-                   });
-               });
+            return value.writeObject([&](json::ObjectWriter& defaultValue) {
+                return defaultValue.write("type", graphics::StaticColor::staticTypeId()) &&
+                    defaultValue.writeValue("color", [&](json::Writer& rgba) { return encodeAny(rgba, color.value()); });
+            });
+        });
     });
 }
 
