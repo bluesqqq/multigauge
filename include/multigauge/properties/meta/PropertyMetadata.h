@@ -10,11 +10,13 @@ class PropertyObject; // Forward declaration
 struct PropertyMetadata {
     using OptionsGetter = bool (*)(json::Writer&);
     using TypeListGetter = bool (*)(json::Writer&);
+    using DefaultGetter = bool (*)(json::Writer&);
     using CollectionItemsGetter = bool (*)(const PropertyObject*, json::Writer&);
 
     bool nullable = false; ///< Whether JSON null is a valid property value.
     OptionsGetter getOptions = nullptr; ///< Retrieves the finite set of valid values, when applicable.
     TypeListGetter getTypes = nullptr; ///< Retrieves valid concrete types for a polymorphic property.
+    DefaultGetter getDefault = nullptr; ///< Retrieves the default serialized value, when available.
     CollectionItemsGetter getCollectionItems = nullptr; ///< Retrieves inspector metadata for each item in a collection.
 };
 

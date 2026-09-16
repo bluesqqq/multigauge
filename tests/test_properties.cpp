@@ -146,3 +146,20 @@ TEST_CASE("property metadata writes nested children directly into their group") 
     CHECK(metadata.root().size() == 0);
 #endif
 }
+
+TEST_CASE("nullable polymorphic color metadata provides a default value") {
+#if MG_BUILD_EDITOR
+    mg::graphics::Paint paint;
+    mg::json::Document metadata = mg::json::array();
+    mg::json::Writer writer = metadata.writer();
+    REQUIRE(paint.writePropertiesMeta(writer));
+
+    const mg::json::Reader stroke = metadata.root().element(1);
+    REQUIRE(stroke.member("default").isObject());
+
+    std::string_view type;
+    REQUIRE(stroke.member("default").member("value").member("type").read(type));
+    CHECK(type == "static");
+    CHECK_FALSE(stroke.member("default").member("inspector").valid());
+#endif
+}
