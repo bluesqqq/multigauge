@@ -75,62 +75,27 @@ bool writeCollectionItems(const ::mg::PropertyObject* obj, json::Writer& writer)
 } // namespace detail
 
 template <auto MemberPtr, auto CallbackPtr = nullptr>
-    requires detail::PropertyMember<MemberPtr> && detail::PropertyCallback<CallbackPtr, detail::MemberClass<MemberPtr>>
-::mg::Property makeProperty(const char* key) {
+::mg::Property makeProperty(const char* key)
+    requires detail::PropertyMember<MemberPtr> && detail::PropertyCallback<CallbackPtr, detail::MemberClass<MemberPtr>> {
     using T = detail::MemberType<MemberPtr>;
-
-    ::mg::Property property{
-        key,
-        &detail::setMember<MemberPtr, CallbackPtr>,
-        &detail::getMember<MemberPtr>,
-        nullptr
-    };
-
-    // Expose nested PropertyObject access when supported by the member type.
-    if constexpr (detail::ChildObjectTraits<T>::supported) {
-        property.getChild = &detail::getChildObject<MemberPtr>;
-    }
+    ::mg::Property p{key, &detail::setMember<MemberPtr, CallbackPtr>, &detail::getMember<MemberPtr>, nullptr};
+    if constexpr (detail::ChildObjectTraits<T>::supported) p.getChild = &detail::getChildObject<MemberPtr>;
 
 #if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
-    
     meta.nullable = PropertyNullableTraits<T>::value;
-
-    // Enum metadata.
-    if constexpr (::mg::EnumDescribed<::mg::EnumTraitsTypeT<T>>) {
-        meta.getOptions = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
-    }
-    
-    // Polymorphic object metadata.
-    if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) {
-        meta.getTypes = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
-    }
-    
-    if constexpr (
-        requires(::mg::json::Writer& writer) {
-            {
-                ::mg::MgPolymorphicRegistryTraits<T>::getDefaultMeta(writer)
-            } -> std::same_as<bool>;
-        }
-    ) {
+    if constexpr (::mg::EnumDescribed<::mg::EnumTraitsTypeT<T>>) meta.getOptions = &::mg::enumOptionsMeta<::mg::EnumTraitsTypeT<T>>;
+    if constexpr (::mg::MgPolymorphicRegistryTraits<T>::supported) meta.getTypes = &::mg::MgPolymorphicRegistryTraits<T>::getTypesMeta;
+    if constexpr (requires(::mg::json::Writer& writer) { { ::mg::MgPolymorphicRegistryTraits<T>::getDefaultMeta(writer) } -> std::same_as<bool>; }) {
         meta.getDefault = &::mg::MgPolymorphicRegistryTraits<T>::getDefaultMeta;
     }
-
-    // Polymorphic collection metadata.
     if constexpr (detail::PolymorphicCollectionTraits<T>::supported) {
         meta.getTypes = &detail::PolymorphicCollectionTraits<T>::getTypesMeta;
         meta.getCollectionItems = &detail::writeCollectionItems<MemberPtr>;
     }
-
-    return {
-        property.key,
-        property.set,
-        property.get,
-        property.getChild,
-        meta
-    };
+    return {p.key, p.set, p.get, p.getChild, meta};
 #else
-    return property;
+    return p;
 #endif
 }
 

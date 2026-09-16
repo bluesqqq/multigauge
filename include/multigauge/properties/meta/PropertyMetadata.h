@@ -16,7 +16,7 @@ struct PropertyMetadata {
     bool nullable = false; ///< Whether JSON null is a valid property value.
     OptionsGetter getOptions = nullptr; ///< Retrieves the finite set of valid values, when applicable.
     TypeListGetter getTypes = nullptr; ///< Retrieves valid concrete types for a polymorphic property.
-    DefaultGetter getDefault = nullptr; ///< Retrieves the default serialized value and inspector metadata, when available.
+    DefaultGetter getDefault = nullptr; ///< Retrieves the default serialized value, when available.
     CollectionItemsGetter getCollectionItems = nullptr; ///< Retrieves inspector metadata for each item in a collection.
 };
 
