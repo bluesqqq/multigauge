@@ -1,7 +1,6 @@
 #pragma once
 
 #include <concepts>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -46,13 +45,6 @@ concept PropertyMember =
         typename MemberPtrTraits<decltype(MemberPtr)>::Type;
     } &&
     std::derived_from<MemberClass<MemberPtr>, ::mg::PropertyObject>;
-
-template <auto CallbackPtr, typename Owner>
-concept PropertyCallback =
-    std::is_null_pointer_v<decltype(CallbackPtr)> ||
-    requires(Owner& owner) {
-        std::invoke(CallbackPtr, owner);
-    };
 
 //----------[ CHILD ]----------//
 
