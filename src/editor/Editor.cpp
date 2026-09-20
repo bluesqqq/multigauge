@@ -76,6 +76,13 @@ bool setPropertyPath(::mg::PropertyObject& object, const std::string& path, json
            owner->setProperty(property->key, value);
 }
 
+bool mutateCollectionPath(::mg::PropertyObject& object, const std::string& path, json::Reader operation) {
+    ::mg::PropertyObject* owner = nullptr;
+    const ::mg::Property* property = nullptr;
+    return object.resolvePath(path, owner, property) && owner && property && property->meta.collection &&
+           property->meta.collection->mutate && property->meta.collection->mutate(owner, operation);
+}
+
 bool setPropertyPaths(
     ::mg::PropertyObject& object,
     const std::vector<PropertyUpdate>& updates
@@ -107,7 +114,7 @@ bool setPropertyPaths(
         json::Document value = json::parse(update.json);
         if (!value.valid() ||
             !object.resolvePath(update.path, owner, property) || !owner || !property ||
-            !property->validate || !property->validate(owner, value.root())) {
+            !property->meta.validate || !property->meta.validate(owner, value.root())) {
             return false;
         }
         resolved.push_back({owner, property, std::move(value)});
@@ -645,6 +652,24 @@ Result Editor::setElementProperties(ElementRef reference, const std::vector<Prop
         Element* value = element(reference);
         return value && setPropertyPaths(*value, updates);
     }) ? OkObject() : Error("Failed to set element properties");
+}
+
+Result Editor::mutateFaceCollection(FaceId id, const std::string& path, const std::string& text) {
+    if (!face(id) || path.empty()) return Error("Invalid face collection mutation");
+    return commit("mutate face collection", [this, id, path, text]() {
+        GaugeFace* value = face(id);
+        const json::Document document = json::parse(text);
+        return value && document.valid() && mutateCollectionPath(*value, path, document.root());
+    }) ? OkObject() : Error("Failed to mutate face collection");
+}
+
+Result Editor::mutateElementCollection(ElementRef reference, const std::string& path, const std::string& text) {
+    if (!element(reference) || path.empty()) return Error("Invalid element collection mutation");
+    return commit("mutate element collection", [this, reference, path, text]() {
+        Element* value = element(reference);
+        const json::Document document = json::parse(text);
+        return value && document.valid() && mutateCollectionPath(*value, path, document.root());
+    }) ? OkObject() : Error("Failed to mutate element collection");
 }
 
 Result Editor::getFaceProperty(FaceId id, const std::string& path) const {

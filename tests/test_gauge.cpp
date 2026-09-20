@@ -530,6 +530,8 @@ TEST_CASE("radial parts expose embedded polymorphic collection inspector metadat
     CHECK(collection.member("types").size() == 2);
     REQUIRE(collection.member("items").isArray());
     CHECK(collection.member("items").size() == 2);
+    REQUIRE(collection.member("operations").isArray());
+    CHECK(collection.member("operations").size() == 3);
 
     std::string_view firstType;
     REQUIRE(collection.member("items").element(0).member("type").read(firstType));
@@ -544,6 +546,17 @@ TEST_CASE("radial parts expose embedded polymorphic collection inspector metadat
     const auto needleInspector = collection.member("items").element(1).member("inspector");
     CHECK(needleInspector.member("properties").isArray());
     CHECK(needleInspector.member("layout").isArray());
+
+    const mg::Property* partsProperty = radial.findProperty("parts");
+    REQUIRE(partsProperty != nullptr);
+    REQUIRE(partsProperty->meta.collection != nullptr);
+    REQUIRE(partsProperty->meta.collection->mutate != nullptr);
+    const auto append = mg::json::parse(R"({"action":"append","value":{"type":"scale","radius":0.5}})");
+    REQUIRE(append.valid());
+    REQUIRE(partsProperty->meta.collection->mutate(&radial, append.root()));
+    const auto remove = mg::json::parse(R"({"action":"remove","index":2})");
+    REQUIRE(remove.valid());
+    REQUIRE(partsProperty->meta.collection->mutate(&radial, remove.root()));
 #endif
 }
 
@@ -736,6 +749,69 @@ TEST_CASE("editor batches property mutations atomically") {
     CHECK(editor.historyIndex() == historyBeforeBatch);
     REQUIRE(editor.redo());
     CHECK(editor.historyIndex() == historyBeforeBatch + 1);
+}
+
+TEST_CASE("editor mutates inspector collections without replacing the collection value") {
+    mg::editor::Editor editor;
+    const auto createdFace = editor.createFace("{}");
+    REQUIRE(createdFace.ok);
+    std::uint64_t rawFaceId = 0;
+    REQUIRE(createdFace.data.root().member("id").read(rawFaceId));
+    const auto faceId = static_cast<mg::editor::Editor::FaceId>(rawFaceId);
+
+    REQUIRE(editor.setFaceProperties(faceId, {{"bgColor", R"({"type":"value"})"}}).ok);
+    const auto metadata = editor.getFacePropertyInspector(faceId, "bgColor.timeline.keyframes");
+    REQUIRE(metadata.ok);
+    const auto collection = metadata.data.root().member("property").member("collection");
+    REQUIRE(collection.isObject());
+    CHECK(collection.member("default").isObject());
+    CHECK(collection.member("operations").isArray());
+    CHECK(collection.member("operations").size() == 3);
+
+    const std::size_t historyBeforeAppend = editor.historyIndex();
+    REQUIRE(editor.mutateFaceCollection(
+        faceId, "bgColor.timeline.keyframes",
+        R"({"action":"append","value":{"pos":0.25,"color":"#112233FF"}})"
+    ).ok);
+    CHECK(editor.historyIndex() == historyBeforeAppend + 1);
+
+    REQUIRE(editor.mutateFaceCollection(
+        faceId, "bgColor.timeline.keyframes",
+        R"({"action":"append","value":{"pos":0.75,"color":"#445566FF"}})"
+    ).ok);
+    const std::size_t historyBeforeUpdate = editor.historyIndex();
+    REQUIRE(editor.mutateFaceCollection(
+        faceId, "bgColor.timeline.keyframes",
+        R"({"action":"update","index":0,"updates":[{"path":"pos","value":0.9}]})"
+    ).ok);
+    CHECK(editor.historyIndex() == historyBeforeUpdate + 1);
+
+    const auto keyframes = editor.getFaceProperty(faceId, "bgColor.timeline.keyframes");
+    REQUIRE(keyframes.ok);
+    const auto values = keyframes.data.root().member("value");
+    REQUIRE(values.isArray());
+    REQUIRE(values.size() == 2);
+    double firstPosition = 0.0;
+    double secondPosition = 0.0;
+    REQUIRE(values.element(0).member("pos").read(firstPosition));
+    REQUIRE(values.element(1).member("pos").read(secondPosition));
+    CHECK(firstPosition == doctest::Approx(0.75));
+    CHECK(secondPosition == doctest::Approx(0.9));
+
+    const std::size_t historyBeforeInvalid = editor.historyIndex();
+    CHECK_FALSE(editor.mutateFaceCollection(
+        faceId, "bgColor.timeline.keyframes",
+        R"({"action":"append","value":{"pos":0.75,"color":"#FFFFFFFF"}})"
+    ).ok);
+    CHECK(editor.historyIndex() == historyBeforeInvalid);
+
+    REQUIRE(editor.mutateFaceCollection(
+        faceId, "bgColor.timeline.keyframes", R"({"action":"remove","index":1})"
+    ).ok);
+    REQUIRE(editor.undo());
+    const auto restored = editor.getFaceProperty(faceId, "bgColor.timeline.keyframes");
+    REQUIRE(restored.ok);
+    CHECK(restored.data.root().member("value").size() == 2);
 }
 
 TEST_CASE("editor API drives the screen-facing gauge face") {
