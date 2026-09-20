@@ -155,11 +155,11 @@ TEST_CASE("nullable polymorphic color metadata provides a default value") {
     REQUIRE(paint.writePropertiesMeta(writer));
 
     const mg::json::Reader stroke = metadata.root().element(1);
-    REQUIRE(stroke.member("default").isObject());
-
-    std::string_view type;
-    REQUIRE(stroke.member("default").member("value").member("type").read(type));
-    CHECK(type == "static");
-    CHECK_FALSE(stroke.member("default").member("inspector").valid());
+    std::string_view color;
+    REQUIRE(stroke.member("default").read(color));
+    CHECK(color == "#000000FF");
+    REQUIRE(paint.setProperty("stroke", stroke.member("default")));
+    REQUIRE(paint.stroke);
+    CHECK(std::string_view(paint.stroke->typeId()) == "static");
 #endif
 }
