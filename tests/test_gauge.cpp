@@ -675,6 +675,64 @@ TEST_CASE("gauge editor preserves hierarchy invariants through editing and histo
     CHECK(restoredRoots == 0);
 }
 
+TEST_CASE("editor batches property mutations atomically") {
+    mg::editor::Editor editor;
+    const auto createdFace = editor.createFace("{}");
+    REQUIRE(createdFace.ok);
+    std::uint64_t rawFaceId = 0;
+    REQUIRE(createdFace.data.root().member("id").read(rawFaceId));
+    const auto faceId = static_cast<mg::editor::Editor::FaceId>(rawFaceId);
+
+    const auto createdElement = editor.createElement(
+        {faceId, mg::gauge::NodeHandle::invalid(), mg::editor::Editor::Append},
+        R"({"type":"rectangle","radius":8})"
+    );
+    REQUIRE(createdElement.ok);
+    const mg::editor::ElementRef element{faceId, readHandle(createdElement.data.root().member("element"))};
+    REQUIRE(element.handle.valid());
+
+    const std::size_t historyBeforeBatch = editor.historyIndex();
+    const std::vector<mg::editor::PropertyUpdate> updates{
+        {"radius", "9"},
+        {"paint.thickness", "3"},
+    };
+    REQUIRE(editor.setElementProperties(element, updates).ok);
+    CHECK(editor.historyIndex() == historyBeforeBatch + 1);
+
+    double radius = 0.0;
+    const auto updatedRadius = editor.getElementProperty(element, "radius");
+    REQUIRE(updatedRadius.ok);
+    REQUIRE(updatedRadius.data.root().member("value").read(radius));
+    CHECK(radius == 9.0);
+
+    const std::vector<mg::editor::PropertyUpdate> invalidPath{
+        {"radius", "10"},
+        {"paint.missing", "4"},
+    };
+    CHECK_FALSE(editor.setElementProperties(element, invalidPath).ok);
+    const std::vector<mg::editor::PropertyUpdate> invalidValue{
+        {"radius", "10"},
+        {"paint.thickness", "\"invalid\""},
+    };
+    CHECK_FALSE(editor.setElementProperties(element, invalidValue).ok);
+    const std::vector<mg::editor::PropertyUpdate> overlappingPaths{
+        {"paint", R"({"thickness":4})"},
+        {"paint.thickness", "4"},
+    };
+    CHECK_FALSE(editor.setElementProperties(element, overlappingPaths).ok);
+    CHECK(editor.historyIndex() == historyBeforeBatch + 1);
+
+    const auto unchangedRadius = editor.getElementProperty(element, "radius");
+    REQUIRE(unchangedRadius.ok);
+    REQUIRE(unchangedRadius.data.root().member("value").read(radius));
+    CHECK(radius == 9.0);
+
+    REQUIRE(editor.undo());
+    CHECK(editor.historyIndex() == historyBeforeBatch);
+    REQUIRE(editor.redo());
+    CHECK(editor.historyIndex() == historyBeforeBatch + 1);
+}
+
 TEST_CASE("editor API drives the screen-facing gauge face") {
     mg::editor::Manager editors;
     const auto id = editors.create();

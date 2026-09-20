@@ -76,6 +76,48 @@ bool setPropertyPath(::mg::PropertyObject& object, const std::string& path, json
            owner->setProperty(property->key, value);
 }
 
+bool setPropertyPaths(
+    ::mg::PropertyObject& object,
+    const std::vector<PropertyUpdate>& updates
+) {
+    if (updates.empty()) return false;
+
+    const auto overlaps = [](const std::string& left, const std::string& right) {
+        return left == right ||
+               (left.size() > right.size() && left.starts_with(right) && left[right.size()] == '.') ||
+               (right.size() > left.size() && right.starts_with(left) && right[left.size()] == '.');
+    };
+    for (std::size_t index = 0; index < updates.size(); ++index) {
+        if (updates[index].path.empty()) return false;
+        for (std::size_t previous = 0; previous < index; ++previous)
+            if (overlaps(updates[index].path, updates[previous].path)) return false;
+    }
+
+    struct ResolvedUpdate {
+        ::mg::PropertyObject* owner;
+        const ::mg::Property* property;
+        json::Document value;
+    };
+
+    std::vector<ResolvedUpdate> resolved;
+    resolved.reserve(updates.size());
+    for (const PropertyUpdate& update : updates) {
+        ::mg::PropertyObject* owner = nullptr;
+        const ::mg::Property* property = nullptr;
+        json::Document value = json::parse(update.json);
+        if (!value.valid() ||
+            !object.resolvePath(update.path, owner, property) || !owner || !property ||
+            !property->validate || !property->validate(owner, value.root())) {
+            return false;
+        }
+        resolved.push_back({owner, property, std::move(value)});
+    }
+
+    for (const ResolvedUpdate& update : resolved)
+        if (!update.owner->setProperty(update.property->key, update.value.root())) return false;
+    return true;
+}
+
 template <typename WriteIdentity>
 Result getPropertyInspector(
     const ::mg::PropertyObject& object,
@@ -575,6 +617,14 @@ Result Editor::setFaceProperty(FaceId id, const std::string& path, const std::st
                : Error("Failed to set face property");
 }
 
+Result Editor::setFaceProperties(FaceId id, const std::vector<PropertyUpdate>& updates) {
+    if (!face(id) || updates.empty()) return Error("Invalid face property updates");
+    return commit("set face properties", [this, id, updates]() {
+        GaugeFace* value = face(id);
+        return value && setPropertyPaths(*value, updates);
+    }) ? OkObject() : Error("Failed to set face properties");
+}
+
 Result
 Editor::setElementProperty(ElementRef reference, const std::string& path, const std::string& text) {
     if (!element(reference)) return Error("Invalid element");
@@ -587,6 +637,14 @@ Editor::setElementProperty(ElementRef reference, const std::string& path, const 
                   })
                ? OkObject()
                : Error("Failed to set element property");
+}
+
+Result Editor::setElementProperties(ElementRef reference, const std::vector<PropertyUpdate>& updates) {
+    if (!element(reference) || updates.empty()) return Error("Invalid element property updates");
+    return commit("set element properties", [this, reference, updates]() {
+        Element* value = element(reference);
+        return value && setPropertyPaths(*value, updates);
+    }) ? OkObject() : Error("Failed to set element properties");
 }
 
 Result Editor::getFaceProperty(FaceId id, const std::string& path) const {

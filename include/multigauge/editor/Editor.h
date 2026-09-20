@@ -175,12 +175,24 @@ public:
         const std::string& json
     );
 
+    /// Sets multiple face properties as one atomic history entry.
+    ///
+    /// @note Update paths must be distinct and cannot be ancestors or descendants of one another.
+    /// @return An error result when any update path or serialized value is invalid.
+    Result setFaceProperties(FaceId faceId, const std::vector<PropertyUpdate>& updates);
+
     /// @brief Sets one element property from JSON.
     Result setElementProperty(
         ElementRef element,
         const std::string& path,
         const std::string& json
     );
+
+    /// Sets multiple element properties as one atomic history entry.
+    ///
+    /// @note Update paths must be distinct and cannot be ancestors or descendants of one another.
+    /// @return An error result when any update path or serialized value is invalid.
+    Result setElementProperties(ElementRef element, const std::vector<PropertyUpdate>& updates);
 
     /// @brief Gets one face property.
     Result getFaceProperty(
