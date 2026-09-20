@@ -17,6 +17,9 @@ struct Property {
     /// @brief Function used to decode and assign a property value.
     using Setter = bool (*)(PropertyObject*, json::Reader);
 
+    /// @brief Function used to validate a property value without assigning it.
+    using Validator = bool (*)(const PropertyObject*, json::Reader);
+
     /// @brief Function used to encode a property value.
     using Getter = bool (*)(const PropertyObject*, json::Writer&);
 
@@ -26,6 +29,7 @@ struct Property {
     const char* key = nullptr; ///< JSON key.
     Setter set = nullptr; ///< Setter function using json value as input.
     Getter get = nullptr; ///< Getter function using json value as output.
+    Validator validate = nullptr; ///< Validator function using json value as input.
     /// Returns a borrowed nested property object, or nullptr when absent.
     /// The returned object must be owned by the supplied property object.
     ChildGetter getChild = nullptr;

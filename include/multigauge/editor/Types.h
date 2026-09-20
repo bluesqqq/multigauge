@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <string>
 
 #include <multigauge/container/GenerationalHandle.h>
 #include <multigauge/gauge/Element.h>
@@ -38,6 +39,12 @@ struct ElementPlacement {
         std::size_t i = static_cast<std::size_t>(-1)
     )
         : faceId(face), parent(parentHandle), index(i) {}
+};
+
+/// Describes one serialized property assignment in an editor batch mutation.
+struct PropertyUpdate {
+    std::string path;
+    std::string json;
 };
 
 } // namespace mg::editor

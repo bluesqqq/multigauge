@@ -246,6 +246,14 @@ Result setFaceProperty(
     return value ? value->setFaceProperty(faceId, path, text) : invalidEditor(id);
 }
 
+Result setFaceProperties(
+    Manager& manager, EditorId id, NodeId faceId,
+    const std::vector<PropertyUpdate>& updates
+) {
+    auto* value = editor(manager, id);
+    return value ? value->setFaceProperties(faceId, updates) : invalidEditor(id);
+}
+
 Result getFaceProperty(
     Manager& manager, EditorId id,
     NodeId faceId,
@@ -273,6 +281,14 @@ Result setElementProperty(
 ) {
     auto* value = editor(manager, id);
     return value ? value->setElementProperty(ref, path, text) : invalidEditor(id);
+}
+
+Result setElementProperties(
+    Manager& manager, EditorId id, ElementRef ref,
+    const std::vector<PropertyUpdate>& updates
+) {
+    auto* value = editor(manager, id);
+    return value ? value->setElementProperties(ref, updates) : invalidEditor(id);
 }
 
 Result getElementProperty(
@@ -414,10 +430,12 @@ Result Manager::reorderElement(EditorId id, ElementRef element, std::size_t inde
 Result Manager::moveElement(EditorId id, ElementRef element, const ElementPlacement& where) { return detail::moveElement(*this, id, element, where); }
 Result Manager::replaceElement(EditorId id, ElementRef element, const std::string& json) { return detail::replaceElement(*this, id, element, json); }
 Result Manager::setFaceProperty(EditorId id, NodeId faceId, const std::string& path, const std::string& json) { return detail::setFaceProperty(*this, id, faceId, path, json); }
+Result Manager::setFaceProperties(EditorId id, NodeId faceId, const std::vector<PropertyUpdate>& updates) { return detail::setFaceProperties(*this, id, faceId, updates); }
 Result Manager::getFaceProperty(EditorId id, NodeId faceId, const std::string& path) { return detail::getFaceProperty(*this, id, faceId, path); }
 Result Manager::getFaceInspector(EditorId id, NodeId faceId) { return detail::getFaceInspector(*this, id, faceId); }
 Result Manager::getFacePropertyInspector(EditorId id, NodeId faceId, const std::string& path) { return detail::getFacePropertyInspector(*this, id, faceId, path); }
 Result Manager::setElementProperty(EditorId id, ElementRef element, const std::string& path, const std::string& json) { return detail::setElementProperty(*this, id, element, path, json); }
+Result Manager::setElementProperties(EditorId id, ElementRef element, const std::vector<PropertyUpdate>& updates) { return detail::setElementProperties(*this, id, element, updates); }
 Result Manager::getElementProperty(EditorId id, ElementRef element, const std::string& path) { return detail::getElementProperty(*this, id, element, path); }
 Result Manager::getElementInspector(EditorId id, ElementRef element) { return detail::getElementInspector(*this, id, element); }
 Result Manager::getElementPropertyInspector(EditorId id, ElementRef element, const std::string& path) { return detail::getElementPropertyInspector(*this, id, element, path); }

@@ -68,10 +68,12 @@ public:
     [[nodiscard]] Result replaceElement(EditorId id, ElementRef element, const std::string& json);
 
     [[nodiscard]] Result setFaceProperty(EditorId id, NodeId faceId, const std::string& path, const std::string& json);
+    [[nodiscard]] Result setFaceProperties(EditorId id, NodeId faceId, const std::vector<PropertyUpdate>& updates);
     [[nodiscard]] Result getFaceProperty(EditorId id, NodeId faceId, const std::string& path);
     [[nodiscard]] Result getFaceInspector(EditorId id, NodeId faceId);
     [[nodiscard]] Result getFacePropertyInspector(EditorId id, NodeId faceId, const std::string& path);
     [[nodiscard]] Result setElementProperty(EditorId id, ElementRef element, const std::string& path, const std::string& json);
+    [[nodiscard]] Result setElementProperties(EditorId id, ElementRef element, const std::vector<PropertyUpdate>& updates);
     [[nodiscard]] Result getElementProperty(EditorId id, ElementRef element, const std::string& path);
     [[nodiscard]] Result getElementInspector(EditorId id, ElementRef element);
     [[nodiscard]] Result getElementPropertyInspector(EditorId id, ElementRef element, const std::string& path);

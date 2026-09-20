@@ -41,6 +41,15 @@ bool getMember(const ::mg::PropertyObject* obj, json::Writer& writer) {
 
 template <auto MemberPtr>
     requires PropertyMember<MemberPtr>
+bool validateMember(const ::mg::PropertyObject*, json::Reader value) {
+    using T = MemberType<MemberPtr>;
+
+    T decoded{};
+    return decodeAny<T>(value, decoded);
+}
+
+template <auto MemberPtr>
+    requires PropertyMember<MemberPtr>
 const ::mg::PropertyObject* getChildObject(const ::mg::PropertyObject* obj) {
     using C = MemberClass<MemberPtr>;
     using T = MemberType<MemberPtr>;
@@ -77,8 +86,8 @@ template <auto MemberPtr>
 ::mg::Property makeProperty(const char* key)
     requires detail::PropertyMember<MemberPtr> {
     using T = detail::MemberType<MemberPtr>;
-    ::mg::Property p{key, &detail::setMember<MemberPtr>, &detail::getMember<MemberPtr>, nullptr};
-    if constexpr (detail::ChildObjectTraits<T>::supported) p.getChild = &detail::getChildObject<MemberPtr>;
+    ::mg::Property::ChildGetter child = nullptr;
+    if constexpr (detail::ChildObjectTraits<T>::supported) child = &detail::getChildObject<MemberPtr>;
 
 #if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
@@ -92,18 +101,20 @@ template <auto MemberPtr>
         meta.getTypes = &detail::PolymorphicCollectionTraits<T>::getTypesMeta;
         meta.getCollectionItems = &detail::writeCollectionItems<MemberPtr>;
     }
-    return {p.key, p.set, p.get, p.getChild, meta};
+    return {key, &detail::setMember<MemberPtr>, &detail::getMember<MemberPtr>,
+            &detail::validateMember<MemberPtr>, child, meta};
 #else
-    return p;
+    return {key, &detail::setMember<MemberPtr>, &detail::getMember<MemberPtr>,
+            &detail::validateMember<MemberPtr>, child};
 #endif
 }
 
 inline ::mg::Property makeCustomProperty(const char* key, ::mg::Property::Setter set, ::mg::Property::Getter get) {
 #if MG_BUILD_EDITOR
     ::mg::PropertyMetadata meta{};
-    return {key, set, get, nullptr, meta};
+    return {key, set, get, nullptr, nullptr, meta};
 #else
-    return {key, set, get, nullptr};
+    return {key, set, get, nullptr, nullptr};
 #endif
 }
 
