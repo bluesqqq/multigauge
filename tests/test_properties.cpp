@@ -161,5 +161,9 @@ TEST_CASE("nullable polymorphic color metadata provides a default value") {
     REQUIRE(paint.setProperty("stroke", stroke.member("default")));
     REQUIRE(paint.stroke);
     CHECK(std::string_view(paint.stroke->typeId()) == "static");
+
+    const auto valueColor = mg::json::parse(R"({"type":"value"})");
+    REQUIRE(paint.setProperty("stroke", valueColor.root()));
+    CHECK(std::string_view(paint.stroke->typeId()) == "value");
 #endif
 }
