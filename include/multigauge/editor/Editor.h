@@ -197,8 +197,20 @@ public:
     /// @brief Gets the complete inspector document for one face.
     Result getFaceInspector(FaceId faceId) const;
 
+    /// Gets fresh inspector metadata for one face property path.
+    ///
+    /// @note `path` uses dotted property syntax.
+    /// @return Result data containing `id`, `path`, and the described `property`.
+    Result getFacePropertyInspector(FaceId faceId, const std::string& path) const;
+
     /// @brief Gets the complete inspector document for one element.
     Result getElementInspector(ElementRef element) const;
+
+    /// Gets fresh inspector metadata for one element property path.
+    ///
+    /// @note `path` uses dotted property syntax.
+    /// @return Result data containing `element`, `path`, and the described `property`.
+    Result getElementPropertyInspector(ElementRef element, const std::string& path) const;
 
     //----------[ HISTORY ]----------//
 

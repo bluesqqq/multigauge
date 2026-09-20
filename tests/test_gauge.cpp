@@ -612,6 +612,19 @@ TEST_CASE("gauge editor preserves hierarchy invariants through editing and histo
     REQUIRE(property.data.root().member("value").read(radius));
     CHECK(radius == 8.0);
 
+    const auto fillInspector = editor.getElementPropertyInspector(rootRef, "paint.fill");
+    REQUIRE(fillInspector.ok);
+    std::string_view inspectorPath;
+    REQUIRE(fillInspector.data.root().member("path").read(inspectorPath));
+    CHECK(inspectorPath == "paint.fill");
+    std::string_view fillKey;
+    REQUIRE(fillInspector.data.root().member("property").member("key").read(fillKey));
+    CHECK(fillKey == "fill");
+    bool fillNullable = false;
+    REQUIRE(fillInspector.data.root().member("property").member("nullable").read(fillNullable));
+    CHECK(fillNullable);
+    CHECK_FALSE(editor.getElementPropertyInspector(rootRef, "paint.missing").ok);
+
     REQUIRE(editor.replaceElement(rootRef, R"({"type":"frame"})").ok);
     REQUIRE(face->get(root) != nullptr);
     CHECK(std::string_view(face->get(root)->typeId()) == "frame");
