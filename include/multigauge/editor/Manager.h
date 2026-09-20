@@ -70,9 +70,11 @@ public:
     [[nodiscard]] Result setFaceProperty(EditorId id, NodeId faceId, const std::string& path, const std::string& json);
     [[nodiscard]] Result getFaceProperty(EditorId id, NodeId faceId, const std::string& path);
     [[nodiscard]] Result getFaceInspector(EditorId id, NodeId faceId);
+    [[nodiscard]] Result getFacePropertyInspector(EditorId id, NodeId faceId, const std::string& path);
     [[nodiscard]] Result setElementProperty(EditorId id, ElementRef element, const std::string& path, const std::string& json);
     [[nodiscard]] Result getElementProperty(EditorId id, ElementRef element, const std::string& path);
     [[nodiscard]] Result getElementInspector(EditorId id, ElementRef element);
+    [[nodiscard]] Result getElementPropertyInspector(EditorId id, ElementRef element, const std::string& path);
 
     [[nodiscard]] ClipboardState::Kind clipboardKind() const;
     void clearClipboard();

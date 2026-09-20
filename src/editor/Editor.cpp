@@ -76,6 +76,30 @@ bool setPropertyPath(::mg::PropertyObject& object, const std::string& path, json
            owner->setProperty(property->key, value);
 }
 
+template <typename WriteIdentity>
+Result getPropertyInspector(
+    const ::mg::PropertyObject& object,
+    const std::string& path,
+    WriteIdentity&& writeIdentity
+) {
+    if (path.empty()) return Error("Invalid property path");
+
+    const ::mg::PropertyObject* owner = nullptr;
+    const ::mg::Property* property = nullptr;
+    if (!object.resolvePath(path, owner, property) || !owner || !property)
+        return Error("Invalid property path");
+
+    Result result = OkObject();
+    json::Writer writer = result.data.writer();
+    return writer.writeObject([&](json::ObjectWriter& output) {
+        return writeIdentity(output) &&
+               output.write("path", path) &&
+               output.writeValue("property", [&](json::Writer& metadata) {
+                   return owner->writePropertyMeta(metadata, *property);
+               });
+    }) ? std::move(result) : Error("Failed to get property inspector metadata");
+}
+
 bool readAssets(json::Reader value, std::vector<Editor::Asset>& out) {
     if (!value.isArray() || value.size() > 16) return false;
 
@@ -627,6 +651,15 @@ Result Editor::getFaceInspector(FaceId id) const {
                ? std::move(result) : Error("Failed to get face inspector");
 }
 
+Result Editor::getFacePropertyInspector(FaceId id, const std::string& path) const {
+    const GaugeFace* value = face(id);
+    if (!value) return Error("Invalid face id");
+
+    return getPropertyInspector(*value, path, [&](json::ObjectWriter& object) {
+        return object.write("id", static_cast<std::uint64_t>(id));
+    });
+}
+
 Result Editor::getElementInspector(ElementRef reference) const {
     const Element* value = element(reference);
     if (!value) return Error("Invalid element");
@@ -643,6 +676,17 @@ Result Editor::getElementInspector(ElementRef reference) const {
         });
     })
                ? std::move(result) : Error("Failed to get element inspector");
+}
+
+Result Editor::getElementPropertyInspector(ElementRef reference, const std::string& path) const {
+    const Element* value = element(reference);
+    if (!value) return Error("Invalid element");
+
+    return getPropertyInspector(*value, path, [&](json::ObjectWriter& object) {
+        return object.writeValue("element", [&](json::Writer& referenceWriter) {
+            return writeHandle(referenceWriter, reference.faceId, reference.handle);
+        });
+    });
 }
 
 Result Editor::getHierarchy() const {
