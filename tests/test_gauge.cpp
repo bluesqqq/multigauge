@@ -683,6 +683,11 @@ TEST_CASE("editor batches property mutations atomically") {
     REQUIRE(createdFace.data.root().member("id").read(rawFaceId));
     const auto faceId = static_cast<mg::editor::Editor::FaceId>(rawFaceId);
 
+    const std::vector<mg::editor::PropertyUpdate> valueColor{
+        {"bgColor", R"({"type":"value"})"},
+    };
+    REQUIRE(editor.setFaceProperties(faceId, valueColor).ok);
+
     const auto createdElement = editor.createElement(
         {faceId, mg::gauge::NodeHandle::invalid(), mg::editor::Editor::Append},
         R"({"type":"rectangle","radius":8})"
