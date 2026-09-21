@@ -102,6 +102,18 @@ inline bool applyCollectionItemUpdates(::mg::PropertyObject& object, json::Reade
     return true;
 }
 
+inline bool mutateCollectionItem(::mg::PropertyObject& object, json::Reader operation) {
+    if (!operation.isObject()) return false;
+    std::string_view path;
+    const json::Reader nested = operation.member("operation");
+    ::mg::PropertyObject* owner = nullptr;
+    const ::mg::Property* property = nullptr;
+    return operation.member("path").read(path) && !path.empty() && nested.valid() &&
+           object.resolvePath(std::string(path), owner, property) && owner && property &&
+           property->meta.collection && property->meta.collection->mutate &&
+           property->meta.collection->mutate(owner, nested);
+}
+
 template <typename Item>
 ::mg::PropertyObject* collectionItemObject(Item& item) {
     if constexpr (requires { { item.get() } -> std::convertible_to<::mg::PropertyObject*>; }) return item.get();
@@ -176,6 +188,9 @@ bool mutateCollection(::mg::PropertyObject* obj, json::Reader operation) {
         } else if (action == "update") {
             ::mg::PropertyObject* item = collectionItemObject(next[index]);
             if (!item || !applyCollectionItemUpdates(*item, operation.member("updates"))) return false;
+        } else if (action == "mutate") {
+            ::mg::PropertyObject* item = collectionItemObject(next[index]);
+            if (!item || !mutateCollectionItem(*item, operation)) return false;
         } else {
             return false;
         }

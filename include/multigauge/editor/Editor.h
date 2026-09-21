@@ -199,7 +199,9 @@ public:
     /// @param path Dotted path to the collection property.
     /// @param json Operation object. `append` requires a serialized `value`; `remove`
     /// and `update` require an item `index`; `update` also requires a non-empty
-    /// `updates` array of `{path, value}` property assignments.
+    /// `updates` array of `{path, value}` property assignments. `mutate` requires
+    /// an item `index`, descendant collection `path`, and nested collection
+    /// `operation` object in the same format.
     /// @return An error result when the collection, operation, item, or nested value is invalid.
     Result mutateFaceCollection(FaceId faceId, const std::string& path, const std::string& json);
 

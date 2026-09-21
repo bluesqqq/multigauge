@@ -106,7 +106,8 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
                        return collectionMeta->getDefault(this, value);
                    })) &&
                    (!collectionMeta->mutate || collection.writeArray("operations", [](json::ArrayWriter& operations) {
-                       return operations.write("append") && operations.write("remove") && operations.write("update");
+                       return operations.write("append") && operations.write("remove") && operations.write("update") &&
+                              operations.write("mutate");
                    })) &&
                    collection.writeValue("items", [&](json::Writer& items) {
                        return collectionMeta->getItems(this, items);
