@@ -878,6 +878,12 @@ TEST_CASE("editor API drives the screen-facing gauge face") {
     CHECK(editors.isFace(id, faceId));
     CHECK(editors.getFace(id, faceId) != nullptr);
     CHECK(editors.getFaceInspector(id, faceId).ok);
+    REQUIRE(editors.setFaceProperties(id, faceId, {{"bgColor", R"({"type":"value"})"}}).ok);
+    REQUIRE(editors.mutateFaceCollection(
+        id, faceId, "bgColor.timeline.keyframes",
+        R"({"action":"append","value":{"pos":0.5,"color":"#112233FF"}})"
+    ).ok);
+    CHECK(editors.getFaceCollectionItemInspector(id, faceId, "bgColor.timeline.keyframes", 0).ok);
     CHECK(editors.exportPackage(id).ok);
     CHECK(editors.destroy(id));
 }

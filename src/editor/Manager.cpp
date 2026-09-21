@@ -281,6 +281,13 @@ Result getFacePropertyInspector(Manager& manager, EditorId id, NodeId faceId, co
     return value ? value->getFacePropertyInspector(faceId, path) : invalidEditor(id);
 }
 
+Result getFaceCollectionItemInspector(
+    Manager& manager, EditorId id, NodeId faceId, const std::string& path, std::size_t index
+) {
+    auto* value = editor(manager, id);
+    return value ? value->getFaceCollectionItemInspector(faceId, path, index) : invalidEditor(id);
+}
+
 Result setElementProperty(
     Manager& manager, EditorId id,
     ElementRef ref,
@@ -324,6 +331,13 @@ Result getElementInspector(Manager& manager, EditorId id, ElementRef ref) {
 Result getElementPropertyInspector(Manager& manager, EditorId id, ElementRef ref, const std::string& path) {
     auto* value = editor(manager, id);
     return value ? value->getElementPropertyInspector(ref, path) : invalidEditor(id);
+}
+
+Result getElementCollectionItemInspector(
+    Manager& manager, EditorId id, ElementRef ref, const std::string& path, std::size_t index
+) {
+    auto* value = editor(manager, id);
+    return value ? value->getElementCollectionItemInspector(ref, path, index) : invalidEditor(id);
 }
 
 ClipboardState::Kind clipboardKind(const Manager& manager) {
@@ -451,12 +465,14 @@ Result Manager::mutateFaceCollection(EditorId id, NodeId faceId, const std::stri
 Result Manager::getFaceProperty(EditorId id, NodeId faceId, const std::string& path) { return detail::getFaceProperty(*this, id, faceId, path); }
 Result Manager::getFaceInspector(EditorId id, NodeId faceId) { return detail::getFaceInspector(*this, id, faceId); }
 Result Manager::getFacePropertyInspector(EditorId id, NodeId faceId, const std::string& path) { return detail::getFacePropertyInspector(*this, id, faceId, path); }
+Result Manager::getFaceCollectionItemInspector(EditorId id, NodeId faceId, const std::string& path, std::size_t index) { return detail::getFaceCollectionItemInspector(*this, id, faceId, path, index); }
 Result Manager::setElementProperty(EditorId id, ElementRef element, const std::string& path, const std::string& json) { return detail::setElementProperty(*this, id, element, path, json); }
 Result Manager::setElementProperties(EditorId id, ElementRef element, const std::vector<PropertyUpdate>& updates) { return detail::setElementProperties(*this, id, element, updates); }
 Result Manager::mutateElementCollection(EditorId id, ElementRef element, const std::string& path, const std::string& json) { return detail::mutateElementCollection(*this, id, element, path, json); }
 Result Manager::getElementProperty(EditorId id, ElementRef element, const std::string& path) { return detail::getElementProperty(*this, id, element, path); }
 Result Manager::getElementInspector(EditorId id, ElementRef element) { return detail::getElementInspector(*this, id, element); }
 Result Manager::getElementPropertyInspector(EditorId id, ElementRef element, const std::string& path) { return detail::getElementPropertyInspector(*this, id, element, path); }
+Result Manager::getElementCollectionItemInspector(EditorId id, ElementRef element, const std::string& path, std::size_t index) { return detail::getElementCollectionItemInspector(*this, id, element, path, index); }
 ClipboardState::Kind Manager::clipboardKind() const { return detail::clipboardKind(*this); }
 void Manager::clearClipboard() { detail::clearClipboard(*this); }
 Result Manager::copyFace(EditorId id, NodeId faceId) { return detail::copyFace(*this, id, faceId); }

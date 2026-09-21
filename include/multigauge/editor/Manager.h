@@ -73,12 +73,14 @@ public:
     [[nodiscard]] Result getFaceProperty(EditorId id, NodeId faceId, const std::string& path);
     [[nodiscard]] Result getFaceInspector(EditorId id, NodeId faceId);
     [[nodiscard]] Result getFacePropertyInspector(EditorId id, NodeId faceId, const std::string& path);
+    [[nodiscard]] Result getFaceCollectionItemInspector(EditorId id, NodeId faceId, const std::string& path, std::size_t index);
     [[nodiscard]] Result setElementProperty(EditorId id, ElementRef element, const std::string& path, const std::string& json);
     [[nodiscard]] Result setElementProperties(EditorId id, ElementRef element, const std::vector<PropertyUpdate>& updates);
     [[nodiscard]] Result mutateElementCollection(EditorId id, ElementRef element, const std::string& path, const std::string& json);
     [[nodiscard]] Result getElementProperty(EditorId id, ElementRef element, const std::string& path);
     [[nodiscard]] Result getElementInspector(EditorId id, ElementRef element);
     [[nodiscard]] Result getElementPropertyInspector(EditorId id, ElementRef element, const std::string& path);
+    [[nodiscard]] Result getElementCollectionItemInspector(EditorId id, ElementRef element, const std::string& path, std::size_t index);
 
     [[nodiscard]] ClipboardState::Kind clipboardKind() const;
     void clearClipboard();
