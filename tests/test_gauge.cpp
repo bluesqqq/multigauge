@@ -531,7 +531,7 @@ TEST_CASE("radial parts expose embedded polymorphic collection inspector metadat
     REQUIRE(collection.member("items").isArray());
     CHECK(collection.member("items").size() == 2);
     REQUIRE(collection.member("operations").isArray());
-    CHECK(collection.member("operations").size() == 3);
+    CHECK(collection.member("operations").size() == 4);
 
     std::string_view firstType;
     REQUIRE(collection.member("items").element(0).member("type").read(firstType));
@@ -766,7 +766,7 @@ TEST_CASE("editor mutates inspector collections without replacing the collection
     REQUIRE(collection.isObject());
     CHECK(collection.member("default").isObject());
     CHECK(collection.member("operations").isArray());
-    CHECK(collection.member("operations").size() == 3);
+    CHECK(collection.member("operations").size() == 4);
 
     const std::size_t historyBeforeAppend = editor.historyIndex();
     REQUIRE(editor.mutateFaceCollection(
@@ -812,6 +812,39 @@ TEST_CASE("editor mutates inspector collections without replacing the collection
     const auto restored = editor.getFaceProperty(faceId, "bgColor.timeline.keyframes");
     REQUIRE(restored.ok);
     CHECK(restored.data.root().member("value").size() == 2);
+}
+
+TEST_CASE("editor mutates collections nested in collection items") {
+    mg::editor::Editor editor;
+    const auto createdFace = editor.createFace("{}");
+    REQUIRE(createdFace.ok);
+    std::uint64_t rawFaceId = 0;
+    REQUIRE(createdFace.data.root().member("id").read(rawFaceId));
+    const auto faceId = static_cast<mg::editor::Editor::FaceId>(rawFaceId);
+    const auto createdElement = editor.createElement(
+        {faceId, mg::gauge::NodeHandle::invalid(), mg::editor::Editor::Append}, R"({"type":"radial"})"
+    );
+    REQUIRE(createdElement.ok);
+    const mg::editor::ElementRef element{faceId, readHandle(createdElement.data.root().member("element"))};
+    REQUIRE(editor.setElementProperty(
+        element, "parts", R"([{"type":"scale","ticks":{"root":{},"subs":[]}}])"
+    ).ok);
+
+    const std::size_t historyBeforeMutation = editor.historyIndex();
+    REQUIRE(editor.mutateElementCollection(
+        element, "parts",
+        R"({"action":"mutate","index":0,"path":"ticks.subs","operation":{"action":"append","value":{"divisions":4}}})"
+    ).ok);
+    CHECK(editor.historyIndex() == historyBeforeMutation + 1);
+
+    const auto parts = editor.getElementProperty(element, "parts");
+    REQUIRE(parts.ok);
+    const auto subs = parts.data.root().member("value").element(0).member("ticks").member("subs");
+    REQUIRE(subs.isArray());
+    REQUIRE(subs.size() == 1);
+    std::int64_t divisions = 0;
+    REQUIRE(subs.element(0).member("divisions").read(divisions));
+    CHECK(divisions == 4);
 }
 
 TEST_CASE("editor API drives the screen-facing gauge face") {
