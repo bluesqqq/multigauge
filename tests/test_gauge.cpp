@@ -779,6 +779,16 @@ TEST_CASE("editor mutates inspector collections without replacing the collection
         faceId, "bgColor.timeline.keyframes",
         R"({"action":"append","value":{"pos":0.75,"color":"#445566FF"}})"
     ).ok);
+    const auto itemMetadata = editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline.keyframes", 1);
+    REQUIRE(itemMetadata.ok);
+    std::uint64_t itemIndex = 0;
+    REQUIRE(itemMetadata.data.root().member("index").read(itemIndex));
+    CHECK(itemIndex == 1);
+    const auto itemInspector = itemMetadata.data.root().member("item").member("inspector");
+    REQUIRE(itemInspector.isObject());
+    CHECK(itemInspector.member("properties").isArray());
+    CHECK_FALSE(editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline.keyframes", 2).ok);
+    CHECK_FALSE(editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline", 0).ok);
     const std::size_t historyBeforeUpdate = editor.historyIndex();
     REQUIRE(editor.mutateFaceCollection(
         faceId, "bgColor.timeline.keyframes",
