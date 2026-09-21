@@ -194,6 +194,20 @@ public:
     /// @return An error result when any update path or serialized value is invalid.
     Result setElementProperties(ElementRef element, const std::vector<PropertyUpdate>& updates);
 
+    /// Applies one collection operation to a face property as one history entry.
+    ///
+    /// @param path Dotted path to the collection property.
+    /// @param json Operation object. `append` requires a serialized `value`; `remove`
+    /// and `update` require an item `index`; `update` also requires a non-empty
+    /// `updates` array of `{path, value}` property assignments.
+    /// @return An error result when the collection, operation, item, or nested value is invalid.
+    Result mutateFaceCollection(FaceId faceId, const std::string& path, const std::string& json);
+
+    /// Applies one collection operation to an element property as one history entry.
+    ///
+    /// @see mutateFaceCollection for the operation format.
+    Result mutateElementCollection(ElementRef element, const std::string& path, const std::string& json);
+
     /// @brief Gets one face property.
     Result getFaceProperty(
         FaceId faceId,

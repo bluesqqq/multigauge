@@ -98,11 +98,18 @@ bool PropertyObject::writePropertyMeta(json::Writer& writer, const Property& pro
                    });
         }
         if (!object.writeValue("value", [&](json::Writer& value) { return prop.get ? prop.get(this, value) : value.null(); })) return false;
-        if (!prop.meta.getCollectionItems) return true;
+        const CollectionMetadata* collectionMeta = prop.meta.collection;
+        if (!collectionMeta || !collectionMeta->getItems) return true;
         return object.writeObject("collection", [&](json::ObjectWriter& collection) {
             return (!prop.meta.getTypes || collection.writeValue("types", prop.meta.getTypes)) &&
+                   (!collectionMeta->getDefault || collection.writeValue("default", [&](json::Writer& value) {
+                       return collectionMeta->getDefault(this, value);
+                   })) &&
+                   (!collectionMeta->mutate || collection.writeArray("operations", [](json::ArrayWriter& operations) {
+                       return operations.write("append") && operations.write("remove") && operations.write("update");
+                   })) &&
                    collection.writeValue("items", [&](json::Writer& items) {
-                       return prop.meta.getCollectionItems(this, items);
+                       return collectionMeta->getItems(this, items);
                    });
         });
     });

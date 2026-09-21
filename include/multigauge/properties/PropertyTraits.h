@@ -73,22 +73,40 @@ struct ChildObjectTraits<std::unique_ptr<T>> {
     static const ::mg::PropertyObject* getConst(const std::unique_ptr<T>& value) { return value.get(); }
 };
 
-//----------[ POLYMORPHIC COLLECTION ]----------//
+//----------[ COLLECTION ]----------//
 
-/// Detects a vector of owned polymorphic `PropertyObject`s.
+/// Describes a collection whose items can be edited through inspector metadata.
+///
+/// Specialize this trait for collection value types that need to normalize or
+/// validate mutations beyond the default vector behavior.
 template <typename T>
-struct PolymorphicCollectionTraits { static constexpr bool supported = false; };
+struct InspectorCollectionTraits { static constexpr bool supported = false; };
+
+template <PropertyObjectValue Item>
+struct InspectorCollectionTraits<std::vector<Item>> {
+    static constexpr bool supported = true;
+    using ItemType = Item;
+
+    static bool normalize(std::vector<Item>&) { return true; }
+
+    static bool writeDefault(const std::vector<Item>&, json::Writer& writer) {
+        return encodeAny(writer, Item{});
+    }
+};
 
 template <typename Base>
     requires std::derived_from<Base, ::mg::PropertyObject> &&
              ::mg::MgPolymorphicRegistryTraits<std::unique_ptr<Base>>::supported
-struct PolymorphicCollectionTraits<std::vector<std::unique_ptr<Base>>> {
+struct InspectorCollectionTraits<std::vector<std::unique_ptr<Base>>> {
     static constexpr bool supported = true;
     using Owned = std::unique_ptr<Base>;
+    using ItemType = Base;
 
     static bool getTypesMeta(json::Writer& writer) {
         return ::mg::MgPolymorphicRegistryTraits<Owned>::getTypesMeta(writer);
     }
+
+    static bool normalize(std::vector<Owned>&) { return true; }
 };
 
 } // namespace props::detail

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cstddef>
+#include <algorithm>
+#include <cmath>
 #include <vector>
 
 #include <multigauge/graphics/colors/Color.h>
@@ -21,8 +23,10 @@ struct ColorKeyframe : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Gradient Stop", {
-        MG_PROPERTY("pos", "Position", widget::number);
-        MG_PROPERTY("color", "Color", widget::color);
+        MG_CONTROL(widget::colorKeyframe, {
+            MG_BIND("position", "pos"),
+            MG_BIND("color", "color"),
+        });
     });
     MG_INSPECTOR_END()
 #endif
@@ -35,6 +39,60 @@ public:
     ColorKeyframe(ColorKeyframe&&) noexcept = default;
     ColorKeyframe& operator=(ColorKeyframe&&) noexcept = default;
 };
+
+} // namespace mg::graphics
+
+namespace mg::props::detail {
+
+template <>
+struct InspectorCollectionTraits<std::vector<::mg::graphics::ColorKeyframe>> {
+    static constexpr bool supported = true;
+
+    static bool normalize(std::vector<::mg::graphics::ColorKeyframe>& keyframes) {
+        std::sort(keyframes.begin(), keyframes.end(), [](const auto& left, const auto& right) {
+            return left.position < right.position;
+        });
+        float previous = -1.0F;
+        for (const auto& keyframe : keyframes) {
+            if (!keyframe.color || !std::isfinite(keyframe.position) ||
+                keyframe.position < 0.0F || keyframe.position > 1.0F ||
+                keyframe.position <= previous) return false;
+            previous = keyframe.position;
+        }
+        return true;
+    }
+
+    static bool writeDefault(const std::vector<::mg::graphics::ColorKeyframe>& keyframes,
+                             json::Writer& writer) {
+        float left = 0.0F;
+        float right = 0.0F;
+        float widest = -1.0F;
+        const ::mg::graphics::OwnedColor* color = nullptr;
+        for (const auto& keyframe : keyframes) {
+            if (keyframe.position - left > widest) {
+                right = keyframe.position;
+                widest = right - left;
+                color = keyframe.color ? &keyframe.color : nullptr;
+            }
+            left = keyframe.position;
+        }
+        if (1.0F - left > widest) {
+            right = 1.0F;
+            widest = right - left;
+            color = keyframes.empty() || !keyframes.back().color ? nullptr : &keyframes.back().color;
+        }
+        return writer.writeObject([&](json::ObjectWriter& object) {
+            if (!object.write("pos", (left + right) * 0.5F)) return false;
+            return object.writeValue("color", [&](json::Writer& value) {
+                return color && *color ? encodeAny(value, (*color)->clone()) : value.write("#000000FF");
+            });
+        });
+    }
+};
+
+} // namespace mg::props::detail
+
+namespace mg::graphics {
 
 /// A normalized color ramp. Position mapping belongs to ValueColor/TimeColor;
 /// interpolation always happens in this fixed [0, 1] domain.
@@ -50,7 +108,9 @@ class ColorTimeline : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Gradient", {
-        MG_PROPERTY("keyframes", "Stops", widget::gradient);
+        MG_CONTROL(widget::gradientTimeline, {
+            MG_BIND("keyframes", "keyframes"),
+        });
     });
     MG_INSPECTOR_END()
 #endif
