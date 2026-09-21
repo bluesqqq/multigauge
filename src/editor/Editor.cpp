@@ -149,6 +149,34 @@ Result getPropertyInspector(
     }) ? std::move(result) : Error("Failed to get property inspector metadata");
 }
 
+template <typename WriteIdentity>
+Result getCollectionItemInspector(
+    const ::mg::PropertyObject& object,
+    const std::string& path,
+    std::size_t index,
+    WriteIdentity&& writeIdentity
+) {
+    if (path.empty()) return Error("Invalid collection property path");
+
+    const ::mg::PropertyObject* owner = nullptr;
+    const ::mg::Property* property = nullptr;
+    if (!object.resolvePath(path, owner, property) || !owner || !property ||
+        !property->meta.collection || !property->meta.collection->getItem) {
+        return Error("Invalid collection property path");
+    }
+
+    Result result = OkObject();
+    json::Writer writer = result.data.writer();
+    return writer.writeObject([&](json::ObjectWriter& output) {
+        return writeIdentity(output) &&
+               output.write("path", path) &&
+               output.write("index", static_cast<std::uint64_t>(index)) &&
+               output.writeValue("item", [&](json::Writer& metadata) {
+                   return property->meta.collection->getItem(owner, index, metadata);
+               });
+    }) ? std::move(result) : Error("Invalid collection item index");
+}
+
 bool readAssets(json::Reader value, std::vector<Editor::Asset>& out) {
     if (!value.isArray() || value.size() > 16) return false;
 
@@ -743,6 +771,15 @@ Result Editor::getFacePropertyInspector(FaceId id, const std::string& path) cons
     });
 }
 
+Result Editor::getFaceCollectionItemInspector(FaceId id, const std::string& path, std::size_t index) const {
+    const GaugeFace* value = face(id);
+    if (!value) return Error("Invalid face id");
+
+    return getCollectionItemInspector(*value, path, index, [&](json::ObjectWriter& object) {
+        return object.write("id", static_cast<std::uint64_t>(id));
+    });
+}
+
 Result Editor::getElementInspector(ElementRef reference) const {
     const Element* value = element(reference);
     if (!value) return Error("Invalid element");
@@ -766,6 +803,21 @@ Result Editor::getElementPropertyInspector(ElementRef reference, const std::stri
     if (!value) return Error("Invalid element");
 
     return getPropertyInspector(*value, path, [&](json::ObjectWriter& object) {
+        return object.writeValue("element", [&](json::Writer& referenceWriter) {
+            return writeHandle(referenceWriter, reference.faceId, reference.handle);
+        });
+    });
+}
+
+Result Editor::getElementCollectionItemInspector(
+    ElementRef reference,
+    const std::string& path,
+    std::size_t index
+) const {
+    const Element* value = element(reference);
+    if (!value) return Error("Invalid element");
+
+    return getCollectionItemInspector(*value, path, index, [&](json::ObjectWriter& object) {
         return object.writeValue("element", [&](json::Writer& referenceWriter) {
             return writeHandle(referenceWriter, reference.faceId, reference.handle);
         });

@@ -122,24 +122,35 @@ template <typename Item>
 
 template <auto MemberPtr>
     requires PropertyMember<MemberPtr> && InspectorCollectionTraits<MemberType<MemberPtr>>::supported
+bool writeCollectionItem(const ::mg::PropertyObject* obj, std::size_t index, json::Writer& writer) {
+    using C = MemberClass<MemberPtr>;
+    const C* self = static_cast<const C*>(obj);
+    const auto& collection = self->*MemberPtr;
+    if (index >= collection.size()) return false;
+    const auto& item = collection[index];
+
+    return writer.writeObject([&](json::ObjectWriter& entry) {
+        const ::mg::PropertyObject* object = nullptr;
+        if constexpr (requires { { item.get() } -> std::convertible_to<const ::mg::PropertyObject*>; }) object = item.get();
+        else object = &item;
+        if (!object) return entry.writeValue("type", [](json::Writer& value) { return value.null(); });
+        if constexpr (requires { item->typeId(); })
+            if (!entry.write("type", object->typeId() ? object->typeId() : "")) return false;
+        return entry.writeValue("inspector", [&](json::Writer& inspector) {
+            return object->writeInspectorMeta(inspector);
+        });
+    });
+}
+
+template <auto MemberPtr>
+    requires PropertyMember<MemberPtr> && InspectorCollectionTraits<MemberType<MemberPtr>>::supported
 bool writeCollectionItems(const ::mg::PropertyObject* obj, json::Writer& writer) {
     using C = MemberClass<MemberPtr>;
     const C* self = static_cast<const C*>(obj);
 
     return writer.writeArray([&](json::ArrayWriter& items) {
-        for (const auto& item : self->*MemberPtr) {
-            if (!items.writeObject([&](json::ObjectWriter& entry) {
-                const ::mg::PropertyObject* object = nullptr;
-                if constexpr (requires { { item.get() } -> std::convertible_to<const ::mg::PropertyObject*>; }) object = item.get();
-                else object = &item;
-                if (!object) return entry.writeValue("type", [](json::Writer& value) { return value.null(); });
-                if constexpr (requires { item->typeId(); })
-                    if (!entry.write("type", object->typeId() ? object->typeId() : "")) return false;
-                return entry.writeValue("inspector", [&](json::Writer& inspector) {
-                    return object->writeInspectorMeta(inspector);
-                });
-            })) return false;
-        }
+        for (std::size_t index = 0; index < (self->*MemberPtr).size(); ++index)
+            if (!writeCollectionItem<MemberPtr>(obj, index, items.writer())) return false;
         return true;
     });
 }
@@ -207,6 +218,7 @@ const ::mg::CollectionMetadata& collectionMetadata() {
     static const ::mg::CollectionMetadata metadata = [] {
         ::mg::CollectionMetadata result{};
         result.getItems = &writeCollectionItems<MemberPtr>;
+        result.getItem = &writeCollectionItem<MemberPtr>;
         result.mutate = &mutateCollection<MemberPtr>;
         if constexpr (requires(const MemberType<MemberPtr>& collection, json::Writer& writer) {
             { InspectorCollectionTraits<MemberType<MemberPtr>>::writeDefault(collection, writer) } -> std::same_as<bool>;

@@ -1,5 +1,7 @@
 #pragma once
 
+#include <cstddef>
+
 #include <multigauge/json/Json.h>
 
 namespace mg {
@@ -9,6 +11,7 @@ class PropertyObject; // Forward declaration
 /// Editor-only capabilities and metadata for a collection property.
 struct CollectionMetadata {
     using ItemsGetter = bool (*)(const PropertyObject*, json::Writer&);
+    using ItemGetter = bool (*)(const PropertyObject*, std::size_t, json::Writer&);
     using DefaultGetter = bool (*)(const PropertyObject*, json::Writer&);
 
     /// Applies a serialized collection operation.
@@ -18,7 +21,8 @@ struct CollectionMetadata {
     /// available for a particular property.
     using Mutator = bool (*)(PropertyObject*, json::Reader);
 
-    ItemsGetter getItems = nullptr;
+    ItemsGetter getItems = nullptr; ///< Writes inspector metadata for every collection item.
+    ItemGetter getItem = nullptr; ///< Writes inspector metadata for one zero-based collection item.
     DefaultGetter getDefault = nullptr;
     Mutator mutate = nullptr;
 };
