@@ -51,27 +51,27 @@ private:
 
     MG_PROPS_PARENT(Element)
     MG_PROPS_BEGIN()
-    MG_PROP(seconds_, "seconds")
-    MG_PROP(backgroundColor_, "bgColor")
-    MG_PROP(secondsColor_, "secondsColor")
-    MG_PROP(graphColor_, "graphColor")
-    MG_PROP(borderColor_, "borderColor")
-    MG_PROP(value_, "value")
+        MG_PROP(seconds_, "seconds")
+        MG_PROP(backgroundColor_, "bgColor")
+        MG_PROP(secondsColor_, "secondsColor")
+        MG_PROP(graphColor_, "graphColor")
+        MG_PROP(borderColor_, "borderColor")
+        MG_PROP(value_, "value")
     MG_PROPS_END()
 
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
-    MG_SECTION("Graph", {
-        MG_PROPERTY("seconds", "Window (seconds)", widget::number);
-        MG_PROPERTY("value", "Value", widget::valueRef);
-    });
-    MG_SECTION("Colors", {
-        MG_PROPERTY("bgColor", "Background", widget::color);
-        MG_PROPERTY("secondsColor", "Time Labels", widget::color);
-        MG_PROPERTY("graphColor", "Graph", widget::color);
-        MG_PROPERTY("borderColor", "Border", widget::color);
-    });
-    MG_INCLUDE("layout");
+        MG_SECTION("Graph", {
+            MG_PROPERTY("seconds", "Window (seconds)", widget::number);
+            MG_INCLUDE("value");
+        });
+        MG_SECTION("Colors", {
+            MG_PROPERTY("bgColor", "Background", widget::color);
+            MG_PROPERTY("secondsColor", "Time Labels", widget::color);
+            MG_PROPERTY("graphColor", "Graph", widget::color);
+            MG_PROPERTY("borderColor", "Border", widget::color);
+        });
+        MG_INCLUDE("layout");
     MG_INSPECTOR_END()
 #endif
 };

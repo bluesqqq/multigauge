@@ -7,7 +7,6 @@
 
 namespace mg::graphics {
 
-TimeColor::TimeColor() = default;
 TimeColor::TimeColor(ColorTimeline timeline, LoopType loopType, float periodMs)
     : timeline(std::move(timeline)), loopType(loopType), periodMs(periodMs) {}
 OwnedColor TimeColor::clone() const { return std::make_unique<TimeColor>(*this); }

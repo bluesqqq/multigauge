@@ -64,25 +64,28 @@ struct InspectorCollectionTraits<std::vector<::mg::graphics::ColorKeyframe>> {
 
     static bool writeDefault(const std::vector<::mg::graphics::ColorKeyframe>& keyframes,
                              json::Writer& writer) {
-        float left = 0.0F;
-        float right = 0.0F;
+        float previous = 0.0F;
+        float widestLeft = 0.0F;
+        float widestRight = 1.0F;
         float widest = -1.0F;
         const ::mg::graphics::OwnedColor* color = nullptr;
         for (const auto& keyframe : keyframes) {
-            if (keyframe.position - left > widest) {
-                right = keyframe.position;
-                widest = right - left;
+            if (keyframe.position - previous > widest) {
+                widestLeft = previous;
+                widestRight = keyframe.position;
+                widest = widestRight - widestLeft;
                 color = keyframe.color ? &keyframe.color : nullptr;
             }
-            left = keyframe.position;
+            previous = keyframe.position;
         }
-        if (1.0F - left > widest) {
-            right = 1.0F;
-            widest = right - left;
+        if (1.0F - previous > widest) {
+            widestLeft = previous;
+            widestRight = 1.0F;
+            widest = widestRight - widestLeft;
             color = keyframes.empty() || !keyframes.back().color ? nullptr : &keyframes.back().color;
         }
         return writer.writeObject([&](json::ObjectWriter& object) {
-            if (!object.write("pos", (left + right) * 0.5F)) return false;
+            if (!object.write("pos", (widestLeft + widestRight) * 0.5F)) return false;
             return object.writeValue("color", [&](json::Writer& value) {
                 return color && *color ? encodeAny(value, (*color)->clone()) : value.write("#000000FF");
             });
@@ -108,7 +111,7 @@ class ColorTimeline : public ::mg::PropertyObject {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Gradient", {
-        MG_CONTROL(widget::gradientTimeline, {
+        MG_CONTROL(widget::gradient, {
             MG_BIND("keyframes", "keyframes"),
         });
     });

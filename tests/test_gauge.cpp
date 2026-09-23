@@ -560,6 +560,123 @@ TEST_CASE("radial parts expose embedded polymorphic collection inspector metadat
 #endif
 }
 
+TEST_CASE("radial inspector includes its non-optional ValueView fields") {
+#if MG_BUILD_EDITOR
+    mg::gauge::Radial radial;
+    auto initialMetadata = mg::json::array();
+    auto initialWriter = initialMetadata.writer();
+    REQUIRE(radial.writePropertiesMeta(initialWriter));
+
+    mg::json::Reader initialValue;
+    for (std::size_t index = 0; index < initialMetadata.root().size(); ++index) {
+        const auto candidate = initialMetadata.root().element(index);
+        std::string_view key;
+        if (candidate.member("key").read(key) && key == "value") {
+            initialValue = candidate;
+            break;
+        }
+    }
+    REQUIRE(initialValue.valid());
+    bool nullable = false;
+    REQUIRE(initialValue.member("nullable").read(nullable));
+    CHECK_FALSE(nullable);
+    CHECK(initialValue.member("properties").isArray());
+    CHECK(initialValue.member("properties").size() == 4);
+
+    auto inspector = mg::json::object();
+    auto inspectorWriter = inspector.writer();
+    REQUIRE(radial.writeInspectorMeta(inspectorWriter));
+    const auto radialLayout = inspector.root().member("layout").element(0).member("children");
+    REQUIRE(radialLayout.isArray());
+    REQUIRE(radialLayout.size() == 2);
+    std::string_view nodeType;
+    std::string_view includedPath;
+    REQUIRE(radialLayout.element(0).member("type").read(nodeType));
+    REQUIRE(radialLayout.element(0).member("path").read(includedPath));
+    CHECK(nodeType == "include");
+    CHECK(includedPath == "value");
+    const auto valueLayout = initialValue.member("layout");
+    REQUIRE(valueLayout.isArray());
+    REQUIRE(valueLayout.size() == 4);
+    std::string_view selectorWidget;
+    REQUIRE(valueLayout.element(0).member("widget").read(selectorWidget));
+    CHECK(selectorWidget == "value-selector");
+
+    const auto selected = mg::json::parse(R"("engineRPM")");
+    REQUIRE(selected.valid());
+    REQUIRE(radial.setProperty("value", selected.root()));
+
+    auto selectedMetadata = mg::json::array();
+    auto selectedWriter = selectedMetadata.writer();
+    REQUIRE(radial.writePropertiesMeta(selectedWriter));
+    mg::json::Reader selectedValue;
+    for (std::size_t index = 0; index < selectedMetadata.root().size(); ++index) {
+        const auto candidate = selectedMetadata.root().element(index);
+        std::string_view key;
+        if (candidate.member("key").read(key) && key == "value") {
+            selectedValue = candidate;
+            break;
+        }
+    }
+    REQUIRE(selectedValue.valid());
+    const auto properties = selectedValue.member("properties");
+    REQUIRE(properties.isArray());
+    mg::json::Reader id;
+    for (std::size_t index = 0; index < properties.size(); ++index) {
+        const auto candidate = properties.element(index);
+        std::string_view key;
+        if (candidate.member("key").read(key) && key == "id") {
+            id = candidate;
+            break;
+        }
+    }
+    REQUIRE(id.valid());
+    std::string_view valueId;
+    REQUIRE(id.member("value").read(valueId));
+    CHECK(valueId == "engineRPM");
+#endif
+}
+
+TEST_CASE("value colors expose scalar and child property metadata") {
+#if MG_BUILD_EDITOR
+    mg::graphics::ValueColor color;
+    auto metadata = mg::json::array();
+    auto writer = metadata.writer();
+    REQUIRE(color.writePropertiesMeta(writer));
+
+    mg::json::Reader valueMeta;
+    mg::json::Reader timelineMeta;
+    for (std::size_t index = 0; index < metadata.root().size(); ++index) {
+        const auto candidate = metadata.root().element(index);
+        std::string_view key;
+        if (!candidate.member("key").read(key)) continue;
+        if (key == "id") valueMeta = candidate;
+        if (key == "timeline") timelineMeta = candidate;
+    }
+
+    CHECK(valueMeta.member("value").isNull());
+    const auto timelineProperties = timelineMeta.member("properties");
+    REQUIRE(timelineProperties.isArray());
+    REQUIRE(timelineProperties.size() == 1);
+    std::string_view timelineKey;
+    REQUIRE(timelineProperties.element(0).member("key").read(timelineKey));
+    CHECK(timelineKey == "keyframes");
+
+    auto inspector = mg::json::object();
+    auto inspectorWriter = inspector.writer();
+    REQUIRE(color.writeInspectorMeta(inspectorWriter));
+    const auto controls = inspector.root().member("layout").element(0).member("children");
+    REQUIRE(controls.isArray());
+    REQUIRE(controls.size() == 2);
+    std::string_view valueWidget;
+    std::string_view timelineWidget;
+    REQUIRE(controls.element(0).member("widget").read(valueWidget));
+    REQUIRE(controls.element(1).member("widget").read(timelineWidget));
+    CHECK(valueWidget == "value-selector");
+    CHECK(timelineWidget == "gradient");
+#endif
+}
+
 TEST_CASE("gauge element codec owns type and property serialization") {
     auto element = mg::gauge::Element::registry().create("rectangle");
     REQUIRE(element != nullptr);
@@ -779,6 +896,15 @@ TEST_CASE("editor mutates inspector collections without replacing the collection
         faceId, "bgColor.timeline.keyframes",
         R"({"action":"append","value":{"pos":0.75,"color":"#445566FF"}})"
     ).ok);
+    REQUIRE(editor.mutateFaceCollection(
+        faceId, "bgColor.timeline.keyframes",
+        R"({"action":"update","index":0,"updates":[{"path":"color.color","value":"#AABBCCFF"}]})"
+    ).ok);
+    const auto updatedKeyframes = editor.getFaceProperty(faceId, "bgColor.timeline.keyframes");
+    REQUIRE(updatedKeyframes.ok);
+    std::string_view updatedColor;
+    REQUIRE(updatedKeyframes.data.root().member("value").element(0).member("color").read(updatedColor));
+    CHECK(updatedColor == "#AABBCCFF");
     const auto itemMetadata = editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline.keyframes", 1);
     REQUIRE(itemMetadata.ok);
     std::uint64_t itemIndex = 0;
@@ -787,7 +913,8 @@ TEST_CASE("editor mutates inspector collections without replacing the collection
     const auto itemInspector = itemMetadata.data.root().member("item").member("inspector");
     REQUIRE(itemInspector.isObject());
     CHECK(itemInspector.member("properties").isArray());
-    CHECK_FALSE(editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline.keyframes", 2).ok);
+    CHECK(editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline.keyframes", 2).ok);
+    CHECK_FALSE(editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline.keyframes", 3).ok);
     CHECK_FALSE(editor.getFaceCollectionItemInspector(faceId, "bgColor.timeline", 0).ok);
     const std::size_t historyBeforeUpdate = editor.historyIndex();
     REQUIRE(editor.mutateFaceCollection(
@@ -800,13 +927,16 @@ TEST_CASE("editor mutates inspector collections without replacing the collection
     REQUIRE(keyframes.ok);
     const auto values = keyframes.data.root().member("value");
     REQUIRE(values.isArray());
-    REQUIRE(values.size() == 2);
+    REQUIRE(values.size() == 3);
     double firstPosition = 0.0;
     double secondPosition = 0.0;
+    double thirdPosition = 0.0;
     REQUIRE(values.element(0).member("pos").read(firstPosition));
     REQUIRE(values.element(1).member("pos").read(secondPosition));
-    CHECK(firstPosition == doctest::Approx(0.75));
-    CHECK(secondPosition == doctest::Approx(0.9));
+    REQUIRE(values.element(2).member("pos").read(thirdPosition));
+    CHECK(firstPosition == doctest::Approx(0.25));
+    CHECK(secondPosition == doctest::Approx(0.75));
+    CHECK(thirdPosition == doctest::Approx(0.9));
 
     const std::size_t historyBeforeInvalid = editor.historyIndex();
     CHECK_FALSE(editor.mutateFaceCollection(
@@ -821,7 +951,7 @@ TEST_CASE("editor mutates inspector collections without replacing the collection
     REQUIRE(editor.undo());
     const auto restored = editor.getFaceProperty(faceId, "bgColor.timeline.keyframes");
     REQUIRE(restored.ok);
-    CHECK(restored.data.root().member("value").size() == 2);
+    CHECK(restored.data.root().member("value").size() == 3);
 }
 
 TEST_CASE("editor mutates collections nested in collection items") {
@@ -837,7 +967,7 @@ TEST_CASE("editor mutates collections nested in collection items") {
     REQUIRE(createdElement.ok);
     const mg::editor::ElementRef element{faceId, readHandle(createdElement.data.root().member("element"))};
     REQUIRE(editor.setElementProperty(
-        element, "parts", R"([{"type":"scale","ticks":{"root":{},"subs":[]}}])"
+        element, "parts", R"([{"type":"scale","ticks":{"root":{"paint":{"fill":"#112233FF"}},"subs":[]}}])"
     ).ok);
 
     const std::size_t historyBeforeMutation = editor.historyIndex();
@@ -855,6 +985,18 @@ TEST_CASE("editor mutates collections nested in collection items") {
     std::int64_t divisions = 0;
     REQUIRE(subs.element(0).member("divisions").read(divisions));
     CHECK(divisions == 4);
+
+    REQUIRE(editor.mutateElementCollection(
+        element, "parts",
+        R"({"action":"mutate","index":0,"path":"ticks.root.paint.fill.keyframes","operation":{"action":"update","index":0,"updates":[{"path":"color.color","value":"#AABBCCFF"}]}})"
+    ).ok);
+    const auto updatedParts = editor.getElementProperty(element, "parts");
+    REQUIRE(updatedParts.ok);
+    std::string_view updatedColor;
+    REQUIRE(updatedParts.data.root().member("value").element(0).member("ticks").member("root")
+        .member("paint").member("fill").member("keyframes").element(0).member("color")
+        .read(updatedColor));
+    CHECK(updatedColor == "#AABBCCFF");
 }
 
 TEST_CASE("editor API drives the screen-facing gauge face") {

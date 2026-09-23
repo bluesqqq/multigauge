@@ -38,14 +38,12 @@ void ScalePart::draw(::mg::graphics::Graphics& graphics, ::mg::Point<float> cent
 void ScalePart::update(const ::mg::ValueView& value) { ticks_.setValueView(value.valueBase()); }
 
 void Radial::draw(::mg::graphics::Graphics& graphics, const ::mg::Rect<float>& bounds) const {
-    const ::mg::ValueView value = value_.value_or(::mg::ValueView{});
     const float radius = std::min(bounds.width, bounds.height) * 0.5F;
     const ::mg::Point<float> center{bounds.x + bounds.width * 0.5F, bounds.y + bounds.height * 0.5F};
-    for (const auto& part : parts_) if (part) part->draw(graphics, center, radius, value, startAngle_, endAngle_);
+    for (const auto& part : parts_) if (part) part->draw(graphics, center, radius, value_, startAngle_, endAngle_);
 }
 void Radial::update(std::chrono::microseconds) {
-    const ::mg::ValueView value = value_.value_or(::mg::ValueView{});
-    for (const auto& part : parts_) if (part) part->update(value);
+    for (const auto& part : parts_) if (part) part->update(value_);
 }
 } // namespace mg::gauge
 

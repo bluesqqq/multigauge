@@ -9,7 +9,7 @@ class ValueColor final : public Color {
     MG_EDITOR_NAME("Value Color")
     MG_TYPE_ID("value")
 
-    ColorTimeline timeline;
+    ColorTimeline timeline{rgba{0, 0, 0, 255}};
     ::mg::ValueRef value;
 
     MG_PROPS_PARENT(Color)
@@ -21,7 +21,7 @@ class ValueColor final : public Color {
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
     MG_SECTION("Value Color", {
-        MG_PROPERTY("id", "Value ID", widget::text);
+        MG_PROPERTY("id", "Value ID", widget::valueSelector);
         MG_PROPERTY("timeline", "Stops", widget::gradient);
     });
     MG_INSPECTOR_END()

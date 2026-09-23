@@ -72,19 +72,15 @@ private:
         MG_PROP(value_, "id")
         MG_PROP(minimumBase_, "min")
         MG_PROP(maximumBase_, "max")
-    MG_PROP(unitIndex_, "unitIndex")
+        MG_PROP(unitIndex_, "unitIndex")
     MG_PROPS_END()
 
 #if MG_BUILD_EDITOR
     MG_INSPECTOR_BEGIN()
-    MG_SECTION("Value", {
-        MG_PROPERTY("id", "ID", widget::text);
-        MG_ROW({
-            MG_PROPERTY("min", "Minimum", widget::number);
-            MG_PROPERTY("max", "Maximum", widget::number);
-        });
+        MG_PROPERTY("id", "Value", widget::valueSelector);
+        MG_PROPERTY("min", "Minimum", widget::number);
+        MG_PROPERTY("max", "Maximum", widget::number);
         MG_PROPERTY("unitIndex", "Unit Index", widget::number);
-    });
     MG_INSPECTOR_END()
 #endif
 };
@@ -92,6 +88,11 @@ private:
 CODEC_BEGIN(ValueView)
     DECODE() {
         std::string_view id;
+
+        if (v.isNull()) {
+            out = ValueView{};
+            return true;
+        }
 
         if (v.read(id)) {
             out = ValueView(id);
