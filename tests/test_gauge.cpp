@@ -597,7 +597,7 @@ TEST_CASE("radial inspector includes its non-optional ValueView fields") {
     CHECK(includedPath == "value");
     const auto valueLayout = initialValue.member("layout");
     REQUIRE(valueLayout.isArray());
-    REQUIRE(valueLayout.size() == 3);
+    REQUIRE(valueLayout.size() == 4);
     std::string_view selectorWidget;
     REQUIRE(valueLayout.element(0).member("widget").read(selectorWidget));
     CHECK(selectorWidget == "value-selector");
