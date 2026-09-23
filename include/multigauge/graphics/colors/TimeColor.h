@@ -11,7 +11,7 @@ class TimeColor final : public Color {
 public:
     enum class LoopType { Forward, Reverse, PingPong };
 
-    TimeColor();
+    TimeColor() = default;
     TimeColor(ColorTimeline timeline, LoopType loopType = LoopType::Forward, float periodMs = 1000.0F);
     TimeColor(const TimeColor&) = default;
     TimeColor& operator=(const TimeColor&) = default;
@@ -21,7 +21,7 @@ protected:
     rgba resolveUncached(const ColorResolver::Frame& frame) const noexcept override;
 
 private:
-    ColorTimeline timeline;
+    ColorTimeline timeline{rgba{0, 0, 0, 255}};
     LoopType loopType = LoopType::Forward;
     float periodMs = 1000.0F;
 
