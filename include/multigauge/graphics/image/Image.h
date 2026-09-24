@@ -23,11 +23,16 @@ struct Image {
     Image(Image&& other) noexcept { *this = std::move(other); }
 
     Image& operator=(Image&& other) noexcept {
+        if (this == &other) return *this;
+
+        if (native && destroy) destroy(native);
         width = other.width;
         height = other.height;
         native = other.native;
         destroy = other.destroy;
 
+        other.width = 0;
+        other.height = 0;
         other.native = nullptr;
         other.destroy = nullptr;
         return *this;
