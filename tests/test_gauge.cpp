@@ -234,6 +234,23 @@ TEST_CASE("built-in elements provide inspector layouts") {
     checkLayout(tickList);
 }
 
+TEST_CASE("image inspector uses the asset widget") {
+#if MG_BUILD_EDITOR
+    mg::gauge::ImageElement image;
+    auto inspector = mg::json::object();
+    auto inspectorWriter = inspector.writer();
+    REQUIRE(image.writeInspectorMeta(inspectorWriter));
+
+    const auto path = inspector.root().member("layout").element(0).member("children").element(0);
+    std::string_view key;
+    std::string_view widget;
+    REQUIRE(path.member("path").read(key));
+    REQUIRE(path.member("widget").read(widget));
+    CHECK(key == "path");
+    CHECK(widget == "asset");
+#endif
+}
+
 TEST_CASE("Clay layout properties serialize grouped padding and floating placement") {
     const auto source = mg::json::parse(R"({
         "width":{"mode":"percent","value":1,"limit":320},
