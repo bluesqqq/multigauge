@@ -30,6 +30,12 @@
 
 namespace {
 
+int destroyedImageCount = 0;
+
+void destroyTestImage(void*) {
+    ++destroyedImageCount;
+}
+
 mg::gauge::NodeHandle readHandle(mg::json::Reader value) {
     std::uint64_t slot = 0;
     std::uint64_t generation = 0;
@@ -182,6 +188,24 @@ TEST_CASE("a face without a background clears transparently") {
     CHECK(context.clears[0].g == 0);
     CHECK(context.clears[0].b == 0);
     CHECK(context.clears[0].a == 0);
+}
+
+TEST_CASE("image move assignment releases its previous native resource") {
+    destroyedImageCount = 0;
+    {
+        int first = 0;
+        int second = 0;
+        mg::images::Image image(1, 1, &first, destroyTestImage);
+        mg::images::Image replacement(2, 2, &second, destroyTestImage);
+
+        image = std::move(replacement);
+
+        CHECK(destroyedImageCount == 1);
+        CHECK(replacement.empty());
+        CHECK(image.width == 2);
+        CHECK(image.height == 2);
+    }
+    CHECK(destroyedImageCount == 2);
 }
 
 TEST_CASE("built-in elements provide inspector layouts") {
