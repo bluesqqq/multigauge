@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://www.multi-gauge.com/schemas/state.schema.json",
-  "title": "Multigauge Runtime State Schema",
-  "description": "Device-local core configuration for user values, telemetry providers, and sensor bindings. It is not part of an importable gauge package and never stores live sensor readings.",
+  "$id": "https://www.multi-gauge.com/schemas/sensors.schema.json",
+  "title": "Multigauge Sensor Configuration Schema",
+  "description": "Device-local sensor configuration for user values, telemetry providers, and sensor bindings. It is not part of an importable gauge package and never stores live sensor readings.",
   "type": "object",
   "additionalProperties": false,
   "properties": {
