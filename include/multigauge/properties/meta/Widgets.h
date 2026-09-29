@@ -19,5 +19,6 @@ inline constexpr const char* alignmentGrid = "alignment-grid";
 inline constexpr const char* insets = "insets";
 inline constexpr const char* anchorPair = "anchor-pair";
 inline constexpr const char* axisPair = "axis-pair";
+inline constexpr const char* asset = "asset";
 
 } // namespace mg::widget

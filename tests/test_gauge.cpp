@@ -30,6 +30,12 @@
 
 namespace {
 
+int destroyedImageCount = 0;
+
+void destroyTestImage(void*) {
+    ++destroyedImageCount;
+}
+
 mg::gauge::NodeHandle readHandle(mg::json::Reader value) {
     std::uint64_t slot = 0;
     std::uint64_t generation = 0;
@@ -184,6 +190,24 @@ TEST_CASE("a face without a background clears transparently") {
     CHECK(context.clears[0].a == 0);
 }
 
+TEST_CASE("image move assignment releases its previous native resource") {
+    destroyedImageCount = 0;
+    {
+        int first = 0;
+        int second = 0;
+        mg::images::Image image(1, 1, &first, destroyTestImage);
+        mg::images::Image replacement(2, 2, &second, destroyTestImage);
+
+        image = std::move(replacement);
+
+        CHECK(destroyedImageCount == 1);
+        CHECK(replacement.empty());
+        CHECK(image.width == 2);
+        CHECK(image.height == 2);
+    }
+    CHECK(destroyedImageCount == 2);
+}
+
 TEST_CASE("built-in elements provide inspector layouts") {
     const auto checkLayout = [](mg::PropertyObject& object) {
         auto document = mg::json::object();
@@ -232,6 +256,23 @@ TEST_CASE("built-in elements provide inspector layouts") {
     checkLayout(rootTick);
     checkLayout(subTick);
     checkLayout(tickList);
+}
+
+TEST_CASE("image inspector uses the asset widget") {
+#if MG_BUILD_EDITOR
+    mg::gauge::ImageElement image;
+    auto inspector = mg::json::object();
+    auto inspectorWriter = inspector.writer();
+    REQUIRE(image.writeInspectorMeta(inspectorWriter));
+
+    const auto path = inspector.root().member("layout").element(0).member("children").element(0);
+    std::string_view key;
+    std::string_view widget;
+    REQUIRE(path.member("path").read(key));
+    REQUIRE(path.member("widget").read(widget));
+    CHECK(key == "path");
+    CHECK(widget == "asset");
+#endif
 }
 
 TEST_CASE("Clay layout properties serialize grouped padding and floating placement") {
