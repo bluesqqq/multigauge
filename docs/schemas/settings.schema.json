@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/settings.schema.json",
+  "title": "Multigauge Device Settings Schema",
+  "description": "Device-local user preferences. This file does not store sensor configuration, live readings, render state, or installed package data.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1,
+      "description": "Schema version."
+    },
+    "activeFace": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "packageId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "faceId": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "required": [
+        "packageId",
+        "faceId"
+      ]
+    },
+    "userColors": {
+      "type": "array",
+      "description": "Three shared RGBA palette colors, encoded as #RRGGBBAA.",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "string",
+        "pattern": "^#[0-9A-Fa-f]{8}$"
+      }
+    }
+  },
+  "required": [
+    "version",
+    "userColors"
+  ]
+}

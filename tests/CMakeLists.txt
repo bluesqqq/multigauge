@@ -10,6 +10,7 @@ set(MULTIGAUGE_CORE_TEST_SOURCES
   test_polymorphic_registry.cpp
   test_colors.cpp
   test_sensors.cpp
+  test_settings.cpp
 )
 
 if(MULTIGAUGE_BUILD_EDITOR)

@@ -19,6 +19,7 @@
 #include <multigauge/json/Json.h>
 #include <multigauge/package/Manager.h>
 #include <multigauge/sensor/Manager.h>
+#include <multigauge/settings/Manager.h>
 
 namespace mg {
 
@@ -65,6 +66,9 @@ public:
     [[nodiscard]] sensor::Manager& sensors();
     [[nodiscard]] const sensor::Manager& sensors() const;
 
+    [[nodiscard]] settings::Manager& settings();
+    [[nodiscard]] const settings::Manager& settings() const;
+
 #if MG_BUILD_EDITOR
     [[nodiscard]] editor::Manager& editors();
     [[nodiscard]] const editor::Manager& editors() const;
@@ -80,6 +84,7 @@ private:
 
     std::unique_ptr<package::Manager> packages_;
     sensor::Manager sensors_;
+    settings::Manager settings_;
 #if MG_BUILD_EDITOR
     editor::Manager editors_;
 #endif

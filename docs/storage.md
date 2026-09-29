@@ -5,7 +5,8 @@ Multigauge stores runtime data below an implementation-selected data root:
 ```text
 <dataRoot>/
   library.json
-  state.json
+  settings.json
+  sensors.json
   packages/<package-id>/
     manifest.json
     faces/<face-id>.json
@@ -20,7 +21,13 @@ reconstructs the package document without those internal IDs.
 [library.schema.json](./schemas/library.schema.json), and
 [gauge.schema.json](./schemas/gauge.schema.json), respectively.
 
-`state.json` follows [state.schema.json](./schemas/state.schema.json). It is
-device-local configuration owned by `mg::sensor::Manager`: provider instances,
-user-defined values, and sensor bindings. It is not included when importing or
-exporting a gauge package and does not store live sensor readings.
+`settings.json` follows [settings.schema.json](./schemas/settings.schema.json).
+It is device-local user preference data owned by `mg::settings::Manager`: the
+selected installed face and the shared user-color palette. The selected face is
+restored by a host after it creates a graphics context. It is not included when
+importing or exporting a gauge package.
+
+`sensors.json` follows [sensors.schema.json](./schemas/sensors.schema.json). It is
+device-local sensor configuration owned by `mg::sensor::Manager`: provider
+instances, user-defined values, and sensor bindings. It is not included when
+importing or exporting a gauge package and does not store live sensor readings.
