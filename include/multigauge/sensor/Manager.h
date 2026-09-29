@@ -31,10 +31,10 @@ public:
     //----------[ PERSISTENCE ]----------//
 
     /// @brief Replaces persisted user values, provider configuration, and bindings.
-    /// @return True when state was loaded or no state file exists.
+    /// @return True when sensor configuration was loaded or no sensors file exists.
     [[nodiscard]] bool load();
 
-    /// @brief Writes changed sensor configuration to persistent state.
+    /// @brief Writes changed sensor configuration to persistent storage.
     /// @return True when state is already current or was saved successfully.
     [[nodiscard]] bool save();
 
