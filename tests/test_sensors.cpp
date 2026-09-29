@@ -160,7 +160,7 @@ TEST_CASE("sensor manager rejects malformed state without replacing current stat
     REQUIRE(manager.defineUserValue({"customRPM", "Custom RPM", "revolutions", 0.0F, 10000.0F}).ok);
 
     const std::string malformed = R"({"version":1,"userValues":[})";
-    REQUIRE(fs.writeBytes("/telemetry/state.json", reinterpret_cast<const std::uint8_t*>(malformed.data()), malformed.size()));
+    REQUIRE(fs.writeBytes("/telemetry/sensors.json", reinterpret_cast<const std::uint8_t*>(malformed.data()), malformed.size()));
     CHECK_FALSE(manager.load());
 
     std::vector<mg::sensor::UserValueConfig> values;
