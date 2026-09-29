@@ -33,7 +33,7 @@ Manager::Manager(io::FileSystem & fs, std::string root): fs_(fs), dataRoot_(std:
 
 bool Manager::load() {
     if (registry_.providerCount() != 0) return false;
-    const auto p = paths::statePath(dataRoot_);
+    const auto p = paths::sensorsPath(dataRoot_);
     if (!fs_.exists(p)) {
         ValueRegistry::clearUsers();
         providers_.clear();
@@ -50,7 +50,7 @@ bool Manager::save() {
     json::Document d = json::object();
     auto w = d.writer();
     if (!writeDocument(w)) return false;
-    const auto p = paths::statePath(dataRoot_),
+    const auto p = paths::sensorsPath(dataRoot_),
         t = p + ".tmp";
     if (!json::writeJsonFile(fs_, t, d.root()) || !fs_.rename(t, p)) {
         (void) fs_.remove(t);
