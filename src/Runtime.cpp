@@ -14,6 +14,7 @@ Runtime::Runtime(
     io::Logger* logger
 ) : dataRoot_(config.dataRoot.empty() ? "/multigauge" : std::move(config.dataRoot)),
     sensors_(fs, dataRoot_),
+    settings_(fs, dataRoot_),
     fs_(fs),
     time_(time),
     logger_(logger) {}
@@ -35,6 +36,7 @@ bool Runtime::init() {
     packages_ = std::make_unique<package::Manager>(fs_, dataRoot_);
     packages_->rebuildLibrary();
 
+    if (!settings_.load(userPalette_)) return false;
     if (!sensors_.load()) return false;
 
     contexts_ = std::make_unique<context::Manager>(
@@ -80,6 +82,10 @@ sensor::Manager& Runtime::sensors() { return sensors_; }
 
 const sensor::Manager& Runtime::sensors() const { return sensors_; }
 
+settings::Manager& Runtime::settings() { return settings_; }
+
+const settings::Manager& Runtime::settings() const { return settings_; }
+
 #if MG_BUILD_EDITOR
 editor::Manager& Runtime::editors() { return editors_; }
 
@@ -87,6 +93,7 @@ const editor::Manager& Runtime::editors() const { return editors_; }
 #endif
 
 bool Runtime::setUserColor(std::size_t slot, graphics::rgba color) {
+    if (!settings_.setUserColor(slot, color) || !settings_.save()) return false;
     return userPalette_.setColor(slot, color);
 }
 
