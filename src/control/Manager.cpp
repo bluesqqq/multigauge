@@ -156,7 +156,10 @@ bool Manager::writeDocument(json::Writer& writer) const {
                 if (!slot.bound) continue;
                 const char* type = actionName(slot.action);
                 if (!type || !bindings.writeObject([&](json::ObjectWriter& entry) {
-                    if (!entry.write("port", index) || !entry.write("action", type)) return false;
+                    if (!entry.write("port", static_cast<std::uint64_t>(index)) ||
+                        !entry.write("action", type)) {
+                        return false;
+                    }
                     return true;
                 })) {
                     return false;
