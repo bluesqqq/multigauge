@@ -9,6 +9,7 @@
 
 #include <multigauge/context/Manager.h>
 #include <multigauge/Config.h>
+#include <multigauge/control/Manager.h>
 #if MG_BUILD_EDITOR
 #include <multigauge/editor/Manager.h>
 #endif
@@ -17,6 +18,7 @@
 #include <multigauge/io/Logger.h>
 #include <multigauge/io/Time.h>
 #include <multigauge/json/Json.h>
+#include <multigauge/navigation/Manager.h>
 #include <multigauge/package/Manager.h>
 #include <multigauge/sensor/Manager.h>
 #include <multigauge/settings/Manager.h>
@@ -29,6 +31,7 @@ namespace graphics { class GraphicsContext; }
 /// @brief Configures a Runtime instance.
 struct RuntimeConfig {
     std::string dataRoot = "/multigauge";
+
 };
 
 /// @brief Owns the long-lived state of one Multigauge runtime instance.
@@ -63,11 +66,17 @@ public:
     [[nodiscard]] context::Manager& contexts();
     [[nodiscard]] const context::Manager& contexts() const;
 
+    [[nodiscard]] navigation::Manager& navigation();
+    [[nodiscard]] const navigation::Manager& navigation() const;
+
     [[nodiscard]] sensor::Manager& sensors();
     [[nodiscard]] const sensor::Manager& sensors() const;
 
     [[nodiscard]] settings::Manager& settings();
     [[nodiscard]] const settings::Manager& settings() const;
+
+    [[nodiscard]] control::Manager& controls();
+    [[nodiscard]] const control::Manager& controls() const;
 
 #if MG_BUILD_EDITOR
     [[nodiscard]] editor::Manager& editors();
@@ -89,6 +98,8 @@ private:
     editor::Manager editors_;
 #endif
     std::unique_ptr<context::Manager> contexts_;
+    std::unique_ptr<navigation::Manager> navigation_;
+    std::unique_ptr<control::Manager> controls_;
 
     graphics::UserPalette userPalette_;
 
