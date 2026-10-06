@@ -28,13 +28,13 @@ void GaugeScreen::onShow(context::Context& ctx) {
 
 void GaugeScreen::onHide(context::Context& ctx) {}
 
-control::Result GaugeScreen::onControl(const control::Action& action) {
-    switch (action.type) {
-        case control::ActionType::Next:
+control::Result GaugeScreen::onControl(control::Action action) {
+    switch (action) {
+        case control::Action::Next:
             return control::Result::nextFace();
-        case control::ActionType::Previous:
+        case control::Action::Previous:
             return control::Result::previousFace();
-        case control::ActionType::Select:
+        case control::Action::Select:
             return control::Result::openMenu();
     }
     return control::Result::ignored();

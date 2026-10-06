@@ -49,7 +49,7 @@ public:
     /// @brief Offers a bound control action to the active screen and applies its result.
     [[nodiscard]] control::Result handleControl(
         ContextId id,
-        const control::Action& action
+        control::Action action
     );
 
 private:

@@ -23,7 +23,7 @@ public:
 
     /// @brief Handles a navigation action from a bound control port.
     /// @return The result that the context manager should apply.
-    virtual control::Result onControl(const control::Action&) {
+    virtual control::Result onControl(control::Action) {
         return control::Result::ignored();
     }
 

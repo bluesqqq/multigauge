@@ -30,7 +30,7 @@ public:
 
     void onShow(context::Context& ctx) override;
     void onHide(context::Context& ctx) override;
-    control::Result onControl(const control::Action& action) override;
+    control::Result onControl(control::Action action) override;
 
     void update(context::Context& ctx, std::chrono::microseconds delta) override;
     void draw(context::Context& ctx, graphics::Graphics& g) override;

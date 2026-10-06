@@ -70,7 +70,7 @@ bool Manager::showEditor(ContextId id, editor::EditorId editorId, editor::NodeId
 }
 #endif
 
-control::Result Manager::handleControl(ContextId id, const control::Action& action) {
+control::Result Manager::handleControl(ContextId id, control::Action action) {
     Screen* screen = contexts_.getScreen(id);
     if (!screen) return control::Result::ignored();
 
