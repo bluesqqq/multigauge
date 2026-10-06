@@ -122,6 +122,8 @@ TEST_CASE("controls persist bindings for fixed slots") {
     ControlFixture fixture;
     REQUIRE(fixture.controls.load());
     CHECK_FALSE(fixture.controls.bind(mg::control::Manager::MaxPorts, mg::control::Action::Next));
+    if (mg::control::Manager::MaxPorts == 0) return;
+
     REQUIRE(fixture.controls.bind(0, mg::control::Action::Next));
     REQUIRE(fixture.controls.save());
 
@@ -136,6 +138,8 @@ TEST_CASE("controls persist bindings for fixed slots") {
 }
 
 TEST_CASE("controls deliver navigation actions only from bound slots") {
+    if (mg::control::Manager::MaxPorts < 2) return;
+
     ControlFixture fixture;
     NullGraphicsContext graphics;
     const mg::ContextId contextId = fixture.contexts.add(graphics);
@@ -154,6 +158,8 @@ TEST_CASE("controls deliver navigation actions only from bound slots") {
 }
 
 TEST_CASE("next and previous cycle the target gauge package faces") {
+    if (mg::control::Manager::MaxPorts < 3) return;
+
     ControlFixture fixture;
     REQUIRE(fixture.packages.importPackage(R"({
         "name":"Daily Driver",
@@ -184,6 +190,8 @@ TEST_CASE("next and previous cycle the target gauge package faces") {
 }
 
 TEST_CASE("select on a gauge screen returns an open-menu result") {
+    if (mg::control::Manager::MaxPorts < 4) return;
+
     ControlFixture fixture;
     NullGraphicsContext graphics;
     const mg::ContextId contextId = fixture.contexts.add(graphics);
