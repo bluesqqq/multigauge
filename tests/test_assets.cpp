@@ -85,7 +85,7 @@ TEST_CASE("editor refuses to remove an asset used by an image element") {
 TEST_CASE("package manager installs and exports embedded assets") {
     MemoryFileSystem fs;
     mg::package::Manager packages(fs, "/data");
-    const std::string input = R"({"name":"Package","author":"Author","description":"Test","assets":[{"name":"logo.png","mediaType":"image/png","data":"AQID"}],"faces":[{"name":"Face","face":{"children":[]}}]})";
+    const std::string input = R"({"name":"Package","author":"Author","description":"Test","assets":[{"name":"logo.png","mediaType":"image/png","data":"AQID"}],"faces":[{"name":"Face","face":{"children":[]}},{"name":"Second Face","face":{"children":[]}}]})";
 
     const mg::Result imported = packages.importPackage(input);
     REQUIRE(imported.ok);
@@ -99,6 +99,13 @@ TEST_CASE("package manager installs and exports embedded assets") {
     std::string_view data;
     REQUIRE(asset.member("data").read(data));
     CHECK(data == "AQID");
+
+    mg::FaceSummary adjacentFace;
+    REQUIRE(packages.offsetFace("package", "face", 1, adjacentFace));
+    CHECK(adjacentFace.id == "second-face");
+    REQUIRE(packages.offsetFace("package", "second-face", -1, adjacentFace));
+    CHECK(adjacentFace.id == "face");
+    CHECK_FALSE(packages.offsetFace("package", "missing", 1, adjacentFace));
 
     const mg::Result legacyImported = packages.importPackage(
         R"({"name":"Legacy","author":"Author","description":"Test","faces":[{"name":"Face","face":{"children":[]}}]})"

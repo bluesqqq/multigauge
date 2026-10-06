@@ -7,6 +7,7 @@ Multigauge stores runtime data below an implementation-selected data root:
   library.json
   settings.json
   sensors.json
+  controls.json
   packages/<package-id>/
     manifest.json
     faces/<face-id>.json
@@ -31,3 +32,8 @@ importing or exporting a gauge package.
 device-local sensor configuration owned by `mg::sensor::Manager`: provider
 instances, user-defined values, and sensor bindings. It is not included when
 importing or exporting a gauge package and does not store live sensor readings.
+
+`controls.json` follows [controls.schema.json](./schemas/controls.schema.json). It
+stores device-local control-slot bindings owned by `mg::control::Manager`. Hosts
+provide the fixed control-slot count at runtime; pin mappings and user-facing port
+labels remain host responsibilities and are not persisted by core.

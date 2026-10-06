@@ -11,6 +11,7 @@ set(MULTIGAUGE_CORE_TEST_SOURCES
   test_colors.cpp
   test_sensors.cpp
   test_settings.cpp
+  test_controls.cpp
 )
 
 if(MULTIGAUGE_BUILD_EDITOR)
