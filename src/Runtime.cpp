@@ -39,12 +39,15 @@ bool Runtime::init() {
     if (!settings_.load(userPalette_)) return false;
     if (!sensors_.load()) return false;
 
-    contexts_ = std::make_unique<context::Manager>(
-        fs_, dataRoot_, userPalette_, *packages_
+    contexts_ = std::make_unique<context::Manager>(fs_, dataRoot_, userPalette_);
+    navigation_ = std::make_unique<navigation::Manager>(
+        *contexts_, *packages_
 #if MG_BUILD_EDITOR
         , editors_
 #endif
     );
+    controls_ = std::make_unique<control::Manager>(fs_, dataRoot_, *navigation_);
+    if (!controls_->load()) return false;
     lastElapsed_ = time_.elapsed();
     initialized_ = true;
     return true;
@@ -52,6 +55,8 @@ bool Runtime::init() {
 
 void Runtime::shutdown() {
     if (!initialized_) return;
+    controls_.reset();
+    navigation_.reset();
     contexts_.reset();
     packages_.reset();
     initialized_ = false;
@@ -78,6 +83,10 @@ context::Manager& Runtime::contexts() { return *contexts_; }
 
 const context::Manager& Runtime::contexts() const { return *contexts_; }
 
+navigation::Manager& Runtime::navigation() { return *navigation_; }
+
+const navigation::Manager& Runtime::navigation() const { return *navigation_; }
+
 sensor::Manager& Runtime::sensors() { return sensors_; }
 
 const sensor::Manager& Runtime::sensors() const { return sensors_; }
@@ -85,6 +94,10 @@ const sensor::Manager& Runtime::sensors() const { return sensors_; }
 settings::Manager& Runtime::settings() { return settings_; }
 
 const settings::Manager& Runtime::settings() const { return settings_; }
+
+control::Manager& Runtime::controls() { return *controls_; }
+
+const control::Manager& Runtime::controls() const { return *controls_; }
 
 #if MG_BUILD_EDITOR
 editor::Manager& Runtime::editors() { return editors_; }

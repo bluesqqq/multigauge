@@ -17,19 +17,28 @@ public:
 
     //----------[ FACE ]----------//
 
-    void setFace(std::unique_ptr<::mg::gauge::GaugeFace> face, std::string packageId = {});
+    void setFace(
+        std::unique_ptr<::mg::gauge::GaugeFace> face,
+        std::string packageId = {},
+        std::string faceId = {}
+    );
+
+    [[nodiscard]] const std::string& packageId() const noexcept;
+    [[nodiscard]] const std::string& faceId() const noexcept;
 
     //----------[ LIFECYCLE ]----------//
 
     void onShow(context::Context& ctx) override;
     void onHide(context::Context& ctx) override;
+    control::Result onControl(control::Action action) override;
 
     void update(context::Context& ctx, std::chrono::microseconds delta) override;
     void draw(context::Context& ctx, graphics::Graphics& g) override;
 
 private:
     std::unique_ptr<::mg::gauge::GaugeFace> face = nullptr;
-    std::string packageId;
+    std::string packageId_;
+    std::string faceId_;
 
 };
 

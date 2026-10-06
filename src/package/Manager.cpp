@@ -368,6 +368,31 @@ bool Manager::listFaces(const std::string& packageId, std::vector<FaceSummary>& 
     return true;
 }
 
+bool Manager::offsetFace(
+    const std::string& packageId,
+    const std::string& faceId,
+    int offset,
+    FaceSummary& out
+) const {
+    if (!utils::isSafeId(packageId) || !utils::isSafeId(faceId) || !cacheReady) return false;
+
+    const auto package = std::lower_bound(cache.begin(), cache.end(), packageId, [](const PackageRecord& record, const std::string& id) {
+        return record.summary.id < id;
+    });
+    if (package == cache.end() || package->summary.id != packageId || package->faces.empty()) return false;
+
+    const auto current = std::find_if(package->faces.begin(), package->faces.end(), [&](const FaceSummary& face) {
+        return face.id == faceId;
+    });
+    if (current == package->faces.end()) return false;
+
+    const auto count = static_cast<int>(package->faces.size());
+    const auto index = static_cast<int>(std::distance(package->faces.begin(), current));
+    const auto next = (index + offset % count + count) % count;
+    out = package->faces[static_cast<std::size_t>(next)];
+    return true;
+}
+
 Result Manager::getFace(const std::string& packageId, const std::string& faceId) const {
     if (!utils::isSafeId(packageId) || !utils::isSafeId(faceId)) {
         return Error("Invalid face id");

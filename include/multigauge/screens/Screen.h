@@ -2,6 +2,9 @@
 
 #include <chrono>
 
+#include <multigauge/control/Action.h>
+#include <multigauge/control/Result.h>
+
 namespace mg {
 
 namespace context { class Context; }
@@ -17,6 +20,12 @@ public:
 
     virtual void onShow(context::Context& context) {};
     virtual void onHide(context::Context& context) {};
+
+    /// @brief Handles a navigation action from a bound control port.
+    /// @return The result that the context manager should apply.
+    virtual control::Result onControl(control::Action) {
+        return control::Result::ignored();
+    }
 
     virtual void update(context::Context& context, std::chrono::microseconds delta) = 0;
     virtual void draw(context::Context& context, graphics::Graphics& g) = 0;

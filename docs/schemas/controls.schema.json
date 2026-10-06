@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://www.multi-gauge.com/schemas/controls.schema.json",
+  "title": "Multigauge Control Bindings Schema",
+  "description": "Device-local bindings from host-configured control slots to actions.",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "bindings": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "port": { "type": "integer", "minimum": 0 },
+          "action": { "enum": ["next", "select", "previous"] }
+        },
+        "required": ["port", "action"]
+      }
+    }
+  },
+  "required": ["version", "bindings"]
+}

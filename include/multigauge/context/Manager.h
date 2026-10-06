@@ -7,22 +7,14 @@
 
 #include <multigauge/container/GenerationalHandle.h>
 #include <multigauge/container/HandlePool.h>
-#include <multigauge/Config.h>
 #include <multigauge/context/Context.h>
-#if MG_BUILD_EDITOR
-#include <multigauge/editor/Types.h>
-#endif
 
 namespace mg {
 
 // Forward declarations
-namespace package { class Manager; }
 class Screen;
 namespace graphics { class GraphicsContext; class UserPalette; }
 namespace io { class FileSystem; }
-#if MG_BUILD_EDITOR
-namespace editor { class Manager; }
-#endif
 
 using ContextId = GenerationalHandle<struct ContextTag>;
 
@@ -35,11 +27,7 @@ public:
     Manager(
         io::FileSystem& fs,
         std::string dataRoot,
-        const graphics::UserPalette& palette,
-        package::Manager& packages
-#if MG_BUILD_EDITOR
-        , editor::Manager& editors
-#endif
+        const graphics::UserPalette& palette
     );
     ~Manager();
 
@@ -73,16 +61,11 @@ public:
     /// @brief Checks if a context currently has a screen.
     [[nodiscard]] bool hasScreen(ContextId id) const;
 
-    /// @brief Sets a context to a gauge screen from json
-    [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& json);
+    /// @brief Returns a borrowed pointer to a context's active screen, if any.
+    [[nodiscard]] Screen* getScreen(ContextId id);
 
-    /// @brief Sets a context to a gauge screen from package ID and face ID.
-    [[nodiscard]] bool setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId);
-
-#if MG_BUILD_EDITOR
-    /// @brief Sets a context to an editor screen from an editor ID and face ID.
-    [[nodiscard]] bool setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId);
-#endif
+    /// @brief Returns a borrowed pointer to a context's active screen, if any.
+    [[nodiscard]] const Screen* getScreen(ContextId id) const;
 
     //----------[ LIFECYCLE ]----------//
 
@@ -92,10 +75,6 @@ private:
     io::FileSystem& fs_;
     std::string root_;
     const graphics::UserPalette& palette_;
-    package::Manager& packages_;
-#if MG_BUILD_EDITOR
-    editor::Manager& editors_;
-#endif
     HandlePool<Context, ContextId> contexts_;
 };
 

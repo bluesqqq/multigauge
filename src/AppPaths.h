@@ -7,6 +7,7 @@ namespace mg::paths {
 
 inline constexpr std::string_view libraryIndex = "library.json";
 inline constexpr std::string_view sensors = "sensors.json";
+inline constexpr std::string_view controls = "controls.json";
 inline constexpr std::string_view settings = "settings.json";
 inline constexpr std::string_view packagesDir = "packages";
 inline constexpr std::string_view facesDir = "faces";
@@ -40,6 +41,10 @@ inline std::string libraryPath(std::string_view root) {
 
 inline std::string sensorsPath(std::string_view root) {
     return appPath(root, sensors);
+}
+
+inline std::string controlsPath(std::string_view root) {
+    return appPath(root, controls);
 }
 
 inline std::string settingsPath(std::string_view root) {

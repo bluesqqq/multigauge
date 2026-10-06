@@ -1,29 +1,13 @@
 #include <multigauge/context/Manager.h>
 
-#include <multigauge/Config.h>
-#if MG_BUILD_EDITOR
-#include <multigauge/editor/Manager.h>
-#include <multigauge/screens/EditorScreen.h>
-#endif
-#include <multigauge/gauge/GaugeFace.h>
 #include <multigauge/graphics/UserPalette.h>
 #include <multigauge/io/FileSystem.h>
-#include <multigauge/package/Manager.h>
-#include <multigauge/screens/GaugeScreen.h>
-#include <multigauge/utils/Json.h>
+#include <multigauge/screens/Screen.h>
 
 namespace mg::context {
 
-Manager::Manager(io::FileSystem& fs, std::string root, const graphics::UserPalette& palette, package::Manager& packages
-#if MG_BUILD_EDITOR
-                 , editor::Manager& editors
-#endif
-)
-    : fs_(fs), root_(std::move(root)), palette_(palette), packages_(packages)
-#if MG_BUILD_EDITOR
-      , editors_(editors)
-#endif
-{}
+Manager::Manager(io::FileSystem& fs, std::string root, const graphics::UserPalette& palette)
+    : fs_(fs), root_(std::move(root)), palette_(palette) {}
 
 Manager::~Manager() = default;
 
@@ -61,40 +45,15 @@ bool Manager::hasScreen(ContextId id) const {
     return c && c->getScreen();
 }
 
-namespace {
-
-bool loadFace(json::Reader value, std::unique_ptr<gauge::GaugeFace>& face) {
-    if (!value.isObject()) return false;
-
-    auto next = std::make_unique<gauge::GaugeFace>();
-    if (!next->load(value)) return false;
-
-    face = std::move(next);
-    return true;
+Screen* Manager::getScreen(ContextId id) {
+    auto* context = contexts_.get(id);
+    return context ? context->getScreen() : nullptr;
 }
 
-} // namespace
-
-bool Manager::setGaugeScreen(ContextId id, const std::string& json) {
-    auto* c = contexts_.get(id);
-    auto document = json::parse(json);
-    std::unique_ptr<gauge::GaugeFace> face;
-    if (!c || !document.valid() || !loadFace(document.root(), face)) return false;
-
-    auto screen = std::make_unique<GaugeScreen>();
-    screen->setFace(std::move(face));
-    return c->setScreen(std::move(screen));
+const Screen* Manager::getScreen(ContextId id) const {
+    const auto* context = contexts_.get(id);
+    return context ? context->getScreen() : nullptr;
 }
-
-bool Manager::setGaugeScreen(ContextId id, const std::string& packageId, const std::string& faceId) { auto* c = contexts_.get(id); if (!c) return false; Result result = packages_.getFace(packageId, faceId); std::unique_ptr<gauge::GaugeFace> face; if (!result.ok || !loadFace(result.data.root(), face)) return false; auto screen = std::make_unique<GaugeScreen>(); screen->setFace(std::move(face), packageId); return c->setScreen(std::move(screen)); }
-
-#if MG_BUILD_EDITOR
-bool Manager::setEditorScreen(ContextId id, editor::EditorId editorId, editor::NodeId faceId) {
-    auto* c = contexts_.get(id);
-    if (!c || !editors_.isFace(editorId, faceId)) return false;
-    return c->setScreen(std::make_unique<EditorScreen>(editors_, editorId, faceId));
-}
-#endif
 
 void Manager::frame(std::chrono::microseconds delta, std::chrono::microseconds elapsed) {
     for (auto& c : contexts_) c.frame(delta, elapsed);

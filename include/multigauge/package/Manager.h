@@ -55,6 +55,19 @@ public:
     /// @return True when the cache is ready and data was copied.
     bool listFaces(const std::string& packageId, std::vector<FaceSummary>& out) const;
 
+    /// @brief Resolves a face relative to another face in the package's stored order.
+    /// @param packageId Installed package identifier.
+    /// @param faceId Current installed face identifier.
+    /// @param offset Signed number of positions to move; the result wraps at either end.
+    /// @param out Receives the selected face when this function returns true.
+    /// @return False when the package cache or current face is unavailable.
+    bool offsetFace(
+        const std::string& packageId,
+        const std::string& faceId,
+        int offset,
+        FaceSummary& out
+    ) const;
+
     /// Returns the stored face JSON for `faceId` within `packageId`.
     /// @param packageId Installed package id.
     /// @param faceId Installed face id.
