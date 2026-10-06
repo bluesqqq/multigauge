@@ -27,6 +27,13 @@ option(
   ON
 )
 
+set(
+  MULTIGAUGE_CONTROL_MAX_PORTS
+  8
+  CACHE STRING
+  "Maximum number of fixed control slots"
+)
+
 #----------[ DEPENDENCIES ]----------#
 
 include(FetchContent)
@@ -176,6 +183,7 @@ target_compile_definitions(
   multigauge
   PUBLIC
     MG_BUILD_EDITOR=$<BOOL:${MULTIGAUGE_BUILD_EDITOR}>
+    MG_CONTROL_MAX_PORTS=${MULTIGAUGE_CONTROL_MAX_PORTS}
 )
 
 #----------[ TESTS ]----------#
