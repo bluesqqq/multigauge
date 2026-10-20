@@ -26,7 +26,6 @@ namespace mg::control {
 class Manager {
 public:
     static constexpr std::size_t MaxPorts = MG_CONTROL_MAX_PORTS;
-    static_assert(MaxPorts > 0, "MG_CONTROL_MAX_PORTS must be positive.");
 
     Manager(
         io::FileSystem& fs,

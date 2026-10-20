@@ -24,4 +24,5 @@ local to one runtime; they do not identify or route to another gauge.
 The host owns its physical pin table and maps its pins to zero-based control slot
 indices. Core has no knowledge of GPIOs or user-facing port labels. Targets can
 set their fixed storage capacity with `MG_CONTROL_MAX_PORTS` (the ESP32 target
-sets it to four); the CMake equivalent is `MULTIGAUGE_CONTROL_MAX_PORTS`.
+currently sets it to zero until CONTROL pins are assigned); the CMake equivalent
+is `MULTIGAUGE_CONTROL_MAX_PORTS`.
