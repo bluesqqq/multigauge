@@ -5,9 +5,12 @@
 
 namespace mg::json {
 
-inline bool readJsonFile(::mg::io::FileSystem& fs, const std::string& path, Document& out) {
+/// Bounded default for settings, sensor/control configuration, manifests, and faces.
+inline constexpr size_t DefaultJsonFileLimit = 256 * 1024;
+
+inline bool readJsonFile(::mg::io::FileSystem& fs, const std::string& path, Document& out, size_t maxBytes = DefaultJsonFileLimit) {
     std::string text;
-    if (!fs.readText(path, text)) return false;
+    if (!fs.readText(path, text, maxBytes)) return false;
     out = parse(text);
     return out.valid();
 }
