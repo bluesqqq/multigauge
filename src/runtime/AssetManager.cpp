@@ -15,7 +15,7 @@ bool AssetManager::loadJson(const std::string &path, json::Document &out) {
     LOG_DEBUG(TAG, "Reading gauge document: %s", path.c_str());
 
     std::vector<uint8_t> bytes;
-    if (!fs->readBytes(path, bytes)) {
+    if (!fs->readBytes(path, bytes, json::DefaultJsonFileLimit)) {
         LOG_ERROR(TAG, "readBytes failed: %s", path.c_str());
         return false;
     }
@@ -73,7 +73,7 @@ bool AssetManager::loadImage(graphics::GraphicsContext& ctx, std::string_view pa
     }
 
     std::vector<uint8_t> data;
-    if (!fs->readBytes(path, data) || data.empty()) {
+    if (!fs->readBytes(path, data, 64 * 1024) || data.empty()) {
         LOG_ERROR(TAG, "Failed to read image: %s", path.c_str());
         return false;
     }
