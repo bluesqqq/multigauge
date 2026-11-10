@@ -1,5 +1,6 @@
 set(MULTIGAUGE_CORE_TEST_SOURCES
   test_main.cpp
+  test_file_system.cpp
   test_json.cpp
   test_unit_type.cpp
   test_value.cpp
