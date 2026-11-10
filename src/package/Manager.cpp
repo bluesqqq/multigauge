@@ -679,7 +679,7 @@ Result Manager::exportPackage(const std::string& packageId) const {
                    for (const auto& asset : assets) {
                        std::vector<uint8_t> bytes;
                        const std::string path = paths::assetPath(dataRoot, packageId, paths::imagesDir, asset.name);
-                       if (!fs.readBytes(path, bytes) || bytes.empty()) return false;
+                       if (!fs.readBytes(path, bytes, maxAssetEncodedBytes) || bytes.empty()) return false;
                        std::string encoded;
                        if (!encodeAsset(bytes, encoded)) return false;
                        if (!outputAssets.writeObject([&](json::ObjectWriter& output) {

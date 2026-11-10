@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 
 #include <multigauge/editor/Editor.h>
-#include <multigauge/io/FileSystem.h>
+#include "MemoryFileSystem.h"
 #include <multigauge/json/Json.h>
 #include <multigauge/runtime/AssetManager.h>
 #include <multigauge/package/Manager.h>
@@ -11,49 +11,7 @@
 
 namespace {
 
-class MemoryFileSystem final : public mg::io::FileSystem {
-public:
-    bool init() override { return true; }
-    bool readBytes(const std::string& path, std::vector<uint8_t>& out) override {
-        const auto it = files.find(path);
-        if (it == files.end()) return false;
-        out = it->second;
-        return true;
-    }
-    bool writeBytesImpl(const std::string& path, const uint8_t* data, size_t length) override {
-        files[path] = std::vector<uint8_t>(data, data + length);
-        return true;
-    }
-    bool exists(const std::string& path) override { return files.contains(path) || directories.contains(path); }
-    bool size(const std::string& path, size_t& out) override {
-        const auto it = files.find(path);
-        if (it == files.end()) return false;
-        out = it->second.size();
-        return true;
-    }
-    bool remove(const std::string& path) override { return files.erase(path) != 0 || directories.erase(path) != 0; }
-    bool rename(const std::string& from, const std::string& to) override {
-        const auto it = files.find(from);
-        if (it == files.end()) return false;
-        files[to] = std::move(it->second);
-        files.erase(it);
-        return true;
-    }
-    bool makeDirectory(const std::string& path) override { directories.insert(path); return true; }
-    bool listDirectories(const std::string& path, std::vector<std::string>& out) override {
-        out.clear();
-        const std::string prefix = path + "/";
-        for (const auto& directory : directories) {
-            if (directory.rfind(prefix, 0) != 0) continue;
-            const std::string remainder = directory.substr(prefix.size());
-            if (!remainder.empty() && remainder.find('/') == std::string::npos) out.push_back(remainder);
-        }
-        return true;
-    }
-
-    std::map<std::string, std::vector<uint8_t>> files;
-    std::set<std::string> directories;
-};
+using mg::test::MemoryFileSystem;
 
 } // namespace
 

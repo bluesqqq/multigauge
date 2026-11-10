@@ -7,7 +7,7 @@
 #endif
 #include <multigauge/graphics/GraphicsContext.h>
 #include <multigauge/graphics/UserPalette.h>
-#include <multigauge/io/FileSystem.h>
+#include "MemoryFileSystem.h"
 #include <multigauge/navigation/Manager.h>
 #include <multigauge/package/Manager.h>
 #include <multigauge/screens/GaugeScreen.h>
@@ -19,43 +19,7 @@
 
 namespace {
 
-class MemoryFileSystem final : public mg::io::FileSystem {
-public:
-    bool init() override { return true; }
-    bool readBytes(const std::string& path, std::vector<std::uint8_t>& out) override {
-        const auto found = files_.find(path);
-        if (found == files_.end()) return false;
-        out = found->second;
-        return true;
-    }
-    bool exists(const std::string& path) override { return files_.contains(path) || directories_.contains(path); }
-    bool size(const std::string& path, size_t& out) override {
-        const auto found = files_.find(path);
-        if (found == files_.end()) return false;
-        out = found->second.size();
-        return true;
-    }
-    bool remove(const std::string& path) override { return files_.erase(path) != 0 || directories_.erase(path) != 0; }
-    bool rename(const std::string& from, const std::string& to) override {
-        const auto found = files_.find(from);
-        if (found == files_.end()) return false;
-        files_[to] = std::move(found->second);
-        files_.erase(found);
-        return true;
-    }
-    bool makeDirectory(const std::string& path) override { directories_.insert(path); return true; }
-    bool listDirectories(const std::string&, std::vector<std::string>& out) override { out.clear(); return true; }
-
-protected:
-    bool writeBytesImpl(const std::string& path, const std::uint8_t* data, size_t length) override {
-        files_[path] = std::vector<std::uint8_t>(data, data + length);
-        return true;
-    }
-
-private:
-    std::map<std::string, std::vector<std::uint8_t>> files_;
-    std::set<std::string> directories_;
-};
+using mg::test::MemoryFileSystem;
 
 class NullGraphicsContext final : public mg::graphics::GraphicsContext {
 public:
