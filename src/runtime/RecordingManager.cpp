@@ -1,5 +1,6 @@
 #include <multigauge/runtime/RecordingManager.h>
 
+#include <multigauge/io/Log.h>
 #include <multigauge/io/FileSystem.h>
 
 #include <etl/crc32.h>
@@ -129,8 +130,17 @@ RecordingManager::~RecordingManager() = default;
 RecordingManager::Error RecordingManager::start(
     std::span<const Channel> channels, std::optional<std::chrono::sys_seconds> startedAt
 ) {
-    if (file_) return Error::AlreadyRecording;
-    if (!validChannels(channels)) return Error::InvalidChannels;
+    constexpr const char* TAG = "RecordingManager::start";
+
+    if (file_) {
+        LOG_WARN(TAG, "Already recording.");
+        return Error::AlreadyRecording;
+    }
+
+    if (!validChannels(channels)) {
+        LOG_WARN(TAG, "Invalid channels detected.");
+        return Error::InvalidChannels;
+    }
 
     std::string path;
     std::unique_ptr<io::File> file;
@@ -138,47 +148,82 @@ RecordingManager::Error RecordingManager::start(
         const auto utcStem = startedAt ? utcFilenameStem(*startedAt) : std::string{};
         std::uint32_t suffix = 0;
         auto& number = utcStem.empty() ? nextFallbackId_ : suffix;
-        if (utcStem.empty() && number == 0) return failure_ = Error::StartFailed;
+        if (utcStem.empty() && number == 0) {
+            LOG_ERROR(TAG, "Fallback recording filename IDs exhausted.");
+            return failure_ = Error::StartFailed;
+        }
 
         do {
             path = recordingPath(utcStem, number);
             auto created = fs_.create(path);
-            if (!created.file && !created.alreadyExists) break;
+            if (!created.file && !created.alreadyExists){
+                LOG_ERROR(TAG, "Failed to create recording file: %s", path.c_str());
+                break;
+            }
+
             ++number;
+
             if (!created.file) continue;
             file = std::move(created.file);
-            if (!writeHeader(*file, channels, startedAt)) break;
+            if (!writeHeader(*file, channels, startedAt)) {
+                LOG_ERROR(TAG, "Failed to write recording header: %s", path.c_str());
+                break;
+            }
 
             file_ = std::move(file);
             channelCount_ = channels.size();
             lastElapsed_ = {};
             failure_ = Error::None;
+
+            LOG_INFO(TAG, "Recording started: %s (%u channels)", path.c_str(), static_cast<unsigned>(channelCount_));
+
             return Error::None;
         } while (number != 0);
     } catch (const std::bad_alloc&) {
-        // Use the same cleanup path as a failed header write.
+        LOG_ERROR(TAG, "Memory allocation failed while starting recording.");
     }
+
     if (file) {
         file.reset();
         try {
-            fs_.remove(path);
+            if (!fs_.remove(path)) {
+                LOG_WARN(TAG, "Failed to remove incomplete recording: %s", path.c_str());
+            }
         } catch (const std::bad_alloc&) {
-            // Preserve StartFailed if cleanup cannot complete.
+            LOG_WARN(TAG, "Allocation failure during recording cleanup.");
         }
     }
+
     return failure_ = Error::StartFailed;
 }
 
 RecordingManager::Error RecordingManager::appendSamples(std::span<const Sample> samples) {
-    if (!file_) return Error::NotRecording;
+    constexpr const char* TAG = "RecordingManager::appendSamples";
+    
+    if (!file_) {
+        LOG_WARN(TAG, "Cannot append samples: no active recording.");
+        return Error::NotRecording;
+    }
 
     auto elapsed = lastElapsed_;
     for (const auto& sample : samples) {
-        // An ordered bound check also rejects NaN and infinity.
-        if (sample.channelIndex >= channelCount_ || sample.elapsed < elapsed ||
-            !(std::abs(sample.value) <= MaxValue)) {
+        if (sample.channelIndex >= channelCount_) {
+            LOG_WARN(TAG, "Invalid sample channel index: %u", static_cast<unsigned>(sample.channelIndex));
             return Error::InvalidSamples;
         }
+
+        if (sample.elapsed < elapsed) {
+            LOG_WARN(TAG, "Out-of-order sample timestamp: %lld us (previous: %lld us)",
+                static_cast<long long>(sample.elapsed.count()),
+                static_cast<long long>(elapsed.count()));
+            return Error::InvalidSamples;
+        }
+
+        if (!(std::abs(sample.value) <= MaxValue)) {
+            LOG_WARN(TAG, "Sample contains an invalid measurement.");
+            return Error::InvalidSamples;
+        }
+
         elapsed = sample.elapsed;
     }
 
@@ -186,39 +231,72 @@ RecordingManager::Error RecordingManager::appendSamples(std::span<const Sample> 
     while (!samples.empty()) {
         const auto firstElapsed = static_cast<std::uint64_t>(samples.front().elapsed.count());
         putLittleEndian(block + 1, firstElapsed);
+
         std::size_t count = 0;
         for (const auto& sample : samples.first(std::min(samples.size(), SamplesPerBlock))) {
             // Validation guarantees nonnegative, ordered timestamps.
             const auto offset = static_cast<std::uint64_t>(sample.elapsed.count()) - firstElapsed;
             if (offset > MaxOffset) break;
+
             auto* record = block + BlockHeaderBytes + count * SampleBytes;
+
             putLittleEndian(record, static_cast<std::uint32_t>(offset));
             record[4] = static_cast<std::uint8_t>(sample.channelIndex);
             putLittleEndian(record + 5, std::bit_cast<std::uint32_t>(static_cast<float>(sample.value)));
+
             ++count;
         }
+
         block[0] = static_cast<std::uint8_t>(count);
         if (!writeBlock(*file_, block, BlockHeaderBytes + count * SampleBytes)) {
+            LOG_ERROR(TAG, "Failed to write sample block at %llu us (%u samples)",
+                static_cast<unsigned long long>(firstElapsed),
+                static_cast<unsigned>(count)
+            );
+
             file_.reset();
             return failure_ = Error::WriteFailed;
         }
+
         samples = samples.subspan(count);
     }
+
     lastElapsed_ = elapsed;
     return Error::None;
 }
 
 RecordingManager::Error RecordingManager::flush() {
-    if (!file_) return Error::NotRecording;
-    if (file_->flush()) return Error::None;
+    constexpr const char* TAG = "RecordingManager::flush";
 
-    file_.reset();
-    return failure_ = Error::FlushFailed;
+    if (!file_) {
+        LOG_WARN(TAG, "Not recording.");
+        return Error::NotRecording;
+    }
+
+    if (!file_->flush()) {
+        LOG_ERROR(TAG, "Failed to flush recording to storage.");
+        file_.reset();
+        return failure_ = Error::FlushFailed;
+    }
+
+    return Error::None;
 }
 
 RecordingManager::Error RecordingManager::stop(std::chrono::microseconds duration) {
-    if (!file_) return Error::NotRecording;
-    if (duration < lastElapsed_) return Error::InvalidDuration;
+    constexpr const char* TAG = "RecordingManager::stop";
+
+    if (!file_) {
+        LOG_WARN(TAG, "Not recording.");
+        return Error::NotRecording;
+    }
+
+    if (duration < lastElapsed_) {
+        LOG_WARN(TAG, "Invalid recording duration: %lld us, last sample: %lld us",
+            static_cast<long long>(duration.count()),
+            static_cast<long long>(lastElapsed_.count())
+        );
+        return Error::InvalidDuration;
+    }
 
     std::uint8_t block[BlockHeaderBytes + ChecksumBytes] = {};
     putLittleEndian(block + 1, static_cast<std::uint64_t>(duration.count()));
@@ -226,7 +304,21 @@ RecordingManager::Error RecordingManager::stop(std::chrono::microseconds duratio
     const bool flushed = written && file_->flush();
     const bool closed = file_->close();
     file_.reset();
-    if (!flushed || !closed) return failure_ = Error::FinalizeFailed;
+
+    if (!written || !flushed || !closed) {
+        LOG_ERROR(TAG, "Failed to finalize recording (write=%d, flush=%d, close=%d)",
+            static_cast<int>(written),
+            static_cast<int>(flushed),
+            static_cast<int>(closed)
+        );
+        return failure_ = Error::FinalizeFailed;
+    }
+
+    LOG_INFO(TAG, "Recording stopped successfully (duration=%lld us, channels=%u)",
+        static_cast<long long>(duration.count()),
+        static_cast<unsigned>(channelCount_)
+    );
+
     return Error::None;
 }
 
