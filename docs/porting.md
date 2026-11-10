@@ -35,13 +35,13 @@ Construct and initialize `mg::Runtime`, register a render surface with `runtime.
 and call `Runtime::frame()` from the host frame loop. Keep the registered graphics
 context dimensions current when its render surface changes size.
 
-The [recording manager interface](../include/multigauge/runtime/RecordingManager.h)
-is intended to become a `Runtime`-owned service exposed by `recordings()`, like
-the other runtime managers. The host supplies a `FileSystem` backend that outlives
-the manager. On ESP32, the existing `LittleFsFileSystem` can be used for bring-up.
-The intended SD destination should be initialized separately from the filesystem
-required by `Runtime::init()`, so missing or failed recording media affects only
-logging.
+After `Runtime::init()` succeeds, `runtime.recordings()` returns a borrowed
+[recording manager](../include/multigauge/runtime/RecordingManager.h) valid until
+`Runtime::shutdown()`. It uses the runtime filesystem by default. A host can set
+`RuntimeConfig::recordingFileSystem` to a separate destination, such as an SD
+backend, and keep it alive for the lifetime of the runtime. The host initializes
+that separate destination before recording. `Runtime::init()` only initializes
+the primary filesystem, so missing separate recording media affects only logging.
 
 The host chooses the channels, applies the Fast, Normal, and Slow sampling
 presets, and decides when to omit unchanged values. On the playback timeline, a
@@ -58,6 +58,7 @@ call `flush()` approximately every 1–5 seconds to limit buffered data and publ
 a copy of the manager's status for other tasks. To finish a recording,
 the storage task drains its pending batches and checks the result of
 `stop(duration)` before the host shuts down `Runtime` or unmounts the destination.
+Shutting down with an active recording closes its file without a final duration.
 The [binary recording format](./recording-format.md) supports recovering complete
 blocks before a partial tail. Listing and playback belong to the reader and its
 consumers.

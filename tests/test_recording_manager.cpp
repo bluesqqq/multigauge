@@ -1,7 +1,7 @@
 #include <doctest/doctest.h>
 #include <lodepng.h>
 
-#include <multigauge/runtime/RecordingManager.h>
+#include <multigauge/Runtime.h>
 
 #include <bit>
 #include <limits>
@@ -18,6 +18,11 @@ using namespace std::chrono_literals;
 constexpr Manager::Channel Channels[] = {{"rpm", "rpm"}, {"coolant", "C"}, {"user.aux_voltage", "V"}};
 constexpr auto FirstPath = "/recordings/recording_000001.mgr";
 constexpr auto SecondPath = "/recordings/recording_000002.mgr";
+
+class TestClock final : public mg::io::Time {
+public:
+    std::chrono::microseconds elapsed() const override { return 0us; }
+};
 
 std::uint64_t readLE(Bytes bytes, std::size_t offset, std::size_t length) {
     std::uint64_t value = 0;
@@ -488,6 +493,58 @@ TEST_CASE("recording reports finalization write, flush and close failures and re
     CHECK(manager.status().failure == Error::FinalizeFailed);
     CHECK(fs.closeCalls == 1);
     CHECK(decode(fs.files.at(FirstPath)).samples.size() == 1);
+}
+
+TEST_CASE("runtime owns recordings and closes an unfinished file on shutdown") {
+    mg::test::MemoryFileSystem fs;
+    TestClock clock;
+    mg::Runtime runtime(fs, clock);
+    REQUIRE(runtime.init());
+    const auto& readOnlyRuntime = runtime;
+    auto& recordings = runtime.recordings();
+    CHECK(&readOnlyRuntime.recordings() == &recordings);
+    REQUIRE(recordings.start(Channels) == Error::None);
+    const Manager::Sample samples[] = {{0us, 0, 1000}};
+    REQUIRE(recordings.appendSamples(samples) == Error::None);
+    const auto closes = fs.closeCalls;
+
+    runtime.shutdown();
+    CHECK(fs.closeCalls == closes + 1);
+    const auto unfinished = decode(fs.files.at(FirstPath));
+    CHECK(unfinished.samples.size() == 1);
+    CHECK_FALSE(unfinished.duration.has_value());
+
+    REQUIRE(runtime.init());
+    CHECK_FALSE(runtime.recordings().status().recording);
+    REQUIRE(runtime.recordings().start(Channels) == Error::None);
+    REQUIRE(runtime.recordings().stop(1s) == Error::None);
+    CHECK(decode(fs.files.at(SecondPath)).duration == 1s);
+}
+
+TEST_CASE("runtime uses a separate recording destination without requiring it at startup") {
+    class RecordingDestination final : public mg::test::MemoryFileSystem {
+    public:
+        int initCalls = 0;
+        bool init() override {
+            ++initCalls;
+            return !failOpen;
+        }
+    } destination;
+    destination.failOpen = true;
+    mg::test::MemoryFileSystem fs;
+    TestClock clock;
+    mg::Runtime runtime(fs, clock, {.recordingFileSystem = &destination});
+    REQUIRE(runtime.init());
+    CHECK(destination.initCalls == 0);
+    CHECK(runtime.recordings().start(Channels) == Error::StartFailed);
+    CHECK(runtime.initialized());
+
+    destination.failOpen = false;
+    REQUIRE(destination.init());
+    REQUIRE(runtime.recordings().start(Channels) == Error::None);
+    REQUIRE(runtime.recordings().stop(1s) == Error::None);
+    CHECK_FALSE(fs.files.contains(FirstPath));
+    CHECK(decode(destination.files.at(FirstPath)).duration == 1s);
 }
 
 } // namespace

@@ -4,6 +4,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -20,6 +21,7 @@
 #include <multigauge/json/Json.h>
 #include <multigauge/navigation/Manager.h>
 #include <multigauge/package/Manager.h>
+#include <multigauge/runtime/RecordingManager.h>
 #include <multigauge/sensor/Manager.h>
 #include <multigauge/settings/Manager.h>
 
@@ -32,6 +34,10 @@ namespace graphics { class GraphicsContext; }
 struct RuntimeConfig {
     std::string dataRoot = "/multigauge";
 
+    /// Optional borrowed recording destination. Null uses the runtime filesystem.
+    /// The host initializes a separate destination before recording and keeps it
+    /// alive for the lifetime of the Runtime.
+    io::FileSystem* recordingFileSystem = nullptr;
 };
 
 /// @brief Owns the long-lived state of one Multigauge runtime instance.
@@ -54,6 +60,8 @@ public:
     //----------[ LIFECYCLE ]----------//
 
     [[nodiscard]] bool init();
+    /// Releases the managers. Stop active recordings explicitly before shutdown
+    /// to write the final duration and check for storage errors.
     void shutdown();
     [[nodiscard]] bool initialized() const noexcept;
     void frame();
@@ -78,6 +86,10 @@ public:
     [[nodiscard]] control::Manager& controls();
     [[nodiscard]] const control::Manager& controls() const;
 
+    /// Borrowed until shutdown(). Requires an initialized Runtime.
+    [[nodiscard]] RecordingManager& recordings();
+    [[nodiscard]] const RecordingManager& recordings() const;
+
 #if MG_BUILD_EDITOR
     [[nodiscard]] editor::Manager& editors();
     [[nodiscard]] const editor::Manager& editors() const;
@@ -100,6 +112,7 @@ private:
     std::unique_ptr<context::Manager> contexts_;
     std::unique_ptr<navigation::Manager> navigation_;
     std::unique_ptr<control::Manager> controls_;
+    std::optional<RecordingManager> recordings_;
 
     graphics::UserPalette userPalette_;
 
@@ -107,6 +120,7 @@ private:
     std::chrono::microseconds lastElapsed_{};
 
     io::FileSystem& fs_;
+    io::FileSystem& recordingFileSystem_;
     io::Time& time_;
     io::Logger* logger_;
 };
