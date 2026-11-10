@@ -2,6 +2,8 @@
 
 #include <multigauge/io/FileSystem.h>
 
+#include <etl/crc32.h>
+
 #include <algorithm>
 #include <bit>
 #include <cmath>
@@ -24,7 +26,6 @@ constexpr auto MaxOffset = std::numeric_limits<std::uint32_t>::max();
 constexpr auto MaxValue = std::numeric_limits<float>::max();
 constexpr std::size_t MaxChannelIdBytes = 128;
 constexpr std::size_t MaxUnitLabelBytes = 32;
-constexpr std::uint32_t CrcSeed = 0xffffffffu;
 
 static_assert(sizeof(float) == 4 && std::numeric_limits<float>::is_iec559);
 
@@ -64,18 +65,6 @@ void putLittleEndian(std::uint8_t* out, UInt value) {
     }
 }
 
-std::uint32_t updateCrc32(std::uint32_t crc, std::span<const std::uint8_t> bytes) {
-    for (const auto byte : bytes) {
-        crc ^= byte;
-        for (int bit = 0; bit < 8; ++bit) {
-            const bool lowBit = (crc & 1u) != 0;
-            crc >>= 1;
-            if (lowBit) crc ^= 0xedb88320u;
-        }
-    }
-    return crc;
-}
-
 bool validChannels(std::span<const RecordingManager::Channel> channels) {
     if (channels.empty() || channels.size() > std::numeric_limits<std::uint8_t>::max()) return false;
 
@@ -93,10 +82,10 @@ bool validChannels(std::span<const RecordingManager::Channel> channels) {
 
 bool writeHeader(io::File& file, std::span<const RecordingManager::Channel> channels,
                  std::optional<std::chrono::sys_seconds> startedAt) {
-    std::uint32_t crc = CrcSeed;
+    etl::crc32_t16 crc;
     const auto write = [&](std::span<const std::uint8_t> bytes) {
         if (bytes.empty()) return true;
-        crc = updateCrc32(crc, bytes);
+        crc.add(bytes.begin(), bytes.end());
         return file.write(bytes.data(), bytes.size());
     };
     const std::uint8_t header[] = {
@@ -121,12 +110,13 @@ bool writeHeader(io::File& file, std::span<const RecordingManager::Channel> chan
     }
 
     std::uint8_t checksum[ChecksumBytes];
-    putLittleEndian(checksum, ~crc);
+    putLittleEndian(checksum, crc.value());
     return file.write(checksum, sizeof(checksum));
 }
 
 bool writeBlock(io::File& file, std::uint8_t* block, std::size_t size) {
-    putLittleEndian(block + size, ~updateCrc32(CrcSeed, {block, size}));
+    const etl::crc32_t16 crc(block, block + size);
+    putLittleEndian(block + size, crc.value());
     return file.write(block, size + ChecksumBytes);
 }
 
@@ -184,8 +174,9 @@ RecordingManager::Error RecordingManager::appendSamples(std::span<const Sample> 
 
     auto elapsed = lastElapsed_;
     for (const auto& sample : samples) {
+        // An ordered bound check also rejects NaN and infinity.
         if (sample.channelIndex >= channelCount_ || sample.elapsed < elapsed ||
-            !std::isfinite(sample.value) || std::abs(sample.value) > MaxValue) {
+            !(std::abs(sample.value) <= MaxValue)) {
             return Error::InvalidSamples;
         }
         elapsed = sample.elapsed;
