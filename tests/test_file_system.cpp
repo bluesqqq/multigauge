@@ -105,3 +105,26 @@ TEST_CASE("streams expose positions and separate file and directory listings") {
     CHECK_FALSE(fs.listFiles("missing", names));
     CHECK(names.empty());
 }
+
+TEST_CASE("exclusive file creation preserves existing files and distinguishes other failures") {
+    mg::test::MemoryFileSystem fs;
+    const std::string path = "/logs/session/samples.bin";
+    auto created = fs.create(path);
+    REQUIRE(created.file);
+    CHECK_FALSE(created.alreadyExists);
+    CHECK(fs.directories.contains("/logs/session"));
+    auto collision = fs.create(path);
+    CHECK_FALSE(collision.file);
+    CHECK(collision.alreadyExists);
+    CHECK(fs.files.at(path).empty());
+    const uint8_t byte = 42;
+    REQUIRE(created.file->write(&byte, 1));
+    REQUIRE(created.file->close());
+    CHECK(fs.create(path).alreadyExists);
+    CHECK(fs.files.at(path) == std::vector<uint8_t>{42});
+    CHECK(fs.create("/logs/session").alreadyExists);
+    fs.failOpen = true;
+    const auto failed = fs.create("/logs/session/another.bin");
+    CHECK_FALSE(failed.file);
+    CHECK_FALSE(failed.alreadyExists);
+}

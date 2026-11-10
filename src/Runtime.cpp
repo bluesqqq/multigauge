@@ -16,6 +16,7 @@ Runtime::Runtime(
     sensors_(fs, dataRoot_),
     settings_(fs, dataRoot_),
     fs_(fs),
+    recordingFileSystem_(config.recordingFileSystem ? *config.recordingFileSystem : fs),
     time_(time),
     logger_(logger) {}
 
@@ -48,6 +49,7 @@ bool Runtime::init() {
     );
     controls_ = std::make_unique<control::Manager>(fs_, dataRoot_, *navigation_);
     if (!controls_->load()) return false;
+    recordings_.emplace(recordingFileSystem_);
     lastElapsed_ = time_.elapsed();
     initialized_ = true;
     return true;
@@ -55,6 +57,7 @@ bool Runtime::init() {
 
 void Runtime::shutdown() {
     if (!initialized_) return;
+    recordings_.reset();
     controls_.reset();
     navigation_.reset();
     contexts_.reset();
@@ -98,6 +101,10 @@ const settings::Manager& Runtime::settings() const { return settings_; }
 control::Manager& Runtime::controls() { return *controls_; }
 
 const control::Manager& Runtime::controls() const { return *controls_; }
+
+RecordingManager& Runtime::recordings() { return *recordings_; }
+
+const RecordingManager& Runtime::recordings() const { return *recordings_; }
 
 #if MG_BUILD_EDITOR
 editor::Manager& Runtime::editors() { return editors_; }

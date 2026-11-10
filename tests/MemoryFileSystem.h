@@ -3,16 +3,19 @@
 #include <algorithm>
 #include <limits>
 #include <map>
+#include <optional>
 #include <set>
 
 namespace mg::test {
 class MemoryFileSystem : public io::FileSystem {
     class MemoryFile final : public io::File {
     public:
-        MemoryFile(std::vector<uint8_t>& bytes, io::FileMode mode) : bytes_(bytes), mode_(mode) {
+        MemoryFile(MemoryFileSystem& fs, std::vector<uint8_t>& bytes, io::FileMode mode)
+            : fs_(fs), bytes_(bytes), mode_(mode) {
             if (mode == io::FileMode::Write) bytes_.clear();
             if (mode == io::FileMode::Append) position_ = bytes_.size();
         }
+        ~MemoryFile() override { close(); }
         bool read(uint8_t* data, size_t capacity, size_t& count) override {
             count = 0;
             if (closed_ || mode_ != io::FileMode::Read || (!data && capacity)) return false;
@@ -24,11 +27,13 @@ class MemoryFileSystem : public io::FileSystem {
         bool write(const uint8_t* data, size_t length) override {
             if (closed_ || mode_ == io::FileMode::Read || (!data && length)) return false;
             if (mode_ == io::FileMode::Append) position_ = bytes_.size();
-            if (length > std::numeric_limits<size_t>::max() - position_) return false;
-            bytes_.resize(std::max(bytes_.size(), position_ + length));
-            if (length) std::copy_n(data, length, bytes_.data() + position_);
-            position_ += length;
-            return true;
+            const size_t accepted = std::min(length, fs_.writeBudget.value_or(length));
+            if (accepted > std::numeric_limits<size_t>::max() - position_) return false;
+            bytes_.resize(std::max(bytes_.size(), position_ + accepted));
+            if (accepted) std::copy_n(data, accepted, bytes_.data() + position_);
+            position_ += accepted;
+            if (fs_.writeBudget) *fs_.writeBudget -= accepted;
+            return accepted == length;
         }
         bool seek(size_t offset) override {
             if (closed_ || offset > bytes_.size()) return false;
@@ -40,9 +45,18 @@ class MemoryFileSystem : public io::FileSystem {
             offset = position_;
             return true;
         }
-        bool flush() override { return !closed_; }
-        bool close() override { closed_ = true; return true; }
+        bool flush() override {
+            ++fs_.flushCalls;
+            return !closed_ && !fs_.failFlush;
+        }
+        bool close() override {
+            if (closed_) return true;
+            closed_ = true;
+            ++fs_.closeCalls;
+            return !fs_.failClose;
+        }
     private:
+        MemoryFileSystem& fs_;
         std::vector<uint8_t>& bytes_;
         io::FileMode mode_;
         size_t position_ = 0;
@@ -52,6 +66,13 @@ public:
     std::map<std::string, std::vector<uint8_t>> files;
     std::set<std::string> directories;
     bool failDirectory = false;
+    bool failOpen = false;
+    bool failRemove = false;
+    bool failFlush = false;
+    bool failClose = false;
+    std::optional<size_t> writeBudget;
+    size_t flushCalls = 0;
+    size_t closeCalls = 0;
     bool init() override { return true; }
     bool exists(const std::string& path) override { return files.contains(path) || directories.contains(path); }
     bool size(const std::string& path, size_t& out) override {
@@ -60,7 +81,7 @@ public:
         out = it->second.size();
         return true;
     }
-    bool remove(const std::string& path) override { return files.erase(path) != 0 || directories.erase(path) != 0; }
+    bool remove(const std::string& path) override { return !failRemove && (files.erase(path) != 0 || directories.erase(path) != 0); }
     bool rename(const std::string& from, const std::string& to) override {
         const auto it = files.find(from);
         if (it == files.end()) return false;
@@ -77,8 +98,15 @@ public:
     bool listFiles(const std::string& path, std::vector<std::string>& out) override { return listEntries(path, out, false); }
 protected:
     std::unique_ptr<io::File> openImpl(const std::string& path, io::FileMode mode) override {
-        if (directories.contains(path) || (mode == io::FileMode::Read && !files.contains(path))) return nullptr;
-        return std::make_unique<MemoryFile>(files[path], mode);
+        if (failOpen || directories.contains(path) || (mode == io::FileMode::Read && !files.contains(path))) return nullptr;
+        return std::make_unique<MemoryFile>(*this, files[path], mode);
+    }
+    io::CreateFileResult createImpl(const std::string& path) override {
+        if (failOpen) return {};
+        if (directories.contains(path)) return {nullptr, true};
+        const auto [entry, inserted] = files.try_emplace(path);
+        if (!inserted) return {nullptr, true};
+        return {std::make_unique<MemoryFile>(*this, entry->second, io::FileMode::Write)};
     }
 private:
     bool listEntries(const std::string& path, std::vector<std::string>& out, bool dirs) {
