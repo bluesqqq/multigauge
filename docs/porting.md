@@ -18,6 +18,12 @@ power-loss durability. Keep the filesystem alive until all its handles are close
 and serialize access to handles on the host. `listFiles` and `listDirectories`
 return immediate child names rather than full paths.
 
+`FileSystem::create(path)` creates missing parent directories and asks
+the backend to create a new writable file atomically. Its result distinguishes
+an occupied path from other failures. Recording destinations must implement
+`createImpl()` using an exclusive creation primitive supplied by the
+backend. Backends that lack this operation report a creation failure.
+
 `readBytes` and `readText` require a `maxBytes` content limit. They reject oversized
 files before allocating, enforce the limit while reading growing files, and leave
 the output unchanged on failure. Zero permits only empty files. The limit does
@@ -28,6 +34,33 @@ to 256 KiB and accepts an explicit override; image reads are limited to 64 KiB.
 Construct and initialize `mg::Runtime`, register a render surface with `runtime.contexts().add(...)`,
 and call `Runtime::frame()` from the host frame loop. Keep the registered graphics
 context dimensions current when its render surface changes size.
+
+The [recording manager interface](../include/multigauge/runtime/RecordingManager.h)
+is intended to become a `Runtime`-owned service exposed by `recordings()`, like
+the other runtime managers. The host supplies a `FileSystem` backend that outlives
+the manager. On ESP32, the existing `LittleFsFileSystem` can be used for bring-up.
+The intended SD destination should be initialized separately from the filesystem
+required by `Runtime::init()`, so missing or failed recording media affects only
+logging.
+
+The host chooses the channels, applies the Fast, Normal, and Slow sampling
+presets, and decides when to omit unchanged values. On the playback timeline, a
+channel has no value until its first sample, then holds its last recorded value
+until its next update. The host supplies the RTC start time when it has a trusted
+UTC clock. Samples and the final duration use monotonic elapsed time, so clock
+adjustments leave the timeline intact. The duration also preserves time after
+the last update.
+
+On a real-time host, use a bounded handoff from the sampler to a storage task that
+calls the manager with ordered batches. The frame loop, sensor acquisition, and
+controls should continue without waiting for recording I/O. The storage task can
+call `flush()` approximately every 1–5 seconds to limit buffered data and publish
+a copy of the manager's status for other tasks. To finish a recording,
+the storage task drains its pending batches and checks the result of
+`stop(duration)` before the host shuts down `Runtime` or unmounts the destination.
+The [binary recording format](./recording-format.md) supports recovering complete
+blocks before a partial tail. Listing and playback belong to the reader and its
+consumers.
 
 `RuntimeConfig::dataRoot` selects the storage root used by package, settings, and
 sensor persistence. See [storage.md](./storage.md) for its file contract. Hosts
