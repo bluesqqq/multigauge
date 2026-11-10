@@ -48,6 +48,11 @@ public:
     virtual bool close() = 0;
 };
 
+struct CreateFileResult {
+    std::unique_ptr<File> file; ///< Newly created writable file on success.
+    bool alreadyExists = false; ///< The path was occupied and left untouched.
+};
+
 class FileSystem {
     public:
         virtual ~FileSystem() = default;
@@ -66,6 +71,11 @@ class FileSystem {
         /// @note Write and Append create missing parents.
         /// @return Unique pointer to file on success, `nullptr` on failure.
         [[nodiscard]] std::unique_ptr<File> open(const std::string& path, FileMode mode);
+
+        /// @brief Atomically creates a new, empty writable file, creating missing parents.
+        /// @return The new file, or an empty handle. On failure `alreadyExists`
+        /// distinguishes an occupied path from I/O failure or lack of backend support.
+        [[nodiscard]] CreateFileResult create(const std::string& path);
 
         /// @brief Removes a file or empty directory.
         virtual bool remove(const std::string& path) = 0;
@@ -106,6 +116,7 @@ class FileSystem {
 
     protected:
         virtual std::unique_ptr<File> openImpl(const std::string&, FileMode) = 0;
+        virtual CreateFileResult createImpl(const std::string&) { return {}; }
 
     private:
         bool makeParentDirectories(const std::string& path);

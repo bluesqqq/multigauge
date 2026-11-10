@@ -65,6 +65,11 @@ std::unique_ptr<mg::io::File> mg::io::FileSystem::open(const std::string& path, 
     return openImpl(path, mode);
 }
 
+mg::io::CreateFileResult mg::io::FileSystem::create(const std::string& path) {
+    if (!makeParentDirectories(path)) return {};
+    return createImpl(path);
+}
+
 bool mg::io::FileSystem::makeParentDirectories(const std::string& path) {
     const std::size_t separator = path.find_last_of("/\\");
     if (separator != std::string::npos) {
