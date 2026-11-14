@@ -21,6 +21,7 @@ namespace {
 constexpr std::size_t BlockBytes = 512;
 constexpr std::size_t BlockHeaderBytes = 9;
 constexpr std::size_t SampleBytes = 9;
+constexpr std::uint32_t UnavailableSampleBits = 0x7fc00000;
 constexpr std::size_t ChecksumBytes = 4;
 constexpr std::size_t SamplesPerBlock = (BlockBytes - BlockHeaderBytes - ChecksumBytes) / SampleBytes;
 constexpr auto MaxOffset = std::numeric_limits<std::uint32_t>::max();
@@ -219,7 +220,7 @@ RecordingManager::Error RecordingManager::appendSamples(std::span<const Sample> 
             return Error::InvalidSamples;
         }
 
-        if (!(std::abs(sample.value) <= MaxValue)) {
+        if (sample.available && !(std::abs(sample.value) <= MaxValue)) {
             LOG_WARN(TAG, "Sample contains an invalid measurement.");
             return Error::InvalidSamples;
         }
@@ -242,7 +243,9 @@ RecordingManager::Error RecordingManager::appendSamples(std::span<const Sample> 
 
             putLittleEndian(record, static_cast<std::uint32_t>(offset));
             record[4] = static_cast<std::uint8_t>(sample.channelIndex);
-            putLittleEndian(record + 5, std::bit_cast<std::uint32_t>(static_cast<float>(sample.value)));
+            putLittleEndian(record + 5, sample.available
+                ? std::bit_cast<std::uint32_t>(static_cast<float>(sample.value))
+                : UnavailableSampleBits);
 
             ++count;
         }
