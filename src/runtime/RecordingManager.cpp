@@ -72,7 +72,8 @@ bool validChannels(std::span<const RecordingManager::Channel> channels) {
 
     for (std::size_t i = 0; i < channels.size(); ++i) {
         const auto& channel = channels[i];
-        if (channel.id.empty() || channel.id.size() > MaxChannelIdBytes || channel.unit.size() > MaxUnitLabelBytes) {
+        if (channel.id.empty() || channel.id.size() > MaxChannelIdBytes || channel.unit.size() > MaxUnitLabelBytes ||
+            !std::isfinite(channel.minimum) || !std::isfinite(channel.maximum) || channel.minimum > channel.maximum) {
             return false;
         }
         for (const auto& earlier : channels.first(i)) {
@@ -101,10 +102,12 @@ bool writeHeader(io::File& file, std::span<const RecordingManager::Channel> chan
         if (!write(utc)) return false;
     }
     for (const auto& channel : channels) {
-        std::uint8_t lengths[4];
-        putLittleEndian(lengths, static_cast<std::uint16_t>(channel.id.size()));
-        putLittleEndian(lengths + 2, static_cast<std::uint16_t>(channel.unit.size()));
-        if (!write(lengths) ||
+        std::uint8_t metadata[12];
+        putLittleEndian(metadata, static_cast<std::uint16_t>(channel.id.size()));
+        putLittleEndian(metadata + 2, static_cast<std::uint16_t>(channel.unit.size()));
+        putLittleEndian(metadata + 4, std::bit_cast<std::uint32_t>(channel.minimum));
+        putLittleEndian(metadata + 8, std::bit_cast<std::uint32_t>(channel.maximum));
+        if (!write(metadata) ||
             !write({reinterpret_cast<const std::uint8_t*>(channel.id.data()), channel.id.size()}) ||
             !write({reinterpret_cast<const std::uint8_t*>(channel.unit.data()), channel.unit.size()})) {
             return false;

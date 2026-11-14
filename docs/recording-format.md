@@ -34,7 +34,10 @@ fields use two's complement. Every CRC is CRC-32/ISO-HDLC (reflected polynomial
 | Header CRC | CRC of all preceding header bytes, starting with the magic |
 
 Each channel entry has a `u16` identifier length, a `u16` base unit label length,
-then the identifier bytes followed by the label bytes. Lengths count bytes and
+an IEEE 754 binary32 minimum and maximum (in that order), then the identifier
+bytes followed by the label bytes. The bounds are captured in base units when
+the recording starts and must be finite with minimum ≤ maximum. Equal bounds
+indicate no usable plot scale. Lengths count bytes and
 there are no terminators. Identifiers are nonempty and unique by byte comparison.
 An empty label denotes a unitless channel. The label describes the canonical base
 unit captured with the recording. It is independent of display preferences.

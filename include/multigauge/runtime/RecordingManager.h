@@ -25,6 +25,8 @@ public:
     struct Channel {
         std::string_view id; ///< Nonempty identifier, unique within the recording.
         std::string_view unit{}; ///< Canonical base unit label, or empty for unitless values.
+        float minimum = 0.0F; ///< Lower display bound in the channel's base unit.
+        float maximum = 0.0F; ///< Upper display bound in the same unit. Equal bounds indicate no usable scale.
     };
 
     /// @brief One channel update. Callers may omit unchanged values.
@@ -66,8 +68,9 @@ public:
 
     /// @brief Opens a new recording with the given channels in the given order.
     /// @param channels One to 255 channels. Identifiers can occupy up to 128 bytes
-    /// and unit labels up to 32 bytes. The list and its strings are borrowed for
-    /// the call and written to the recording on success.
+    /// and unit labels up to 32 bytes. Bounds must be finite and ordered and
+    /// are stored as binary32. The list and its strings are borrowed for the
+    /// call and written to the recording on success.
     /// @param startedAt Optional UTC start time, at second precision, corresponding
     /// to elapsed zero. Stored in the header and used for filenames when the year
     /// is in [1, 9999]. Sample ordering uses elapsed time.

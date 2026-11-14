@@ -15,7 +15,11 @@ using Error = Manager::Error;
 using Bytes = std::span<const std::uint8_t>;
 using namespace std::chrono_literals;
 
-constexpr Manager::Channel Channels[] = {{"rpm", "rpm"}, {"coolant", "C"}, {"user.aux_voltage", "V"}};
+constexpr Manager::Channel Channels[] = {
+    {"rpm", "rpm", 0.0F, 8000.0F},
+    {"coolant", "C", -40.0F, 120.0F},
+    {"user.aux_voltage", "V", 0.25F, 4.75F},
+};
 constexpr auto FirstPath = "/recordings/recording_000001.mgr";
 constexpr auto SecondPath = "/recordings/recording_000002.mgr";
 
@@ -39,6 +43,7 @@ bool validCrc(Bytes bytes, std::size_t payloadLength) {
 struct DecodedRecording {
     std::optional<std::int64_t> utcSeconds;
     std::vector<std::pair<std::string, std::string>> channels;
+    std::vector<std::pair<float, float>> ranges;
     std::vector<Manager::Sample> samples;
     std::optional<std::chrono::microseconds> duration;
     std::vector<std::size_t> blockCounts;
@@ -56,10 +61,13 @@ bool readHeader(Bytes& bytes, DecodedRecording& recording) {
         pos += 8;
     }
     for (unsigned i = 0; i < bytes[6]; ++i) {
-        if (bytes.size() < pos + 4) return false;
+        if (bytes.size() < pos + 12) return false;
         const auto idLength = static_cast<std::size_t>(readLE(bytes, pos, 2));
         const auto unitLength = static_cast<std::size_t>(readLE(bytes, pos + 2, 2));
-        pos += 4;
+        const auto minimum = std::bit_cast<float>(static_cast<std::uint32_t>(readLE(bytes, pos + 4, 4)));
+        const auto maximum = std::bit_cast<float>(static_cast<std::uint32_t>(readLE(bytes, pos + 8, 4)));
+        recording.ranges.emplace_back(minimum, maximum);
+        pos += 12;
         if (bytes.size() < pos + idLength + unitLength) return false;
         const auto* id = reinterpret_cast<const char*>(bytes.data() + pos);
         recording.channels.emplace_back(std::string(id, idLength), std::string(id + idLength, unitLength));
@@ -120,6 +128,8 @@ TEST_CASE("recording stores mixed-rate updates, base unit metadata and the actua
     for (std::size_t i = 0; i < recording.channels.size(); ++i) {
         CHECK(recording.channels[i].first == Channels[i].id);
         CHECK(recording.channels[i].second == Channels[i].unit);
+        CHECK(recording.ranges[i].first == Channels[i].minimum);
+        CHECK(recording.ranges[i].second == Channels[i].maximum);
     }
     CHECK(recording.duration == 3s);
     CHECK(recording.blockCounts == std::vector<std::size_t>{3, 3});
@@ -282,12 +292,16 @@ TEST_CASE("recording rejects invalid channels, batches and duration before writi
     const std::string longId(129, 'x');
     const Manager::Channel oversized[] = {{"rpm", longLabel}};
     const Manager::Channel oversizedId[] = {{longId, "rpm"}};
+    const Manager::Channel reversedRange[] = {{"rpm", "rpm", 8000.0F, 0.0F}};
+    const Manager::Channel nonFiniteRange[] = {{"rpm", "rpm", 0.0F, std::numeric_limits<float>::infinity()}};
     const std::vector<Manager::Channel> tooMany(256, {"rpm", "rpm"});
     CHECK(manager.start({}) == Error::InvalidChannels);
     CHECK(manager.start(duplicate) == Error::InvalidChannels);
     CHECK(manager.start(unnamed) == Error::InvalidChannels);
     CHECK(manager.start(oversized) == Error::InvalidChannels);
     CHECK(manager.start(oversizedId) == Error::InvalidChannels);
+    CHECK(manager.start(reversedRange) == Error::InvalidChannels);
+    CHECK(manager.start(nonFiniteRange) == Error::InvalidChannels);
     CHECK(manager.start(tooMany) == Error::InvalidChannels);
     CHECK(manager.appendSamples({}) == Error::NotRecording);
     CHECK(manager.stop(0us) == Error::NotRecording);
