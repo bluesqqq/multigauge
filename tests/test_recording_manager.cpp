@@ -87,8 +87,10 @@ DecodedRecording decode(Bytes bytes) {
         for (std::size_t i = 0; i < count; ++i) {
             const auto offset = 9 + i * 9;
             const auto time = std::chrono::microseconds(elapsed + readLE(bytes, offset, 4));
-            const auto value = std::bit_cast<float>(static_cast<std::uint32_t>(readLE(bytes, offset + 5, 4)));
-            recording.samples.push_back({time, bytes[offset + 4], value});
+            const auto bits = static_cast<std::uint32_t>(readLE(bytes, offset + 5, 4));
+            const bool available = bits != 0x7fc00000;
+            recording.samples.push_back({time, bytes[offset + 4],
+                available ? std::bit_cast<float>(bits) : 0.0F, available});
         }
         bytes = bytes.subspan(payloadLength + 4);
     }
@@ -128,6 +130,25 @@ TEST_CASE("recording stores mixed-rate updates, base unit metadata and the actua
         CHECK(recording.samples[i].channelIndex == expected[i].channelIndex);
         CHECK(recording.samples[i].value == expected[i].value);
     }
+}
+
+TEST_CASE("recording stores unavailable transitions between equal readings") {
+    mg::test::MemoryFileSystem fs;
+    Manager manager(fs);
+    REQUIRE(manager.start(Channels) == Error::None);
+    const Manager::Sample samples[] = {{0us, 0, 1200}, {20ms, 0, 0, false}, {40ms, 0, 1200}};
+    REQUIRE(manager.appendSamples(samples) == Error::None);
+    REQUIRE(manager.stop(60ms) == Error::None);
+
+    const auto saved = decode(fs.files.at(FirstPath));
+    REQUIRE(saved.samples.size() == 3);
+    CHECK(saved.samples[0].available);
+    CHECK_FALSE(saved.samples[1].available);
+    CHECK(saved.samples[1].elapsed == 20ms);
+    CHECK(saved.samples[1].channelIndex == 0);
+    CHECK(saved.samples[2].available);
+    CHECK(saved.samples[2].value == 1200);
+    CHECK(saved.duration == 60ms);
 }
 
 TEST_CASE("recording filenames use UTC and preserve collisions across restarts") {

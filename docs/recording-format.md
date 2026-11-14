@@ -58,8 +58,11 @@ nondecreasing across blocks, with ties stored in submission order. A new block
 starts when the count limit or offset range would be exceeded. The wire value is
 always binary32, including on targets with a wider `Measurement`. Converting from
 `double` can round values and can underflow very small magnitudes to subnormal
-values or zero. Non-finite values and values outside the finite binary32 range
-are rejected before any block of the batch is written.
+values or zero. Available measurements outside the finite binary32 range are
+rejected before any block of the batch is written. The exact bit
+pattern `0x7fc00000` marks the channel unavailable from this timestamp until
+its next finite sample. Other non-finite bit patterns are invalid. A channel
+starts unavailable until its first finite sample.
 
 A full block is 508 bytes (9 bytes of framing, 55 × 9 bytes of samples, and a
 4-byte CRC). The writer uses a 512-byte scratch buffer and writes only the encoded
@@ -81,7 +84,7 @@ backend. A failed flush ends the recording and reports `FlushFailed`.
 Reject incomplete headers, unknown versions or flag bits, and invalid header
 CRCs. With a valid header, recover the consecutive complete sample blocks before
 EOF or the first truncated or invalid record. Validate each entire block before
-using any samples, including its CRC, channel indices, finite values, timestamp
+using any samples, including its CRC, channel indices, value encoding, timestamp
 ordering, and overflow when adding offsets to the first sample time. A complete
 final record with a valid CRC and duration supplies the actual duration. In its
 absence, the last valid sample time is the end of the recoverable timeline.

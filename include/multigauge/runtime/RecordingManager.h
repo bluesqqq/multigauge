@@ -32,6 +32,7 @@ public:
         std::chrono::microseconds elapsed{}; ///< Monotonic time since the recording started.
         std::size_t channelIndex = 0; ///< Zero-based index into the channel list passed to start().
         Measurement value = 0.0F; ///< Value in the channel's canonical base unit.
+        bool available = true; ///< False marks the channel unavailable and ignores value.
     };
 
     enum class Error {
@@ -81,7 +82,8 @@ public:
 
     /// @brief Appends a batch to the active recording.
     /// @param samples Borrowed for the call. Each sample must refer to a declared
-    /// channel and have a finite value within the binary32 range. Elapsed times
+    /// channel. Available samples must have a finite value within the binary32
+    /// range. An unavailable update lasts until the next available sample. Elapsed times
     /// must be nonnegative and nondecreasing across all channels and batches.
     /// Equal timestamps preserve submission order.
     /// @return None once the whole batch has been written to the backend in order.
